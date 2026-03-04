@@ -37,7 +37,7 @@ RAW_DIR = os.path.join(ARCHIVE_DIR, "raw")
 FILTERED_DIR = os.path.join(ARCHIVE_DIR, "filtered")
 DATE_RE_DAY = re.compile(r"^\d{8}$")
 DATE_RE_RANGE = re.compile(r"^\d{8}-\d{8}$")
-SUPABASE_TIME_FIELDS = ("published", "updated_at", "embedding_updated_at")
+SUPABASE_TIME_FIELDS = ("published",)
 
 
 TOKEN_RE = re.compile(r"[A-Za-z0-9]+|[\u4e00-\u9fff]")

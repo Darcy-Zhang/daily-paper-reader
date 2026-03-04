@@ -68,7 +68,12 @@ def _is_within_time_window(
     if end_dt <= start_dt:
         return True
 
-    for field in time_fields:
+    # 为防止兼容字段导致时间窗口被放宽，始终仅基于 published 做硬过滤。
+    fields = [f for f in (time_fields or ("published",)) if str(f).strip() == "published"]
+    if not fields:
+        fields = ["published"]
+
+    for field in fields:
         dt = _parse_datetime_like(record.get(field))
         if dt is None:
             continue
