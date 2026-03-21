@@ -31,9 +31,9 @@ jobs:
     timeout-minutes: 120
     env:
       BLT_API_KEY: ${{ secrets.BLT_API_KEY }}
-      BLT_REWRITE_MODEL: gemini-3-flash-preview
-      BLT_RERANK_MODEL: qwen3-reranker-4b
-      BLT_FILTER_MODEL: gemini-3-flash-preview-nothinking
+      BLT_REWRITE_MODEL: kimi-k2.5
+      BLT_RERANK_MODEL: qwen3-vl-rerank
+      BLT_FILTER_MODEL: kimi-k2.5
       DPR_EMBED_API_TIMEOUT: "60"
       PYTHONUNBUFFERED: "1"
 
