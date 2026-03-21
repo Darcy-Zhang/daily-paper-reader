@@ -121,6 +121,8 @@ class LLMClient:
     def _provider_name(self, base_url: str | None = None) -> str:
         try:
             url = (base_url or self.base_url or '').lower()
+            if 'dashscope.aliyuncs.com' in url:
+                return 'dashscope'
             if 'deepseek' in url:
                 return 'deepseek'
             if 'siliconflow' in url or 'siliconflow.cn' in url:
@@ -375,7 +377,7 @@ class BltClient(LLMClient):
         model: Optional[str] = None,
     ) -> dict:
         """
-        调用柏拉图 Rerank 接口（/v1/rerank）。
+        调用排序接口。DashScope 与 OpenAI-compatible 网关使用不同的 Rerank 路径。
 
         :param query: 查询文本
         :param documents: 待排序文档列表
@@ -387,22 +389,60 @@ class BltClient(LLMClient):
         if not documents:
             raise ValueError("rerank: documents 不能为空")
 
+        selected_model = model or self.model
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
         }
-        payload: Dict[str, Any] = {
-            "model": model or self.model,
-            "query": query,
-            "documents": documents,
-        }
-        if top_n is not None:
-            payload["top_n"] = int(top_n)
+        provider = self._provider_name()
 
-        request_bases = self._iter_retry_bases(total_attempts=6)
+        if provider == "dashscope":
+            model_name = str(selected_model or "").strip()
+            # DashScope 的文本排序接口不走 OpenAI 兼容的 /rerank 路径：
+            # - qwen3-rerank 使用 compatible-api/v1/reranks
+            # - 其它排序模型（如 gte-rerank-v2 / qwen3-vl-rerank）使用官方 text-rerank 路径
+            if model_name == "qwen3-rerank":
+                payload = {
+                    "model": model_name,
+                    "query": query,
+                    "documents": documents,
+                }
+                if top_n is not None:
+                    payload["top_n"] = int(top_n)
+                request_bases = ["https://dashscope.aliyuncs.com/compatible-api/v1"]
+            else:
+                payload = {
+                    "model": model_name,
+                    "input": {
+                        "query": query,
+                        "documents": documents,
+                    },
+                    "parameters": {
+                        "return_documents": True,
+                    },
+                }
+                if top_n is not None:
+                    payload["parameters"]["top_n"] = int(top_n)
+                request_bases = ["https://dashscope.aliyuncs.com/api/v1/services/rerank/text-rerank"]
+        else:
+            payload = {
+                "model": selected_model,
+                "query": query,
+                "documents": documents,
+            }
+            if top_n is not None:
+                payload["top_n"] = int(top_n)
+            request_bases = self._iter_retry_bases(total_attempts=6)
+
         last_error: Exception | None = None
         for attempt_idx, req_base in enumerate(request_bases, start=1):
-            request_url = f"{req_base.rstrip('/')}/rerank"
+            if provider == "dashscope":
+                if str(selected_model or "").strip() == "qwen3-rerank":
+                    request_url = f"{req_base.rstrip('/')}/reranks"
+                else:
+                    request_url = f"{req_base.rstrip('/')}/text-rerank"
+            else:
+                request_url = f"{req_base.rstrip('/')}/rerank"
             try:
                 response = requests.post(request_url, headers=headers, json=payload, timeout=120)
                 response.raise_for_status()

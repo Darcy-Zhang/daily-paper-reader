@@ -252,11 +252,11 @@
       // - Summarized_LLM_MODEL：用户选择的总结模型
       // - BLT_API_KEY：写入后端流水线使用的 BLT_API_KEY（与 Summarized_LLM_API_KEY 相同）
       // - Reranker_LLM_API_KEY：与 Summarized_LLM_API_KEY 相同
-      // - Reranker_LLM_BASE_URL：默认 https://dashscope.aliyuncs.com/compatible-mode/v1/rerank
-      // - Reranker_LLM_MODEL：默认 qwen3-reranker-4b
+      // - Reranker_LLM_BASE_URL：默认 https://dashscope.aliyuncs.com/api/v1/services/rerank/text-rerank/text-rerank
+      // - Reranker_LLM_MODEL：默认 qwen3-vl-rerank
       const summarisedBaseUrl = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
-      const rerankerBaseUrl = 'https://dashscope.aliyuncs.com/compatible-mode/v1/rerank';
-      const rerankerModel = 'qwen3-reranker-4b';
+      const rerankerBaseUrl = 'https://dashscope.aliyuncs.com/api/v1/services/rerank/text-rerank/text-rerank';
+      const rerankerModel = 'qwen3-vl-rerank';
 
       const secretNameSummKey = 'Summarized_LLM_API_KEY';
       const secretNameSummUrl = 'Summarized_LLM_BASE_URL';
@@ -919,8 +919,8 @@
 
         const createdAt = new Date().toISOString();
         const summarizedBaseUrl = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
-        const rerankerBaseUrl = 'https://dashscope.aliyuncs.com/compatible-mode/v1/rerank';
-        const rerankerModel = 'qwen3-reranker-4b';
+        const rerankerBaseUrl = 'https://dashscope.aliyuncs.com/api/v1/services/rerank/text-rerank/text-rerank';
+        const rerankerModel = 'qwen3-vl-rerank';
 
         const plainConfig = {
           createdAt,
