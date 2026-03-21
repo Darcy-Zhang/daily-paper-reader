@@ -247,15 +247,15 @@
       };
 
       // 简易配置下的约定：
-      // - Summarized_LLM_API_KEY：用户输入的柏拉图 API Key
-      // - Summarized_LLM_BASE_URL：默认 https://api.bltcy.ai/v1/chat/completions
+      // - Summarized_LLM_API_KEY：用户输入的 DashScope API Key
+      // - Summarized_LLM_BASE_URL：默认 https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions
       // - Summarized_LLM_MODEL：用户选择的总结模型
       // - BLT_API_KEY：写入后端流水线使用的 BLT_API_KEY（与 Summarized_LLM_API_KEY 相同）
       // - Reranker_LLM_API_KEY：与 Summarized_LLM_API_KEY 相同
-      // - Reranker_LLM_BASE_URL：默认 https://api.bltcy.ai/v1/rerank
+      // - Reranker_LLM_BASE_URL：默认 https://dashscope.aliyuncs.com/compatible-mode/v1/rerank
       // - Reranker_LLM_MODEL：默认 qwen3-reranker-4b
-      const summarisedBaseUrl = 'https://api.bltcy.ai/v1/chat/completions';
-      const rerankerBaseUrl = 'https://api.bltcy.ai/v1/rerank';
+      const summarisedBaseUrl = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
+      const rerankerBaseUrl = 'https://dashscope.aliyuncs.com/compatible-mode/v1/rerank';
       const rerankerModel = 'qwen3-reranker-4b';
 
       const secretNameSummKey = 'Summarized_LLM_API_KEY';
@@ -657,7 +657,7 @@
         <div style="margin-bottom:10px; font-size:13px;">
           <label style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
             <input type="radio" name="secret-setup-mode" value="simple" checked />
-            <span><strong>简易配置（推荐）</strong>：填写 GitHub Token 与柏拉图 API Key，即可启用订阅与论文总结能力。</span>
+            <span><strong>简易配置（推荐）</strong>：填写 GitHub Token 与 DashScope API Key，即可启用订阅与论文总结能力。</span>
           </label>
           <label style="display:flex; align-items:center; gap:6px; color:#aaa;">
             <input type="radio" name="secret-setup-mode" value="advanced" disabled />
@@ -680,7 +680,7 @@
             需要具备 <code>repo</code> 和 <code>workflow</code> 权限。
           </div>
 
-          <div style="font-weight:500; margin-bottom:4px;">柏拉图（BLTCY）API Key（必填）</div>
+          <div style="font-weight:500; margin-bottom:4px;">DashScope API Key（必填）</div>
           <input
             id="secret-setup-plato"
             type="password"
@@ -689,10 +689,10 @@
             style="width:100%; box-sizing:border-box; padding:6px 8px; margin-bottom:4px; font-size:13px;"
           />
           <button id="secret-setup-plato-verify" type="button" class="secret-gate-btn secondary" style="margin-bottom:4px;">
-            验证柏拉图 API Key
+            验证 DashScope API Key
           </button>
           <div id="secret-setup-plato-status" style="min-height:18px; font-size:12px; color:#999; margin-bottom:8px;">
-            将通过 <code>/v1/token/quota</code> 接口验证可用性。
+            将通过 <code>/compatible-mode/v1/models</code> 接口验证可用性。
           </div>
 
           <div style="font-weight:500; margin-bottom:4px; display:flex; align-items:center; gap:4px;">
@@ -833,17 +833,17 @@
       platoVerifyBtn.addEventListener('click', async () => {
         const key = platoInput.value.trim();
         if (!key) {
-          platoStatusEl.textContent = '请先输入柏拉图 API Key。';
+          platoStatusEl.textContent = '请先输入 DashScope API Key。';
           platoStatusEl.style.color = '#c00';
           platoOk = false;
           return;
         }
         platoVerifyBtn.disabled = true;
-        platoStatusEl.textContent = '正在验证柏拉图 API Key...';
+        platoStatusEl.textContent = '正在验证 DashScope API Key...';
         platoStatusEl.style.color = '#666';
         try {
           const resp = await fetch(
-            'https://api.bltcy.ai/v1/token/quota',
+            'https://dashscope.aliyuncs.com/compatible-mode/v1/models',
             {
               method: 'GET',
               headers: {
@@ -855,12 +855,8 @@
             throw new Error(`HTTP ${resp.status}`);
           }
           const data = await resp.json().catch(() => null);
-          const quota =
-            data && typeof data.quota === 'number' ? data.quota : 0;
-          const used = -quota;
-          platoStatusEl.textContent = `✅ 验证成功：已用额度约 ${used.toFixed(
-            2,
-          )}`;
+          const modelCount = Array.isArray(data && data.data) ? data.data.length : 0;
+          platoStatusEl.textContent = `✅ 验证成功：已获取 ${modelCount} 个可用模型`;
           platoStatusEl.style.color = '#28a745';
           platoOk = true;
         } catch (e) {
@@ -898,7 +894,7 @@
         }
         if (!platoKey || !platoOk) {
           if (errorEl) {
-            errorEl.textContent = '请先填写并通过验证柏拉图 API Key。';
+            errorEl.textContent = '请先填写并通过验证 DashScope API Key。';
             errorEl.style.color = '#c00';
           }
           return;
@@ -919,8 +915,8 @@
         }
 
         const createdAt = new Date().toISOString();
-        const summarizedBaseUrl = 'https://api.bltcy.ai/v1/chat/completions';
-        const rerankerBaseUrl = 'https://api.bltcy.ai/v1/rerank';
+        const summarizedBaseUrl = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
+        const rerankerBaseUrl = 'https://dashscope.aliyuncs.com/compatible-mode/v1/rerank';
         const rerankerModel = 'qwen3-reranker-4b';
 
         const plainConfig = {

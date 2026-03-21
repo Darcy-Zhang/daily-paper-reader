@@ -96,9 +96,9 @@
 
 ### 1) 🔑 准备大模型 API Key
 
-当前 README 默认以 **柏拉图 API 平台** 为示例，建议先按默认配置跑通。
+当前 README 默认以 **DashScope（阿里云百炼兼容模式）** 为示例，建议先按默认配置跑通。
 
-- 🌐 打开 [柏拉图 API 平台](https://api.bltcy.ai/)
+- 🌐 打开 [DashScope 控制台](https://dashscope.aliyun.com/)
 - 📝 完成注册 / 登录
 - 🔐 充值并创建密钥
 
