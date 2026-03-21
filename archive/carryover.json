@@ -1,130 +1,8 @@
 {
-  "generated_at": "2026-03-21T09:38:08.982706+00:00",
-  "updated_date": "20260220-20260321",
+  "generated_at": "2026-03-21T19:27:40.520063+00:00",
+  "updated_date": "20260321",
   "carryover_days": 9,
   "items": [
-    {
-      "id": "2602.10357v1",
-      "title": "Theoretical Analysis of Contrastive Learning under Imbalanced Data: From Training Dynamics to a Pruning Solution",
-      "abstract": "Contrastive learning has emerged as a powerful framework for learning generalizable representations, yet its theoretical understanding remains limited, particularly under imbalanced data distributions that are prevalent in real-world applications. Such an imbalance can degrade representation quality and induce biased model behavior, yet a rigorous characterization of these effects is lacking. In this work, we develop a theoretical framework to analyze the training dynamics of contrastive learning with Transformer-based encoders under imbalanced data. Our results reveal that neuron weights evolve through three distinct stages of training, with different dynamics for majority features, minority features, and noise. We further show that minority features reduce representational capacity, increase the need for more complex architectures, and hinder the separation of ground-truth features from noise. Inspired by these neuron-level behaviors, we show that pruning restores performance degraded by imbalance and enhances feature separation, offering both conceptual insights and practical guidance. Major theoretical findings are validated through numerical experiments.",
-      "authors": [
-        "Haixu Liao",
-        "Yating Zhou",
-        "Songyang Zhang",
-        "Meng Wang",
-        "Shuai Zhang"
-      ],
-      "primary_category": "cs.LG",
-      "categories": [
-        "cs.LG"
-      ],
-      "published": "2026-02-10T23:06:12+00:00",
-      "link": "https://arxiv.org/pdf/2602.10357v1",
-      "tags": [
-        "keyword:生成对比学习",
-        "query:生成对比学习"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "theoretical analysis of contrastive learning under imbalanced data",
-      "llm_evidence_cn": "不平衡数据下对比学习的理论分析",
-      "llm_evidence": "不平衡数据下对比学习的理论分析",
-      "canonical_evidence": "不平衡数据下对比学习的理论分析",
-      "llm_tldr_en": "Theoretically analyzes contrastive learning dynamics and proposes pruning for imbalanced data.",
-      "llm_tldr_cn": "理论分析对比学习动态并提出针对不平衡数据的剪枝方法。",
-      "llm_tldr": "理论分析对比学习动态并提出针对不平衡数据的剪枝方法。",
-      "llm_tags": [
-        "query:q8"
-      ],
-      "matched_query_tag": "query:q8",
-      "matched_query_text": "Improving sample efficiency in contrastive representation learning",
-      "matched_requirement_id": "req-8",
-      "selection_source": "carryover_cache",
-      "paper_id": "2602.10357v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2602.12317v1",
-      "title": "Free Lunch in Medical Image Foundation Model Pre-training via Randomized Synthesis and Disentanglement",
-      "abstract": "Medical image foundation models (MIFMs) have demonstrated remarkable potential for a wide range of clinical tasks, yet their development is constrained by the scarcity, heterogeneity, and high cost of large-scale annotated datasets. Here, we propose RaSD (Randomized Synthesis and Disentanglement), a scalable framework for pre-training MIFMs entirely on synthetic data. By modeling anatomical structures and appearance variations with randomized Gaussian distributions, RaSD exposes models to sufficient multi-scale structural and appearance perturbations, forcing them to rely on invariant and task-relevant anatomical cues rather than dataset-specific textures, thereby enabling robust and transferable representation learning. We pre-trained RaSD on 1.2 million 3D volumes and 9.6 million 2D images, and extensively evaluated the resulting models across 6 imaging modalities, 48 datasets, and 56 downstream tasks. Across all evaluated downstream tasks, RaSD consistently outperforms training-from-scratch models, achieves the best performance on 17 tasks, and remains comparable to models pre-trained on large real datasets in most others. These results demonstrate that the capacity of synthetic data alone to drive robust representation learning. Our findings establish a paradigm shift in medical AI, demonstrating that synthetic data can serve as a \"free lunch\" for scalable, privacy-preserving, and clinically generalizable foundation models.",
-      "authors": [
-        "Yuhan Wei",
-        "Yuting He",
-        "Linshan Wu",
-        "Fuxiang Huang",
-        "Junlin Hou",
-        "Hao Chen"
-      ],
-      "primary_category": "q-bio.QM",
-      "categories": [
-        "q-bio.QM",
-        "cs.AI",
-        "cs.LG"
-      ],
-      "published": "2026-02-12T18:09:22+00:00",
-      "link": "https://arxiv.org/pdf/2602.12317v1",
-      "tags": [
-        "keyword:生成对比学习",
-        "query:生成对比学习"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "medical image foundation model pretraining with synthetic data augmentation and representation learning",
-      "llm_evidence_cn": "医学图像基础模型预训练与合成数据增强及表示学习",
-      "llm_evidence": "医学图像基础模型预训练与合成数据增强及表示学习",
-      "canonical_evidence": "医学图像基础模型预训练与合成数据增强及表示学习",
-      "llm_tldr_en": "Proposes RaSD for pretraining medical image foundation models entirely on synthetic data with disentanglement.",
-      "llm_tldr_cn": "提出RaSD框架，完全基于合成数据预训练医学图像基础模型。",
-      "llm_tldr": "提出RaSD框架，完全基于合成数据预训练医学图像基础模型。",
-      "llm_tags": [
-        "query:profile-1:composite"
-      ],
-      "matched_query_tag": "query:profile-1:composite",
-      "matched_query_text": "Papers central to 衔接生成式学习与对比学习方法, especially work that connects or combines: Joint-Embedding; deep representation learning techniques; self-supervised pretraining frameworks; contrastive learning representation learning; medical image analysis radiology pathology; augmentation strategies for contrastive learning; Bridging generative and contrastive learning methods; Improving sample efficiency in contrastive representation learning; Novel contrastive loss functions and objective designs; how does contrastive learning improve medical image classification with limited annotations.",
-      "matched_requirement_id": "req-composite-profile-1",
-      "selection_source": "carryover_cache",
-      "paper_id": "2602.12317v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2602.09507v1",
-      "title": "Towards Uniformity and Alignment for Multimodal Representation Learning",
-      "abstract": "Multimodal representation learning aims to construct a shared embedding space in which heterogeneous modalities are semantically aligned. Despite strong empirical results, InfoNCE-based objectives introduce inherent conflicts that yield distribution gaps across modalities. In this work, we identify two conflicts in the multimodal regime, both exacerbated as the number of modalities increases: (i) an alignment-uniformity conflict, whereby the repulsion of uniformity undermines pairwise alignment, and (ii) an intra-alignment conflict, where aligning multiple modalities induces competing alignment directions. To address these issues, we propose a principled decoupling of alignment and uniformity for multimodal representations, providing a conflict-free recipe for multimodal learning that simultaneously supports discriminative and generative use cases without task-specific modules. We then provide a theoretical guarantee that our method acts as an efficient proxy for a global Hölder divergence over multiple modality distributions, and thus reduces the distribution gap among modalities. Extensive experiments on retrieval and UnCLIP-style generation demonstrate consistent gains.",
-      "authors": [
-        "Wenzhe Yin",
-        "Pan Zhou",
-        "Zehao Xiao",
-        "Jie Liu",
-        "Shujian Yu",
-        "Jan-Jakob Sonke",
-        "Efstratios Gavves"
-      ],
-      "primary_category": "cs.LG",
-      "categories": [
-        "cs.LG"
-      ],
-      "published": "2026-02-10T08:08:07+00:00",
-      "link": "https://arxiv.org/pdf/2602.09507v1",
-      "tags": [
-        "keyword:生成对比学习",
-        "query:生成对比学习"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "novel contrastive loss design, decoupling alignment and uniformity objectives",
-      "llm_evidence_cn": "新型对比损失设计，解耦对齐与均匀性目标",
-      "llm_evidence": "新型对比损失设计，解耦对齐与均匀性目标",
-      "canonical_evidence": "新型对比损失设计，解耦对齐与均匀性目标",
-      "llm_tldr_en": "Identifies conflicts in InfoNCE-based multimodal learning and proposes decoupled alignment-uniformity objectives.",
-      "llm_tldr_cn": "发现InfoNCE多模态学习中的冲突，提出解耦的对齐-均匀性目标。",
-      "llm_tldr": "发现InfoNCE多模态学习中的冲突，提出解耦的对齐-均匀性目标。",
-      "llm_tags": [
-        "query:q9"
-      ],
-      "matched_query_tag": "query:q9",
-      "matched_query_text": "Novel contrastive loss functions and objective designs",
-      "matched_requirement_id": "req-9",
-      "selection_source": "carryover_cache",
-      "paper_id": "2602.09507v1",
-      "carry_days": 1
-    },
     {
       "id": "2603.12514v1",
       "title": "Addressing Data Scarcity in 3D Trauma Detection through Self-Supervised and Semi-Supervised Learning with Vertex Relative Position Encoding",
@@ -485,44 +363,6 @@
       "carry_days": 1
     },
     {
-      "id": "2602.09506v2",
-      "title": "Equilibrium contrastive learning for imbalanced image classification",
-      "abstract": "Contrastive learning (CL) is a predominant technique in image classification, but they showed limited performance with an imbalanced dataset. Recently, several supervised CL methods have been proposed to promote an ideal regular simplex geometric configuration in the representation space-characterized by intra-class feature collapse and uniform inter-class mean spacing, especially for imbalanced datasets. In particular, existing prototype-based methods include class prototypes, as additional samples to consider all classes. However, the existing CL methods suffer from two limitations. First, they do not consider the alignment between the class means/prototypes and classifiers, which could lead to poor generalization. Second, existing prototype-based methods treat prototypes as only one additional sample per class, making their influence depend on the number of class instances in a batch and causing unbalanced contributions across classes. To address these limitations, we propose Equilibrium Contrastive Learning (ECL), a supervised CL framework designed to promote geometric equilibrium, where class features, means, and classifiers are harmoniously balanced under data imbalance. The proposed ECL framework uses two main components. First, ECL promotes the representation geometric equilibrium (i.e., a regular simplex geometry characterized by collapsed class samples and uniformly distributed class means), while balancing the contributions of class-average features and class prototypes. Second, ECL establishes a classifier-class center geometric equilibrium by aligning classifier weights and class prototypes. We ran experiments with three long-tailed datasets, the CIFAR-10(0)-LT, ImageNet-LT, and the two imbalanced medical datasets, the ISIC 2019 and our constructed LCCT dataset. Results show that ECL outperforms existing SOTA supervised CL methods designed for imbalanced classification.",
-      "authors": [
-        "Sumin Roh",
-        "Harim Kim",
-        "Ho Yun Lee",
-        "Il Yong Chun"
-      ],
-      "primary_category": "cs.CV",
-      "categories": [
-        "cs.CV"
-      ],
-      "published": "2026-02-10T08:07:56+00:00",
-      "link": "https://arxiv.org/pdf/2602.09506v2",
-      "tags": [
-        "keyword:生成对比学习",
-        "query:生成对比学习"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "novel equilibrium contrastive learning with geometric configuration objective",
-      "llm_evidence_cn": "新型均衡对比学习，引入几何构型目标函数",
-      "llm_evidence": "新型均衡对比学习，引入几何构型目标函数",
-      "canonical_evidence": "新型均衡对比学习，引入几何构型目标函数",
-      "llm_tldr_en": "Proposes equilibrium CL with prototype alignment for imbalanced classification",
-      "llm_tldr_cn": "提出针对不平衡分类的均衡对比学习与原型对齐方法",
-      "llm_tldr": "提出针对不平衡分类的均衡对比学习与原型对齐方法",
-      "llm_tags": [
-        "query:q9"
-      ],
-      "matched_query_tag": "query:q9",
-      "matched_query_text": "Novel contrastive loss functions and objective designs",
-      "matched_requirement_id": "req-9",
-      "selection_source": "carryover_cache",
-      "paper_id": "2602.09506v2",
-      "carry_days": 1
-    },
-    {
       "id": "2602.14983v1",
       "title": "Orthogonalized Multimodal Contrastive Learning with Asymmetric Masking for Structured Representations",
       "abstract": "Multimodal learning seeks to integrate information from heterogeneous sources, where signals may be shared across modalities, specific to individual modalities, or emerge only through their interaction. While self-supervised multimodal contrastive learning has achieved remarkable progress, most existing methods predominantly capture redundant cross-modal signals, often neglecting modality-specific (unique) and interaction-driven (synergistic) information. Recent extensions broaden this perspective, yet they either fail to explicitly model synergistic interactions or learn different information components in an entangled manner, leading to incomplete representations and potential information leakage. We introduce \\textbf{COrAL}, a principled framework that explicitly and simultaneously preserves redundant, unique, and synergistic information within multimodal representations. COrAL employs a dual-path architecture with orthogonality constraints to disentangle shared and modality-specific features, ensuring a clean separation of information components. To promote synergy modeling, we introduce asymmetric masking with complementary view-specific patterns, compelling the model to infer cross-modal dependencies rather than rely solely on redundant cues. Extensive experiments on synthetic benchmarks and diverse MultiBench datasets demonstrate that COrAL consistently matches or outperforms state-of-the-art methods while exhibiting low performance variance across runs. These results indicate that explicitly modeling the full spectrum of multimodal information yields more stable, reliable, and comprehensive embeddings.",
@@ -557,45 +397,6 @@
       "matched_requirement_id": "req-4",
       "selection_source": "carryover_cache",
       "paper_id": "2602.14983v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2602.10745v1",
-      "title": "Spectral-Spatial Contrastive Learning Framework for Regression on Hyperspectral Data",
-      "abstract": "Contrastive learning has demonstrated great success in representation learning, especially for image classification tasks. However, there is still a shortage in studies targeting regression tasks, and more specifically applications on hyperspectral data. In this paper, we propose a spectral-spatial contrastive learning framework for regression tasks for hyperspectral data, in a model-agnostic design allowing to enhance backbones such as 3D convolutional and transformer-based networks. Moreover, we provide a collection of transformations relevant for augmenting hyperspectral data. Experiments on synthetic and real datasets show that the proposed framework and transformations significantly improve the performance of all studied backbone models.",
-      "authors": [
-        "Mohamad Dhaini",
-        "Paul Honeine",
-        "Maxime Berar",
-        "Antonin Van Exem"
-      ],
-      "primary_category": "cs.CV",
-      "categories": [
-        "cs.CV",
-        "cs.LG"
-      ],
-      "published": "2026-02-11T11:16:57+00:00",
-      "link": "https://arxiv.org/pdf/2602.10745v1",
-      "tags": [
-        "keyword:生成对比学习",
-        "query:生成对比学习"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "spectral-spatial contrastive learning with augmentation strategies for hyperspectral data",
-      "llm_evidence_cn": "高光谱数据的光谱-空间对比学习与增强策略",
-      "llm_evidence": "高光谱数据的光谱-空间对比学习与增强策略",
-      "canonical_evidence": "高光谱数据的光谱-空间对比学习与增强策略",
-      "llm_tldr_en": "Contrastive learning framework with tailored augmentations for hyperspectral regression tasks.",
-      "llm_tldr_cn": "针对高光谱回归任务的对比学习框架与定制增强。",
-      "llm_tldr": "针对高光谱回归任务的对比学习框架与定制增强。",
-      "llm_tags": [
-        "query:q6"
-      ],
-      "matched_query_tag": "query:q6",
-      "matched_query_text": "augmentation strategies for contrastive learning",
-      "matched_requirement_id": "req-6",
-      "selection_source": "carryover_cache",
-      "paper_id": "2602.10745v1",
       "carry_days": 1
     },
     {
@@ -680,41 +481,6 @@
       "matched_requirement_id": "req-6",
       "selection_source": "carryover_cache",
       "paper_id": "2602.14032v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.17765v1",
-      "title": "Grounded Multimodal Retrieval-Augmented Drafting of Radiology Impressions Using Case-Based Similarity Search",
-      "abstract": "Automated radiology report generation has gained increasing attention with the rise of deep learning and large language models. However, fully generative approaches often suffer from hallucinations and lack clinical grounding, limiting their reliability in real-world workflows. In this study, we propose a multimodal retrieval-augmented generation (RAG) system for grounded drafting of chest radiograph impressions. The system combines contrastive image-text embeddings, case-based similarity retrieval, and citation-constrained draft generation to ensure factual alignment with historical radiology reports. A curated subset of the MIMIC-CXR dataset was used to construct a multimodal retrieval database. Image embeddings were generated using CLIP encoders, while textual embeddings were derived from structured impression sections. A fusion similarity framework was implemented using FAISS indexing for scalable nearest-neighbor retrieval. Retrieved cases were used to construct grounded prompts for draft impression generation, with safety mechanisms enforcing citation coverage and confidence-based refusal. Experimental results demonstrate that multimodal fusion significantly improves retrieval performance compared to image-only retrieval, achieving Recall@5 above 0.95 on clinically relevant findings. The grounded drafting pipeline produces interpretable outputs with explicit citation traceability, enabling improved trustworthiness compared to conventional generative approaches. This work highlights the potential of retrieval-augmented multimodal systems for reliable clinical decision support and radiology workflow augmentation",
-      "authors": [
-        "Himadri Samanta"
-      ],
-      "primary_category": "q-bio.QM",
-      "categories": [
-        "q-bio.QM"
-      ],
-      "published": "2026-03-18T14:25:50+00:00",
-      "link": "https://arxiv.org/pdf/2603.17765v1",
-      "tags": [
-        "keyword:生成对比学习",
-        "query:生成对比学习"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "Contrastive learning for radiology report generation with limited annotations",
-      "llm_evidence_cn": "对比学习用于有限标注的放射学报告生成",
-      "llm_evidence": "对比学习用于有限标注的放射学报告生成",
-      "canonical_evidence": "对比学习用于有限标注的放射学报告生成",
-      "llm_tldr_en": "Uses contrastive image-text embeddings for grounded radiology impression drafting.",
-      "llm_tldr_cn": "使用对比图像-文本嵌入实现基于事实的放射学印象起草。",
-      "llm_tldr": "使用对比图像-文本嵌入实现基于事实的放射学印象起草。",
-      "llm_tags": [
-        "query:q10"
-      ],
-      "matched_query_tag": "query:q10",
-      "matched_query_text": "how does contrastive learning improve medical image classification with limited annotations",
-      "matched_requirement_id": "req-10",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.17765v1",
       "carry_days": 1
     },
     {
@@ -851,13 +617,13 @@
         "query:对比学习进展"
       ],
       "llm_score": 8.0,
-      "llm_evidence_en": "Unsupervised contrastive learning for 3D shape matching with spectral features",
-      "llm_evidence_cn": "用于3D形状匹配的无监督对比学习与谱特征",
-      "llm_evidence": "用于3D形状匹配的无监督对比学习与谱特征",
-      "canonical_evidence": "用于3D形状匹配的无监督对比学习与谱特征",
-      "llm_tldr_en": "First unsupervised contrastive learning approach for spectral shape matching without functional map solvers.",
-      "llm_tldr_cn": "首个用于谱形状匹配的无监督对比学习方法，无需功能图求解器。",
-      "llm_tldr": "首个用于谱形状匹配的无监督对比学习方法，无需功能图求解器。",
+      "llm_evidence_en": "unsupervised contrastive learning for 3D shape matching, novel CL method",
+      "llm_evidence_cn": "用于三维形状匹配的无监督对比学习新方法",
+      "llm_evidence": "用于三维形状匹配的无监督对比学习新方法",
+      "canonical_evidence": "用于三维形状匹配的无监督对比学习新方法",
+      "llm_tldr_en": "First unsupervised contrastive learning approach for spectral shape matching, directly enhancing feature representations in embedding space.",
+      "llm_tldr_cn": "首个用于谱形状匹配的无监督对比学习方法，直接增强嵌入空间特征表示。",
+      "llm_tldr": "首个用于谱形状匹配的无监督对比学习方法，直接增强嵌入空间特征表示。",
       "llm_tags": [
         "query:q1"
       ],
@@ -1020,90 +786,6 @@
       "carry_days": 1
     },
     {
-      "id": "2603.14837v1",
-      "title": "DamageArbiter: A CLIP-Enhanced Multimodal Arbitration Framework for Hurricane Damage Assessment from Street-View Imagery",
-      "abstract": "Analyzing street-view imagery with computer vision models for rapid, hyperlocal damage assessment is becoming popular and valuable in emergency response and recovery, but traditional models often act like black boxes, lacking interpretability and reliability. This study proposes a multimodal disagreement-driven Arbitration framework powered by Contrastive Language-Image Pre-training (CLIP) models, DamageArbiter, to improve the accuracy, interpretability, and robustness of damage estimation from street-view imagery. DamageArbiter leverages the complementary strengths of unimodal and multimodal models, employing a lightweight logistic regression meta-classifier to arbitrate cases of disagreement. Using 2,556 post-disaster street-view images, paired with both manually generated and large language model (LLM)-generated text descriptions, we systematically compared the performance of unimodal models (including image-only and text-only models), multimodal CLIP-based models, and DamageArbiter. Notably, DamageArbiter improved the accuracy from 74.33% (ViT-B/32, image-only) to 82.79%, surpassing the 80% accuracy threshold and achieving an absolute improvement of 8.46% compared to the strongest baseline model. Beyond improvements in overall accuracy, compared to visual models relying solely on images, DamageArbiter, through arbitration of discrepancies between unimodal and multimodal predictions, mitigates common overconfidence errors in visual models, especially in situations where disaster visual cues are ambiguous or subject to interference, reducing overconfidence but incorrect predictions. We further mapped and analyzed geo-referenced predictions and misclassifications to compare model performance across locations. Overall, this work advances street-view-based disaster assessment from coarse severity classification toward a more reliable and interpretable framework.",
-      "authors": [
-        "Yifan Yang",
-        "Lei Zou",
-        "Wenjing Gong",
-        "Kani Fu",
-        "Zongrong Li",
-        "Siqin Wang",
-        "Bing Zhou",
-        "Heng Cai",
-        "Hao Tian"
-      ],
-      "primary_category": "cs.CV",
-      "categories": [
-        "cs.CV"
-      ],
-      "published": "2026-03-16T05:32:25+00:00",
-      "link": "https://arxiv.org/pdf/2603.14837v1",
-      "tags": [
-        "keyword:对比学习进展"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "CLIP-based multimodal learning for image-text damage assessment",
-      "llm_evidence_cn": "基于CLIP的多模态图像-文本学习用于灾害评估",
-      "llm_evidence": "基于CLIP的多模态图像-文本学习用于灾害评估",
-      "canonical_evidence": "基于CLIP的多模态图像-文本学习用于灾害评估",
-      "llm_tldr_en": "Proposes DamageArbiter, a CLIP-enhanced multimodal arbitration framework combining vision and language for hurricane damage assessment.",
-      "llm_tldr_cn": "提出DamageArbiter框架，利用CLIP增强的多模态仲裁结合视觉和语言进行飓风灾害评估。",
-      "llm_tldr": "提出DamageArbiter框架，利用CLIP增强的多模态仲裁结合视觉和语言进行飓风灾害评估。",
-      "llm_tags": [
-        "query:q4"
-      ],
-      "matched_query_tag": "query:q4",
-      "matched_query_text": "multimodal contrastive learning image text audio",
-      "matched_requirement_id": "req-4",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.14837v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.01125v1",
-      "title": "Predictive Reasoning with Augmented Anomaly Contrastive Learning for Compositional Visual Relations",
-      "abstract": "While visual reasoning for simple analogies has received significant attention, compositional visual relations (CVR) remain relatively unexplored due to their greater complexity. To solve CVR tasks, we propose Predictive Reasoning with Augmented Anomaly Contrastive Learning (PR-A$^2$CL), \\ie, to identify an outlier image given three other images that follow the same compositional rules. To address the challenge of modelling abundant compositional rules, an Augmented Anomaly Contrastive Learning is designed to distil discriminative and generalizable features by maximizing similarity among normal instances while minimizing similarity between normal and anomalous outliers. More importantly, a predict-and-verify paradigm is introduced for rule-based reasoning, in which a series of Predictive Anomaly Reasoning Blocks (PARBs) iteratively leverage features from three out of the four images to predict those of the remaining one. Throughout the subsequent verification stage, the PARBs progressively pinpoint the specific discrepancies attributable to the underlying rules. Experimental results on SVRT, CVR and MC$^2$R datasets show that PR-A$^2$CL significantly outperforms state-of-the-art reasoning models.",
-      "authors": [
-        "Chengtai Li",
-        "Yuting He",
-        "Jianfeng Ren",
-        "Ruibin Bai",
-        "Yitian Zhao",
-        "Heng Yu",
-        "Xudong Jiang"
-      ],
-      "primary_category": "cs.CV",
-      "categories": [
-        "cs.CV",
-        "cs.AI"
-      ],
-      "published": "2026-03-01T14:17:44+00:00",
-      "link": "https://arxiv.org/pdf/2603.01125v1",
-      "tags": [
-        "keyword:对比学习进展",
-        "query:对比学习进展"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "novel contrastive learning method with augmented anomaly detection",
-      "llm_evidence_cn": "新颖的对比学习方法，结合增强异常检测",
-      "llm_evidence": "新颖的对比学习方法，结合增强异常检测",
-      "canonical_evidence": "新颖的对比学习方法，结合增强异常检测",
-      "llm_tldr_en": "Introduces PR-A2CL, an augmented anomaly contrastive learning method for compositional visual relations with predictive reasoning.",
-      "llm_tldr_cn": "提出PR-A2CL方法，通过增强异常对比学习解决组合视觉关系推理任务。",
-      "llm_tldr": "提出PR-A2CL方法，通过增强异常对比学习解决组合视觉关系推理任务。",
-      "llm_tags": [
-        "query:q1"
-      ],
-      "matched_query_tag": "query:q1",
-      "matched_query_text": "contrastive learning recent advances and new methods",
-      "matched_requirement_id": "req-1",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.01125v1",
-      "carry_days": 1
-    },
-    {
       "id": "2602.18923v1",
       "title": "Variational views for self-supervised learning in radio astronomy",
       "abstract": "Modern astronomical surveys are producing progressively larger and more complex datasets, making traditional supervised approaches that rely on extensive labelled catalogues increasingly difficult. Consequently, pre-training using self-supervised learning (SSL), which offers a scalable route by extracting structure directly from unlabelled images, is becoming attractive for many downstream applications. In this work we consider the use of coupled self-supervised representation learning approaches for radio galaxy morphology pre-training. In order to account for the more nuanced variations in radio galaxy morphology than are typically included in the augmented views of view-based SSL algorithms, we use a pre-trained Variational Autoencoder (VAE) to generate views for training a larger view-based self-supervised model. To do this, a $β$-VAE was trained on the Radio Galaxy Zoo (RGZ) dataset, where moderate regularization ($β= 2.3$) was found to provide a good balance between reconstruction quality and disentanglement of generative factors such as source multiplicity and lobe asymmetry. An analysis of the $β$-VAE reveals that Fanaroff-Riley class identity manifests as a continuous transition across the latent space, rather than being associated to a single discrete dimension. $β$-VAE reconstructions were then incorporated as generative augmentations within a view-based SSL pipeline. Our experiments show that combining these generative views with standard image augmentations improves downstream classification performance, and we present ablation studies clarifying the relative contribution of each augmentation type. These results indicate that generative and contrastive approaches are complementary, and point toward disentanglement-aware self-supervised learning as a promising direction for future radio astronomy surveys.",
@@ -1256,45 +938,6 @@
       "carry_days": 1
     },
     {
-      "id": "2603.16338v1",
-      "title": "SpikeCLR: Contrastive Self-Supervised Learning for Few-Shot Event-Based Vision using Spiking Neural Networks",
-      "abstract": "Event-based vision sensors provide significant advantages for high-speed perception, including microsecond temporal resolution, high dynamic range, and low power consumption. When combined with Spiking Neural Networks (SNNs), they can be deployed on neuromorphic hardware, enabling energy-efficient applications on embedded systems. However, this potential is severely limited by the scarcity of large-scale labeled datasets required to effectively train such models. In this work, we introduce SpikeCLR, a contrastive self-supervised learning framework that enables SNNs to learn robust visual representations from unlabeled event data. We adapt prior frame-based methods to the spiking domain using surrogate gradient training and introduce a suite of event-specific augmentations that leverage spatial, temporal, and polarity transformations. Through extensive experiments on CIFAR10-DVS, N-Caltech101, N-MNIST, and DVS-Gesture benchmarks, we demonstrate that self-supervised pretraining with subsequent fine-tuning outperforms supervised learning in low-data regimes, achieving consistent gains in few-shot and semi-supervised settings. Our ablation studies reveal that combining spatial and temporal augmentations is critical for learning effective spatio-temporal invariances in event data. We further show that learned representations transfer across datasets, contributing to efforts for powerful event-based models in label-scarce settings.",
-      "authors": [
-        "Maxime Vaillant",
-        "Axel Carlier",
-        "Lai Xing Ng",
-        "Christophe Hurter",
-        "Benoit R. Cottereau"
-      ],
-      "primary_category": "cs.CV",
-      "categories": [
-        "cs.CV"
-      ],
-      "published": "2026-03-17T10:11:34+00:00",
-      "link": "https://arxiv.org/pdf/2603.16338v1",
-      "tags": [
-        "keyword:对比学习进展",
-        "query:对比学习进展"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "contrastive self-supervised learning for event-based vision with spiking neural networks",
-      "llm_evidence_cn": "基于脉冲神经网络的对比自监督学习用于事件视觉",
-      "llm_evidence": "基于脉冲神经网络的对比自监督学习用于事件视觉",
-      "canonical_evidence": "基于脉冲神经网络的对比自监督学习用于事件视觉",
-      "llm_tldr_en": "SpikeCLR enables SNNs to learn robust representations via contrastive SSL from unlabeled event data.",
-      "llm_tldr_cn": "SpikeCLR使脉冲神经网络能通过对比自监督学习从无标注事件数据学习鲁棒表征。",
-      "llm_tldr": "SpikeCLR使脉冲神经网络能通过对比自监督学习从无标注事件数据学习鲁棒表征。",
-      "llm_tags": [
-        "query:q2"
-      ],
-      "matched_query_tag": "query:q2",
-      "matched_query_text": "self-supervised representation learning with contrastive objectives",
-      "matched_requirement_id": "req-2",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.16338v1",
-      "carry_days": 1
-    },
-    {
       "id": "2602.23589v2",
       "title": "Pseudo Contrastive Learning for Diagram Comprehension in Multimodal Models",
       "abstract": "Recent multimodal models such as Contrastive Language-Image Pre-training (CLIP) have shown remarkable ability to align visual and linguistic representations. However, domains where small visual differences carry large semantic significance, such as diagram understanding, remain challenging due to the models' limited sensitivity to fine-grained structural variations.   We propose a new training paradigm designed to enhance diagram comprehension in vision-language models. Our approach introduces pseudo contrastive samples generated by a diagram renderer that creates synthetic diagrams using randomly picked text elements. These samples highlight structural differences in diagrammatic imagery without requiring any modification or editing of the original data. By incorporating these pseudo contrastive samples into the training objective, the model learns to capture more precise and semantically consistent diagram structures.   Empirical evaluations on a benchmark dataset of flowcharts demonstrate substantial improvements over standard CLIP and hard-negative CLIP training in both image-text matching and visual question answering tasks. The results underscore the value of domain-specific training strategies and contribute to advancing diagrammatic understanding within the broader context of vision-language learning.",
@@ -1328,48 +971,6 @@
       "matched_requirement_id": "req-4",
       "selection_source": "carryover_cache",
       "paper_id": "2602.23589v2",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.12606v1",
-      "title": "Mastering Negation: Boosting Grounding Models via Grouped Opposition-Based Learning",
-      "abstract": "Current vision-language detection and grounding models predominantly focus on prompts with positive semantics and often struggle to accurately interpret and ground complex expressions containing negative semantics. A key reason for this limitation is the lack of high-quality training data that explicitly captures discriminative negative samples and negation-aware language descriptions.   To address this challenge, we introduce D-Negation, a new dataset that provides objects annotated with both positive and negative semantic descriptions. Building upon the observation that negation reasoning frequently appears in natural language, we further propose a grouped opposition-based learning framework that learns negation-aware representations from limited samples. Specifically, our method organizes opposing semantic descriptions from D-Negation into structured groups and formulates two complementary loss functions that encourage the model to reason about negation and semantic qualifiers.   We integrate the proposed dataset and learning strategy into a state-of-the-art language-based grounding model. By fine-tuning fewer than 10 percent of the model parameters, our approach achieves improvements of up to 4.4 mAP and 5.7 mAP on positive and negative semantic evaluations, respectively. These results demonstrate that explicitly modeling negation semantics can substantially enhance the robustness and localization accuracy of vision-language grounding models.",
-      "authors": [
-        "Zesheng Yang",
-        "Xi Jiang",
-        "Bingzhang Hu",
-        "Weili Guan",
-        "Runmin Cong",
-        "Guo-Jun Qi",
-        "Feng Zheng"
-      ],
-      "primary_category": "cs.CV",
-      "categories": [
-        "cs.CV",
-        "cs.AI"
-      ],
-      "published": "2026-03-13T03:21:48+00:00",
-      "link": "https://arxiv.org/pdf/2603.12606v1",
-      "tags": [
-        "keyword:对比学习进展",
-        "query:对比学习进展"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "explicitly addresses negative sample mining through grouped opposition-based learning and D-Negation dataset with discriminative negative samples",
-      "llm_evidence_cn": "通过分组对抗学习和D-Negation数据集显式解决负样本挖掘，包含判别性负样本",
-      "llm_evidence": "通过分组对抗学习和D-Negation数据集显式解决负样本挖掘，包含判别性负样本",
-      "canonical_evidence": "通过分组对抗学习和D-Negation数据集显式解决负样本挖掘，包含判别性负样本",
-      "llm_tldr_en": "Proposes opposition-based learning framework and dataset to improve vision-language models' handling of negation through explicit negative sample training.",
-      "llm_tldr_cn": "提出对抗学习框架和数据集，通过显式负样本训练提升视觉语言模型对否定的处理能力。",
-      "llm_tldr": "提出对抗学习框架和数据集，通过显式负样本训练提升视觉语言模型对否定的处理能力。",
-      "llm_tags": [
-        "query:q3"
-      ],
-      "matched_query_tag": "query:q3",
-      "matched_query_text": "hard negative sampling techniques in contrastive learning",
-      "matched_requirement_id": "req-3",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.12606v1",
       "carry_days": 1
     },
     {
@@ -1531,6 +1132,85 @@
       "matched_requirement_id": "req-4",
       "selection_source": "carryover_cache",
       "paper_id": "2603.08224v1",
+      "carry_days": 1
+    },
+    {
+      "id": "2603.13994v1",
+      "title": "Human-like Object Grouping in Self-supervised Vision Transformers",
+      "abstract": "Vision foundation models trained with self-supervised objectives achieve strong performance across diverse tasks and exhibit emergent object segmentation properties. However, their alignment with human object perception remains poorly understood. Here, we introduce a behavioral benchmark in which participants make same/different object judgments for dot pairs on naturalistic scenes, scaling up a classical psychophysics paradigm to over 1000 trials. We test a diverse set of vision models using a simple readout from their representations to predict subjects' reaction times. We observe a steady improvement across model generations, with both architecture and training objective contributing to alignment, and transformer-based models trained with the DINO self-supervised objective showing the strongest performance. To investigate the source of this improvement, we propose a novel metric to quantify the object-centric component of representations by measuring patch similarity within and between objects. Across models, stronger object-centric structure predicts human segmentation behavior more accurately. We further show that matching the Gram matrix of supervised transformer models, capturing similarity structure across image patches, with that of a self-supervised model through distillation improves their alignment with human behavior, converging with the prior finding that Gram anchoring improves DINOv3's feature quality. Together, these results demonstrate that self-supervised vision models capture object structure in a behaviorally human-like manner, and that Gram matrix structure plays a role in driving perceptual alignment.",
+      "authors": [
+        "Hossein Adeli",
+        "Seoyoung Ahn",
+        "Andrew Luo",
+        "Mengmi Zhang",
+        "Nikolaus Kriegeskorte",
+        "Gregory Zelinsky"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI",
+        "q-bio.NC"
+      ],
+      "published": "2026-03-14T15:43:10+00:00",
+      "link": "https://arxiv.org/pdf/2603.13994v1",
+      "tags": [
+        "keyword:对比学习进展",
+        "query:对比学习进展"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "self-supervised vision transformers with DINO objective for visual pretraining",
+      "llm_evidence_cn": "自监督视觉Transformer，使用DINO目标进行视觉预训练",
+      "llm_evidence": "自监督视觉Transformer，使用DINO目标进行视觉预训练",
+      "canonical_evidence": "自监督视觉Transformer，使用DINO目标进行视觉预训练",
+      "llm_tldr_en": "Evaluates self-supervised vision transformers against human perception benchmarks, showing DINO-trained models align increasingly with human object grouping.",
+      "llm_tldr_cn": "评估自监督视觉Transformer与人类感知基准的对齐，显示DINO训练模型与人类物体分组越来越一致。",
+      "llm_tldr": "评估自监督视觉Transformer与人类感知基准的对齐，显示DINO训练模型与人类物体分组越来越一致。",
+      "llm_tags": [
+        "query:q7"
+      ],
+      "matched_query_tag": "query:q7",
+      "matched_query_text": "latest breakthrough methods in self supervised visual pretraining",
+      "matched_requirement_id": "req-7",
+      "selection_source": "carryover_cache",
+      "paper_id": "2603.13994v1",
+      "carry_days": 1
+    },
+    {
+      "id": "2603.17248v1",
+      "title": "Pathology-Aware Multi-View Contrastive Learning for Patient-Independent ECG Reconstruction",
+      "abstract": "Reconstructing a 12-lead electrocardiogram (ECG) from a reduced lead set is an ill-posed inverse problem due to anatomical variability. Standard deep learning methods often ignore underlying cardiac pathology losing vital morphology in precordial leads. We propose Pathology-Aware Multi-View Contrastive Learning, a framework that regularizes the latent space through a pathological manifold. Our architecture integrates high-fidelity time-domain waveforms with pathology-aware embeddings learned via supervised contrastive alignment. By maximizing mutual information between latent representations and clinical labels, the framework learns to filter anatomical \"nuisance\" variables. On the PTB-XL dataset, our method achieves approx. 76\\% reduction in RMSE compared to state-of-the-art model in patient-independent setting. Cross-dataset evaluation on the PTB Diagnostic Database confirms superior generalization, bridging the gap between hardware portability and diagnostic-grade reconstruction.",
+      "authors": [
+        "Youssef Youssef",
+        "Jitin Singla"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-03-18T01:06:30+00:00",
+      "link": "https://arxiv.org/pdf/2603.17248v1",
+      "tags": [
+        "keyword:对比学习进展",
+        "query:对比学习进展"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "applies multi-view contrastive learning to ECG reconstruction beyond computer vision, with pathology-aware supervised contrastive alignment",
+      "llm_evidence_cn": "将多视角对比学习应用于计算机视觉之外的ECG重建，采用病理感知的监督对比对齐",
+      "llm_evidence": "将多视角对比学习应用于计算机视觉之外的ECG重建，采用病理感知的监督对比对齐",
+      "canonical_evidence": "将多视角对比学习应用于计算机视觉之外的ECG重建，采用病理感知的监督对比对齐",
+      "llm_tldr_en": "Pathology-aware contrastive learning reconstructs ECG signals using multi-view alignment beyond vision.",
+      "llm_tldr_cn": "病理感知对比学习利用多视角对齐重建心电信号，超越视觉领域。",
+      "llm_tldr": "病理感知对比学习利用多视角对齐重建心电信号，超越视觉领域。",
+      "llm_tags": [
+        "query:q8"
+      ],
+      "matched_query_tag": "query:q8",
+      "matched_query_text": "contrastive learning applications beyond computer vision",
+      "matched_requirement_id": "req-8",
+      "selection_source": "carryover_cache",
+      "paper_id": "2603.17248v1",
       "carry_days": 1
     }
   ]

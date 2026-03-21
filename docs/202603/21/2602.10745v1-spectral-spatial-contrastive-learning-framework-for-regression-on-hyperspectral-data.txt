@@ -1,0 +1,140 @@
+Title: Spectral-Spatial Contrastive Learning Framework for Regression on Hyperspectral Data
+
+URL Source: https://arxiv.org/pdf/2602.10745v1
+
+Published Time: Thu, 12 Feb 2026 01:49:11 GMT
+
+Number of Pages: 5
+
+Markdown Content:
+## SPECTRAL-SPATIAL CONTRASTIVE LEARNING FRAMEWORK FOR REGRESSION ON HYPERSPECTRAL DATA 
+
+## Mohamad Dhaini 1,2 * , Paul Honeine 1, Maxime Berar 1, Antonin Van Exem 2 
+
+> 1
+
+## Univ Rouen Normandie, INSA Rouen Normandie, Universit´ e Le Havre Normandie, Normandie Univ, LITIS UR 4108, F-76000 Rouen, France  
+
+> 2
+
+## Tellux, 76150 Maromme, France 
+
+ABSTRACT 
+
+Contrastive learning has demonstrated great success in rep-resentation learning, especially for image classification tasks. However, there is still a shortage in studies targeting re-gression tasks, and more specifically applications on hy-perspectral data. In this paper, we propose a spectral-spatial contrastive learning framework for regression tasks for hyper-spectral data, in a model-agnostic design allowing to enhance backbones such as 3D convolutional and transformer-based networks. Moreover, we provide a collection of transforma-tions relevant for augmenting hyperspectral data. Experi-ments on synthetic and real datasets show that the proposed framework and transformations significantly improve the performance of all studied backbone models. 
+
+Index Terms — Contrastive Learning, Hyperspectral Data, Regression, Spectral-spatial Data Augmentation 
+
+1. INTRODUCTION 
+
+Hyperspectral imagery offers valuable insights into the phys-ical properties of an object or area without the need for phys-ical contact. Hyperspectral sensors capture a broad range of information within the light spectrum, often spanning hun-dreds of contiguous bands across a wavelength range of ap-proximately 500 nm to 2500 nm. This capability allows each material to possess its own distinct spectral signature. This type of data has been gaining significant attention from the signal processing and machine learning community, mainly for classification [1] and unmixing [2] tasks. Recently, due to the limitation of supervised learning techniques to labeled data, self-supervised learning methods have been gaining popularity to learn general representations from unlabeled data. In this context, contrastive learning is a self-supervised approach that provides such a relevant representation. For this purpose, the latent space representa-tion is learned through a contrastive loss, by maximizing the agreement between differently augmented views of the same sample [3, 4]. 
+
+> * Corresponding Author This work is funded by Tellux Company and LITIS UR 4108 lab.
+
+In our related work [5], spectral contrastive learning for hyperspectral data has demonstrated its efficiency, providing robustness to the neural network to several kinds of spec-tral variabilities and yielding robust and reliable results across real and synthetic applications. However, in real-world sce-narios, hyperspectral data is not limited to just spectral vari-abilities; it also contains critical spatial information. The spa-tial aspect of the data represents the structure and relationship of features within a given space, offering a rich context that spectral data alone might overlook [6]. Incorporating spatial information could lead to significant advancements, such as better generalization scores by leveraging the spatial relation-ships and patterns within the data, enhanced noise reduction capabilities through the identification of spatial outliers, and a deeper understanding of the contextual interactions between different features. This paves the way to the idea of investi-gating the potential of spatial contrastive learning. In this paper, we capitalize on the strengths of both spectrally and spatially methods, by exploring the fusion of spectral-spatial contrastive learning. We also consider the more difficult regression tasks. Therefore, the main contribu-tions can be seen as following: 1. We revisit some spatial augmentation techniques, often used in computer vision, to fit into hyperspectral data. Moreover, we make use of the spectral transformations to create a spectral-spatial toolbox. 2. We propose a framework suitable for spectral-spatial contrastive learning on hyperspectral data with the use of 3D-based backbone architectures, including 3D CNN and transformer-based architectures. 3. We show the relevance of our framework in enhancing 5 recent hyperspectral methods in synthetic and real-world scenarios, including unmixing and prediction of pollution concentration in soil data. The rest of the paper is organized as follows. Section 2 high-lights some of the related work on contrastive learning with hyperspectral data. In Section 3, we present the core ideas be-hind our proposed method. The experimental studies with the obtained results are presented in Section 4. The contributions and future steps are summarized in Section 5. 
+
+> arXiv:2602.10745v1 [cs.CV] 11 Feb 2026
+
+2. RELATED WORK 
+
+Recently, there have been some studies investigating the use of contrastive learning on hyperspectral data. However, the majority of these studies were targeting classification tasks. In [7] a contrastive learning network is introduced based on a nearest neighbor augmentation scheme, by extracting similar-ities from nearest neighbor samples to learn enhanced seman-tic relationships. Three data augmentation strategies were in-troduced to enhance the representation of features extracted by contrastive learning: Band erasure, gradient mask and ran-dom occlusion. In the same context, [8] introduced a spectral-spatial contrastive clustering network, with a set of spectral-spatial augmentation techniques that includes random crop-ping, resizing, rotation, flipping, and blurring for the spatial domain, as well as band permutation and band erasure for the spectral domain. Similarly, we proposed in our paper [5] a self-supervised contrastive learning method designed for regression on hyperspectral imagery, featuring custom aug-mentations (e.g., atmospheric simulation) and a modified con-trastive loss employing radius-based pairing. The framework achieved notable performance gains in tasks such as hyper-spectral unmixing and pollution concentration prediction [9]. Parallel to these contrastive learning works, there were several studies focusing on spectral-spatial processing through the use of 3D-CNN architectures. A 3D-CNN for classifica-tion was introduced in [10], including two 3D convolutional layers. Moreover, [11] proposed a 3D architecture com-posed of one 3D-CNN layer followed by 2D-CNN ones. The 3D-CNN layer is adequate for extracting spectral-spatial features, since it processes the data in three dimensions. Fol-lowing this, the 2D-CNN layers focus on further extracting and refining spatial features from the spectrally processed data. A sophisticated 3D-CNN model was introduced in [12]. It begins with a 3D convolutional layer employing a kernel to capture spatial and spectral features, followed by a pooling layer that reduces the spectral dimension. The model then replicates this structure with increased neurons for deeper feature extraction. Subsequent layers progressively reduce the spatial dimensionality, enhancing feature abstraction. The architecture proposed in [13] leverages two parallel streams to separately process spectral and spatial information. The spectral stream employs 3D convolutions tailored to capture joint spectral–spatial correlations, while the spatial stream refines neighborhood structures. A transformer-based design was introduced in [14] by combining 3D convolutions for early spectral–spatial embedding with a vision transformer backbone. The initial convolutional blocks extract local-ized spectral–spatial features, which are then tokenized into patch representations. Multi-head self-attention layers model long-range dependencies across both spectral and spatial di-mensions, while projection layers adapt the transformer out-puts for different tasks, offering improved feature abstraction compared to purely convolutional approaches. 
+
+Fig. 1 . Architecture of the proposed framework. 
+
+3. PROPOSED FRAMEWORK 3.1. Architecture 
+
+Due to the high dimensionality of hyperspectral images, pro-cessing the entire hyperspectral cube directly (all wavelengths for all pixels) is computationally intensive and often imprac-tical. To address these challenges, the hyperspectral cube is often divided into smaller, more manageable segments called patches [10, 15]. This division into patches allows for more efficient processing and helps in capturing both spatial and spectral information within a localized region. By focusing on patches, algorithms can extract spatial features (like tex-ture and shape) and spectral features (like reflectance values at different wavelengths) more effectively and use these features to classify each patch or pixel within the patch. Regarding la-bel assignment of the extracted patch, as we are dealing with regression tasks, the average label of the extracted patch can serve as a robust representation of the material in that patch. For an input hyperspectral image X ∈ Rk×H×W , with H
+
+and W spatial dimensions and k the total number of wave-lengths, a patch P ∈ Rk×S×S is extracted, where S is the patch size. Every input patch is then augmented using a transformation toolbox Φtransf orm containing spectral, spa-tial and spectral-spatial transformations. Both the original patch P and the transformed one, denoted eP, are then passed to a shared feature extractor Φw to get F = [ f 1, f 2, . . . , f N ]⊤
+
+and eF, respectively, with N = S × S in this case. In order to fully capture joint spectral-spatial information, the feature extractor Φw is a 3D neural network backbone, which could be any 3D-CNN architecture, such as in [11, 12, 13], or a transformer-based one as in [14]. These features are passed into a regression network gθ to generate the regression labels 
+
+ˆY = [ˆ y1, ˆy2, . . . , ˆyN ]⊤ ∈ RN ×s for s prediction variables. The network is jointly trained with contrastive and regres-sion losses simultaneously. The architecture of the proposed framework is given in Figure 1. In the following, we describe in detail the contrastive learning, before presenting the spectral and spatial data aug-mentation strategies. 3.2. Contrastive Learning 
+
+After augmenting the input patch P with a different view eP,both are forwarded to the feature extractor Φw, which ex-tracts the corresponding features, F and eF respectively, and then will be later on passed to a regression head gθ . To op-timize the feature extractor, we train the neural network so that patches with different views or close regression labels should share similar features in the latent space, while differ-ent spectra with different labels should be far away. This type of training can be achieved using a self-supervised contrastive loss [3]. In classification, selecting similar data pairs (referred to as positive pairs) can be done in a straightforward way, by taking the transformed version of a sample as well as other samples that belong to the same class, while dealing with the rest as negative ones. In regression, as we do not have class la-bels, we define for the i-th sample a ball Bi of radius r where positive pair j is selected using the ℓ2-norm as following: 
+
+yi − yj ≤ r. (1) This allows us to explore, for regression tasks, any contrastive loss from the literature often proposed for classification tasks. We consider the contrastive loss used in most recent work based on the cross entropy, namely                    
+
+> LContrastive =−1
+> N
+> 2NX
+> i=1
+> X
+> j∈Bi
+> log exp  sim  fi, f j/τ P
+> k̸∈Biexp (sim ( fi, f k)/τ ).
+> (2)
+
+where sim( u, v) = uT v/(∥u∥∥ v∥) is the cosine similarity between two vectors, and τ is a temperature scalar. By mini-mizing this loss, the similarity between i-th and j-th samples is maximized while minimizing the similarity between i-th and k-th samples. For training, the contrastive loss is com-bined with a standard mean squared error regression loss ac-cording to the following: 
+
+Ltotal = LR + α LContrastive , (3) 
+
+LR = 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+yi − gθ
+
+ f i 2 . (4) 
+
+3.3. Spectral Data Augmentation Strategies 
+
+Standard image augmentation techniques, such as grayscale and color jittering, are not suitable for addressing the spectral domain. Following our previous work [5], we explore a set of spectral domain augmentation strategies specifically designed for hyperspectral data: 1. Spectral Shift: random displacement of the spectrum along the wavelength axis, making the model more ro-bust to wavelength variations. 2. Spectral Flipping: reversing the order of spectral bands to improve invariance to potential inconsisten-cies in band ordering across sensors. 
+
+Fig. 2 . Original (blue) and transformed (orange) examples from real spectral data. 3. Scattering Hapke’s Model [16]: simulating realistic scattering effects caused by light–surface interactions. 4. Atmospheric Compensation [17]: applying radio-metric corrections to mimic atmospheric effects under varying illumination conditions. 5. Elastic Distortion: introducing smooth, random wave-length deformations to model misalignments and spec-tral variability. Moreover, we consider the following augmentation strategies: 1. Band Erasure [8]: masking random wavelengths. 2. Band Permutation [8]: shuffling the order of spectral bands. 3. Nearest Neighbor Mixing [7]: generating synthetic samples from local averages of neighboring spectra. An example of these spectral transformations can be seen in Figure 2 when applied to real spectral data. 
+
+3.4. Spatial Data Augmentation Methods 
+
+In addition to spectral-domain strategies, common spatial augmentations can also be applied to hyperspectral cubes by treating each spectral channel as a separate 2D image. As these transformations are well established in the literature, we briefly recall the most relevant ones here: 1. Rotation: random rotations of image patches by a cho-sen angle. 2. Elastic Deformation: smooth spatial distortions based on displacement fields. 3. Flipping: horizontal or vertical mirroring of patches. 4. Translation: shifting the patch by fixed pixel offsets in the x and/or y directions. Table 1 . R2 Scores for Synthetic Data.                                                                 
+
+> Luo [11] Hamida [12] Li [10] Atik [13] Varahagiri [14]
+> Baseline 0.43 ±0.03 0.40 ±0.03 0.56 ±0.03 0.66 ±0.02 0.81 ±0.02 Spectral contrastive 0.55 ±0.03 0.56 ±0.03 0.72 ±0.03 0.74 ±0.02 0.88 ±0.02 Spatial contrastive 0.58 ±0.03 0.57 ±0.03 0.74 ±0.05 0.75 ±0.02 0.89 ±0.02 Spectral+Spatial 0.58 ±0.03 0.59 ±0.03 0.81 ±0.04 0.78 ±0.02 0.93 ±0.02
+
+Table 2 . Mean Absolute Errors for Synthetic Data.                                                                 
+
+> Luo [11] Hamida [12] Li [10] Atik [13] Varahagiri [14]
+> Baseline 0.3122 ±0.06 0.3249 ±0.06 0.2865 ±0.04 0.2555 ±0.03 0.1930 ±0.03 Spectral contrastive 0.2912 ±0.06 0.2859 ±0.06 0.2271 ±0.04 0.2255 ±0.03 0.1730 ±0.03 Spatial contrastive 0.2791 ±0.06 0.2801 ±0.06 0.2222 ±0.04 0.2195 ±0.03 0.1689 ±0.03 Spectral+Spatial 0.2791 ±0.06 0.2675 ±0.06 0.1912 ±0.04 0.2050 ±0.03 0.1471 ±0.03
+
+4. EXPERMIMENTS & RESULTS 4.1. Synthetic Spatial Hyperspectral Data 
+
+For the synthetic data, four random endmembers were se-lected from the USGS digital spectral library [18]. Each end-member is composed of 224 contiguous bands. A total of 
+
+100 × 100 pixels were generated with abundances follow-ing a Dirichlet distribution. Additive zero-mean Gaussian noise was added to the data with a signal-to-noise ratio of 20 dB. We considered a polynomial post-nonlinear mixing of the endmembers, where the nonlinearity is represented by the element-wise product of two linear mixtures as following: 
+
+x = M a + M a ⊙ M a + n, (5) with M , a and n being the endmember matrix, abundances and noise vector, respectively, and ⊙ denotes the element-wise product. In addition, the resulting hyperspectral cube was modulated spatially by multiplying it with a 2D Gaussian pattern, adding a realistic spatial variability to the synthetic data. This approach effectively mimics real-world hyperspec-tral imagery characteristics [19]. After that, the hyperspectral cube was divided into 10 × 10 patches and each patch was labeled with the average mixing coefficients. The model was trained to predict these mixing coefficients. We examined five benchmark 3D-based backbones de-scribed in Section 2 [10, 11, 12, 13, 14]. The obtained R2
+
+scores and mean absolute errors are given in Table 1 and Table 2, respectively. For each model, we considered as base-line the entire model trained using the regression loss only, thus without the contrastive loss. After that, we evaluated the effectiveness of each set of transformations (spectral, spatial and spectral-spatial) on improving this baseline. For the spectral-spatial augmentation strategies, the process starts with a spatial transform for the input patch followed by a spectral one. In the training process, a large batch of 256 was used to help the contrastive learning process as it provides many negative samples per anchor, making the model learn to distinguish representations more effectively. All 3D-based backbones were trained using a stochastic gradient descent optimizer. 
+
+Table 3 . R2 Scores for Samson Data.                                                                 
+
+> Luo [11] Hamida [12] Li [10] Atik [13] Varahagiri [14]
+> Baseline 0.59 ±0.02 0.56 ±0.03 0.55 ±0.03 0.65 ±0.03 0.76 ±0.02 Spectral contrastive 0.72 ±0.02 0.68 ±0.03 0.66 ±0.03 0.73 ±0.03 0.86 ±0.02 Spatial contrastive 0.74 ±0.02 0.72 ±0.03 0.69 ±0.03 0.74 ±0.03 0.88 ±0.02 Spectral+Spatial 0.76 ±0.02 0.75 ±0.03 0.74 ±0.03 0.76 ±0.03 0.91 ±0.02
+
+Table 4 . Mean Absolute Errors for Samson Dataset.                                                                 
+
+> Luo [11] Hamida [12] Li [10] Atik [13] Varahagiri [14]
+> Baseline 0.48 ±0.009 0.50 ±0.011 0.52 ±0.012 0.46 ±0.012 0.34 ±0.009 Spectral contrastive 0.39 ±0.009 0.43 ±0.011 0.45 ±0.012 0.37 ±0.011 0.25 ±0.009 Spatial contrastive 0.36 ±0.009 0.39 ±0.011 0.41 ±0.011 0.36 ±0.011 0.23 ±0.009 Spectral+Spatial 0.34 ±0.009 0.35 ±0.011 0.36 ±0.011 0.34 ±0.011 0.21 ±0.009
+
+It is clear from these results that contrastive learning im-proved the baseline scores for all the compared models. We can also see the incremental improvement of the framework, where adding spectral to spatial contrastive learning lead to the best regression metrics for each model. The fusion of both kinds of transformations improves robustness against a wide variety of variabilities that might occur in real scenar-ios. The spectral-spatial transformer [14] outperformed the other architectures, which highlights the high performance of transformers on hyperspectral tasks compared to standard 3D-CNN architectures, but with higher computational com-plexity. Moreover, even such transformers can benefit from contrastive learning to obtain better regression metrics. 
+
+4.2. Samson Dataset 
+
+The Samson dataset obtained by the SAMSON sensor [20] is one of the most widely used hyperspectral datasets for hyper-spectral unmixing. The original image contains 952 × 952 
+
+pixels and 156 bands ranging from 0.401 to 0.889 μm. The most used scene is a 95 × 95 pixel image cropped from the original image. The dataset consists of three main endmem-bers: Soil, Tree, and Water. The same process as the one presented in the synthetic data section was done. The results are shown in Table 3 and Table 4. Again we see similar re-sults as obtained in synthetic data, where contrastive learn-ing framework improved the baseline score in every scenario. In addition, the spectral-spatial transformer also obtained the best results, which highlights its performance on real scenes and not only synthetic ones. 
+
+5. CONCLUSION 
+
+In this paper, we introduced a spectral-spatial contrastive learning framework. Moreover, we presented a set of spectral and spatial transformations adequate for hyperspectral data. The relevance of the proposed framework was demonstrated on synthetic and real world datasets. Future work will involve combining the presented framework with domain adaptation to generalize knowledge on unseen domains. 6. REFERENCES 
+
+[1] Swalpa Kumar Roy, Gopal Krishna, Shiv Ram Dubey, and Bidyut B Chaudhuri, “Hybridsn: Exploring 3-D–2-D CNN feature hierarchy for hyperspectral image classi-fication,” IEEE Geoscience and Remote Sensing Letters ,vol. 17, no. 2, pp. 277–281, 2019. [2] Mohamad Dhaini, Maxime Berar, Paul Honeine, and Antonin Van Exem, “End-to-end convolutional autoen-coder for nonlinear hyperspectral unmixing,” Remote Sensing , vol. 14, no. 14, pp. 3341, 2022. [3] Ting Chen, Simon Kornblith, Mohammad Norouzi, and Geoffrey Hinton, “A simple framework for contrastive learning of visual representations,” in International con-ference on machine learning , 2020, pp. 1597–1607. [4] Nassim Ait Ali Braham, Conrad M Albrecht, Julien Mairal, Jocelyn Chanussot, Yi Wang, and Xiao Xiang Zhu, “Spectralearth: Training hyperspectral foundation models at scale,” IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing , 2025. [5] Mohamad Dhaini, Maxime Berar, Paul Honeine, and Antonin Van Exem, “Contrastive learning for regres-sion on hyperspectral data,” in IEEE International Con-ference on Acoustics, Speech and Signal Processing (ICASSP) . IEEE, 2024, pp. 5080–5084. [6] Qu Shenming, Li Xiang, and Gan Zhihua, “A new hyperspectral image classification method based on spatial-spectral features,” Scientific Reports , vol. 12, no. 1, pp. 1541, 2022. [7] Meng Wang, Feng Gao, Junyu Dong, Heng-Chao Li, and Qian Du, “Nearest neighbor-based contrastive learning for hyperspectral and LiDAR data classifica-tion,” IEEE Transactions on Geoscience and Remote Sensing , 2023. [8] Xiang Hu, Teng Li, Tong Zhou, and Yuanxi Peng, “Deep spatial-spectral subspace clustering for hyper-spectral images based on contrastive learning,” Remote Sensing , vol. 13, no. 21, pp. 4418, 2021. [9] Mohamad Dhaini, Franc ¸ois-Joseph Roudaut, Antonin Garret, Ronan Arzur, Audrey Chereau, Fanny Buhler-Varenne, Paul Honeine, M´ elanie Mignot, and Antonin van Exem, “Hyperspectral imaging for the evaluation of lithology and the monitoring of hydrocarbons in en-vironmental samples,” in RemTech (International event on Remediation, Coasts, Floods, Climate, Seismic, Re-generation Industry) , 2021. [10] Ying Li, Haokui Zhang, and Qiang Shen, “Spectral– spatial classification of hyperspectral imagery with 3D convolutional neural network,” Remote Sensing , vol. 9, no. 1, pp. 67, 2017. [11] Yanan Luo, Jie Zou, Chengfei Yao, Xiaosong Zhao, Tao Li, and Gang Bai, “HSI-CNN: A novel convolution neu-ral network for hyperspectral image,” in International Conference on Audio, Language and Image Processing (ICALIP) . IEEE, 2018, pp. 464–469. [12] Amina Ben Hamida, Alexandre Benoit, Patrick Lam-bert, and Chokri Ben Amar, “3-D deep learning ap-proach for remote sensing image classification,” IEEE Transactions on geoscience and remote sensing , vol. 56, no. 8, pp. 4420–4434, 2018. [13] Saziye Ozge Atik, “Dual-stream spectral-spatial convo-lutional neural network for hyperspectral image classifi-cation and optimal band selection,” Advances in Space Research , vol. 74, no. 5, pp. 2025–2041, 2024. [14] Shyam Varahagiri, Aryaman Sinha, Shiv Ram Dubey, and Satish Kumar Singh, “3D-convolution guided spectral-spatial transformer for hyperspectral image classification,” in 2024 IEEE Conference on Artificial Intelligence (CAI) . IEEE, 2024, pp. 8–14. [15] Xiuheng Wang, Jie Chen, C´ edric Richard, and David Brie, “Learning spectral-spatial prior via 3DDNCNN for hyperspectral image deconvolution,” in IEEE In-ternational Conference on Acoustics, Speech and Signal Processing (ICASSP) . IEEE, 2020, pp. 2403–2407. [16] Bruce Hapke, “Bidirectional reflectance spectroscopy: 1. theory,” Journal of Geophysical Research: Solid Earth , vol. 86, no. B4, pp. 3039–3054, 1981. [17] Tatsumi Uezato, Richard J Murphy, Arman Melkumyan, and Anna Chlingaryan, “A novel endmember bundle ex-traction and clustering approach for capturing spectral variability within endmember classes,” IEEE Transac-tions on Geoscience and Remote Sensing , vol. 54, no. 11, pp. 6712–6731, 2016. [18] GA Swayze, RN Clark, TVV King, A Gallagher, and WM Calvin, “The us geological survey, digital spectral library: Version 1: 0.2 to 3.0 mum,” in Bulletin of the American astronomical society , 1993, vol. 25, p. 1033. [19] Fadi Kizel and Maxim Shoshany, “Spatially adaptive hyperspectral unmixing through endmembers analytical localization based on sums of anisotropic 2D gaussians,” 
+
+ISPRS Journal of Photogrammetry and Remote Sensing ,vol. 141, pp. 185–207, 2018. [20] Curtiss O Davis, Maria Kavanaugh, Ricardo Letelier, W Paul Bissett, and David Kohler, “Spatial and spectral resolution considerations for imaging coastal waters,” in 
+
+Coastal Ocean Remote Sensing . SPIE, 2007, vol. 6680, pp. 196–207.

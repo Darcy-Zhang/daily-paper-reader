@@ -1,0 +1,1405 @@
+Title: Equilibrium contrastive learning for imbalanced image classification
+
+URL Source: https://arxiv.org/pdf/2602.09506v2
+
+Published Time: Thu, 19 Feb 2026 01:47:51 GMT
+
+Number of Pages: 18
+
+Markdown Content:
+> JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, FEBRUARY 2026 1
+
+# Equilibrium contrastive learning for imbalanced image classification 
+
+Sumin Roh, Harim Kim, Ho Yun Lee †, and Il Yong Chun †
+
+Abstract —The data imbalance issue is critical in image clas-sification. Contrastive learning (CL) is a predominant technique in image classification, but they showed limited classification performance when the class distribution in a training dataset is skewed (i.e., an imbalanced dataset). Recently, several supervised CL methods have been proposed particularly to promote an ideal regular simplex geometric configuration in the representation space—characterized by intra-class feature collapse and uniform inter-class mean spacing—especially for imbalanced datasets. In particular, existing prototype-based methods include class repre-sentatives, i.e., prototypes, as additional samples to achieve a more balanced treatment of all classes. However, the existing supervised CL methods for imbalanced datasets still suffer from two major limitations. First, they do not consider the alignment between the class means/prototypes and linear classifiers, which could lead to poor generalization. Second, existing prototype-based methods treat class prototypes as only one additional sample per class, making their influence depend on the number of class instances in a batch and causing unbalanced contributions across classes. To address these limitations, we propose Equilibrium Contrastive Learning (ECL), a supervised CL framework designed to pro-mote geometric equilibrium in the representation space, where class features, means, and classifiers are harmoniously balanced under data imbalance. The proposed ECL framework uses two main strategies. First, ECL promotes the representation geomet-ric equilibrium (i.e., a regular simplex geometry characterized by collapsed class samples and uniformly distributed class means), while balancing the contributions of class-average features and class prototypes. Second, ECL establishes a classifier-class center geometric equilibrium by aligning classifier weights and class prototypes in the representation space. We ran experiments with three long-tailed natural image datasets, the CIFAR-10-LT, CIFAR-100-LT and ImageNet-LT benchmark datasets, and the two imbalanced medical image classification datasets, the ISIC 2019 benchmark and our constructed lung cancer chest computed tomography dataset. Results with the five imbalanced datasets 
+
+> †
+
+Corresponding authors. The work was supported in part by NRF Grant RS-2023-00213455 funded by MSIT, the Digital Therapeutics Development and Demonstration Support Program Grant H0601-24-1023 funded by MSIT and NIPA, the BK21 FOUR Project, IITP Grant RS-2019-II190421 (AI Graduate School Support Program (Sungkyunkwan University)) funded by MSIT, KIAT Grant RS-2024-00418086 (HRD Program for Industrial Innovation) funded by MOTIE, IBS-R015-D1, Future Medicine 20*30 Project of the Samsung Medical Center (Grant No. SMO1240791), IITP Grant RS-2021-II212068 funded by MSIT and Artificial Intelligence Innovation Hub, SKKU-SMC and SKKU-KBSMC Future Convergence Research Program grants. Sumin Roh is with the Department of Electrical and Computer Engineering (ECE), Sungkyunkwan University (SKKU), Suwon 16419, South Korea (email: sumsumin@g.skku.edu ). Harim Kim is with the Department of Radiology, Samsung Medical Center (SMC), Seoul 06351, South Korea (email: k3541729@gmail.com ). Ho Yun Lee is with the Department of Radiology, SMC, Seoul 06351, South Korea, and with School of Medicine, SKKU, Suwon 16419, South Korea (email: hoyunlee96@gmail.com ). Il Yong Chun is with the Departments of ECE, Artificial Intelligence, Advanced Display Engineering, and Semiconductor Convergence Engineering, Display Convergence Engineering, SKKU, Suwon 16419, South Korea, and also with the Center for Neuroscience Imaging Research, Institute for Basic Science, Suwon 16419, South Korea (email: iychun@skku.edu ). 
+
+Fig. 1: Illustration of Equilibrium Contrastive Learning (ECL ). ECL promotes the following three key geometric properties that collectively establish geometric equilibrium in the representation space: 1) the collapse of within-class representations (denoted by ⦁) to their class means (denoted by 
+
+◊), 2) equidistant spacing among class means, and 3) align-ment between linear classifier weights (denoted by skyblue sticks) and class means. It can simplify the geometries in representation and classifier, leading to simple nearest-centroid classifications in the representation space. The simple geome-tries are useful for improving the generalization capability. 
+
+show that ECL outperforms existing state-of-the-art supervised CL methods designed for imbalanced/long-tailed classification. Codes are available at this link. 
+
+Index Terms —Long-tailed recognition, Contrastive learning, Supervised learning. 
+
+I. I NTRODUCTION 
+
+# IMBALANCED distributions can easily be found in real-world datasets. Any dataset that exhibits an unequal dis-tribution among its classes is referred to as an imbalanced dataset [1]. Image classification becomes challenging when the dataset has imbalanced distributions. Contrastive learning (CL) is a predominant technique in image classification [2]–[4] and several supervised CL methods have been proposed to handle imbalanced datasets [5]–[7]. In particular, [6], [7] promote in the representation space that all instances with the same label collapse to points and these points are equidistant from each other, i.e., intra-class feature collapse and uniform inter-class mean spacing [8], respectively. The existing prototype-based CL methods [6], [7], [9], [10] aim to promote the aforemen-tioned geometric properties by incorporating class prototypes as additional samples, which enables a more balanced consid-eration of all classes under imbalanced settings. However, the existing supervised CL methods have two limitations. First, existing CL methods underestimate the alignment between linear classifiers and the class center representations [8],  
+
+> arXiv:2602.09506v2 [cs.CV] 18 Feb 2026 JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, FEBRUARY 2026 2
+
+leading to limited generalization performances in imbalanced test sets. Second, the existing prototype-based CL methods [6], [7], [9], [10] treat each prototype merely as a single additional sample per class, causing its influence to diminish as the number of class instances in a batch increases. Consequently, the prototype signal becomes weak, making the objectives sensitive to mini-batch composition. To overcome these limitations, this paper proposes 
+
+Equilibrium Contrastive Learning ( ECL ), a new supervised end-to-end (E2E) framework that promotes geometric equilib-rium in the representation space by harmoniously balancing class features, means, and classifier weights. We propose two complementary strategies in the ECL framework. First, we propose the Balanced Class-wise ECL (BC-ECL ) formulation that promotes representation geometric equilibrium—a regular simplex geometry characterized by intra-class feature collapse and uniform inter-class mean spacing—in a batch-invariant manner by balancing the contributions of class-average fea-tures and prototypes. Second, we propose the Classifier-class 
+
+Center Geometric Equilibrium ( CC-GE ) promoting loss that aligns class prototypes and classifier weights. Combined all together, proposed ECL can promote the symmetric and very simple geometry in a batch-invariant manner, to improve generalization performance in imbalanced learning. See its illustration in Fig. 1. We ran experiments with three long-tailed natural image datasets, the CIFAR-10-LT, CIFAR-100-LT, and ImageNet-LT benchmark datasets [11], and with two imbalanced medical image datasets, the International Skin Imaging Collaboration (ISIC) 2019 benchmark dataset [12] for skin lesion image clas-sification and our constructed Lung Cancer chest Computed Tomography (LCCT) dataset to determine the risk of cancer recurrence. Our numerical experiments demonstrate that the proposed ECL method achieves outperforming performance compared to existing state-of-the-art (SOTA) supervised CL methods for handling imbalanced datasets. We analyzed different supervised CL methods with the three perspectives, 1) how well within-class representations collapse to their class means, 2) how far are class means between different classes, and 3) how well last-layer classifiers are aligned with the class prototypes/means. We observed that proposed ECL improves these key metrics, compared to those from the SOTA methods. Our contributions can be summarized as follows:  
+
+> ∙
+
+The proposed ECL framework promotes three key geo-metric properties in a batch-invariant manner: 1) intra-class feature collapse, 2) uniform inter-class mean spac-ing, and 3) alignment between classifier weights and class center representations. Together, ECL establishes simplified and stable geometric structures jointly among class features, means, and classifier weights, ultimately improving generalization in imbalanced learning.  
+
+> ∙
+
+Proposed ECL achieves the SOTA performance on five imbalanced datasets: ImageNet-LT, CIFAR-10-LT, CIFAR-100-LT, ISIC 2019, and LCCT. II. R ELATED WORK 
+
+This section reviews existing supervised CL methods that are proposed to handle imbalanced/long-tailed datasets. [9] proposes a two-stage method that introduces parametric class-wise learnable centers to rebalance the learning process from an optimization perspective. The method improves the gradient balance across classes, making the model more attentive to minority classes. Global and Local Mixture Consistency Cu-mulative learning (GLMC) [5] is an E2E method that proposes a global and local mixture consistency loss to improve the robustness of the feature extractor, and a cumulative head-tail soft label reweighted loss to mitigate the majority class bias problem. Targeted Supervised Contrastive learning (TSC) [6] is a two-stage method that introduces uniformly distributed targets to each class during training to prevent that the rep-resentation space is biased by majority classes. BCL [7] is an E2E method that proposes a balanced CL loss to form a regular simplex configuration in the representation space. BCL additionally employs the logit compensation approach to learn an unbiased classifier. Parametric Contrastive learning (PaCo) [9] is an E2E method that introduces learnable class-wise centers into the contrastive loss to rebalance optimization across head and tail classes. Generalized PaCo (GPaCo) [10] is an E2E method that generalizes PaCo by removing the momentum encoder, yielding a single-encoder parametric con-trastive framework with learnable class-wise centers for im-proving optimization stability and generalization. Probabilistic Contrastive learning (ProCo) [13] is an end-to-end method that models each class using a von Mises–Fisher distribution, al-lowing the model to learn from class-level distributions rather than relying solely on mini-batch instances. By comparing feature representations against these class-wise distributions within the contrastive loss, ProCo achieves effective learning without requiring large mini-batch sizes. Beyond imbalanced learning, Contrast your Neighbors (CoNe) [14] is an E2E supervised CL method that supervises each instance using its neighbors in the representation space together with a distributional-consistency regularizer, encour-aging similar instances to share similar predictive distributions. TSC [6] and BCL [7] aims to promote a geometric equilibrium among representations from different classes— namely, intra-class feature collapse and uniform inter-class mean spacing—under imbalanced datasets. To ensure balanced consideration of all classes in the presence of class imbalance, TSC [6], BCL [7], PaCo [9], and GPaCo [10] incorporate class prototypes as extra samples. The proposed ECL framework differs from the existing methods in the following key aspects:  
+
+> ∙
+
+Beyond promoting geometric equilibrium among repre-sentations, ECL emphasizes the importance of CC-GE— namely, alignment between classifier weights with class-center representations—an aspect overlooked in the exist-ing supervised CL methods [5]–[7], [9], [10], [13], [14]. This alignment is crucial for improving generalization under class imbalance.  
+
+> ∙
+
+ECL promotes representation geometric equilibrium in a batch-invariant manner by balancing class-average features and prototypes contributions. In contrast, in JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, FEBRUARY 2026 3
+
+TSC [6], BCL [7], PaCo [9], and GPaCo [10], the influence of prototypes varies across classes depending on their sample counts, potentially causing the geometric structure to fluctuate with mini-batch composition. III. M ETHODS 
+
+This section describes the proposed ECL framework. Sec-tion III-A provides some preliminaries to facilitate the under-standing of the proposed method. Section III-B presents two key insights that motivate the proposed method. Section III-C presents the details of the proposed ECL framework. 
+
+A. Preliminaries 
+
+The goal of image classification is to learn a mapping from the input space  to the target space  = {1 , 2, … , 𝐶 }, where a training dataset is given by  = {( 𝐱 𝑖 , 𝑦 𝑖 ) ∶ 𝑖 ∈ } with 𝐱 𝑖 ∈
+
+ and 𝑦 𝑖 ∈  denoting an input image and its corresponding class label, respectively, and 𝐶 is the number of classes, and 
+
+ = {1 , … , 𝑁 }. The quality of this mapping critically depends on the geometric structure formed by learned representations and a classifier. To address this challenge, we propose ECL that promotes three key properties that simplify and stabilize the geometry in the representation space, particularly for handling imbalanced datasets. Under balanced datasets, such configurations empirically confer important benefits, such as improved generalization and robustness [8]. We describe the three key properties below:  
+
+> ∙
+
+(a) Intra-class feature collapse. As training progresses, all the within-class samples collapse to their class means in a representation space in the end. See the illustration in Fig. 2(a).  
+
+> ∙
+
+(b) Inter-class mean geometric equilibrium . Distances and angles between each class means become equal form-ing a symmetric representation structure at the terminal training phase. See the illustration in Fig. 2(b).  
+
+> ∙
+
+(c) CC-GE: Classifier-class Center Geometric Equi-librium . Under a balanced dataset, although the class means and linear classifiers live in dual vector spaces, they can converge to each other with rescaling [8]. This self-duality convergence property—referred to as the CC-GE—can be formally written as follows: 
+
+‖‖‖‖
+
+𝐖 ⊤
+
+‖𝐖 ‖F
+
+− 𝐌 
+
+‖𝐌 ‖F
+
+‖‖‖‖F
+
+→ 0, (1) where 𝐖 ⊤ ∶= [𝐰 1, … , 𝐰 𝐶 ] is the classifier weights matrix by stacking the weights of classifier and 𝐌 ∶= [μ1 −̇ μ, … , μ𝑐 −̇ μ] is the class means matrix by stacking the class means, in which 𝐰 𝑐 is the 𝑐 th class weight vector of a classifier, μ𝑐 is the 𝑐 th class mean vector and ̇ μ
+
+is the average of all class means. See the illustration in Fig. 2(c). In analyzing different methods, we use (1) to evaluate how well the self-duality is induced. In practice, it is difficult to use (1) as loss function in training with highly imbalanced datasets, because samples from minority classes may not be included in a batch so one cannot compute the class means. In the proposed ECL framework, we extend (1) to use class prototypes. We observe   
+
+> (a) (b) (c)
+
+Fig. 2: Illustration of three key properties to simplify geome-tries via ECL under class imbalance (red and green denote features from different majority classes, and blue denotes features from the minority class). (a) Intra-class feature collapse: all the intra-class representations (denoted by ⦁)collapse to their corresponding class means (denoted by ◊). (b) Inter-class mean geometric equilibrium: distances and angles among class means become equal, forming a symmetric geometric structure. (c) CC-GE: Classifier–class center geo-metric equilibrium: the linear classifiers (denoted by skyblue sticks) and class means converge to each other with rescaling. that this extension can accelerate training and improve the classification performance (see Section V-B3). Combining all these properties, one can simplify a classifier in the sense that a classifier converges to the class means with the nearest distance. For balanced datasets, supervised CL [4] can naturally achieve the three properties above [15]. However, class imbalance inevitably deteriorates the aforementioned three key properties [16], [17]: 
+
+Does class imbalance hinder property (a)? In theory, the supervised CL method [4] can induce property (a) regardless of whether a dataset is balanced or not [7], [15]. In practice, however, majority classes often exhibit larger effective intra-class variability due to their overwhelming number of samples. 
+
+How does class imbalance hinder property (b)? The theoretical analysis in [7], [15] reveals that data imbalance mainly disrupts the geometric equilibrium of inter-class means because majority classes dominate repulsion terms. Under class imbalance, each sample moves farther away from ma-jority classes, as the overwhelming number of majority-class instances exerts a disproportionately large repulsive influence on the feature space. Suppose that in Fig. 1(b), the red majority class is larger than the green majority class, while the blue minority class is far smaller than both. In light of the above analysis, this imbalance induces angular separations such that 
+
+𝜃 1(green-red ) > 𝜃 2(red-blue ) > 𝜃 3(blue-green ), resulting in an asymmetric inter-class mean geometry. BCL [7] is designed to alleviate this issue, but it introduces another limitation that motivates our work (see later Section III-B1). 
+
+How does class imbalance hinder property (c)? Under a bal-anced dataset, a symmetric geometry of the classifier weights emerges as a consequence of the representation geometric equilibrium satisfying properties (a) and (b), at the minimal supervised CL loss [15]. However, in practice, and particularly under class imbalance, it is challenging to satisfy properties (a) and (b) with supervised CL methods, thereby making it inherently difficult to satisfy property (c) as well. In other words, even when properties (a) and (b) are partially promoted JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, FEBRUARY 2026 4
+
+in an imbalanced learning setup—such as in methods like BCL [7]—property (c) does not necessarily emerge as a natural consequence. In imbalanced learning, majority classes tend to exhibit larger effective intra-class variability simply due to their overwhelming number of samples. This broader variabil-ity induces larger angular margins for majority classes, causing their classifier weights to drift away from their correspond-ing class-mean directions. Conversely, minority classes—with fewer samples and smaller variability—require only modest margins, keeping their weights closer to their means. These asymmetric angular tendencies distort the decision boundaries, preventing the classifier weights from converging to a symmet-ric geometric configuration and thereby hindering property (c). (See later Fig. 3(a) for empirical evidence.) Exiting supervised CL methods underestimate property (c), and this limitation motivates our work (see later Section III-B2). 
+
+B. Motivations: Two key insights from analyzing BCL 
+
+This section motivates the proposed method by presenting two key insights from analyzing the predominant supervised CL method for imbalanced datasets, BCL [7]. The main idea of BCL is to include class prototypes in every mini-batch so that all classes are consistently considered even under imbalanced datasets. BCL encourages the learned represen-tations to collapse toward the vertices of a regular simplex, a highly symmetric configuration in which all class means are equally spaced. In the following subsections, we derive two key insights from analyzing BCL:  
+
+> ∙
+
+The contribution of prototypes depends on batch com-position in forming the representation geometric equi-librium, which may impede performance improvements particularly for majority classes.  
+
+> ∙
+
+The classifier weights and class center representations may become misaligned, leading to poor generalization performance. These naturally extend to other supervised CL methods for imbalanced datasets. 
+
+1) Prototype contribution depending on batch composition: 
+
+The BCL loss is given by the following [7]: 
+
+BCL ∶= − 1
+
+||∑
+
+> 𝑖 ∈
+
+1
+
+|(𝑖 )| + 1 
+
+∑ 
+
+> 𝑗 ∈(𝑖 )∪{ 𝑝 𝑦 𝑖 }
+
+log exp( 𝐳 𝑖 ⋅ 𝐳 𝑗 ∕𝜏 )
+
+∑ 
+
+> 𝑐 ∈
+> 1
+> |𝑐 |+1
+
+∑  
+
+> 𝑘 ∈𝑐 ∪{ 𝑝 𝑐 }
+
+exp( 𝐳 𝑖 ⋅ 𝐳 𝑘 ∕𝜏 ) , (2) where  is the index set of all training samples in a CL mini-batch, 𝑖 denotes the index of an anchor sample, (𝑖 ) represents the index set of all positive samples associated with the anchor 
+
+𝑖 within a CL mini-batch, excluding the anchor itself, 𝑝 𝑐 
+
+denotes the index of the 𝑐 th class prototype, 𝑐 represents the set of all samples of the 𝑐 th class in a CL mini-batch, and 
+
+| ⋅ | denotes the number of samples in a set. For the 𝑖 th anchor sample, its feature representation and class label are 𝐳 𝑖 and 𝑦 𝑖 ,respectively. The temperature parameter 𝜏 adjusts the scale of similarity scores before the exponential operation, effectively controlling the contrastive strength between an anchor and  
+
+> (a) Training set (b) Test set
+
+Fig. 3: Visualization of feature distribution on the unit sphere obtained by BCL with the LCCT dataset zooming in to the upper half for better visualization. The △ and □ symbols indicate the class means and classifier weights, while the red and green points represent samples from the majority and minority classes, respectively. The results show that the CC-GE property is not induced. its positive or negative samples. BCL performs class-wise averaging in the denominator of (2), where the features of samples within each class are averaged. In addition, class prototypes are included in every mini-batch. The behavior of BCL (2) (with 𝜏 = 1 ) is analyzed through the following bound [7]: 
+
+BCL ≥ ∑
+
+> 𝑖 ∈
+
+log 
+
+(
+
+1 + ( 𝐶 − 1)exp 
+
+(
+
+1
+
+𝐶 − 1 
+
+∑
+
+> 𝑐 ∈∖𝑦 𝑖
+
+1
+
+|𝑐 | + 1 
+
+∑  
+
+> 𝑘 ∈𝑐 ∪{ 𝑝 𝑐 }
+
+𝐳 𝑖 ⋅ 𝐳 𝑘 
+
+⏟⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏟⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏟ 
+
+> repulsion term
+
+− 1
+
+|(𝑖 )| + 1 
+
+∑ 
+
+> 𝑗 ∈(𝑖 )∪{ 𝑝 𝑦 𝑖 }
+
+𝐳 𝑖 ⋅ 𝐳 𝑗 
+
+⏟⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏟⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏟ 
+
+> attraction term
+
+)) 
+
+,
+
+(3) 
+
+This shows that the class-wise averaging operator in the denominator of (2) mitigates the dominance of majority classes in the repulsion term of (3). Without it, majority classes dominate the repulsion term in (3), resulting in an asymmetric geometry. In addition, incorporating class prototypes into every mini-batch in (2) ensures that inter-class relations are consistently preserved, even when minority classes are more likely to be absent from a batch. 
+
+However, each class prototype is treated as only a single additional sample and is averaged with the corresponding instances. As a result, its contribution diminishes as the number of samples from that class increases within a batch, in both the attraction and repulsion terms of (3). Consequently, the loss in (2) becomes sensitive to batch composition. As the number of instances from a class increases within a batch, the contribution of its prototype diminishes, causing variations in batch-wise class means and shifting class representations across batches rather than forming stable geometric relations. This may impede the performance improvement particularly for majority classes, as the contribution of prototypes from majority classes is weak (see empirical evidence later in Section V-B2). 
+
+2) Misalignment between classifier weights and class center representations: Although BCL is designed to promote the geometric equilibrium among representations—namely, prop-erties (a) and (b) in Section III-A—it lacks a mechanism to establish a symmetric geometric configuration for the classi-fier, i.e., the CC-GE property (c) in Section III-A. We argue JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, FEBRUARY 2026 5
+
+that this missing component plays a critical role in its limited generalization performance under class imbalance. As discussed in Section III-A, under class imbalance, it becomes difficult even for BCL to fully promote properties (a) and (b) in the representation space, thereby making it inherently challenging for property (c) to emerge. In partic-ular, the imbalance in effective intra-class variability across classes induces asymmetric angular margins, causing classifier weights to drift away from their corresponding class-mean directions and preventing the formation of a symmetric ge-ometric configuration. The above rationale is supported by our observation. BCL demonstrated poor generalization on imbalanced LCCT test sets; see Fig. 3(b). As illustrated in Fig. 3(a), while the representation geometric equilibrium is partially promoted, the classifier nevertheless does not form a symmetric geometric configuration—i.e., the CC-GE is not induced—with CC-GE measures of 0.51 and 0.73 for the LCCT training and test sets, respectively. In particular, the majority class exhibits larger effective intra-class variability than the minority class, which pushes the decision boundary toward the minority side and results in the formation of asymmetric classifier weights. Our rationale and observation correspond well with the theoretical claim in [16], [17] that imbalanced learning deteriorates inducing the key properties in Section III-A and generalization capability. If the class representations, class means, and classifier weights are jointly in geometric equilibrium—i.e., if all three properties in Section III-A are simultaneously satisfied— the classification problem reduces to a nearest-centroid–like decision rule that improves generalization. In particular, when the last-layer classifier weights are well aligned with their corresponding class means (i.e., when the CC-GE property is induced), classification simply amounts to selecting the class whose weight vector is most closely aligned with the input representation, analogous to nearest-centroid classification. In the next section, we propose the ECL framework that can address the two aforementioned limitations. Specifically, the proposed BC-ECL formulation in Section III-C1 mitigates the batch-dependent prototype contribution in forming the rep-resentation geometric equilibrium, while the proposed CC-GE promoting loss in Section III-C2 resolves the classifier–class center misalignment. 
+
+C. ECL: Equilibrium Contrastive Learning 
+
+Fig. 4 illustrates the overall E2E framework of ECL. ECL consists of three core modules: contrastive represen-tation learning in Fig. 4(a), classifier-class center alignment in Fig. 4(b), and classifier learning in Fig. 4(c). The ECL framework uses the following three training losses in each core module: 1) BC-ECL loss that promotes intra-class feature collapse and inter-class mean geometric equilibrium with batch-invariant prototype contributions (Section III-C1), 2) 
+
+the CC-GE promoting loss that aligns classifier weights and class center representations (Section III-C2), and 3) classifier learning loss that can address the bias issue caused by data imbalance (Section III-C3). ECL uses the following three major components:  
+
+> ∙
+
+Data augmentation ̃ 𝐱 = Aug( 𝐱 ): Given a batch of samples 
+
+𝐱 , we generate three random augmentation samples ̃ 𝐱 (1) ,̃
+
+𝐱 (2) , and ̃ 𝐱 (3) , similar to [7]. In the CL branch (Fig. 4(a)), we use ̃ 𝐱 (2) and ̃ 𝐱 (3) , so the size of each CL mini-batch is || = 2 𝐵 , where 𝐵 is the number of samples in a mini-batch. In the classifier learning branch (Fig. 4(c)), we use ̃ 𝐱 (1) . 
+
+> ∙
+
+Feature extractor 𝐟 = 𝑓 (̃𝐱 ): It extracts features 𝐟 ∈ ℝ𝐹 
+
+from ̃ 𝐱 , where 𝐹 is the dimension of features. In the classifier learning branch (Fig. 4(c)), we use 𝐟 . In the CL branch (Fig. 4(a)), following the prevailing convention in CL, we introduce an additional projector Proj to produce features 𝐳 for CL: 𝐳 = Proj( 𝐟 ), where 𝐳 ∈ ℝ𝐹 . 
+
+> ∙
+
+Classifier 𝐥 = 𝑔 (𝐟 ): The classifier maps features 𝐟 to the logits 𝐥 ∈ ℝ𝐶 , where 𝐶 is the number of classes. We use a linear classifier, i.e., 𝐥 = 𝐖𝐟 + 𝐛 , where 𝐖 ∈ ℝ𝐶 ×𝐹 is defined as in (1) and 𝐛 ∈ ℝ𝐶 is the bias. 
+
+1) BC-ECL: Balanced Class-wise ECL: To overcome this limitation arising from batch-dependent prototype contribu-tions, we propose a BC-ECL formulation as follows: 
+
+BC-ECL ∶= − 1
+
+||∑
+
+> 𝑖 ∈
+
+1
+
+|(𝑖 )|∑
+
+> 𝑗 ∈(𝑖 )
+
+log exp(( 𝐳 𝑖 ⋅ 𝐳 𝑗 + 𝐳 𝑖 ⋅ 𝐳 𝑝 𝑦 𝑖 )∕(2 𝜏 )) 
+
+∑
+
+> 𝑐 ∈
+
+( 1 
+
+> |𝑐 |
+
+∑
+
+> 𝑘 ∈𝑐
+
+exp( 𝐳 𝑖 ⋅ 𝐳 𝑘 ∕𝜏 )
+
+)
+
++ exp( 𝐳 𝑖 ⋅ 𝐳 𝑝 𝑐 ∕𝜏 )
+
+.
+
+(4) Different from BCL (2), the denominator of the proposed loss (4) first averages the instances within each class and then takes the sum of the class-average and the corresponding prototype. In its numerator, we take the average of each positive sample and its corresponding prototype. The proposed BC-ECL loss (4) simultaneously balances 
+
+1) the contributions of class-average features and prototypes within each class, and 2) the overall influence across majority and minority classes, thereby yielding stable and balanced representations across batches. In addition, (4) promotes that all the within-class representations collapse to their class means. We support this claim by deriving its bound whose key idea is to decouple the attraction and repulsion effects [15]: 
+
+Theorem 1. The loss in (4) with 𝜏 = 1 is bounded by 
+
+BC-ECL ≥ 1
+
+||∑
+
+> 𝑖 ∈
+
+log 
+
+(
+
+1 + ( 𝐶 − 1)exp 
+
+(
+
+12( 𝐶 − 1) 
+
+∑
+
+> 𝑐 ∈⧵{𝑦 𝑖 }
+
+( 1
+
+|𝑐 |∑
+
+> 𝑘 ∈𝑐
+
+𝐳 𝑖 ⋅ 𝐳 𝑘 
+
+)
+
++ 𝐳 𝑖 ⋅ 𝐳 𝑝 𝑐 
+
+⏟⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏟⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏟ 
+
+> repulsion term
+
+− 12
+
+(( 1
+
+|(𝑖 )|∑
+
+> 𝑗 ∈(𝑖 )
+
+𝐳 𝑖 ⋅ 𝐳 𝑗 
+
+)
+
++ 𝐳 𝑖 ⋅ 𝐳 𝑝 𝑦 𝑖 
+
+)
+
+⏟⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏟⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏟ 
+
+> attraction term
+
+)) 
+
+. (5) 
+
+Proof. See Section S1 in the Supplementary Material. JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, FEBRUARY 2026 6
+
+Fig. 4: The overall ECL architecture. The proposed ECL consists of three core modules, (a) contrastive representation learning with proposed BC-ECL in Section III-C1, (b) classifier-class center alignment with proposed CC-GE in Section III-C2, and (c) classifier learning with LC introduced in Section III-C3. (a) The proposed BC-ECL formulation equalizes the contribution between class-average features and prototypes in promoting the intra-class feature collapse and geometric equilibrium among class means. We utilize the linearly transformed classifier weights as class prototypes, and 𝓁 2-normalize the representations 
+
+{𝐳 (2)  
+
+> 𝑖
+
+, 𝐳 (3)  
+
+> 𝑖
+
+∶ ∀ 𝑖 }. The symbols Sim. and Avg. denote a similarity computation between two vectors and an averaging operator, respectively. (b) The proposed CC-GE loss aligns the classifier weights and class prototypes to promote geometric equilibrium between classifier weights and class center representations. (c) For classifier learning, we use a logit-compensated variant of the cross-entropy loss, LC .Theorem 1 leads to the following geometric interpretations, revealing how BC-ECL (4) shapes the feature representation space:  
+
+> ∙
+
+Balanced repulsion and attraction. BC-ECL equally weights the class-mean features and class prototypes in both the repulsion and attraction terms, preventing prototype dilution and ensuring balanced class-wise con-tributions.  
+
+> ∙
+
+Intra-class feature collapse. Each anchor representation is simultaneously pulled toward its positive samples and its class prototype, encouraging intra-class feature col-lapse.  
+
+> ∙
+
+Inter-class mean geometric equilibrium. An anchor is pushed away from both the mean features and prototypes of non-target classes, maintaining an inter-class geometric equilibrium with well-separated class means.  
+
+> ∙
+
+Batch-invariant geometry. By equalizing contributions between class means and prototypes, BC-ECL reduces sensitivity to batch composition and maintains consistent geometric relations across batches. Given an imbalanced dataset, minimizing (4) encourages all within-class representations to collapse toward their corre-sponding class means and ultimately to the vertices of a regular simplex, while preserving a stable inter-class geometric equi-librium across batches. (Note that given a balanced dataset, when one obtains the minimum from supervised CL loss [4], representations from each class collapse to the vertices of a regular simplex [8], [15].) Compared to the bound in (3) for BCL, the bound in (5) for BC-ECL exhibits a weaker contrastive effect due to the addi-tional 1∕2 factor applied to both attraction and repulsion terms. This attenuation can be offset by reducing the temperature 𝜏 
+
+in (4), which strengthens the contrastive sharpness despite the 
+
+1∕2 factor. We compare BCL (2) and BC-ECL (4) in terms of their performance on classes grouped into many-, medium-, and few-shot regimes (see later Section V-B2). Given that classifier weights are co-linear with the vertices of the simplex [8], [15], we obtain the class prototypes by passing the classifier weights through a linear transformation. This differs from [7] that calculates class prototypes by apply-ing a non-linear multi-layer perceptron (MLP) model to the classifier weights. We compare these two forms of prototypes in terms of training time and classification performance (see later Section V-B3). The computational complexity of the proposed BC-ECL formulation in (4) is (||(|| + 𝐶 )𝐹 ), which is comparable to that of BCL in (2). Computing and incorporating class prototypes only marginally increases the overall cost over the supervised CL loss [4] whose complexity is (||2𝐹 ). When 
+
+𝐵 ≫ 𝐶 , the computational complexity of BC-ECL becomes 
+
+(||2𝐹 ) that is the same order as the supervised CL loss [4]. 
+
+2) Promoting CC-GE: Classifier-class Center Geometric Equilibrium: The proposed BC-ECL formulation in (4) can promote the representation geometric equilibrium (see the first two properties in Section III-A) in a batch-invariant manner. However, in imbalanced learning, BC-ECL in (4) may 
+
+not promote the CC-GE property (see the third property in Section III-A), which, in turn, deteriorates generalization. See our corresponding observations in Section III-B2. Our aim is to establish a symmetric geometric configuration JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, FEBRUARY 2026 7
+
+in both representation and classifier to improve the general-ization performance in imbalanced classification. We propose a new geometric loss that explicitly promotes the CC-GE property, by aligning the class center representations, i.e., class prototypes, and classifier weights: 
+
+CC-GE ∶= ‖‖‖‖
+
+𝐖 ⊤
+
+‖𝐖 ‖F
+
+− 𝐏 
+
+‖𝐏 ‖F
+
+‖‖‖‖
+
+> 2F
+
+, (6) where the the classifier weights matrix 𝐖 is defined as in (1), and 𝐏 ∈ ℝ𝐹 ×𝐶 is the class prototypes matrix defined by stacking the class prototypes, specifically, 𝐏 ∶= [𝐳 𝑝 1 , … , 𝐳 𝑝 𝐶 
+
+].Note in (6) that as prototypes, we apply a linear transfor-mation, i.e., single-layer perceptron model, to class-specific weights of a linear classifier {𝐰 1, … , 𝐰 𝐶 } to project them into the representation space, rather than the mean representations. If the classifier weights are co-linear with the vertices of a simplex to which the classes collapse as achieved in balanced supervised CL [8], [15], the prototypes obtained through the linearly transformed classifier weights are also co-linear with the vertices of a regular simplex. Under class imbalance, without minimizing (6), classifier weights do not maintain symmetric geometric relations; see Section III-B2. By minimizing (6), one can simplify the geometric configuration of both the representation space and the classifier, effectively making the classifier behave like a nearest-centroid classifier. In other words, the classifier no longer needs to learn complex decision boundaries; it simply determines which classifier weight is most closely aligned with each instance feature. This simpler decision rule can improve generalization, particularly under class imbalance. The computational complexity of the proposed CC-GE promoting loss in (6) is (𝐹 𝐶 ). When combined with the complexity of BC-ECL in (4), the overall cost becomes 
+
+(||(|| + 𝐶 )𝐹 ), since in general 𝐵 ≫ 1 and 𝐵 ≥ 𝐶 . When 
+
+𝐵 ≫ 𝐶 , this becomes (||2𝐹 ) that is the same order as the supervised CL loss [4]. 
+
+3) Logit compensation loss: In imbalanced learning, bias typically exists in the logits. Following [7], we use the logit compensation (LC) approach [7], [18]–[20] to address the bias issue caused by data imbalance: 
+
+LC ∶= − 1
+
+||∑
+
+> 𝑖 ∈
+
+∑
+
+> 𝑐 ∈
+
+𝟙 𝑐 =𝑦 𝑖 ⋅ log 
+
+( exp( 𝑔 (𝐟 𝑖 )𝑐 + log ℎ𝑐 )
+
+∑𝑐 ′∈ exp( 𝑔 (𝐟 𝑖 )𝑐 ′ + log ℎ𝑐 ′ )
+
+)
+
+,
+
+(7) where ℎ𝑐 = |𝑐 |∕|| ∈ [0 , 1] denotes the frequency of the 
+
+𝑐 th class, and where 𝟙 𝑐 =𝑦 𝑖 denotes the indicator function that equals 1 if 𝑐 = 𝑦 𝑖 and 0 otherwise. This can address the bias problem by adding log ℎ𝑐 to the logits. 
+
+4) The overall ECL loss: The overall ECL loss is given by 
+
+ = 𝜆 BC-ECL ⋅ BC-ECL + 𝜆 CC-GE ⋅ CC-GE + 𝜆 LC ⋅ LC , (8) where 𝜆 BC-ECL , 𝜆 CC-GE , and 𝜆 LC are hyper-parameters that control the strength of BC-ECL in (4), CC-GE in (6), and 
+
+LC in (7), respectively. Under class imbalance, minimizing the overall loss can pro-mote the three key properties in Section III-A, simplifying the geometry of the representation and classifier. (Note again that 
+
+Algorithm 1: Proposed ECL 
+
+Require : Training set , number of epochs Epoch ,batch size 𝐵 , loss balancing parameters 
+
+{𝜆 BC-ECL , 𝜆 CC-GE , 𝜆 LC }
+
+Initialize: Parameters θ of feature extractor 𝑓 ,parameters ϕ of projector Proj, parameters 
+
+(𝐖 , 𝐛 ) of linear classifier 𝑔 , transformation matrix 𝐓 mapping 𝐖 to class prototypes 𝐏 
+
+for epoch = 1 to Epoch do 
+
+Shuffle the dataset indices 
+
+Partition the shuffled indices into mini-batches of size 𝐵 : (1)  
+
+> 𝐵
+
+, (2)  
+
+> 𝐵
+
+, . . . , (𝑀 ) 
+
+> 𝐵
+
+, where 𝑀 ≈ ⌈𝑁 ∕𝐵 ⌉
+
+for iter = 1 to 𝑀 do 
+
+𝐵 = (iter ) 
+
+> 𝐵
+
+⊳ Mini-batch selection 
+
+ ∶= { 𝐳 (𝑗 ) 
+
+> 𝑘
+
+= Proj ϕ(𝑓 θ(Aug 𝑗 (𝐱 𝑘 )) ∶ 𝑘 ∈
+
+𝐵 , 𝑗 = 2 , 3} ⊳ Representations for BC-ECL (4) 
+
+𝐏 = 𝐓𝐖 ⊤ ⊳ Prototypes for BC-ECL (4) and CC-GE promotion (6) 
+
+ ∶= { 𝐥 𝑘 = 𝑔 𝐖 ,𝐛 (𝑓 θ(Aug 𝑗 (𝐱 𝑘 )) ∶ 𝑘 ∈ 𝐵 , 𝑗 =1} ⊳ Logits for classifier learning (7) Compute ∇θ,ϕ,𝐖 ,𝐓 BC-ECL with 
+
+{𝐳 𝑖 (θ, ϕ) ∈ } and 𝐏 (𝐖 , 𝐓 ) ⊳ Gradients for (4) Compute ∇𝐖 ,𝐓 CC-GE with 𝐏 (𝐖 , 𝐓 ) and 𝐖 ⊳
+
+Gradients for (6) Compute ∇θ,𝐖 ,𝐛 LC with {𝐥 𝑖 (θ, 𝐖 , 𝐛 ) ∈  }
+
+and {𝑦 𝑖 ∈ 𝐵 } ⊳ Gradients for (7) Update {θ, ϕ, 𝐖 , 𝐛 , 𝐓 } with 
+
+𝜆 BC-ECL ⋅ ∇θ,ϕ,𝐖 ,𝐓 BC-ECL + 𝜆 CC-GE ⋅
+
+∇𝐖 ,𝐓 CC-GE + 𝜆 LC ⋅ ∇θ,𝐖 ,𝐛 LC 
+
+Output: {θ, 𝐖 , 𝐛 }
+
+BC-ECL promotes intra-class feature collapse and and inter-class mean geometric equilibrium, and CC-GE promotes the CC-GE.) We verify this with some empirical metrics (see later Section IV-C). All the three losses in (8) guide a model toward a common geometric objective under class imbalance—the geometric equilibrium in Fig. 1. Consequently, their gradient directions are naturally aligned, leading to cooperative rather than conflicting updates. We include the pseudo-code of the proposed ECL frame-work in Algorithm 1. In inference, we only use a feature extractor 𝑓 θ and a linear classifier 𝑔 𝐖 ,𝐛 , removing a projector 
+
+Proj ϕ and a linear transformation 𝐓 producing prototypes used in BC-ECL (4) and CC-GE promoting loss (6). IV. E XPERIMENTAL SETUPS 
+
+This section describes experimental setups. We compared the Top-1 accuracy of ECL with six SOTA supervised CL methods proposed to handle imbalanced datasets: TSC [6], BCL [7], GLMC [5], PaCo [9], GPaCo [10], and ProCo [13]. We additionally compared the proposed method with the recent supervised CL method, CoNe [14], that outperformed the representative supervised CL method [9]. Furthermore, JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, FEBRUARY 2026 8
+
+we compared proposed ECL with several supervised learning baselines with the natural image benchmark datasets. We performed several ablation studies to investigate the primary components of the proposed method. (ECL is an E2E learning approach so using only BC-ECL (4) that needs two-stage learning is omitted in its ablation studies.) Section IV-A introduces the five imbalanced datasets, CIFAR-10-LT, CIFAR-100-LT, ImageNet-LT, ISIC 2019, and LCCT. Section IV-B includes implementation details. Sec-tion IV-C introduces the metrics and a visualization tool for evaluating how well the key properties in Section III-A are satisfied. 
+
+A. Imbalanced datasets 
+
+CIFAR-10-LT and CIFAR-100-LT datasets. The datasets are long-tailed versions of CIFAR-10 and CIFAR-100 [11]. They consist of 10 and 100 classes, respectively. We used their standard dataset split that divides each dataset into training, validation, and test sets, with 50 K, 10 K, and 10 K images, respectively [5], [7]. Following [6], [7], we ran experiments with the imbalance factors ( 𝜌 ) = {100 , 50 , 10} . The 𝜌 =
+
+𝑁 max ∕𝑁 min reflects the imbalance degree in the data, where 
+
+𝑁 max and 𝑁 min is the number of samples in the majority and minority classes, respectively. 
+
+ImageNet-LT dataset. The dataset is a long-tailed version of vanila ImageNet [21], [22] consisting of 115 .8K images. The ImageNet-LT dataset has 1,000 classes in total, with five to 1,280 images per class (i.e., 𝜌 = 256 ). We used its standard dataset split that divides ImageNet-LT into a training, validation, and test set, approximately with the 11∶2∶5 ratio [5], [7]. We report the classification accuracy for Many-shot classes (specifically, the number of training samples > 100 ), Medium-shot classes (specifically, the number of training samples is between [20 , 100] ), Few-shot classes (specifically, the number of training samples ≤ 20 ), and overall classes. 
+
+ISIC 2019 dataset. The ISIC 2019 dataset consists of 25,331 dermatoscopic images for skin lesion classification with eight classes [12]. Following [23], we randomly split the dataset into training, validation, and test sets with a ratio of 3 ∶ 1 ∶ 1 . The imbalance factor 𝜌 is 54 .02 .
+
+LCCT dataset. We collected chest CT scans of lung adenocar-cinoma images from 55 patients, in Samsung Medical Center. This dataset was registered as a prospective study [24] and received IRB approval (IRB No. 2018-01-099), where patient dataset were encrypted to prevent their direct identification. Lung adenocarcinoma is a subtype of cancer that consists of heterogeneous histology. Micropapillary and solid pattern (MPsol) is a well-known risk factor for recurrence [25]–[27]. We labeled CT images as high-risk when the presence of MPsol is pathologically proven [28]–[30]. We used a semi-automatic approach in the AVIEW software (developed by Coreline Soft Co., Ltd., Seoul, South Korea) in drawing the tumor region of interests. The constructed dataset consists of 687 images, with high-risk and low-risk classes, approximately of the 3 ∶ 1 ratio, i.e., 𝜌 ≈ 3 . We set the ratio between the training and test sets as approximately 5 ∶ 1 .
+
+B. Implementation details 
+
+This section lists hyperparameters of all methods evaluated in this paper. We trained and tested them with the PyTorch ver. 2.0.0 [31] and NVIDIA GeForce RTX 4090 and A100 GPUs. For the CIFAR-10-LT, CIFAR-100-LT, and ImageNet-LT benchmark datasets, we did not re-train competing methods unless stated otherwise, and instead relied on the officially reported results from their original publications for fair com-parisons. We omit the hyperparameters of competing methods for these three datasets, assuming that the hyperparameters of each existing method had already been finely tuned for these benchmarks in their original studies. 
+
+1) Common hyperparameters: We first list hyperparameters commonly used throughout the methods. For the CIFAR-10-LT and CIFAR-100-LT datasets, we used ResNet-32 [32] for the feature extraction backbone 𝑓 , and set feature dimension 𝐹 and number of epochs 𝑁 epoch as 64 , 200 ,respectively. For the ImageNet-LT dataset, we used ResNeXt-50-32x4d [33] for 𝑓 , and set 𝐹 , batch size 𝐵 , and 𝑁 epoch 
+
+as 2048 , 256 , and 180 , respectively. For the ISIC 2019 and LCCT datasets, we used ResNet-50 [32] for 𝑓 and set 𝐹 
+
+as 2048 , respectively. For the ISIC 2019 dataset, we set 𝐵 
+
+and 𝑁 epoch as 128 and 600 , respectively, and used the same augmentation strategy with [23]. For the LCCT dataset, we set 𝐵 and 𝑁 epoch as 256 and 2500 , respectively, and used 
+
+RandomCrop , RandomHorizontalFlip , GaussianBlur , and 
+
+RandomErasing modules for data augmentation. 
+
+2) Existing methods: We ran two existing methods, PaCo and GPaCo, on the CIFAR-10-LT dataset using their default setups for CIFAR-100-LT, as their original papers report results only on CIFAR-100-LT. We ran five existing methods, TSC, CoNe, GLMC, BCL, and GPaCo, with their default setups on the ISIC2019 and LCCT datasets unless stated otherwise. To achieve the best performance for the ISIC 2019 benchmark and our LCCT datasets, we tuned a learning rate of each existing method. For the ISIC 2019 dataset, we set the learning rate as 0.02 for TSC, CoNe, GLMC, and BCL, and 
+
+0.04 for GPaCo. For the LCCT dataset, we set the learning rate as 0.01 for GLMC and CoNe, 0.03 for BCL and TSC, and 0.04 for GPaCo. 
+
+3) Proposed ECL: Following [7], we used the stochastic gradient descent method with a momentum of 0.9 and decayed the learning rate at the 160 th and 180 th epochs with a step size of 0.1. We used a fixed set of ECL hyperparameters in (8) for all datasets. We set them as {𝜆 BC-ECL = 0 .5, 𝜆 CC-GE = 3 , 𝜆 LC =0.5} , by adjusting them so that the initial magnitudes of the three weighted loss terms lie on a similar scale on CIFAR-10-LT ( 𝜌 = 100 ). See further details of the fine tuning process in Section S2 of the Supplementary Material. Following [7], we implemented the additional projector Proj in CL as a two-layer MLP composed with a Rectified Linear Unit (ReLU) activation between two linear layers (without bias), and we used the same hidden dimension 𝐻 as in [7], unless otherwise specified. For the CIFAR-10-LT and CIFAR-100-LT datasets, we set temperature 𝜏 , 𝐵 , learning rate, and weight decay as 0.05 , 256 ,
+
+0.3, and 5×10 −4 respectively, and used the same augmentation schemes as in [7]. For the ImageNet-LT dataset, we set 𝜏 , 𝐵 ,learning rate, and weight decay as 0.1, 256 , 0.3, and 3×10 −4 ,JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, FEBRUARY 2026 9
+
+respectively, and used the same augmentation schemes as in [13]. For the ISIC 2019 dataset, we set 𝜏 , 𝐻 , learning rate, and weight decay as 0.1, 1024 , 0.15 , and 2×10 −4 respectively. For the LCCT dataset, we set 𝜏 , 𝐻 , learning rate, and weight decay as 0.1, 1024 , 0.15 , and 1×10 −4 respectively. Note that throughout all datasets, we used half of the temperature 𝜏 employed in BCL to compensate for the reduced contrastive effect analyzed in Theorem 1. See our remarks following Theorem 1. 
+
+C. Evaluation metrics and a visualization tool for representa-tion learning 
+
+In analyzing representation learning with the perspectives of the three key properties in Section III-A, we use the two widely used key metrics [2], [6], [34], [35], and the alignment between mean representations and classifier weights in (1). 
+
+1) Intra-class Feature Collapse (FC): The FC metric aver-ages distances between features from the same class [6], [35]: FC ∶= 1
+
+𝐶 
+
+> 𝐶
+
+∑
+
+> 𝑐 =1
+
+1
+
+|𝑐 |2
+
+∑ 
+
+> 𝐳 𝑖 ,𝐳 𝑗 ∈𝑐
+
+‖‖‖𝐳 𝑖 − 𝐳 𝑗 
+
+‖‖‖2 , (9) where 𝑐 denotes the set of all features belonging to 𝑐 th class. This metric quantifies the extent to which features from the same class collapse toward a point, i.e., the degree of intra-class feature collapse—property (a) in Section III-A. A smaller FC value indicates greater compactness among samples within the same class, i.e., better feature collapse. 
+
+2) Inter-class Mean Spacing (MS): The MS metric averages distances between different class means in the representation space [6], [35]: MS ∶= 1
+
+𝐶 (𝐶 − 1) 
+
+> 𝐶
+
+∑
+
+> 𝑐 =1
+> 𝐶
+
+∑
+
+> 𝑐 ′=1 ,𝑐 ′≠𝑐
+
+‖‖𝐦 𝑐 − 𝐦 𝑐 ′ ‖‖2 , (10) where 𝐦 𝑐 denotes the 𝑐 th class mean. This metric quantifies how well the normalized class means are uniformly distributed on a unit hypersphere, reflecting the degree of inter-class mean geometric equilibrium—property (b) in Section III-A. The higher, the better separation between different classes, i.e., closer to a regular simplex configuration. 
+
+3) Self-Duality (SD) between mean embeddings and classi-fier weights: The SD metric evaluates the alignment between mean embeddings and classifier weights: SD ∶= ‖‖‖‖
+
+𝐖 ⊤
+
+‖𝐖 ‖F
+
+− 𝐌 
+
+‖𝐌 ‖F
+
+‖‖‖‖F
+
+, (11) where 𝐖 and 𝐌 are defined as in (1). A smaller SD value indicates better alignment between class means and classifier weights, i.e., better CC-GE—property (c) in Section III-A. 
+
+4) Visualization tool: We qualitatively analyze represen-tation learning by visualizing representations. We first nor-malizing each feature vector to have unit 𝓁 2 norm and then projecting them onto a two-dimensional plane using principal component analysis. This visualization tool—that projects high-dimensional features onto the two-dimensional unit sphere—is widely used in many CL studies [7], [15]. TABLE I: Top-1 accuracy (%) comparisons between different supervised (C)L methods with CIFAR-10-LT and CIFAR-100-LT datasets.                                                                                   
+
+> Methods CIFAR-10-LT CIFAR-100-LT
+> 𝜌 =100 50 10 𝜌 =100 50 10 CB-Focal [36] 74.5 79.2 87.1 39.6 45.1 57.9 BBN [37] 79.8 81.1 88.3 42.5 47.0 59.1 ResLT [38] 82.4 85.1 89.7 48.2 52.7 62.0 Hybrid-SC [39] 81.4 85.3 91.1 46.7 51.8 63.0 TSC [6] 79.7 82.9 88.7 42.8 46.3 57.6 CoNe [14] 25.2 37.2 41.1 -†-†-†
+> GLMC [5] 87.7 90.1 94.0 55.8 61.0 70.7 BCL [7] 84.3 87.2 91.1 51.9 56.5 64.8 PaCo [9] 77.2 79.8 83.4 52.0 56.0 64.2 ProCo [13] 85.9 88.2 91.9 52.8 57.1 65.5 GPaCo [10] 79.2 81.6 85.9 52.3 56.4 65.4
+> ECL (ours) 92.1 92.5 94.4 66.3 67.5 71.0
+> †We failed to run CoNe with CIFAR-100-LT – we observed the NaN in training loss.
+
+TABLE II: Top-1 accuracy (%) comparisons between different (C)L methods with ImageNet-LT dataset.                                                      
+
+> Methods Many Medium Few All CB-Focal [36] 39.6 32.7 16.8 33.2 LDAM [40] 60.4 46.9 30.7 49.8 LADE [41] 65.1 48.9 33.4 53.0 ResLT [38] 63.6 55.7 38.9 56.1 KCL [3] 61.8 49.4 30.9 51.5 TSC [6] 63.5 49.7 30.4 52.4 GLMC [5] 70.1 52.4 30.4 56.3 BCL [7] 67.9 54.2 36.6 57.1 PaCo [9] 64.4 55.7 33.7 56.0 ProCo [13] 68.2 55.1 38.1 57.8 GPaCo [10] 64.7 56.2 39.5 58.0
+> ECL (ours) 68.6 56.3 40.1 58.8
+
+V. R ESULTS AND DISCUSSION 
+
+This section presents and discusses the results obtained with the five imbalanced/long-tailed datasets in Section IV-A. Section V-A compares the Top-1 classification accuracy be-tween different supervised CL methods, and analyzes their representation learning with the three metrics in Section IV-C. Section V-B conducts ablation studies of proposed ECL (8), particularly to evaluate the contribution of each component in (8) and study different forms of CL and prototypes within the ECL framework. Section V-C investigates how the CC-GE property behaves with linear and nonlinear classifiers under class imbalance. 
+
+A. Comparisons between different supervised (C)L methods with imbalanced datasets 1) Classification performance comparisons between differ-ent supervised (C)L methods: TABLES I–III demonstrate that the proposed ECL framework achieves significantly better classification performance compared to several existing SOTA supervised CL methods (listed in Section IV) and several supervised learning baselines, for all the five imbalanced datasets. 
+
+CIFAR-10-LT and CIFAR-100-LT. Comparing results with the CIFAR-10-LT and CIFAR-100-LT datasets with different JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, FEBRUARY 2026 10 
+
+FC: 0.66 
+
+MS: 1.27 
+
+SD: 0.81 
+
+FC: 0.91 
+
+MS: 0.56 
+
+SD: 0.97 
+
+(a) TSC [6] 
+
+FC: 0.02 
+
+MS: 1.95 
+
+SD: 0.51 
+
+FC: 0.41 
+
+MS: 0.82 
+
+SD: 0.73 
+
+(b) BCL [7] 
+
+FC: 0.02 
+
+MS: 1.97 
+
+SD: 0.24 
+
+FC: 0.47 
+
+MS: 0.62 
+
+SD: 0.38 
+
+(c) CoNe [14] 
+
+FC: 0.49 
+
+MS: 1.76 
+
+SD: 0.56 
+
+FC: 0.88 
+
+MS: 0.71 
+
+SD: 0.69 
+
+(d) GLMC [5] 
+
+FC: 0.54 
+
+MS: 1.63 
+
+SD: 0.19 
+
+FC: 0.75 
+
+MS: 0.98 
+
+SD: 0.27 
+
+(e) GPaCo [10] 
+
+FC: 0.04 
+
+MS: 1.95 
+
+SD: 0.12 
+
+FC: 0.23 
+
+MS: 1.61 
+
+SD: 0.21 
+
+(f) ECL 
+
+Training set Test set Training set Test set 
+
+Fig. 5: Visualization of feature distribution on the unit hypersphere for different supervised CL methods with LCCT dataset; 
+
+{𝑥 ∈ [−1 , 1] , 𝑦 ∈ [−1 , 1]} . If class-wise features are clustered (see Fig. 2(a)) to form a regular simplex configuration (see Fig. 2(b)) and their class means are aligned with the classifier weights (see Fig. 2(c)), then good representations and classifier are learned. Legends: denotes minority class samples; denotes majority class samples; denotes minority class mean; denotes majority class mean; denotes minority classifier weight; and denotes majority classifier weight. TABLE III: Top-1 accuracy (%) comparisons between different supervised CL methods with ISIC 2019 and LCCT datasets.                 
+
+> Methods ISIC 2019 (𝜌 ≈ 54 )LCCT (𝜌 ≈ 3 )TSC [6] 50.23 63.6 CoNe [14] 63.57 74.93 GLMC [5] 70.49 59.33 BCL [7] 83.76 80.24 GPaCo [10] 85.66 74.52
+> ECL (ours) 87.31 92.36
+
+𝜌 values shows that the performance gap between existing methods and ECL becomes larger when 𝜌 is larger. See TABLE I. This implies that ECL is in general particularly useful for handling extremely long-tailed datasets. ECL also significantly improved precision and recall performance over existing supervised CL methods; see the CIFAR-10-LT results in Section S3-A of the Supplementary Material. 
+
+ImageNet-LT. Comparing results with ImageNet-LT in TA-BLE II shows that the proposed ECL outperforms exist-ing SOTA supervised CL methods and supervised learning baselines. In particular, ECL achieved significantly higher classification performance on Few-shot classes, implying that ECL is useful for handling minority classes. 
+
+ISIC2019 and LCCT. TABLE III shows the outperforming performance of the proposed ECL over the five aforementioned JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, FEBRUARY 2026 11 
+
+TABLE IV: Comparisons of FC, MS, and SD values (see their definitions in Section IV-C) between different supervised CL methods with CIFAR-10-LT and LCCT datasets (the ↓ and 
+
+↑ symbols indicate that the lower the better and higher the better, respectively).                                              
+
+> Methods CIFAR-10-LT ( 𝜌 = 100 )LCCT FC ↓MS ↑SD ↓FC ↓MS ↑SD ↓
+> TSC [6] 0.95 0.30 1.42 0.91 0.56 0.97 CoNe [14] 1.20 0.44 0.62 0.47 0.62 0.38 GLMC [5] 0.86 0.89 0.71 0.88 0.71 0.69 BCL [7] 0.64 0.62 0.55 0.41 0.82 0.73 GPaCo [10] 0.82 0.75 0.42 0.75 0.98 0.27
+> ECL (ours) 0.36 0.94 0.25 0.23 1.61 0.21
+
+SOTA methods. The confusion matrices in Section S3-B of the Supplementary Material show that ECL achieves low false-negative rates for minority classes while avoiding excessive false positives, reflecting its ability to maintain a more stable trade-off between sensitivity and specificity. In addition, the receiver operating characteristic (ROC) and precision-recall (PR) curves in Section S3-C of the Supplementary Material show that ECL effectively bridges the gap between general classification and minority-class detection, by limiting false positives while preserving a favorable precision–recall trade-off for both majority and minority classes. 
+
+2) Representation learning comparisons with different su-pervised CL methods: TABLE IV with the two imbalanced datasets shows that ECL better induces the three key properties in Section III-A compared to the five SOTA methods. The results in TABLE IV well correspond to the classification performances in TABLES I–III, underlining the importance of promoting three key properties in Section III-A under class imbalance. The visualizations with the representation learning perspec-tive in Fig. 5 can explain the outperforming performance of ECL over existing supervised CL methods under class imbalance. First, we observe that ECL better encourages the feature distribution similarity between training and test sets compared to the existing methods, improving the performance in imbalanced test sets. Second, ECL better promotes all three key properties compared to the existing methods. Comparing Fig. 5(b) with Fig. 5(e) particularly demonstrates that ECL significantly improves the self-duality over BCL. 
+
+B. Ablation studies for proposed ECL 
+
+This section studies the followings:  
+
+> ∙
+
+Section V-B1 studies the contribution of each component in the proposed ECL framework (8);  
+
+> ∙
+
+Section V-B2 studies ECL with its variant that replaces proposed BC-ECL loss (4) with the existing BCL loss (2);  
+
+> ∙
+
+Section V-B3 studies different forms of prototypes in the the proposed CC-GE promoting loss (6). 
+
+1) Ablation study of ECL (8): Several ablation studies in TABLE V investigate the contribution of each component in the proposed ECL loss (8) by calculating the Top-1 classifi-cation accuracy and the FC, MS, and SD measures defined in Section IV-C. TABLE V: Ablation study for the primary components of proposed ECL (the ↓ and ↑ symbols indicate that the lower the better and and higher the better, respectively).                                                        
+
+> BC-ECL CC-GE LC CIFAR-10-LT ( 𝜌 = 100 )LCCT (4) (6) (7) Top-1 acc. FC ↓MS ↑SD ↓Top-1 acc. FC ↓MS ↑SD ↓
+> ✗✗✓82.27 % 0.90 0.39 0.85 79.20 % 0.88 0.52 0.74
+> ✗✓✓87.26 % 0.81 0.37 0.80 81.62% 0.86 0.56 0.72
+> ✓✗✓88.61 % 0.64 0.65 0.86 88.52 % 0.37 0.76 0.71
+> ✓✓✓92.13 % 0.36 0.94 0.35 92.36 % 0.23 1.61 0.21
+
+TABLE V shows that in imbalanced learning, to improve all the FC, MS, SD measures, i.e., to simultaneously promote the intra-class feature collapse, inter-class mean geometric equilibrium, and CC-GE properties in Section III-A, one needs to use all the components BC-ECL (4), LC (7), and 
+
+CC-GE (6). For example, comparing the “ LC ” setup with the “ LC +CC-GE ” combination in TABLE V demonstrates that adding only CC-GE to LC does not improve the SD measure (even if it is designed to improve SD). Comparing “BC-ECL +LC ” with “ BC-ECL +LC +CC-GE ” in TABLE V verifies the effectiveness of the proposed CC-GE loss (6) in improving not only the SD measures, but also FC and MS measures. In addition, TABLE V supports that in imbalanced learning, promoting all three properties can significantly improve the classification performance over the ablated variants. By comparing the first and last rows of TABLE V, we observe that the performance gain of full ECL over the single-classifier learning loss LC is more pronounced on CIFAR-10-LT ( 𝜌 = 100 ) than on the LCCT datasets. This is because the geometric equilibrium in the representation space—illustrated in Fig. 1—is more easily promoted on LCCT than on the highly imbalanced CIFAR-10-LT ( 𝜌 = 100 ). 
+
+2) Can the proposed BC-ECL (4) address the limitation of the existing BCL (2)?: In a nutshell, the full ECL model using the proposed CL formulation BC-ECL (4) consistently outper-forms its variant that replaces it with the BCL formulation 
+
+BCL (2) across Many, Medium, and Few-shot classes as well as on All classes. See the last two rows of TABLE VI. By comparing the baseline BCL [7], the aforementioned variant of ECL, and the full ECL model, we now examine the impact of batch-dependent prototype contributions in BCL. We first compare the baseline model BCL [7] with the variant of ECL—namely, a model whose differences from BCL are the addition of the proposed CC-GE loss and linearly transformed prototypes—in TABLE VI. The results show that, while the variant yields remarkable improvements on Few-shot classes, it offers no performance gain on the Many- and Medium-shot classes. This supports our conjecture in Section III-B1 that batch-dependent prototype contributions can limit performance improvements for classes with many instances, e.g., Many-and Medium-shot groups. In contrast, comparing full ECL with its variant in TABLE VI confirms that the proposed CL loss, BC-ECL (4), effectively resolves this limitation inherent in BCL (2). 
+
+3) Is a linear transformation more effective than a nonlin-ear one for constructing prototypes in the CC-GE promoting loss (6)?: We compare different forms of prototypes in the proposed CC-GE loss (6) that are implemented as follows: 1) JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, FEBRUARY 2026 12 
+
+TABLE VI: Top-1 accuracy (%) comparisons between ECL and its variant by replacing BC-ECL (4) with BCL (2), with ImageNet-LT dataset.                     
+
+> Methods Many Medium Few All BCL [7] (baseline) 67.9 54.2 36.6 57.1 Variant of ECL by replacing 67.6 54.1 39.6 57.3
+> BC-ECL (4) w/ BCL (2)
+> ECL (ours) 68.6 56.3 40.1 58.8
+
+TABLE VII: Performance comparisons between different forms of prototypes 𝐏 in (6) with different datasets.                    
+
+> Methods CIFAR-10-LT ( 𝜌 = 100 )LCCT Training time Top-1 acc. Training time Top-1 acc. Means (1) -†-†11 h 81.61 % Nonlinearly transf. weights of clf. [7] 2.5 h 90.68 % 7.5 h 90.06 %
+> Linearly transf. weights of clf. (ours) 2 h 92.13 % 7 h 92.36 %
+> †We failed to run experiments with CIFAR-10-LT due to high imbalance factor – initial minibatch did not include samples from some minority classes.
+
+the class means that average the within-class representations; 
+
+2) the class prototypes obtained by passing the classifier weights through a non-linear MLP transformation [7]; and 3) 
+
+the class prototypes obtained by passing the classifier weights through a linear transformation. Comparing the second and third schemes in TABLE VII shows that in producing class prototypes from classifier weights, using a linear transformation improves both training efficiency and classification performance. A plausible expla-nation is as follows. Constructing prototypes via a linear transformation of classifier weights preserves their directional structure, ensuring that prototype directions remain geometri-cally consistent with the weight vectors. In contrast, applying an MLP with piecewise activations such as ReLU may in-troduce nonlinear distortions that warp angular relationships and create misalignment between prototypes and classifier weights. Such misalignment weakens the CC-GE property (see Fig. 2(c)), ultimately degrading generalization performance. Our conclusion is that a linear transformation is preferable to a nonlinear one for constructing prototypes in ECL: it better facilitates CC-GE by avoiding the potential directional distortions that nonlinear mappings can introduce, while also reducing computational overhead. Comparing the first with the second and third schemes in TABLE VII supports our claim in Section III-A that using class prototypes, rather than class means, can accelerate training and improve classification performance. 
+
+C. Can the CC-GE property hold with nonlinear classifiers? 
+
+Many existing theoretical studies of the three key geometric properties in Section III-A, e.g., [8], assume a linear classifier. The work [42] theoretically show in balanced learning that a two-layer MLP classifier using ReLU activation and no bias can satisfy CC-GE, yet this result requires a strong assumption about nuclear norm equality. Another theoretical study [43] demonstrates that in balanced learning, a two- or three-layer MLP classifier with ReLU activation can empirically satisfy TABLE VIII: Comparisons of Top-1 accuracy, FC, MS, and SD values between a nonlinear classifier and a linear classifier with CIFAR-10-LT and LCCT datasets.                           
+
+> Methods CIFAR-10-LT ( 𝜌 = 100 )LCCT Top-1 acc. FC ↓MS ↑SD ↓Top-1 acc. FC ↓MS ↑SD ↓
+> Nonlinear 90.65% 0.38 0.88 0.36 89.71% 0.36 1.27 0.33
+> Linear 92.13% 0.36 0.94 0.25 92.36% 0.23 1.61 0.21
+
+CC-GE, where they measure (1) by replacing the classifier weight matrix 𝐖 with the product of the weight matrices across layers. We compare a linear classifier (following the standard convention) with a nonlinear classifier implemented as a three-layer MLP, where ReLU activations and batch normalization layers are inserted between the linear layers, and a bias term is used only in the final linear layer [43]. In contrast to the empirical findings of [43] under balanced learning, our results in TABLE VIII indicate that the nonlinear classifier does not sufficiently promote CC-GE under class imbalance and likewise fails to adequately promote the two properties of representation geometric equilibrium. Ultimately, the nonlinear classifier degraded the classification performance relative to our linear classifier. We conjecture that using a nonlinear classifier hinders the achievement of an overall geometric equilibrium in Fig. 1 that harmoniously balances class representations, class means, and classifier weights in imbalanced learning, ultimately leading to performance degradation. While nonlinear classifiers do not sufficiently promote the desired geometric equilibrium under the aforementioned exper-imental setup in ECL, future work may explore architectural modifications or training schemes that allow nonlinear clas-sifiers to preserve this equilibrium while still benefiting from their expressive capacity. VI. C ONCLUSION 
+
+Imbalanced distributions between classes are easily found in real-world datasets. Class imbalance degrades generalization performance because it disrupts the geometric equilibrium among representations and classifier weights, leading models to overfit majority classes and overlook rare but societally important minority classes. This issue becomes even more severe when the dataset is highly imbalanced, resulting in unreliable predictions in domains where safety and trustworthy decision-making are essential. Several existing supervised CL methods aim to promote a geometric equilibrium among representations from different classes by optionally including class prototypes to more evenly account for all classes. We propose a new E2E supervised CL framework, ECL, that promotes geometric equilibrium in the representation space by harmoniously balancing class features, class means, and classi-fier weights. In ECL, we introduce two complementary strate-gies that, to the best of our knowledge, have not been explored in prior work. First, we promote a consistent geometric equilib-rium of representations across batches by balancing the contri-butions of class-average features and class prototypes; see the proposed BC-ECL formulation in Section III-C1. Second, we JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, FEBRUARY 2026 13 
+
+promote geometric equilibrium between a classifier and class-center representations by mutually aligning classifier weights and class prototypes; see the proposed CC-GE promoting loss in Section III-C2. These two strategies effectively stabilize the geometry of representations and prevent classifier–class mean misalignment, yielding improved generalization. ECL achieves new benchmarking SOTA performances with four real-world long-tailed benchmark datasets, and outperforming performance over existing supervised CL methods with a real-world imbalanced medical image dataset that suffers from poor generalization. By effectively addressing class imbalance, ECL contributes to more reliable and equitable decision-making in safety-critical applications—such as medical diagnosis, au-tonomous driving, and fraud detection—where failures on minority classes can lead to disproportionately harmful con-sequences. Future research directions of ECL can be pursued along several dimensions. First, we aim to address a limitation of ECL: it still shares the common drawback of supervised CL methods in requiring a large batch size to form diverse positive and negative pairs. Motivated by ProCo [44], we plan to modify ECL so that its contrastive objectives are computed against class-wise probability distributions rather than mini-batch samples, while retaining its prototype-based contrasting (which may incur negligible computational overhead). This would enable ECL to function effectively with a smaller batch size while retaining its geometric equilibrium behavior. Second, we plan to extend ECL beyond visual domains to general imbalanced modalities such as text and tabular data. This can be achieved by incorporating a modality-specific en-coder and selecting appropriate augmentation strategies within the proposed ECL framework, potentially enabling ECL to serve as a unified representation learning framework across data types. We believe these extensions will further broaden the applicability and expressiveness of ECL in real-world imbalanced learning scenarios. REFERENCES [1] H. He and E. A. Garcia, “Learning from imbalanced data,” IEEE Transactions on knowledge and data engineering , vol. 21, no. 9, pp. 1263–1284, 2009. 1 [2] T. Chen, S. Kornblith, M. Norouzi, and G. Hinton, “A simple frame-work for contrastive learning of visual representations,” in International Conference on Machine Learning . PMLR, 2020, pp. 1597–1607. 1, 9 [3] B. Kang, Y. Li, S. Xie, Z. Yuan, and J. Feng, “Exploring balanced feature spaces for representation learning,” in International Conference on Learning Representations , 2020. 1, 9 [4] P. Khosla, P. Teterwak, C. Wang, A. Sarna, Y. Tian, P. Isola, A. Maschinot, C. Liu, and D. Krishnan, “Supervised contrastive learning,” in Proceedings of Advances in Neural Information Processing Systems ,vol. 33, 2020, pp. 18 661–18 673. 1, 3, 6, 7 [5] F. Du, P. Yang, Q. Jia, F. Nan, X. Chen, and Y. Yang, “Global and local mixture consistency cumulative learning for long-tailed visual recognitions,” in Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , 2023, pp. 15 814–15 823. 1, 2, 7, 8, 9, 10, 11 [6] T. Li, P. Cao, Y. Yuan, L. Fan, Y. Yang, R. S. Feris, P. Indyk, and D. Katabi, “Targeted supervised contrastive learning for long-tailed recognition,” in Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , 2022, pp. 6918–6928. 1, 2, 3, 7, 8, 9, 10, 11 [7] J. Zhu, Z. Wang, J. Chen, Y.-P. P. Chen, and Y.-G. Jiang, “Balanced contrastive learning for long-tailed visual recognition,” in Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition ,2022, pp. 6908–6917. 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 16 [8] V. Papyan, X. Han, and D. L. Donoho, “Prevalence of neural collapse during the terminal phase of deep learning training,” Proc. National Academy of Sciences , vol. 117, no. 40, pp. 24 652–24 663, 2020. 1, 3, 6, 7, 12 [9] J. Cui, Z. Zhong, S. Liu, B. Yu, and J. Jia, “Parametric contrastive learning,” in Proceedings of the IEEE/CVF International Conference on Computer Vision , 2021, pp. 715–724. 1, 2, 3, 7, 9, 16 [10] J. Cui, Z. Zhong, Z. Tian, S. Liu, B. Yu, and J. Jia, “Generalized parametric contrastive learning,” IEEE Transactions on Pattern Analysis and Machine Intelligence , vol. 46, no. 12, pp. 7463–7474, 2023. 1, 2, 3, 7, 9, 10, 11, 16 [11] A. Krizhevsky, G. Hinton et al. , “Learning multiple layers of features from tiny images,” 2009. 2, 8 [12] D. Gutman, N. C. Codella, E. Celebi, B. Helba, M. Marchetti, N. Mishra, and A. Halpern, “Skin lesion analysis toward melanoma detection: A challenge at the international symposium on biomedical imaging (isbi) 2016, hosted by the international skin imaging collaboration (isic),” arXiv preprint arXiv:1605.01397 , 2016. 2, 8 [13] C. Du, Y. Wang, S. Song, and G. Huang, “Probabilistic contrastive learning for long-tailed visual recognition,” IEEE Transactions on Pattern Analysis and Machine Intelligence , vol. 46, no. 9, pp. 5890–5904, 2024. 2, 7, 9 [14] M. Zheng, S. You, L. Huang, X. Su, F. Wang, C. Qian, X. Wang, and C. Xu, “Cone: Contrast your neighbours for supervised image classification,” arXiv preprint arXiv:2308.10761 , 2023. 2, 7, 9, 10, 11 [15] F. Graf, C. Hofer, M. Niethammer, and R. Kwitt, “Dissecting supervised contrastive learning,” in International Conference on Machine Learning .PMLR, 2021, pp. 3821–3830. 3, 5, 6, 7, 9, 15 [16] C. Fang, H. He, Q. Long, and W. J. Su, “Exploring deep neural networks via layer-peeled model: Minority collapse in imbalanced training,” Proc. National Academy of Sciences , vol. 118, no. 43, p. e2103091118, 2021. 3, 5 [17] Y. Yang, S. Chen, X. Li, L. Xie, Z. Lin, and D. Tao, “Inducing neural collapse in imbalanced learning: Do we really need a learnable classifier at the end of deep neural network?” in Proc. NeurIPS , vol. 35, 2022, pp. 37 991–38 002. 3, 5 [18] A. K. Menon, S. Jayasumana, A. S. Rawat, H. Jain, A. Veit, and S. Kumar, “Long-tail learning via logit adjustment,” arXiv preprint arXiv:2007.07314 , 2020. 7 [19] J. Tan, C. Wang, B. Li, Q. Li, W. Ouyang, C. Yin, and J. Yan, “Equalization loss for long-tailed object recognition,” in Proceedings of the IEEE/CVF conference on Computer Vision and Pattern Recognition ,2020, pp. 11 662–11 671. 7 [20] K. Cao, C. Wei, A. Gaidon, N. Arechiga, and T. Ma, “Learning imbalanced datasets with label-distribution-aware margin loss,” Advances in Neural Information Processing Systems , vol. 32, 2019. 7 [21] Z. Liu, Z. Miao, X. Zhan, J. Wang, B. Gong, and S. X. Yu, “Large-scale long-tailed recognition in an open world,” in Proceedings of the IEEE/CVF conference on Computer Vision and Pattern Recognition ,2019, pp. 2537–2546. 8 [22] J. Deng, W. Dong, R. Socher, L.-J. Li, K. Li, and L. Fei-Fei, “Imagenet: A large-scale hierarchical image database,” in 2009 IEEE conference on Computer Vision and Pattern Recognition . Ieee, 2009, pp. 248–255. 8 [23] Y. Zhang, J. Chen, K. Wang, and F. Xie, “Ecl: Class-enhancement contrastive learning for long-tailed skin lesion classification,” in Interna-tional Conference on Medical Image Computing and Computer-Assisted Intervention . Springer, 2023, pp. 244–254. 8 [24] H. Kim, J. Kim, S. Hwang, Y. J. Oh, J. H. Ahn, M.-J. Kim, T. H. Hong, S. G. Park, J. Y. Choi, H. K. Kim et al. , “Enhancing identification of high-risk cn0 lung adenocarcinoma patients using mri-based radiomic features,” Cancer Research and Treatment: Official Journal of Korean Cancer Association , vol. 57, no. 1, pp. 57–69, 2025. 8 [25] Y. Qu, R. G. Aly, Y. Takahashi, and P. S. Adusumilli, “Micropapillary lung adenocarcinoma and micrometastasis,” Journal of Thoracic Disease ,vol. 9, no. 10, p. 3443, 2017. 8 [26] M. J. Cha, H. Y. Lee, K. S. Lee, J. Y. Jeong, J. Han, Y. M. Shim, and H. S. Hwang, “Micropapillary and solid subtypes of invasive lung adenocarcinoma: clinical predictors of histopathology and outcome,” The Journal of thoracic and cardiovascular surgery , vol. 147, no. 3, pp. 921– 928, 2014. 8 [27] T. Karasaki, D. A. Moore, S. Veeriah, C. Naceur-Lombardelli, A. Toncheva, N. Magno, S. Ward, M. A. Bakir, T. B. Watkins, K. Grigo-riadis et al. , “Evolutionary characterization of lung adenocarcinoma morphology in tracerx,” Nature medicine , pp. 1–13, 2023. 8 JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, FEBRUARY 2026 14 
+
+[28] A. Yoshizawa, N. Motoi, G. J. Riely, C. S. Sima, W. L. Gerald, M. G. Kris, B. J. Park, V. W. Rusch, and W. D. Travis, “Impact of proposed iaslc/ats/ers classification of lung adenocarcinoma: prognostic subgroups and implications for further revision of staging based on analysis of 514 stage i cases,” Modern pathology , vol. 24, no. 5, pp. 653–664, 2011. 8 [29] A. G. Nicholson, M. S. Tsao, M. B. Beasley, A. C. Borczuk, E. Bram-billa, W. A. Cooper, S. Dacic, D. Jain, K. M. Kerr, S. Lantuejoul et al. ,“The 2021 who classification of lung tumors: impact of advances since 2015,” Journal of Thoracic Oncology , vol. 17, no. 3, pp. 362–387, 2022. 8[30] A. L. Moreira, P. S. Ocampo, Y. Xia, H. Zhong, P. A. Russell, Y. Minami, W. A. Cooper, A. Yoshida, L. Bubendorf, M. Papotti et al. ,“A grading system for invasive pulmonary adenocarcinoma: a proposal from the international association for the study of lung cancer pathology committee,” Journal of Thoracic Oncology , vol. 15, no. 10, pp. 1599– 1610, 2020. 8 [31] A. Paszke, S. Gross, S. Chintala, G. Chanan, E. Yang, Z. DeVito, Z. Lin, A. Desmaison, L. Antiga, and A. Lerer, “Automatic differentiation in pytorch,” 2017. 8 [32] K. He, X. Zhang, S. Ren, and J. Sun, “Deep residual learning for image recognition,” in Proceedings of the IEEE conference on Computer Vision and Pattern Recognition , 2016, pp. 770–778. 8 [33] S. Xie, R. Girshick, P. Dollár, Z. Tu, and K. He, “Aggregated residual transformations for deep neural networks,” in Proceedings of the IEEE conference on Computer Vision and Pattern Recognition , 2017, pp. 1492– 1500. 8 [34] K. He, H. Fan, Y. Wu, S. Xie, and R. Girshick, “Momentum contrast for unsupervised visual representation learning,” in Proceedings of the IEEE/CVF conference on Computer Vision and Pattern Recognition ,2020, pp. 9729–9738. 9 [35] T. Wang and P. Isola, “Understanding contrastive representation learning through alignment and uniformity on the hypersphere,” in International Conference on Machine Learning . PMLR, 2020, pp. 9929–9939. 9 [36] Y. Cui, M. Jia, T.-Y. Lin, Y. Song, and S. Belongie, “Class-balanced loss based on effective number of samples,” in Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , 2019, pp. 9268– 9277. 9 [37] B. Zhou, Q. Cui, X.-S. Wei, and Z.-M. Chen, “Bbn: Bilateral-branch network with cumulative learning for long-tailed visual recognition,” in 
+
+Proceedings of the IEEE/CVF conference on Computer Vision and Pattern Recognition , 2020, pp. 9719–9728. 9 [38] J. Cui, S. Liu, Z. Tian, Z. Zhong, and J. Jia, “Reslt: Residual learning for long-tailed recognition,” IEEE transactions on pattern analysis and machine intelligence , vol. 45, no. 3, pp. 3695–3706, 2022. 9 [39] P. Wang, K. Han, X.-S. Wei, L. Zhang, and L. Wang, “Contrastive learning based hybrid networks for long-tailed image classification,” in 
+
+Proceedings of the IEEE/CVF conference on Computer Vision and Pattern Recognition , 2021, pp. 943–952. 9 [40] K. Cao, C. Wei, A. Gaidon, N. Arechiga, and T. Ma, “Learning imbalanced datasets with label-distribution-aware margin loss,” Advances in Neural Information Processing Systems , vol. 32, 2019. 9 [41] Y. Hong, S. Han, K. Choi, S. Seo, B. Kim, and B. Chang, “Disentangling label distribution for long-tailed visual recognition,” in Proceedings of the IEEE/CVF conference on Computer Vision and Pattern Recognition ,2021, pp. 6626–6636. 9 [42] T. Tirer and J. Bruna, “Extended unconstrained features model for exploring deep neural collapse,” in International Conference on Machine Learning . PMLR, 2022, pp. 21 478–21 505. 12 [43] H. Dang, T. T. Huu, S. Osher, N. Ho, T. M. Nguyen et al. , “Neural collapse in deep linear networks: from balanced to imbalanced data,” 2023. 12 [44] Z. Yang, J. Pan, Y. Yang, X. Shi, H.-Y. Zhou, Z. Zhang, and C. Bian, “Proco: Prototype-aware contrastive learning for long-tailed medical image classification,” in International conference on Medical Image Computing and Computer-Assisted Intervention . Springer, 2022, pp. 173–182. 13 
+
+Sumin Roh received the M.Eng. degree in Electrical and Computer Engineering (ECE), Sungkyunkwan University (SKKU), Suwon, South Korea, in 2025. She is currently pursuing the Ph.D. degree in ECE, SKKU, Suwon, South Korea. Her research interests include long-tailed recognition, contrastive learning, and multimodal learning. 
+
+Harim Kim is a 4th year resident currently un-dergoing training at the Department of Radiology, Samsung Medical Center, Seoul, South Korea. She received her M.D. degree from Ewha Womans University, Seoul, South Korea (2015–2019). She also holds a B.A. degree in English Literature (2011–2015). Her research interests focus on tumor imaging and applications of artificial intelligence to medical imaging. 
+
+Ho Yun Lee is a Professor of Radiology (Thoracic Imaging Section) at Samsung Medical Center, Seoul, South Korea, and a Professor at the School of Medicine, Sungkyunkwan University, Suwon, South Korea. Her research interests include thoracic onco-logic imaging and radiomics, with a particular focus on quantitative image analysis and its integration with genomics for prognostic stratification and as-sessment of treatment response. She currently serves as Chair of the International Liaison Committee of the Korean Society of Thoracic Radiology and Chair of the Planning Committee for the Korean Workshop on Pulmonary Functional Imaging, and is a member of the Fleischner Society. 
+
+Il Yong Chun (Member, IEEE) received the B.Eng. degree in Electrical Engineering from Ko-rea University, Seoul, South Korea, in 2009, and the Ph.D. degree in Electrical and Computer En-gineering from Purdue University, West Lafayette, Indiana, in 2015. He is an Associate Professor of Electrical and Computer Engineering (ECE) at Sungkyunkwan University (SKKU), Suwon, South Korea, from 2024. He is also affiliated with the Departments of Artificial Intelligence, Advanced Display Engineering, Semiconductor Convergence Engineering, and Display Convergence Engineering, SKKU, Suwon, South Korea, and the Center for Neuroscience Imaging Research, Institute for Basic Science, Suwon, South Korea. He joined the School of Electronic and Electrical Engineering (now ECE) at SKKU in 2021, as an Assistant Professor. Prior to joining SKKU, he was an Assistant Professor of Electrical and Computer Engineering at the University of Hawai’i, Manoa, a Research Fellow in Electrical Engineering and Computer Science at The University of Michigan, and a Postdoctoral Research Associate in Mathematics at Purdue University, from 2019-2021, 2016-2019, and 2015-2016, respectively. His research interests include machine learning and artificial intelligence, applied to computational imaging and vision. JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, FEBRUARY 2026 15 
+
+# Supplementary Material for “Equilibrium contrastive learning for imbalanced image classification” 
+
+For clarity and completeness, this supplementary material provides the followings: 
+
+∙ Section S7 presents the proof of Theorem 1; 
+
+∙ Section S8 details our hyperparameter settings; 
+
+∙ Section S9 reports precision and recall results for different methods on a benchmark dataset, and confusion matrices for ECL on the medical image datasets. S7. P ROOFS FOR THEOREM 1In this section, we derive the lower bound for BC-ECL (4). Following [S7], [S15], we aim to decompose the loss into 
+
+attraction and repulsion terms. (For notational brevity, we set 
+
+𝜏 = 1 .) We first rewrite the overall BC-ECL los as follows: 
+
+BC-ECL 
+
+= − 1
+
+||∑
+
+> 𝑖 ∈
+
+1
+
+|(𝑖 )|∑
+
+> 𝑗 ∈(𝑖 )
+
+log exp(( 𝐳 𝑖 ⋅ 𝐳 𝑗 + 𝐳 𝑖 ⋅ 𝐳 𝑝 𝑦 𝑖 
+
+)∕2) 
+
+∑ 
+
+> 𝑐 ∈
+> 1
+> |𝑐 |
+
+∑
+
+> 𝑘 ∈𝑐
+
+exp( 𝐳 𝑖 ⋅ 𝐳 𝑘 ) + exp( 𝐳 𝑖 ⋅ 𝐳 𝑝 𝑐 )= 1
+
+||∑
+
+> 𝑖 ∈
+
+(
+
+1
+
+|(𝑖 )|∑
+
+> 𝑗 ∈(𝑖 )
+
+log 
+
+(∑
+
+> 𝑐 ∈
+
+1
+
+|𝑐 |∑
+
+> 𝑘 ∈𝑐
+
+exp( 𝐳 𝑖 ⋅ 𝐳 𝑘 ) + exp( 𝐳 𝑖 ⋅ 𝐳 𝑝 𝑐 )
+
+)
+
+− 1
+
+|(𝑖 )|∑
+
+> 𝑗 ∈(𝑖 )
+
+𝐳 𝑖 ⋅ 𝐳 𝑗 + 𝐳 𝑖 ⋅ 𝐳 𝑝 𝑦 𝑖 
+
+2
+
+)
+
+= 1
+
+||∑
+
+> 𝑖 ∈
+
+(
+
+log 
+
+(∑
+
+> 𝑐 ∈
+
+1
+
+|𝑐 |∑
+
+> 𝑘 ∈𝑐
+
+exp( 𝐳 𝑖 ⋅ 𝐳 𝑘 ) + exp( 𝐳 𝑖 ⋅ 𝐳 𝑝 𝑐 )
+
+)
+
+− 1
+
+|(𝑖 )|∑
+
+> 𝑗 ∈(𝑖 )
+
+𝐳 𝑖 ⋅ 𝐳 𝑗 + 𝐳 𝑖 ⋅ 𝐳 𝑝 𝑦 𝑖 
+
+2
+
+)
+
+= 1
+
+||∑
+
+> 𝑖 ∈
+
+(
+
+log 
+
+(∑
+
+> 𝑐 ∈
+
+1
+
+|𝑐 |∑
+
+> 𝑘 ∈𝑐
+
+exp( 𝐳 𝑖 ⋅ 𝐳 𝑘 ) + exp( 𝐳 𝑖 ⋅ 𝐳 𝑝 𝑐 )
+
+)
+
+−log 
+
+(
+
+exp 
+
+(
+
+1
+
+|(𝑖 )|∑
+
+> 𝑗 ∈(𝑖 )
+
+𝐳 𝑖 ⋅ 𝐳 𝑗 + 𝐳 𝑖 ⋅ 𝐳 𝑝 𝑦 𝑖 
+
+2
+
+))) 
+
+= 1
+
+||∑
+
+> 𝑖 ∈
+
+log 
+
+∑ 
+
+> 𝑐 ∈
+> 1
+> |𝑐 |
+
+∑
+
+> 𝑘 ∈𝑐
+
+exp( 𝐳 𝑖 ⋅ 𝐳 𝑘 ) + exp( 𝐳 𝑖 ⋅ 𝐳 𝑝 𝑐 )exp ( 12|(𝑖 )|
+
+∑
+
+> 𝑗 ∈(𝑖 )
+
+(𝐳 𝑖 ⋅ 𝐳 𝑗 + 𝐳 𝑖 ⋅ 𝐳 𝑝 𝑦 𝑖 
+
+)) , (S1) 
+
+where the second inequality holds by log( 𝑎 ∕𝑏 ) = log 𝑎 − log 𝑏 ,the third inequality holds by ∑𝑗 ∈ 𝑎 𝑖 = ||𝑎 𝑖 .Now, we split the numerator 𝑁 (𝑖 ) in (S1) into intra-class and inter-class terms: 
+
+𝑁 (𝑖 ) ∶= 1
+
+|(𝑖 )|∑
+
+> 𝑗 ∈(𝑖 )
+
+exp( 𝐳 𝑖 ⋅ 𝐳 𝑗 ) + exp( 𝐳 𝑖 ⋅ 𝐳 𝑝 𝑦 𝑖 
+
+)
+
+⏟⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏟⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏟ 
+
+> (a) intra-class
+
++ ∑ 
+
+> 𝑐 ∈⧵{𝑦 𝑖 }
+
+1
+
+|𝑐 |∑
+
+> 𝑘 ∈𝑐
+
+exp( 𝐳 𝑖 ⋅ 𝐳 𝑘 ) + exp( 𝐳 𝑖 ⋅ 𝐳 𝑝 𝑐 )
+
+⏟⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏟⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏟ 
+
+> (b) inter-class
+
+. (S2) 
+
+We obtain the lower bound of the term (a) in (S2) as follows: 
+
+1
+
+|(𝑖 )|∑
+
+> 𝑗 ∈(𝑖 )
+
+exp( 𝐳 𝑖 ⋅ 𝐳 𝑗 ) + exp( 𝐳 𝑖 ⋅ 𝐳 𝑝 𝑦 𝑖 
+
+)
+
+≥ 2
+
+|(𝑖 )|∑
+
+> 𝑗 ∈(𝑖 )
+
+exp 
+
+( 𝐳 𝑖 ⋅ 𝐳 𝑗 + 𝐳 𝑖 ⋅ 𝐳 𝑝 𝑦 𝑖 
+
+2
+
+)
+
+≥ 2exp 
+
+(
+
+1
+
+|(𝑖 )|∑
+
+> 𝑗 ∈(𝑖 )
+
+𝐳 𝑖 ⋅ 𝐳 𝑗 + 𝐳 𝑖 ⋅ 𝐳 𝑝 𝑦 𝑖 
+
+2
+
+)
+
+. (S3) 
+
+where the first inequality in (S3) holds by the arithmetic mean– geometric mean (AM–GM) inequality, i.e., for any positive numbers 𝑥 and 𝑦 , 𝑥 + 𝑦 ≥ 2√𝑥𝑦 , and the second inequality holds by the Jensen’s inequality for a convex function, i.e., for any real numbers {𝑎 𝑖 ∶ 𝑖 ∈ }, ||−1 ∑𝑖 ∈ exp( 𝑎 𝑖 ) ≥
+
+exp( ||−1 ∑𝑖 ∈ 𝑎 𝑖 ). Similarly, we obtain the lower bound of the term (b) in (S2) as follows: 
+
+1
+
+|𝑐 |∑
+
+> 𝑘 ∈𝑐
+
+exp( 𝐳 𝑖 ⋅ 𝐳 𝑘 ) + exp( 𝐳 𝑖 ⋅ 𝐳 𝑝 𝑐 )
+
+≥ 2exp 
+
+(
+
+1
+
+|𝑐 |∑
+
+> 𝑘 ∈𝑐
+
+𝐳 𝑖 ⋅ 𝐳 𝑘 + 𝐳 𝑖 ⋅ 𝐳 𝑝 𝑐 
+
+2
+
+)
+
+. (S4) 
+
+By combining (S3) and (S4), 𝑁 (𝑖 ) in (S2) is lower bounded as follows: 
+
+𝑁 (𝑖 ) ≥ 2exp 
+
+(
+
+1
+
+|(𝑖 )|∑
+
+> 𝑗 ∈(𝑖 )
+
+𝐳 𝑖 ⋅ 𝐳 𝑗 + 𝐳 𝑖 ⋅ 𝐳 𝑝 𝑦 𝑖 
+
+2
+
+)
+
++ ∑ 
+
+> 𝑐 ∈⧵{𝑦 𝑖 }
+
+2exp 
+
+(
+
+1
+
+|𝑐 |∑
+
+> 𝑘 ∈𝑐
+
+𝐳 𝑖 ⋅ 𝐳 𝑘 + 𝐳 𝑖 ⋅ 𝐳 𝑝 𝑐 
+
+2
+
+)
+
+⏟⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏟⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏞⏟ 
+
+> (c)
+
+. (S5) 
+
+By applying the Jensen’s inequality (for a convex function) again to the term (c), we obtain its lower bound: 
+
+∑ 
+
+> 𝑐 ∈⧵{𝑦 𝑖 }
+
+2exp 
+
+(
+
+1
+
+|𝑐 |∑
+
+> 𝑘 ∈𝑐
+
+𝐳 𝑖 ⋅ 𝐳 𝑘 + 𝐳 𝑖 ⋅ 𝐳 𝑝 𝑐 
+
+2
+
+)
+
+≥ 2( 𝐶 − 1)exp 
+
+(
+
+1(𝐶 − 1) 
+
+∑ 
+
+> 𝑐 ∈⧵{𝑦 𝑖 }
+
+1
+
+|𝑐 |∑
+
+> 𝑘 ∈𝑐
+
+𝐳 𝑖 ⋅𝐳 𝑘 + 𝐳 𝑖 ⋅𝐳 𝑝 𝑐 
+
+2
+
+)
+
+. (S6) 
+
+By combining the results in (S5) and (S6), we obtain the final lower bound of 𝑁 (𝑖 ) in (S2): 
+
+𝑁 (𝑖 ) ≥ 2exp 
+
+(
+
+12|(𝑖 )|∑
+
+> 𝑗 ∈(𝑖 )
+
+(𝐳 𝑖 ⋅ 𝐳 𝑗 + 𝐳 𝑖 ⋅ 𝐳 𝑝 𝑦 𝑖 
+
+)
+
+)
+
++ 2( 𝐶 − 1)exp 
+
+(
+
+12( 𝐶 − 1) 
+
+∑ 
+
+> 𝑐 ∈⧵{𝑦 𝑖 }
+
+1
+
+|𝑐 |∑
+
+> 𝑘 ∈𝑐
+
+(𝐳 𝑖 ⋅𝐳 𝑘 + 𝐳 𝑖 ⋅𝐳 𝑝 𝑐 )
+
+)
+
+.
+
+(S7) JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, FEBRUARY 2026 16 
+
+TABLE S1: Top-1 accuracy comparisons of ECL under varying balancing parameter combinations with CIFAR-10-LT (𝜌 = 100 ). 
+
+𝜆 BC-ECL 𝜆 LC 𝜆 CC-GE CIFAR-10-LT 0.5 1 1 91.9 0.5 0.5 1 91.5 0.5 1 3 92.0 0.5 0.5 3 92.1 
+
+1 1 1 91.3 1 0.5 1 91.7 1 1 3 91.8 1 0.5 3 91.6 
+
+Finally, we obtain the lower bound of BC-ECL in (S1). For simplicity, we define the followings in (S7): 
+
+𝐴 (𝑖 ) ∶= 12|(𝑖 )|∑
+
+> 𝑗 ∈(𝑖 )
+
+(𝐳 𝑖 ⋅ 𝐳 𝑗 + 𝐳 𝑖 ⋅ 𝐳 𝑝 𝑦 𝑖 
+
+) (S8) 
+
+𝑅 (𝑖 ) ∶= 12( 𝐶 − 1) 
+
+∑ 
+
+> 𝑐 ∈⧵{𝑦 𝑖 }
+
+1
+
+|𝑐 |∑
+
+> 𝑘 ∈𝑐
+
+(𝐳 𝑖 ⋅𝐳 𝑘 + 𝐳 𝑖 ⋅𝐳 𝑝 𝑐 ) (S9) By applying the result in (S7) and the definitions in (S8)–(S9) to (S1), we derive the following lower bound of BC-ECL :
+
+BC-ECL 
+
+= 1
+
+||∑
+
+> 𝑖 ∈
+
+log 
+
+∑ 
+
+> 𝑐 ∈
+> 1
+> |𝑐 |
+
+∑
+
+> 𝑘 ∈𝑐
+
+exp( 𝐳 𝑖 ⋅ 𝐳 𝑘 ) + exp( 𝐳 𝑖 ⋅ 𝐳 𝑝 𝑐 )exp ( 12|(𝑖 )|
+
+∑
+
+> 𝑗 ∈(𝑖 )
+
+(𝐳 𝑖 ⋅ 𝐳 𝑗 + 𝐳 𝑖 ⋅ 𝐳 𝑝 𝑦 𝑖 
+
+)) in (S1) 
+
+≥ 1
+
+||∑
+
+> 𝑖 ∈
+
+log 2 ⋅ exp( 𝐴 (𝑖 )) + 2( 𝐶 − 1) ⋅ exp( 𝑅 (𝑖 )) exp( 𝐴 (𝑖 )) 
+
+≥ 1
+
+||∑
+
+> 𝑖 ∈
+
+log(2(1 + ( 𝐶 − 1)exp( 𝑅 (𝑖 ) − 𝐴 (𝑖 )))) 
+
+≥ 1
+
+||∑
+
+> 𝑖 ∈
+
+log2 + log(1 + ( 𝐶 − 1)exp( 𝑅 (𝑖 ) − 𝐴 (𝑖 ))) 
+
+≥ 1
+
+||∑
+
+> 𝑖 ∈
+
+log(1 + ( 𝐶 − 1)exp( 𝑅 (𝑖 ) − 𝐴 (𝑖 ))) (S10) Substituting (S8)–(S9) into (S10) completes the proofs of Theo-rem 1. 
+
+S8. H YPERPARAMETER SETTINGS 
+
+To tune the hyperparameters {𝜆 BC-ECL ,𝜆 CC-GE ,𝜆 LC } of the over-all ECL loss (8), we selected their values such that the three weighted loss terms 𝜆 BC-ECL BC-ECL , 𝜆 CC-GE CC-GE , and 𝜆 LC LC 
+
+have similar magnitudes at the first training epoch on the CIFAR-10-LT ( 𝜌 = 100 ) benchmark dataset. We then applied this set of hyperparameters consistently across all datasets. The hyperpa-rameters selected from our simple hyperparameter tuning scheme yielded stable and reliable performance across all datasets. Table S1 reports the top-1 accuracy of ECL on CIFAR-10-LT ( 𝜌 = 100 ) under different balancing parameter combinations 
+
+{𝜆 BC-ECL ,𝜆 LC ,𝜆 CC-GE }. Overall, the performance remains stable across the tested combinations, and we obtained the best result with {𝜆 BC-ECL = 0 .5, 𝜆 LC = 0 .5, 𝜆 CC-GE = 3} . Other combinations yielded comparable accuracy, indicating that ECL is not overly sensitive to the choice of these balancing parameters. This sensi-tivity analysis demonstrates that ECL is robust to a wide range of 
+
+TABLE S2: Comparisons of precision and recall with CIFAR-
+
+10 -LT dataset ( 𝜌 = 100 ). 
+
+Methods Precision Recall BCL [S7] 86.65 84.14 PaCO [S9] 77.21 73.72 GPaCo [S10] 79.73 77.56 
+
+ECL 94.41 91.60 
+
+(a) ISIC 2019 (b) LCCT 
+
+Fig. S1: Confusion matrices for ECL on two different medical image datasets. The bar on the right indicates the classification accuracy. 
+
+parameter choices and consistently outperforms existing state-of-the-art supervised methods on CIFAR-10-LT ( 𝜌 = 100 ) across all combinations we evaluated. 
+
+S9. M ORE EXPERIMENTAL RESULTS 
+
+Section S9-A compares precision and recall between different supervised CL methods on the CIFAR-10-LT benchmark dataset. Section S9-B presents confusion matrix results of ECL with the two medical image datasets, LCCT and ISIC 2019. Section S9-C includes receiver operating characteristic (ROC) and precision-recall (PR) curves of ECL with the two medical image datasets, LCCT and ISIC 2019. 
+
+A. Comparisons of precision and recall between different supervised CL methods 
+
+Table S2 reports precision and recall on the CIFAR-10 -LT benchmark, comparing ECL with supervised CL baselines, BCL [S7], PaCo [S9], and GPaCo [S10], to assess their robustness to class imbalance. The proposed method achieved the highest preci-sion and recall among all baselines, demonstrating more balanced performance across both majority and minority classes. These results suggest that ECL is more robust to class imbalance than existing supervised CL methods. 
+
+B. Confusion matrices for ECL 
+
+Fig. S1 visualizes the confusion matrices for the LCCT and ISIC 2019 datasets to examine whether ECL achieves balanced classification under class imbalance. In LCCT, the high-risk class is the majority class and the low-risk class is the minority class. In ISIC 2019, NV is the only majority class, whereas the remaining classes— SCC , VASC , DF , BCC , AKIEC , BKL , and MEL —serve as minority classes. Across both datasets, the diagonal entries remain strong for all classes, indicating that ECL maintains balanced performance rather JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, FEBRUARY 2026 17 
+
+> (a) ROC curve
+> (b) PR curve
+
+Fig. S2: ROC and PR curves of ECL with the LCCT dataset. 
+
+than collapsing toward the majority classes. Although minority classes naturally exhibit higher error rates, their misclassifications are largely confined to a few semantically similar class pairs rather than being distributed arbitrarily. This suggests that the remaining errors arise primarily from semantic ambiguity—not from a sys-tematic bias toward majority classes. Overall, these results show that ECL achieves relatively low false-negative rates for minority classes while avoiding excessive false positives, demonstrating its ability to maintain a stable trade-off between sensitivity and specificity under class imbalance. 
+
+C. ROC and PR curves for ECL 
+
+Fig. S2 and Fig. S3 visualizes ROC and PR curves of ECL with the LCCT and ISIC 2019 datasets. We report ROC curves to assess how well the model separates positive from negative samples across decision thresholds and PR curves to better reflect performance un-der class imbalance, where false positives can substantially degrade precision for minority classes. For the multi-class setting, we report per-class curves as well as micro- and macro-averaged scores. The micro-averaged score computes a weighted average that reflects class frequency, whereas the macro-averaged score computes an unweighted average over classes, treating all classes equally. Fig. S2(a) and Fig. S2(b) present the ROC and PR curves of ECL with the LCCT dataset, respectively, where the positive class corresponds to the low-risk (minority) class. In Fig. S2(a), the 
+
+> (a) ROC curve
+> (b) PR curve
+
+Fig. S3: ROC and PR curves of ECL with the ISIC 2019 dataset. 
+
+ROC curve achieves a high area under the curve (AUC), with the true positive rate remaining high while the false positive rate stays low across a wide range of decision thresholds. In Fig. S2(b), the PR curve achieves a high AUC and maintains high precision as recall increases across decision thresholds. These results indicate that ECL clearly separates low-risk and high-risk classes while effectively limiting false positives under class imbalance. Fig. S3(a) and Fig. S3(b) present the ROC and PR curves of ECL with the ISIC 2019 dataset, respectively. Fig. S3(a) shows that the per-class ROC curves achieve high AUC values, with true positive rates remaining high while false positive rates stay low across a wide range of decision thresholds. Fig. S3(b) shows the per-class PR curves. The majority class NV achieves a high AUC value, maintaining strong precision even at high recall. Notably, several minority classes such as VASC and BCC achieve comparable or even higher AUC values than NV, indicating that ECL can learn discriminative representations for certain minority classes despite class imbalance. For more challenging minority classes such as AKIEC and DF, precision decreases as recall increases, yet the curves show a gradual degradation rather than an abrupt collapse, suggesting a stable precision–recall trade-off under data imbalance. The gap between the micro- and macro-averaged PR curves sug-gests that ECL performs well on average, while indicating higher misclassification rates in a few challenging minority classes (e.g., JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, FEBRUARY 2026 18 
+
+AKIEC and DF). Corresponding to the confusion-matrix analysis in Section S9-B, these misclassifications are largely concentrated in a few semantically similar class pairs, suggesting semantic am-biguity rather than a systematic bias toward the majority class. Overall, the proposed ECL model effectively addresses data imbalance by limiting false positives through high precision in both binary and multi-class classification tasks, while still leaving room for improvement for some challenging minority classes in the multi-class settings. These results suggest potential clinical utility for real-world medical applications.

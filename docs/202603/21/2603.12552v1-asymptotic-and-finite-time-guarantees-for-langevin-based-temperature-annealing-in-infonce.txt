@@ -1,0 +1,990 @@
+Title: Asymptotic and Finite-Time Guarantees for Langevin-Based Temperature Annealing in InfoNCE
+
+URL Source: https://arxiv.org/pdf/2603.12552v1
+
+Published Time: Mon, 16 Mar 2026 00:26:21 GMT
+
+Number of Pages: 20
+
+Markdown Content:
+> OPT2025: 17th Annual Workshop on Optimization for Machine Learning
+
+# Asymptotic and Finite-Time Guarantees for Langevin-Based Temperature Annealing in InfoNCE 
+
+Faris Chaudhry FARIS .CHAUDHRY 22@ IMPERIAL .AC .UK 
+
+Imperial College London, United Kingdom 
+
+Abstract 
+
+The InfoNCE loss in contrastive learning depends critically on a temperature parameter, yet its dy-namics under fixed versus annealed schedules remain poorly understood. We provide a theoretical analysis by modeling embedding evolution under Langevin dynamics on a compact Riemannian manifold. Under mild smoothness and energy-barrier assumptions, we show that classical simu-lated annealing guarantees extend to this setting: slow logarithmic inverse-temperature schedules ensure convergence in probability to a set of globally optimal representations, while faster sched-ules risk becoming trapped in suboptimal minima. Our results establish a link between contrastive learning and simulated annealing, providing a principled basis for understanding and tuning tem-perature schedules. 
+
+1. Introduction 
+
+Contrastive learning with the Information Noise-Contrastive Estimation (InfoNCE) loss has become a cornerstone of modern representation learning [14, 34]. It encourages an anchor embedding z to be close to its positive embedding z+ (e.g., an augmented view of the same data point) while repelling negative embeddings z− (e.g., embeddings of other data points). The method’s performance is critically dependent on an inverse temperature parameter β which modulates the sharpness of the similarity distribution in the loss function for an anchor zi and its positive sample zj :
+
+ℓi,j = − log exp ( β sim ( zi, z j )) 
+
+P  
+
+> k̸=i
+
+exp ( β sim ( zi, z k)) , (1) where sim( ·, ·) is a similarity function (such as cosine similarity). The overall contrastive loss L is then defined as an average over a set of positive embedding pairs P:
+
+L = 1
+
+|P| 
+
+X
+
+> (i,j )∈P
+
+ℓi,j . (2) This objective formalizes the representation learning problem as a geometric alignment task: the goal is to learn an embedding space where semantic similarity in the input domain is preserved as metric closeness on some manifold, while distinct data points are separated to prevent collapse. Modern self-supervised learning relies heavily on instance-discrimination frameworks like Sim-CLR [5], MoCo [16], and BYOL [13], where the temperature parameter plays a major role in shaping the loss landscape. A fixed temperature often proves inadequate: low temperatures can induce dimensional collapse [20], while high temperatures degrade uniformity and discriminative power [36]. Recognizing this, recent empirical studies have proposed heuristic adaptive schedules,    
+
+> © F. Chaudhry.
+> arXiv:2603.12552v1 [cs.LG] 13 Mar 2026 TEMPERATURE ANNEALING IN CONTRASTIVE LEARNING
+
+such as individualized temperatures for different semantic classes [29], schedules for long-tailed data [23], or even temperature-free losses [21]. Despite these empirical advances, a theoretical grounding for temperature scheduling remains limited. Prior theory has largely focused on generalization bounds under fixed temperatures [32] or the geometric role of temperature as a sharpness parameter [35, 37]. Our work bridges this gap by connecting contrastive learning to the formal guarantees of simulated annealing [6, 9, 15, 22] and viewing stochastic gradient descent (SGD) as a Langevin process [27, 33]. Overall, we establish a formal connection between InfoNCE and classical simulated annealing. We model the evolution of embeddings as a Langevin stochastic differential equation (SDE) on a compact Riemannian manifold, with the InfoNCE objective acting as a time-varying potential. We prove asymptotic global convergence for a logarithmic annealing schedule, β(t) = c ln( t + K),under standard smoothness assumptions. We further derive a finite-time convergence rate for this process to provide a bound on the probability of error. Finally, we provide a geometric analysis of the InfoNCE Hessian, showing that annealing sharpens the loss landscape, which stabilizes the later phases of convergence. In doing so, our work helps to contextualize the heuristic practice of temperature scheduling to its theoretical foundations [31]. 
+
+2. Theoretical Framework 
+
+2.1. InfoNCE as a Gibbs Free Energy 
+
+The InfoNCE loss can be interpreted as the negative log-likelihood of sampling a positive pair from a local Gibbs distribution. For each anchor embedding zi, we define an energy Ei(k) = −sim (zi, z k)
+
+for any candidate sample zk. The local partition function for anchor i over its candidates is Zi(β) = P  
+
+> k̸=i
+
+exp( −β E i(k)) , yielding a probability distribution over candidates: 
+
+pi(k | β) = exp( −β E i(k)) 
+
+Zi(β) = exp( β sim( zi, z k)) 
+
+P  
+
+> l̸=i
+
+exp( β sim( zi, z l)) .
+
+This is precisely a Gibbs-Boltzmann distribution. The InfoNCE loss term ℓi,j is the negative log-probability of selecting the positive sample j, since exp ( −ℓi,j ) = pi(j | β). As β → ∞ , this distribution concentrates sharply on the candidate(s) k∗ maximizing similarity (minimizing energy) with zi. This connection is clearest when viewing the scaled loss, which takes a form analogous to the Helmholtz free energy ( F = E − T S ): 
+
+ℓi,j 
+
+β = − sim( zi, z j )
+
+| {z } 
+
+> Energy Ei(j)
+
++ 1
+
+β log Zi(β)
+
+| {z }
+
+> Entropic/Log-Partition
+> ≈− Temperature ×Entropy
+
+.
+
+The first term minimizes energy by pulling the positive sample zj closer, while the second term penalizes configurations where zi is highly similar to many negatives. 
+
+2.2. The Langevin Model, Key Assumptions, and the Limiting Potential 
+
+This free-energy perspective motivates modeling the embedding evolution as a Langevin process. We model the dynamics of the full set of embeddings Zt on a manifold M using the overdamped    
+
+> 2TEMPERATURE ANNEALING IN CONTRASTIVE LEARNING
+
+Langevin SDE, which approximates the behavior of SGD with isotropic noise scaled by β(t):
+
+dZt = −grad L(Zt, β (t)) d t + p2/β (t) d WM 
+
+> t
+
+, (3) where grad is the Riemannian gradient and β(t) is the time-varying inverse temperature schedule. This SDE models the exploration-exploitation dynamics inherent in annealing as β → ∞ .The convergence of this process relies on the following standard assumptions (formalized in Appendix A, where we also discuss their validity in more detail). 
+
+A1–A2 (Dynamics on a Compact Manifold): The dynamics follow the SDE in (3) on a compact, connected Riemannian manifold M. Compactness, often achieved in practice via ℓ2-normalization, is a key property that guarantees energy barriers are finite. 
+
+A3–A4 (Well-Posed Limiting Potential): The similarity function is smooth and bounded, ensur-ing the loss L converges to a well-defined limiting potential U0(Z) as β → ∞ . This holds for the cosine and Gaussian similarity functions, for example. 
+
+A5–A6 (Annealing Conditions): The potential U0(Z) has a finite critical energy barrier constant 
+
+c∗ = 1 /∆Emax where ∆Emax is the largest energy barrier of the loss landscape. Further, the annealing schedule is logarithmic, β(t) = c ln( t + K), with a rate c that is sufficiently slow ( 0 <c ≤ c∗) and some constant K > 0.For InfoNCE, the limiting potential from A4 is defined as: 
+
+U0(Z) = 1
+
+|P| 
+
+X
+
+> (i,j )∈P
+
+
+
+−sim ( zi, z j ) + max   
+
+> k̸=i
+
+sim ( zi, z k)
+
+
+
+. (4) The global minimizers of this potential correspond to the ideal state of the representations when 
+
+β → ∞ , as formalized in the following proposition. 
+
+Proposition 1 (Characterization of Global Minima) A configuration Z∗ is a global minimizer of the limiting potential U0(Z) if and only if for every positive pair (i, j ), the maximum possible similarity is achieved. 
+
+3. Main Convergence Guarantees 
+
+With the theoretical framework established, we now present our main results. We provide an asymp-totic guarantee of global convergence for a slow annealing schedule, a matching non-convergence result for fast schedules, and a finite-time bound on the convergence rate. 
+
+3.1. Equilibrium at Fixed Temperature 
+
+Before considering a time-varying schedule, we recall the behavior of the SDE in (3) for a fixed inverse temperature β > 0. In this time-homogeneous setting, the process is ergodic and converges to a unique stationary distribution. 
+
+Proposition 2 (Stationary Distribution at Fixed Temperature) For any fixed β > 0, under As-sumptions A1-A3, the SDE admits a unique stationary Gibbs-Boltzmann distribution on M:
+
+πβ (d Z) = 1
+
+Zβ
+
+exp − β L(Z, β ) dμ (Z). (5)    
+
+> 3TEMPERATURE ANNEALING IN CONTRASTIVE LEARNING
+
+This result formalizes the connection to statistical physics and the fundamental trade-off for any fixed temperature: for any finite β, there is a non-zero probability of being in a suboptimal state, while a very large β risks trapping the dynamics, as the noise term p2/β vanishes. This motivates the use of a time-varying annealing schedule to navigate this trade-off. As β → ∞ , this distribution concentrates its mass on the global minimizers of the potential L(Z, β ) (or its limiting form U0(Z)), as formally characterized in Appendix C.1. 
+
+3.2. Asymptotic Global Convergence 
+
+Simulated annealing leverages this concentration property by slowly increasing β(t). If β(t) in-creases slowly enough, the system can escape local minima while the temperature is high ( β is small) and then “freeze” into the global minimum as the temperature drops ( β → ∞ ). Classical simulated annealing theory provides precise conditions for how slow the rate of in-creasing β(t) must be for guaranteed convergence. Adapting these results to our specific time-inhomogeneous SDE (3) yields the following key results. 
+
+Theorem 3 (Global Convergence for Logarithmic Annealing) Under Assumptions A1–A6, the pro-cess Zt defined by Eq. (3) converges in probability to the set U ∗ of global minimizers of U0(Z):
+
+lim  
+
+> t→∞
+
+P Zt ∈ N (U ∗, ϵ ) = 1 , ∀ϵ > 0.
+
+Here, N (U ∗, ϵ ) = {Z ∈ M | inf Y ∈U ∗ d(Z, Y ) < ϵ } denotes an ϵ-neighborhood of the set U ∗
+
+under the Riemannian metric d(·, ·) of the manifold M.The proof combines tools from variational convergence and large deviations [3, 4, 7, 8]. First, we use Γ-convergence to show that the sequence of quasi-stationary Gibbs measures associated with the annealed SDE converges weakly to the uniform measure on the global minimizer set U ∗.This follows from the uniform convergence of the scaled loss Fβ (Z) to the limiting potential U0(Z)
+
+(Lemma B.1) and the compactness of the manifold. Second, we apply Freidlin–Wentzell exit-time theory [8] and Hajek’s classical annealing condition [6, 15] to show that a logarithmic schedule with 
+
+c ≤ c∗ is precisely slow enough to ensure escape from all suboptimal basins. Together, these results imply that the law of Zt converges weakly to the uniform measure on U ∗, which is equivalent to convergence in probability. This theorem provides the central guarantee: a sufficiently slow logarithmic inverse tempera-ture schedule ensures the SDE dynamics find the optimal configuration corresponding to perfect contrastive separation. Conversely, annealing inverse temperature too quickly violates the condi-tions needed to guarantee escape from all local minima. 
+
+Proposition 4 (Non-Convergence for Rapid Annealing) Let Assumptions A1–A5 hold. If the logarithmic annealing schedule β(t) grows too quickly, specifically lim inf t→∞ β(t)ln t = c′ > c ∗,then there exists a set of initial conditions with positive measure from which the process Zt defined by the SDE (3) converges to a suboptimal local minimum basin of U0(Z) with positive probability. That is, for any sufficiently small ϵ > 0:
+
+lim sup 
+
+> t→∞
+
+P Zt /∈ N (U ∗, ϵ ) > 0.   
+
+> 4TEMPERATURE ANNEALING IN CONTRASTIVE LEARNING
+
+This result highlights the precarious choice of annealing rate; faster schedules risk premature convergence to suboptimal representations. The proofs in Appendix B detail how these results adapt classical annealing arguments [6, 10, 11, 15, 22] to handle the specific time-varying potential 
+
+L(Z, β (t)) .
+
+3.3. Finite-Time Convergence Rate 
+
+Going beyond the asymptotic result, we provide a non-asymptotic bound on the probability of error, which depends on the chosen annealing rate c relative to the critical rate c∗.
+
+Corollary 5 (Finite-Time Convergence Rate) Under Assumptions A1–A6, for any ϵ > 0, there exist positive constants C, C ′, and d such that for a sufficiently large time t:
+
+P Zt /∈ N (U ∗, ϵ ) ≤
+
+(
+
+exp   − C(t + K)1−c/c ∗ , if c < c ∗,C′ (t + K)−d, if c = c∗.
+
+The exponent d > 0 in the polynomial decay is a constant that depends on the geometric properties of the loss landscape U0(Z).
+
+This result shows that the convergence rate for the probability of error is polynomial at the critical schedule ( c = c∗) and becomes stretched-exponential for slower schedules ( c < c ∗), providing a quantitative measure of the exploration-exploitation trade-off [18]. 
+
+4. Connection to Discrete Optimization 
+
+While our analysis is in continuous time, it provides strong guidance for the discrete-time algorithms used in practice. The Langevin SDE in (3) is the formal continuous-time limit of Stochastic Gradient Langevin Dynamics (SGLD) [38], an algorithm that injects explicit Gaussian noise into SGD steps. An annealed SGLD update on the manifold can be formulated as: 
+
+Zk+1 = Π M
+
+h
+
+Zk − ηk b∇L (Zk, β k) + p2 ηk/β k ξk
+
+i
+
+,
+
+where ηk is the learning rate, βk is the discrete annealing schedule, and ξk ∼ N (0 , I ).More broadly, standard mini-batch SGD can be viewed as an approximation of this SDE, where the stochasticity of the mini-batch gradient serves as the implicit noise source. The covariance of this implicit noise is data-dependent and generally anisotropic. For SGD to faithfully track the SDE, the learning rate ηk must be carefully chosen in relation to the inverse temperature βk and the co-variance of the gradient noise. Classical stochastic approximation theory [1, 24] provides the formal conditions under which such discrete recursions converge to their limiting SDEs, typically involving a decaying learning rate schedule (e.g., P 
+
+> k
+
+ηk = ∞, P 
+
+> k
+
+η2 
+
+> k
+
+< ∞). Furthermore, non-asymptotic global convergence results for SGLD in non-convex settings have been explicitly established [30], providing a discrete-time counterpart to our continuous analysis. 
+
+5. Geometric Analysis 
+
+Beyond the stochastic escape from local minima, the annealing parameter β also plays a crucial ge-ometric role by dynamically reshaping the loss landscape. To analyze this, we examine the Hessian    
+
+> 5TEMPERATURE ANNEALING IN CONTRASTIVE LEARNING
+
+of the InfoNCE loss, H(Z, β ). The full derivation (see Appendix C.3) shows that the Hessian is composed of two main terms: 
+
+H = β2 Cov k∼pi [∇sik ] + β (Ek∼pi [Hik ] − Hij ) . (6) Away from an optimum, the linear term dominates the spectral norm of the Hessian. While the first term appears quadratic in β, the variance of the distribution pi decays as O(1 /β ) due to concen-tration of measure, resulting in an overall linear scaling O(β). This sharpening effect effectively makes the basins of attraction “steeper” as annealing progresses. We formalize this in the following lemma. 
+
+Lemma 6 (Hessian Sharpening) Let H(Z, β ) be the Hessian of the InfoNCE loss L(Z, β ). For any configuration Z that is not a global minimizer, the dominant eigenvalues of H scale at least linearly with the inverse temperature, i.e., || H|| ∼ O(β).
+
+This linear sharpening creates a powerful synergy with the annealing process. At high tem-peratures (low β), the landscape is relatively smooth, allowing the large noise term in the SDE to facilitate exploration. As the temperature drops, the noise diminishes, but the landscape simultane-ously sharpens, providing a stronger deterministic pull towards the bottom of the global minimum basin once it has been found. 
+
+6. Conclusion and Future Work 
+
+We have established a formal connection between InfoNCE contrastive learning and classical sim-ulated annealing. By modeling the embedding dynamics with a Langevin SDE, we proved asymp-totic global convergence for a logarithmic temperature schedule, provided a finite-time convergence rate, and showed how annealing geometrically sharpens the loss landscape. Our work provides a principled theoretical foundation for the common practice of temperature scheduling. Future work can address either the geometry or the dynamics. In the first case, one could aim to relax the compactness assumption on the embedding manifold, or make the geometry explicit (e.g., hypersphere, Stiefel manifold) to analyze geometric properties in detail. In the second case, one can extend the analysis to anisotropic noise (i.e., by considering a non-diagonal covariance matrix for the Brownian motion) or to non-Gaussian noise (e.g., a L´ evy process) to better model the noise of SGD. Additionally, one could extend the analysis to cover momentum-based optimizers used in practice like Adam, which would require an analysis of underdamped Langevin dynamics and preconditioning. Finally, regarding the practical application of our convergence bounds, we note that explicit es-timation of the critical constant c∗ is intractable in deep learning. Consequently, while our results establish logarithmic schedules as the condition for asymptotic global convergence, the empirical success of faster cosine schedules [23] and square-root schedules suggests that in the finite-time regime, aggressive cooling can accelerate the transition between instance and group-wise discrim-ination to yield ‘good enough’ representations. Furthermore, our geometric analysis clarifies the mechanisms behind known trade-offs: annealing towards low temperatures drives uniformity [36] and effectively mines hard negatives by sharpening the penalty distribution [35], yet must be man-aged carefully to avoid the dimensional collapse associated with premature freezing [20].    
+
+> 6TEMPERATURE ANNEALING IN CONTRASTIVE LEARNING
+
+References 
+
+[1] Albert Benveniste, Michel M´ etivier, and Pierre Priouret. Adaptive Algorithms and Stochastic Approximations , volume 22. Springer-Verlag, 1990. [2] Michael Betancourt. A conceptual introduction to Hamiltonian Monte Carlo. arXiv preprint arXiv:1701.02434 , 2017. [3] Andrea Braides. Gamma-Convergence for Beginners . Oxford University Press, 2002. [4] Olivier Catoni. Sharp large deviations estimates for simulated annealing algorithms. Annales de l’I.H.P. Probabilit´ es et Statistiques , 27(3):291–383, 1991. [5] Ting Chen, Simon Kornblith, Mohammad Norouzi, and Geoffrey Hinton. A simple framework for contrastive learning of visual representations. In Proceedings of the 37th International Conference on Machine Learning (ICML) , 2020. [6] Tzuu-Shuh Chiang, Chii-Ruey Hwang, and Shuenn Jyi Sheu. Diffusion for global optimization in Rn. SIAM Journal on Control and Optimization , 25(3):737–753, 1987. [7] Amir Dembo and Ofer Zeitouni. Large Deviations Techniques and Applications , volume 38 of 
+
+Stochastic Modelling and Applied Probability . Springer Berlin Heidelberg, 2nd edition, 2009. [8] Mark I. Freidlin and Alexander D. Wentzell. Random Perturbations of Dynamical Systems .Grundlehren der mathematischen Wissenschaften. Springer-Verlag, 1984. [9] Stuart Geman and Donald Geman. Stochastic relaxation, Gibbs distributions, and the Bayesian restoration of images. IEEE Transactions on Pattern Analysis and Machine Intelligence , 6(6): 721–741, 1984. [10] Stuart Geman and Chii-Ruey Hwang. Diffusions for global optimization. SIAM Journal on Control and Optimization , 24(5):1031–1043, 1986. [11] Basil Gidas. Nonstationary Markov chains and convergence of the annealing algorithm. Jour-nal of Statistical Physics , 39(1–2):73–131, 1985. [12] Mark Girolami and Ben Calderhead. Riemann manifold Langevin and Hamiltonian Monte Carlo methods. Journal of the Royal Statistical Society: Series B (Statistical Methodology) ,73(2):123–214, 2011. [13] Jean-Bastien Grill, Florian Strub, Florent Altch´ e, Corentin Tallec, Pierre H. Richemond, Elena Buchatskaya, Carl Doersch, Bernardo Avila Pires, Zhaohan Daniel Guo, Mohammad Ghesh-laghi Azar, Bilal Piot, Koray Kavukcuoglu, R´ emi Munos, and Michal Valko. Bootstrap Your Own Latent: A new approach to self-supervised learning. In Advances in Neural Information Processing Systems (NeurIPS) , volume 33, 2020. [14] Michael Gutmann and Aapo Hyv¨ arinen. Noise-Contrastive Estimation: A new estimation principle for unnormalized statistical models. In Proceedings of the 13th International Con-ference on Artificial Intelligence and Statistics (AISTATS) , pages 297–304, 2010.    
+
+> 7TEMPERATURE ANNEALING IN CONTRASTIVE LEARNING
+
+[15] Bruce Hajek. Cooling schedules for optimal annealing. Mathematics of Operations Research ,13(2):311–329, 1988. [16] Kaiming He, Haoqi Fan, Yuxin Wu, Saining Xie, and Ross Girshick. Momentum Contrast for unsupervised visual representation learning. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) , pages 9726–9735, 2020. [17] Richard Holley and Daniel W. Stroock. Simulated annealing via Sobolev inequalities. Com-munications in Mathematical Physics , 115(4):553–569, 1988. [18] Richard A. Holley, Shigeo Kusuoka, and Daniel W. Stroock. Asymptotics of the spectral gap with applications to the theory of simulated annealing. Journal of Functional Analysis , 83(2): 333–347, 1989. [19] Elton P. Hsu. Stochastic Analysis on Manifolds , volume 38 of Graduate Studies in Mathemat-ics . American Mathematical Society, 2002. [20] Li Jing, Pascal Vincent, Yann LeCun, and Yuandong Tian. Understanding dimensional col-lapse in contrastive self-supervised learning. In International Conference on Learning Repre-sentations (ICLR) , 2022. [21] Bum Jun Kim and Sang Woo Kim. Temperature-free loss function for contrastive learning. 
+
+arXiv preprint arXiv:2501.17683 , 2025. [22] Scott Kirkpatrick, C. Daniel Gelatt, and Mario P. Vecchi. Optimization by simulated annealing. 
+
+Science , 220(4598):671–680, 1983. [23] Anna Kukleva, Moritz B¨ ohle, Bernt Schiele, Hilde Kuehne, and Christian Rupprecht. Tem-perature schedules for self-supervised contrastive methods on long-tail data. In International Conference on Learning Representations (ICLR) , 2023. [24] Harold J. Kushner and G. George Yin. Stochastic Approximation and Recursive Algorithms and Applications , volume 35 of Applications of Mathematics . Springer-Verlag, 2nd edition, 2003. [25] Shigeo Kusuoka and Daniel W. Stroock. Precise asymptotics of certain Wiener functionals. 
+
+Journal of Functional Analysis , 99(1):1–74, 1991. [26] Ziyin Liu, Ekdeep Singh Lubana, Masahito Ueda, and Hidenori Tanaka. What shapes the loss landscape of self-supervised learning? In International Conference on Learning Representa-tions (ICLR) , 2023. [27] Stephan Mandt, Matthew D. Hoffman, and David M. Blei. Stochastic gradient descent as approximate Bayesian inference. Journal of Machine Learning Research , 18(134):1–35, 2017. [28] Grigorios A. Pavliotis. Stochastic Processes and Applications: Diffusion Processes, the Fokker–Planck and Langevin Equations . Texts in Applied Mathematics. Springer, 2014.    
+
+> 8TEMPERATURE ANNEALING IN CONTRASTIVE LEARNING
+
+[29] Zi-Hao Qiu, Quanqi Hu, Zhuoning Yuan, Denny Zhou, Lijun Zhang, and Tianbao Yang. Not all semantics are created equal: Contrastive self-supervised learning with automatic tempera-ture individualization. In Proceedings of the 40th International Conference on Machine Learn-ing (ICML) , 2023. [30] Maxim Raginsky, Alexander Rakhlin, and Matus Telgarsky. Non-convex learning via Stochas-tic Gradient Langevin Dynamics: A global convergence guarantee. In Proceedings of the 30th Conference on Learning Theory (COLT) , pages 1674–1727, 2017. [31] Evgenia Rusak, Patrik Reizinger, Attila Juhos, Oliver Bringmann, Roland S. Zimmermann, and Wieland Brendel. InfoNCE: Identifying the gap between theory and practice. arXiv preprint arXiv:2407.00143 , 2024. [32] Nikunj Saunshi, Orestis Plevrakis, Sanjeev Arora, Mikhail Khodak, and Hrishikesh Khande-parkar. A theoretical analysis of contrastive unsupervised representation learning. In Proceed-ings of the 36th International Conference on Machine Learning (ICML) , volume 97, pages 5628–5637, 2019. [33] Bin Shi, Weijie Su, and Michael I. Jordan. On learning rates and Schr¨ odinger operators. 
+
+Journal of Machine Learning Research , 24(379):1–53, 2023. [34] Aaron van den Oord, Yazhe Li, and Oriol Vinyals. Representation learning with contrastive predictive coding. arXiv preprint arXiv:1807.03748 , 2018. [35] Feng Wang and Huaping Liu. Understanding the behaviour of contrastive loss. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) , pages 2495–2504, 2021. [36] Tongzhou Wang and Phillip Isola. Understanding contrastive representation learning through alignment and uniformity on the hypersphere. In Proceedings of the 37th International Con-ference on Machine Learning (ICML) , pages 9929–9939, 2020. [37] Yifei Wang, Qi Zhang, Yisen Wang, Jiansheng Yang, and Zhouchen Lin. Chaos is a ladder: A new theoretical understanding of contrastive learning via augmentation overlap. In Interna-tional Conference on Learning Representations (ICLR) , 2022. [38] Max Welling and Yee Whye Teh. Bayesian learning via Stochastic Gradient Langevin Dy-namics. In Proceedings of the 28th International Conference on Machine Learning (ICML) ,2011.    
+
+> 9TEMPERATURE ANNEALING IN CONTRASTIVE LEARNING
+
+Appendix A. Assumptions for Convergence Theorems 
+
+We first state the assumptions required for our theoretical results, followed by a discussion of their validity in practice. 
+
+A.1. List of Assumptions Assumption A1 (Langevin Dynamics Model) The evolution of the embedding vector Zt ∈ M is modeled by the overdamped Langevin diffusion process on the manifold M, governed by the SDE: 
+
+dZt = −grad L(Zt, β (t)) d t + p2/β (t) d WM 
+
+> t
+
+, (7) 
+
+where grad is the Riemannian gradient on M, L(Z, β ) is the InfoNCE loss, β(t) is the time-varying inverse temperature, and WM 
+
+> t
+
+is standard Brownian motion on M.
+
+Assumption A2 (Manifold) The individual embeddings zi are constrained to a compact, con-nected, Riemannian manifold M0 without boundary. The full state of N embeddings, Z = ( z1, . . . , z N ),evolves on the product manifold M = ( M0)N .
+
+Assumption A3 (Smoothness & Boundedness) The similarity function sim( z, z ′) is C2-smooth with respect to its arguments z, z ′ ∈ M 0, and is bounded, i.e., |sim( z, z ′)| ≤ Smax < ∞. This ensures the InfoNCE loss L(Z, β ) is C2-smooth on M for finite β.
+
+Assumption A4 (Limiting Potential & Minima) The scaled potential converges to a limiting po-tential function 
+
+U0(Z) = lim 
+
+> β→∞
+
+L(Z, β )
+
+β = 1
+
+|P| 
+
+X
+
+> (i,j )∈P
+
+
+
+−sim( zi, z j ) + max   
+
+> k̸=i
+
+sim( zi, z k)
+
+
+
+.
+
+This potential exists, is locally Lipschitz on M, and possesses a non-empty set U ∗ ⊂ M of global minimizers. 
+
+Assumption A5 (Energy Barriers) Let c∗ be the critical schedule constant determined by the energy barriers of the potential U0(Z) on the manifold M. Specifically, c∗ = 1 /∆Emax where 
+
+∆Emax represents the maximum required “escape cost” for the diffusion process to reach U ∗ from any starting point (in terms of the maximum energy to escape any local basin of U0(Z)). Further assume 0 < ∆Emax < ∞ so that 0 < c ∗ < ∞ (finiteness of ∆Emax is guaranteed by compactness of the manifold in Assumption A2). 
+
+Assumption A6 (Annealing Schedule) The inverse temperature β(t) is C1, non-decreasing, sat-isfies β(t) → ∞ , and follows a logarithmic schedule β(t) = c ln( t + K) with a rate 0 < c ≤ c∗.
+
+A.2. Remarks on Validity of Assumptions A1 (Langevin Dynamics): Modeling SGD as a Langevin SDE is a well-established paradigm in modern machine learning theory [27, 33, 38]. While our work assumes isotropic noise for the-oretical clarity, the actual noise in SGD is anisotropic and state-dependent. Furthermore, modern optimizers add features such as preconditioning and momentum, which change the dynamics. These remain directions of future work in simulated annealing more generally. However, the isotropic as-sumption serves as a strong baseline model for annealing behavior, capturing the essential trade-off between thermal noise and gradient drift.    
+
+> 10 TEMPERATURE ANNEALING IN CONTRASTIVE LEARNING
+
+A2 (Manifold): In practice, the compactness assumption is satisfied by the normalization step inherent to contrastive learning. By projecting embeddings onto the unit hypersphere ( Sd−1) via ℓ2-normalization, the state space becomes a compact, connected Riemannian manifold without bound-ary. This property is essential for our theoretical guarantees, as it ensures the state space is bounded and prevents the energy barriers from becoming infinite, thereby guaranteeing finite escape times from local minima. 
+
+A3 (Smoothness & Boundedness): This requirement is mild and satisfied by standard similarity metrics. For instance, both cosine similarity and the Gaussian (RBF) kernel are bounded and C∞
+
+smooth. Consequently, the overall InfoNCE loss remains smooth for any finite β, ensuring that the drift coefficient in the Langevin SDE remains well-behaved. 
+
+A4–A5 (Limiting Potential & Energy Barriers): The existence of a well-defined limiting po-tential U0(Z) and a non-empty set of global minimizers is guaranteed by the smoothness and com-pactness assumptions. The finiteness of the energy barrier ∆Emax is a direct consequence of the manifold’s compactness (Assumption A2), which ensures that the cost to move between any two points on the manifold is finite. Intuitively, ∆Emax depends on the curvature of the manifold; flat-ter manifolds tend to produce shallower potential wells (smaller ∆Emax ), theoretically permitting faster annealing schedules. While explicit estimation of this constant is intractable in deep learning, it is theoretically expected to increase with the number of negative samples, strength of augmen-tations, and hard negative mining, as these factors tend to make the optimization landscape more rugged and populated with additional local minima. 
+
+A6 (Annealing Schedule): The logarithmic schedule is the standard, theoretically optimal sched-ule for simulated annealing, providing the fastest cooling rate that still maintains asymptotic con-vergence guarantees [15]. The condition c ≤ c∗ reflects a necessary balance: the noise must decay slowly enough to ensure the process can exit the deepest local minima. While faster schedules (e.g., linear or square-root decay) are often used in practice to speed up convergence, they lack these asymptotic guarantees and risk getting trapped in suboptimal states if the temperature drops too quickly. 
+
+Appendix B. Proofs of Main Convergence Results 
+
+B.1. Proof of Lemma (Uniform Convergence of Scaled Potentials) Lemma [Uniform Convergence of Scaled Potentials] Under Assumption A3, the scaled loss con-verges uniformly to the limiting potential: 
+
+sup 
+
+> Z∈M
+
+L(Z, β )
+
+β − U0(Z) → 0 as β → ∞ .
+
+Proof We want to show that the difference between the scaled loss and the limiting potential con-verges to zero uniformly over the manifold M. We analyze the absolute difference term-by-term 
+
+> 11
+
+TEMPERATURE ANNEALING IN CONTRASTIVE LEARNING 
+
+for each positive pair (i, j ) ∈ P :
+
+ℓi,j (Z, β )
+
+β −
+
+
+
+−sim( zi, z j ) + max   
+
+> k̸=i
+
+sim( zi, z k)
+
+
+
+=
+
+ 1
+
+β log X 
+
+> k̸=i
+
+eβs ik − sij 
+
+ − (−sij + max   
+
+> k̸=i
+
+sik )
+
+= 1
+
+β log X 
+
+> k̸=i
+
+eβs ik − max   
+
+> k̸=i
+
+sik ,
+
+where we use the shorthand sik = sim( zi, z k). This is the standard form of the log-sum-exp ap-proximation error. Let si, max (Z) = max k̸ =i sik . Factoring out this maximum term: 
+
+1
+
+β log X 
+
+> k̸=i
+
+eβs ik = 1
+
+β log 
+
+eβs i, max 
+
+X 
+
+> k̸=i
+
+eβ(sik −si, max )
+
+
+
+= si, max + 1
+
+β log X 
+
+> k̸=i
+
+eβ(sik −si, max ).
+
+Substituting this back into our expression for the error gives: 
+
+si, max + 1
+
+β log X 
+
+> k̸=i
+
+eβ(sik −si, max ) − si, max = 1
+
+β log X 
+
+> k̸=i
+
+eβ(sik −si, max ).
+
+Let Ki(Z) be the set of indices that achieve the maximum similarity, i.e., Ki(Z) = {k | sik =
+
+si, max (Z)}. Note that 1 ≤ | Ki(Z)| ≤ N . The sum can be bounded above and below: 
+
+|Ki(Z)| ≤ X 
+
+> k̸=i
+
+eβ(sik −si, max ) ≤ N, 
+
+where N is the total number of samples. Taking the logarithm and dividing by β:
+
+log |Ki(Z)|
+
+β ≤ 1
+
+β log X 
+
+> k̸=i
+
+eβ(sik −si, max ) ≤ log Nβ .
+
+As β → ∞ , both the lower bound and the upper bound converge to 0. By the Squeeze Theorem, the error for a single term converges to 0 for any fixed Z.To show this convergence is uniform, we rely on the compactness of the manifold M (As-sumption A2) and the continuity of the similarity function (from Assumption A3). Since sim is a continuous function on a compact set, it is uniformly continuous. This implies that the function 
+
+si, max (Z) = max k̸ =i sim( zi, z k) is also continuous. Therefore, all terms in the bounds are continu-ous functions on a compact set, so the convergence is uniform over M.Since the convergence is uniform for each term in the sum over positive pairs, it is also uniform for their average. Thus, we have: 
+
+lim  
+
+> β→∞
+
+sup 
+
+> Z∈M
+
+L(Z, β )
+
+β − U0(Z) = 0 .
+
+12 TEMPERATURE ANNEALING IN CONTRASTIVE LEARNING 
+
+B.2. Proof of Theorem (Asymptotic Global Convergence) Theorem [Global Convergence for Logarithmic Annealing] Under Assumptions A1–A6, the pro-cess Zt defined by Eq. (3) converges in probability to the set U ∗ of global minimizers of U0(Z):
+
+lim  
+
+> t→∞
+
+P Zt ∈ N (U ∗, ϵ ) = 1 , ∀ϵ > 0.
+
+Proof The proof establishes the convergence in probability of the process Zt to the set of global minimizers U ∗ by demonstrating two fundamental properties. First, we prove that the sequence of quasi-stationary Gibbs distributions, πβ(t), associated with the process converges weakly to the uniform measure on U ∗. This is established using the theory of Γ-convergence [3]. Second, we show that the logarithmic annealing schedule with c ≤ c∗ is precisely the condition required for the diffusion process to escape all suboptimal local minima, allowing it to track its converging target distribution. This is justified by the foundational principles of Freidlin-Wentzell large deviations theory [8], which underpin Hajek’s classical results. 
+
+Part 1: Convergence of the Target Distribution via Γ-Convergence. We first show that the equilibrium state to which the process is attracted at time t, given by the quasi-stationary Gibbs distribution πβ(t), converges to the desired outcome. 
+
+Definitions. Let us define the sequence of scaled potential functions Fβ : M → R by 
+
+Fβ (Z) ≜ L(Z, β )
+
+β .
+
+By the Lemma in Section B.1, the sequence Fβ (Z) converges uniformly to the limiting potential 
+
+U0(Z) on the compact manifold M as β → ∞ . The quasi-stationary Gibbs distribution at time t is given by 
+
+πβ(t)(Z) ≜ 1
+
+C(β(t)) exp  −β(t)Fβ(t)(Z) ,
+
+where C(β(t)) is the normalization constant (partition function). 
+
+Γ-Convergence of Potentials. We invoke the theory of Γ-convergence, a notion of convergence for variational problems that is particularly suited for analyzing the convergence of minimizers. A standard result states that if a sequence of functions Fβ converges uniformly to a function U0
+
+on a compact metric space, then Fβ also Γ-converges to U0 [3]. Given the uniform convergence established in our Lemma B.1, we have 
+
+Fβ(t)Γ
+
+−→ U0 as t → ∞ .
+
+Weak Convergence of Gibbs Measures. The primary utility of establishing Γ-convergence for the potentials is that it directly implies the weak convergence of their corresponding Gibbs measures. A central theorem in the theory of large deviations states that if a sequence of continuous functions 
+
+Fβ on a compact manifold M Γ-converges to a continuous limiting function U0, then the sequence of probability measures πβ ∝ exp( −βF β ) converges weakly to a measure μ∗ that is uniformly distributed on the set U ∗ ≜ arg min Z∈M U0(Z) [7]. 
+
+Conclusion for the Target. Applying this theorem to our sequence, we conclude that the quasi-stationary distribution πβ(t) converges weakly to μ∗, the uniform probability measure on the set of global minimizers of U0(Z).   
+
+> 13 TEMPERATURE ANNEALING IN CONTRASTIVE LEARNING
+
+Part 2: The Annealing Condition and Escape Dynamics. Having established that the target distribution converges correctly, we now provide the dynamic argument showing that the process 
+
+Zt does not become permanently trapped in suboptimal states and can therefore track this target. 
+
+Freidlin-Wentzell Theory. The SDE in Assumption A1 can be viewed as a gradient descent pro-cess on the potential landscape L(Z, β (t)) perturbed by noise with a small temperature T (t) = 1/β (t). The theory of Freidlin and Wentzell [8] provides asymptotic estimates for the exit times of such processes from the domains of attraction of local minima. Asymptotically, as β → ∞ , the landscape L(Z, β ) is governed by U0(Z). The theory defines a quasi-potential V (Z1, Z 2) which represents the minimum energy required to transition from state Z1 to Z2.
+
+Escape Times and the Critical Barrier. The expected time for the process to escape from the basin of attraction of a local minimum of U0 is dominated by the height of the minimal energy barrier, ∆E, that must be crossed to leave the basin. This expected exit time, τescape , follows the Eyring-Kramers law: 
+
+E[τescape ] ≈ exp 
+
+ ∆ET (t)
+
+
+
+= exp( β(t)∆ E).
+
+To guarantee convergence to the global minimum set U ∗, the process must be able to escape from any other state. The most challenging escape is from the “deepest trap,” which corresponds to the local minimum whose basin is surrounded by the highest energy barrier required for a transition towards U ∗. We define this maximum barrier height as ∆Emax (Assumption A5). 
+
+The Necessary and Sufficient Condition. The core of simulated annealing is a comparison of two timescales: the time available for annealing and the time required for escape. The annealing schedule β(t) = c ln( t + K) can be inverted to yield the available time, t + K = exp( β/c ). For the process to be able to escape the deepest trap, the available time must be at least of the same order as the required escape time: 
+
+exp( β/c )
+
+| {z }
+
+> Time Available
+
+≳ exp( β∆Emax )
+
+| {z }
+
+> Time Required
+
+.
+
+Taking the logarithm yields the condition β/c ≳ β∆Emax , or c ≤ 1/∆Emax . The work of Ha-jek [15] and its continuous-time extensions [6] rigorously prove that this condition is both necessary and sufficient. The schedule in Assumption A6, c ≤ c∗ = 1 /∆Emax , ensures that for any compact set K ⊂ M such that K ∩ U ∗ = ∅, the probability of Zt being in K tends to zero as t → ∞ .
+
+Conclusion of the Proof. The two parts of our argument establish the necessary components for convergence. • Part 1 shows that the target equilibrium state of the system, πβ(t), converges weakly to the uniform measure on the set of global minimizers U ∗.• Part 2 shows that the annealing schedule with c ≤ c∗ is precisely the condition required to ensure the process does not become irreversibly trapped in suboptimal states and has a vanishing probability of being found outside any neighborhood of U ∗ as t → ∞ .Together, these results imply that the probability distribution of Zt must itself converge weakly to the uniform measure on U ∗. This is equivalent to the statement of convergence in probability.    
+
+> 14 TEMPERATURE ANNEALING IN CONTRASTIVE LEARNING
+
+B.3. Proof of Proposition (Non-Convergence for Rapid Annealing) Proposition [Non-Convergence for Rapid Annealing] Let Assumptions A1–A5 hold. If the loga-rithmic annealing schedule β(t) grows too quickly, specifically lim inf t→∞ β(t)ln t = c′ > c ∗, then there exists a set of initial conditions with positive measure from which the process Zt converges to a suboptimal local minimum basin of U0(Z) with positive probability. 
+
+Proof The proof establishes that if β(t) increases too rapidly, the diffusion lacks sufficient time to escape the deepest suboptimal basin before the noise vanishes. This conclusion is grounded in Hajek’s necessary condition for global convergence and formalized via the Borel–Cantelli Lemma. 
+
+Part 1: The Necessary Condition for Escape. 
+
+Energy Barriers and Hajek’s Theorem. Under Assumptions A4 and A5, the limiting potential 
+
+U0(Z) possesses a finite collection of local minima separated by saddle points. Define ∆E(Z) as the minimal barrier height required to exit the basin of attraction of Z and eventually reach U ∗. The maximum barrier height over all suboptimal minima is 
+
+∆Emax ≜ sup  
+
+> Z / ∈U∗
+
+∆E(Z).
+
+Hajek’s theorem [15] states that a necessary and sufficient condition for global convergence under a logarithmic schedule β(t) = c ln t is: 
+
+c ≤ 1∆Emax 
+
+.
+
+If c′ > c ∗, this necessary condition fails for the basin corresponding to ∆Emax .
+
+Part 2: Trapping via Escape Rate and Borel–Cantelli. 
+
+Escape Rate Estimate. Freidlin–Wentzell large deviations theory [7, 8] and the Eyring–Kramers law imply that for sufficiently large β, the instantaneous escape rate from a basin with barrier 
+
+∆Emax is 
+
+r(t) ≈ K exp   − β(t) ∆ Emax 
+
+,
+
+where K > 0 is a prefactor determined by the local geometry (Hessians at the local minima and saddle points). If β(t) ≥ c′ ln t with c′ > c ∗ = 1 /∆Emax , then for large t:
+
+r(t) ≤ Kt −p, p ≜ c′∆Emax > 1.
+
+Finite Escape Probability and Borel–Cantelli. Consider disjoint intervals Ik = [2 k, 2k+1 ]. By the Markov property of the diffusion, escape attempts across these intervals are conditionally inde-pendent given entry into the basin. The probability of escape during Ik is bounded by 
+
+P(escape in Ik) ≤
+
+Z 2k+1 
+
+> 2k
+
+r(s) d s ≤ K
+
+Z 2k+1 
+
+> 2k
+
+s−p ds ≤ C 2−k(p−1) .
+
+Summing over all k yields: ∞X
+
+> k=1
+
+P(escape in Ik) < ∞,
+
+> 15
+
+TEMPERATURE ANNEALING IN CONTRASTIVE LEARNING 
+
+since p > 1. By the First Borel–Cantelli Lemma, with positive probability, only finitely many escapes occur. Therefore, if Z0 lies in or enters the deepest suboptimal basin B(U ∗
+
+> L, max
+
+), it remains trapped with positive probability. 
+
+Conclusion. Since B(U ∗
+
+> L, max
+
+) has positive measure by compactness of M, there exists a set of initial conditions from which the process fails to reach U ∗.
+
+B.4. Proof of Corollary (Finite-Time Convergence Rate) Corollary [Finite-Time Convergence Rate] Under Assumptions A1–A6, for any ϵ > 0, there exist positive constants C, C ′, and d such that for a sufficiently large time t:
+
+P Zt /∈ N (U ∗, ϵ ) ≤
+
+(
+
+exp   − C(t + K)1−c/c ∗ , if c < c ∗,C′ (t + K)−d, if c = c∗.
+
+Proof We analyze the escape dynamics from the deepest basin using Freidlin–Wentzell theory for exit times [8] and Holley–Stroock spectral gap estimates [17, 18]. 
+
+Integrated Escape Rate. For the basin with barrier ∆Emax = 1 /c ∗, the instantaneous escape rate is 
+
+r(s) ≈ A exp   − β(s)∆ Emax 
+
+,
+
+where A > 0 is an Eyring–Kramers prefactor depending on the Hessians of U0 near the local minimum and saddle. With β(s) = c ln( s + K):
+
+r(s) = A(s + K)−c/c ∗
+
+.
+
+The survival probability (remaining trapped) is then bounded by: 
+
+P τexit > t  ≤ exp 
+
+
+
+−
+
+Z tt0
+
+r(s) d s
+
+
+
+.
+
+Case 1: Subcritical Schedule ( c < c ∗). For c/c ∗ < 1,
+
+Z tt0
+
+r(s) d s = A
+
+Z tt0
+
+(s + K)−c/c ∗
+
+ds = A
+
+1 − c/c ∗
+
+(t + K)1−c/c ∗
+
+− (t0 + K)1−c/c ∗ .
+
+Hence, for large t:
+
+P Zt /∈ N (U ∗, ϵ ) ≤ exp   − C(t + K)1−c/c ∗ .
+
+Case 2: Critical Schedule ( c = c∗). When c = c∗:
+
+Z tt0
+
+r(s) d s = A
+
+Z tt0
+
+(s + K)−1 ds = A ln t + Kt0 + K .
+
+This yields: 
+
+P Zt /∈ N (U ∗, ϵ ) ≤ (t + K)−A.
+
+Holley, Kusuoka, and Stroock [18] refine this bound using spectral gap analysis, yielding the stated polynomial decay rate with exponent d > 0 depending on the local geometry (ratios of Hessians at minima and saddles). 
+
+16 TEMPERATURE ANNEALING IN CONTRASTIVE LEARNING 
+
+Remark 7 (Dependence of Constants) The constants K and A in the escape rate estimates arise from the classical Eyring–Kramers law for overdamped Langevin dynamics. Specifically, the escape rate from a basin with barrier height ∆E is 
+
+r ≈ A exp   − β ∆E,
+
+where the prefactor A depends only on the local geometry of the potential U0(Z) near the local minimum Zmin and the relevant saddle point Zsaddle . In the overdamped setting, this prefactor is given by 
+
+A = λsaddle 
+
+2π
+
+s
+
+det ∇2U0(Zmin )
+
+det ∇2U0(Zsaddle ) ,
+
+where λsaddle is the absolute value of the unique negative eigenvalue of ∇2U0 at the saddle point. The exponential term exp( −β∆E) captures the temperature-dependent Arrhenius factor and is not part of the prefactor itself. Similarly, the exponent d in the critical-rate case is derived from the spectral gap analysis [17, 18], and depends on analogous curvature information through the Hessians at the minima and saddles. 
+
+Appendix C. Proofs of Supporting Results 
+
+C.1. Proof of Proposition (Stationary Distribution at Fixed Temperature) Proposition [Stationary Distribution at Fixed Temperature] For any fixed β > 0, under Assump-tions A1-A3, the SDE admits a unique stationary Gibbs-Boltzmann distribution on M:
+
+πβ (d Z) = 1
+
+Zβ
+
+exp − β L(Z, β ) dμ (Z),
+
+where dμ is the Riemannian volume measure on M and Zβ = R 
+
+> M
+
+exp( −βL(Z, β )) dμ (Z) is the normalization constant. 
+
+Proof The proof relies on standard results for non-degenerate diffusion processes on compact Rie-mannian manifolds [19, 28]. The state space M is a compact, connected Riemannian manifold without boundary (Assumption A2). The drift term is smooth (Assumption A3), and the diffusion is uniformly elliptic since β > 0 and the Riemannian metric is positive definite. Such processes are known to be strong Feller and topologically irreducible, which guarantees the existence of a unique invariant probability measure (stationary distribution) πβ .The SDE in (3) is a form of Langevin dynamics with potential energy V (Z) = L(Z, β ) and constant temperature T = 1 /β . It is a well-established result that the unique stationary distribution for such dynamics satisfying detailed balance is the Gibbs-Boltzmann distribution [25]: 
+
+πβ (dZ ) ∝ exp 
+
+
+
+− V (Z)
+
+T
+
+
+
+dμ (Z) = exp( −βL(Z, β )) dμ (Z).
+
+The normalization constant Zβ = R 
+
+> M
+
+exp( −βL(Z, β )) dμ (Z) ensures R 
+
+> M
+
+πβ (dZ ) = 1 and is guaranteed to be finite because L(Z, β ) is a continuous function on a compact manifold and is therefore bounded. 
+
+> 17
+
+TEMPERATURE ANNEALING IN CONTRASTIVE LEARNING 
+
+C.2. Proof of Proposition (Characterization of Global Minima) Proposition [Characterization of Global Minima] A configuration Z∗ is a global minimizer of the limiting potential U0(Z) if and only if for every positive pair (i, j ), the maximum possible similarity is achieved. 
+
+Proof Recall the definition of the limiting potential from Assumption A4: 
+
+U0(Z) = 1
+
+|P| 
+
+X
+
+> (i,j )∈P
+
+
+
+−sim( zi, z j ) + max   
+
+> k̸=i
+
+sim( zi, z k)
+
+| {z } 
+
+> Tij (Z)
+
+.
+
+We seek to minimize U0(Z). Consider a single term Tij (Z). By definition of the maximum, 
+
+max k̸ =i sim( zi, z k) ≥ sim( zi, z j ). Therefore, each term Tij (Z) is non-negative. The minimum value of U0(Z) is thus 0. This minimum is achieved if and only if Tij (Z) = 0 for all (i, j ) ∈ P .This requires max k̸ =i sim( zi, z k) = sim( zi, z j ). Since we also know sim( zi, z k) ≤ Smax for all k, this equality can only be satisfied if sim( zi, z j ) = Smax . Thus, the overall potential U0(Z) is minimized if and only if sim( z∗ 
+
+> i
+
+, z ∗ 
+
+> j
+
+) = Smax for all positive pairs (i, j ).
+
+C.3. Proof of Lemma (Hessian Sharpening) Lemma [Hessian Sharpening] Let H(Z, β ) be the Hessian of the InfoNCE loss L(Z, β ). For any configuration Z that is not a global minimizer, the dominant eigenvalues of H scale at least linearly with the inverse temperature, i.e., || H|| ∼ O(β).
+
+Proof We derive the Hessian matrix of the InfoNCE loss for a single anchor embedding zi with respect to that anchor. This is similar to Ziyin et al. [26] but here the temperature parameter is left explicit. Let zj be the positive sample and {zk} be the set of all samples available to anchor zi
+
+(including zj ). Let sik = sim (zi, z k) denote value of the similarity function. The InfoNCE loss for anchor zi is given by: 
+
+li(zi) = − log exp( βs ij )
+
+P 
+
+> k
+
+exp( βs ik )= log X
+
+> k
+
+exp( βs ik )
+
+!
+
+− βs ij .
+
+Let Zi = P 
+
+> k
+
+exp( βs ik ) be the partition function and pik = exp( βs ik ) 
+
+> Zi
+
+be the softmax probability distribution over samples k induced by anchor i. The loss can be written as li = log Zi − βs ij .Let ∇ = ∇zi denote the gradient operator with respect to zi. The gradient of the similarity is 
+
+∇sik = ∂sim (zi,z k ) 
+
+> ∂z i
+
+.
+
+18 TEMPERATURE ANNEALING IN CONTRASTIVE LEARNING 
+
+The gradient of the loss is: 
+
+∇li = ∇(log Zi) − β∇sij 
+
+= 1
+
+Zi
+
+∇Zi − β∇sij 
+
+= 1
+
+Zi
+
+X
+
+> k
+
+exp( βs ik )β∇sik − β∇sij 
+
+= β X
+
+> k
+
+pik ∇sik − β∇sij 
+
+= β(μi − ∇ sij ),
+
+where μi = P 
+
+> k
+
+pik ∇sik = Ek∼pi [∇sik ] is the expected similarity gradient under the distribution 
+
+pi.The Hessian matrix H = ∇(∇li)T is obtained by differentiating the gradient: 
+
+H = ∇[β(μTi − (∇sij )T )] = β[∇μTi − ∇ (∇sij )T ]. (8) Let Hik = ∇(∇sik )T be the Hessian of the similarity function sik with respect to zi. The second term is simply −βHij . For the first term, we use the product rule and the gradient of the softmax probabilities ∇pik = βp ik (∇sik − μi):
+
+∇μTi = ∇ X
+
+> k
+
+pik (∇sik )T
+
+!
+
+= X
+
+> k
+
+[( ∇pik )( ∇sik )T + pik ∇(∇sik )T ]= X
+
+> k
+
+[βp ik (∇sik − μi)( ∇sik )T + pik Hik ]= β X
+
+> k
+
+pik (∇sik )( ∇sik )T − βμ i
+
+X
+
+> k
+
+pik (∇sik )T + X
+
+> k
+
+pik Hik 
+
+= β X
+
+> k
+
+pik (∇sik )( ∇sik )T − μiμTi
+
+!
+
++ X
+
+> k
+
+pik Hik 
+
+= β Cov k∼pi [∇sik ] + Ek∼pi [Hik ].
+
+where Cov k∼pi [∇sik ] is the covariance matrix of the similarity gradients under pi, and Ek∼pi [Hik ]
+
+is the expected Hessian of the similarity function. Substituting back into the expression for H:
+
+H = β[( β Cov k∼pi [∇sik ] + Ek∼pi [Hik ]) − Hij ]= β2 Cov k∼pi [∇sik ] + β(Ek∼pi [Hik ] − Hij ). (9) Eq. (9) shows that the Hessian of the InfoNCE loss consists of two terms. The first term involves the covariance of the similarity gradients and has a prefactor of β2. The second term involves the expected Hessian and scales linearly with β.
+
+19 TEMPERATURE ANNEALING IN CONTRASTIVE LEARNING 
+
+Analyzing the asymptotic behavior as β → ∞ requires considering the limiting behavior of the distribution pi. As β increases, pik concentrates its mass on the sample(s) k∗ maximizing the similarity sik . For such distributions, the variance (and thus the covariance term Cov k∼pi [∇sik ])decays as O(1 /β ). Therefore, the first term scales as β2 · O(1 /β ) = O(β). Simultaneously, the expected Hessian Ek∼pi [Hik ] converges to Hik ∗ .Therefore, the asymptotic scaling of the Hessian depends on whether the positive sample j is the most similar sample k∗:• If k∗̸ = j (i.e., a negative sample is most similar to the anchor zi, indicating a suboptimal configuration), the second term dominates: 
+
+H ≈ β(Hik ∗ − Hij ) as β → ∞ .
+
+In this regime, the Hessian norm scales linearly, || H|| ∼ O(β). This implies that away from the optimum, the local minima sharpen linearly with β.• If k∗ = j (i.e., the positive sample is the most similar, corresponding to configurations near an optimum where the gradient ∇li ≈ 0), the second term vanishes. The scaling is then determined by the β2Cov[ ·] term. While the covariance vanishes, a more detailed analysis of the rate at which it vanishes relative to β2 would be needed to determine the precise scaling at the optimum. However, the dominant scaling away from the optimum is linear. This linear sharpening O(β) of the loss landscape curvature as temperature decreases contributes to the convergence behavior observed during annealing, complementing the theoretical escape guar-antees provided by the slow decay of noise. 
+
+Remark on Manifold Geometry. The geometry of the embedding manifold M influences both the convergence rate and the discretization of the SDE. First, the critical annealing constant c∗
+
+depends on the largest energy barrier ∆Emax , which is shaped by the curvature and flatness of 
+
+M. Flatter manifolds (e.g., a sphere with large radius) tend to produce shallower potential wells, reducing ∆Emax and permitting larger values of c. Conversely, manifolds with tighter curvature create sharper basins and increase ∆Emax , slowing the optimal convergence rate. Second, curvature impacts the discretization error of the Langevin dynamics. The Euler-Maruyama step size η must be small enough to ensure that each update remains within a locally geodesic re-gion. Specifically, in normal coordinates, the discretization error scales with both the learning rate 
+
+η and the product of the curvature tensor R with the Hessian ∇2 U0, i.e., 
+
+Error ∼ O η ∥∇ 2U0∥ · ∥R∥ .
+
+Highly curved manifolds therefore demand smaller steps to remain faithful to the continuous SDE. This is consistent with results on Riemannian Langevin diffusions [2, 12], where the generator involves the Laplace–Beltrami operator, whose spectral gap (and thus mixing time) depends directly on the manifold curvature.

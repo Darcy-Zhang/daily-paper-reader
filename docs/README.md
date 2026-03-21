@@ -6,83 +6,74 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-02-20 ~ 2026-03-21
-- 运行时间：2026-03-21 09:42:04 UTC
+- 最新运行日期：2026-03-21
+- 运行时间：2026-03-21 19:30:35 UTC
 - 运行状态：成功
-- 本次总论文数：20
-- 精读区：9
+- 本次总论文数：17
+- 精读区：6
 - 速读区：11
 
 ### 今日简报（AI）
-- 今日共生成 20 篇推荐（精读 9 篇，速读 11 篇）
-- 精读：《Time Series, Vision, and Language: Exploring the Limits of Alignment in Contrastive Representation Spaces》（9.0/10）, 《InfoNCE Induces Gaussian Distribution》（9.0/10）
-- 速读：《ACL: Aligned Contrastive Learning Improves BERT and Multi-exit BERT Fine-tuning》（8.0/10）, 《ACL: Aligned Contrastive Learning Improves BERT and Multi-exit BERT Fine-tuning》（8.0/10）, 《Spectral Disentanglement and Enhancement: A Dual-domain Contrastive Framework for Representation Learning》（8.0/10）
+- 今日共生成 17 篇推荐（精读 6 篇，速读 11 篇）
+- 精读：《Asymptotic and Finite-Time Guarantees for Langevin-Based Temperature Annealing in InfoNCE》（9.0/10）, 《Free Lunch in Medical Image Foundation Model Pre-training via Randomized Synthesis and Disentanglement》（8.0/10）
+- 速读：《Equilibrium contrastive learning for imbalanced image classification》（8.0/10）, 《Towards Uniformity and Alignment for Multimodal Representation Learning》（8.0/10）, 《Theoretical Analysis of Contrastive Learning under Imbalanced Data: From Training Dynamics to a Pruning Solution》（8.0/10）
 - 这些结果覆盖了当下较热的方向，建议先看精读区论文的关键问题与方法。
-- 详情：[/20260220-20260321/README](/20260220-20260321/README)
+- 详情：[/202603/21/README](/202603/21/README)
 
 ### 精读区论文标签
-1. [Time Series, Vision, and Language: Exploring the Limits of Alignment in Contrastive Representation Spaces](/20260220-20260321/2602.19367v1-time-series-vision-and-language-exploring-the-limits-of-alignment-in-contrastive-representation-spaces)  
-   标签：评分：9.0/10、query:q4
-   evidence：时间序列、视觉和语言编码器的三模态对比对齐
-2. [InfoNCE Induces Gaussian Distribution](/20260220-20260321/2602.24012v1-infonce-induces-gaussian-distribution)  
+1. [Asymptotic and Finite-Time Guarantees for Langevin-Based Temperature Annealing in InfoNCE](/202603/21/2603.12552v1-asymptotic-and-finite-time-guarantees-for-langevin-based-temperature-annealing-in-infonce)  
    标签：评分：9.0/10、query:q9
-   evidence：InfoNCE目标函数使表示呈现高斯结构
-3. [Multimodal Alignment Improves Generalizability of Genomic Biomarker Prediction in Computational Pathology](/20260220-20260321/2603.00193v1-multimodal-alignment-improves-generalizability-of-genomic-biomarker-prediction-in-computational-pathology)  
-   标签：评分：9.0/10、query:q4
-   evidence：多模态对比预训练，对齐病理图像与LLM生成的生物标志物表示
-4. [ITO: Images and Texts as One via Synergizing Multiple Alignment and Training-Time Fusion](/20260220-20260321/2603.02767v1-ito-images-and-texts-as-one-via-synergizing-multiple-alignment-and-training-time-fusion)  
-   标签：评分：9.0/10、query:q4
-   evidence：图像-文本对齐的多模态对比预训练
-5. [ITO: Images and Texts as One via Synergizing Multiple Alignment and Training-Time Fusion](/20260220-20260321/2603.02767v2-ito-images-and-texts-as-one-via-synergizing-multiple-alignment-and-training-time-fusion)  
-   标签：评分：9.0/10、query:q4
-   evidence：图像-文本对比预训练与多对齐机制
-6. [MM-TS: Multi-Modal Temperature and Margin Schedules for Contrastive Learning with Long-Tail Data](/20260220-20260321/2603.08202v1-mm-ts-multi-modal-temperature-and-margin-schedules-for-contrastive-learning-with-long-tail-data)  
-   标签：评分：9.0/10、query:q4
-   evidence：多模态对比学习的温度调度方法
-7. [V-JEPA 2.1: Unlocking Dense Features in Video Self-Supervised Learning](/20260220-20260321/2603.14482v1-v-jepa-21-unlocking-dense-features-in-video-self-supervised-learning)  
-   标签：评分：9.0/10、query:q7
-   evidence：自监督视觉预训练与密集特征
-8. [V-JEPA 2.1: Unlocking Dense Features in Video Self-Supervised Learning](/20260220-20260321/2603.14482v2-v-jepa-21-unlocking-dense-features-in-video-self-supervised-learning)  
-   标签：评分：9.0/10、query:q7
-   evidence：自监督视觉预训练，采用密集预测目标
-9. [BoundAD: Boundary-Aware Negative Generation for Time Series Anomaly Detection](/20260220-20260321/2603.18111v1-boundad-boundary-aware-negative-generation-for-time-series-anomaly-detection)  
-   标签：评分：9.0/10、query:q3
-   evidence：边界感知困难负样本生成用于对比学习
+   evidence：InfoNCE温度退火的理论分析与收敛保证
+2. [Free Lunch in Medical Image Foundation Model Pre-training via Randomized Synthesis and Disentanglement](/202603/21/2602.12317v1-free-lunch-in-medical-image-foundation-model-pre-training-via-randomized-synthesis-and-disentanglement)  
+   标签：评分：8.0/10、query:profile-1
+   evidence：医学图像基础模型预训练与合成数据增强及表示学习
+3. [Predictive Reasoning with Augmented Anomaly Contrastive Learning for Compositional Visual Relations](/202603/21/2603.01125v1-predictive-reasoning-with-augmented-anomaly-contrastive-learning-for-compositional-visual-relations)  
+   标签：评分：8.0/10、query:q1
+   evidence：新颖的对比学习方法，结合增强异常检测
+4. [SpikeCLR: Contrastive Self-Supervised Learning for Few-Shot Event-Based Vision using Spiking Neural Networks](/202603/21/2603.16338v1-spikeclr-contrastive-self-supervised-learning-for-few-shot-event-based-vision-using-spiking-neural-networks)  
+   标签：评分：8.0/10、query:q2
+   evidence：面向事件视觉的对比自监督学习框架
+5. [CRE-T1 Preview Technical Report: Beyond Contrastive Learning for Reasoning-Intensive Retrieval](/202603/21/2603.17387v1-cre-t1-preview-technical-report-beyond-contrastive-learning-for-reasoning-intensive-retrieval)  
+   标签：评分：8.0/10、query:q1
+   evidence：批判对比学习局限性并提出超越方法
+6. [Grounded Multimodal Retrieval-Augmented Drafting of Radiology Impressions Using Case-Based Similarity Search](/202603/21/2603.17765v1-grounded-multimodal-retrieval-augmented-drafting-of-radiology-impressions-using-case-based-similarity-search)  
+   标签：评分：8.0/10、query:q4
+   evidence：用于医学检索的多模态对比图文嵌入
 
 ### 速读区论文标签
-1. [ACL: Aligned Contrastive Learning Improves BERT and Multi-exit BERT Fine-tuning](/20260220-20260321/2602.03563v1-acl-aligned-contrastive-learning-improves-bert-and-multi-exit-bert-fine-tuning)  
+1. [Equilibrium contrastive learning for imbalanced image classification](/202603/21/2602.09506v2-equilibrium-contrastive-learning-for-imbalanced-image-classification)  
    标签：评分：8.0/10、query:q9
-   evidence：解决目标冲突的新型对齐对比学习框架
-2. [ACL: Aligned Contrastive Learning Improves BERT and Multi-exit BERT Fine-tuning](/20260220-20260321/2602.03563v2-acl-aligned-contrastive-learning-improves-bert-and-multi-exit-bert-fine-tuning)  
+   evidence：新型均衡对比学习，引入几何构型目标函数
+2. [Towards Uniformity and Alignment for Multimodal Representation Learning](/202603/21/2602.09507v1-towards-uniformity-and-alignment-for-multimodal-representation-learning)  
    标签：评分：8.0/10、query:q9
-   evidence：提出对齐对比学习框架，设计新颖的对比学习目标
-3. [Spectral Disentanglement and Enhancement: A Dual-domain Contrastive Framework for Representation Learning](/20260220-20260321/2602.09066v1-spectral-disentanglement-and-enhancement-a-dual-domain-contrastive-framework-for-representation-learning)  
-   标签：评分：8.0/10、query:q4
-   evidence：用于表示学习的双域对比框架与谱分析
-4. [Beyond the Unit Hypersphere: Embedding Magnitude in Contrastive Learning](/20260220-20260321/2602.09229v1-beyond-the-unit-hypersphere-embedding-magnitude-in-contrastive-learning)  
-   标签：评分：8.0/10、query:q9
-   evidence：对比学习中嵌入幅度的系统性研究
-5. [Learning Multi-Modal Prototypes for Cross-Domain Few-Shot Object Detection](/20260220-20260321/2602.18811v1-learning-multi-modal-prototypes-for-cross-domain-few-shot-object-detection)  
-   标签：评分：7.0/10、query:q3
-   evidence：通过抖动框动态生成难负样本原型
-6. [SPP-SCL: Semi-Push-Pull Supervised Contrastive Learning for Image-Text Sentiment Analysis and Beyond](/20260220-20260321/2602.20767v1-spp-scl-semi-push-pull-supervised-contrastive-learning-for-image-text-sentiment-analysis-and-beyond)  
+   evidence：新型对比损失设计，解耦对齐与均匀性目标
+3. [Theoretical Analysis of Contrastive Learning under Imbalanced Data: From Training Dynamics to a Pruning Solution](/202603/21/2602.10357v1-theoretical-analysis-of-contrastive-learning-under-imbalanced-data-from-training-dynamics-to-a-pruning-solution)  
+   标签：评分：8.0/10、query:q8
+   evidence：不平衡数据下对比学习的理论分析
+4. [Spectral-Spatial Contrastive Learning Framework for Regression on Hyperspectral Data](/202603/21/2602.10745v1-spectral-spatial-contrastive-learning-framework-for-regression-on-hyperspectral-data)  
+   标签：评分：8.0/10、query:q6
+   evidence：高光谱数据的光谱-空间对比学习与增强策略
+5. [Learning Generalizable 3D Medical Image Representations from Mask-Guided Self-Supervision](/202603/21/2603.13660v1-learning-generalizable-3d-medical-image-representations-from-mask-guided-self-supervision)  
+   标签：评分：7.0/10、query:q8
+   evidence：医学影像自监督学习使用对比目标
+6. [Towards Stable Self-Supervised Object Representations in Unconstrained Egocentric Video](/202603/21/2603.13912v1-towards-stable-self-supervised-object-representations-in-unconstrained-egocentric-video)  
+   标签：评分：7.0/10、query:q7
+   evidence：自监督视觉表征学习，从无标注第一人称视频学习稳定目标表示
+7. [DCP-CLIP:A Coarse-to-Fine Framework for Open-Vocabulary Semantic Segmentation with Dual Interaction](/202603/21/2603.13951v1-dcp-clipa-coarse-to-fine-framework-for-open-vocabulary-semantic-segmentation-with-dual-interaction)  
    标签：评分：7.0/10、query:q4
-   evidence：图像文本的半推拉监督对比学习
-7. [GatedCLIP: Gated Multimodal Fusion for Hateful Memes Detection](/20260220-20260321/2602.20818v1-gatedclip-gated-multimodal-fusion-for-hateful-memes-detection)  
-   标签：评分：7.0/10、query:q4
-   evidence：门控融合的多模态对比学习用于视觉语言任务
-8. [CLIP Is Shortsighted: Paying Attention Beyond the First Sentence](/20260220-20260321/2602.22419v1-clip-is-shortsighted-paying-attention-beyond-the-first-sentence)  
-   标签：评分：7.0/10、query:q4
-   evidence：分析并改进CLIP的长文本多模态对比学习
-9. [Faster Training, Fewer Labels: Self-Supervised Pretraining for Fine-Grained BEV Segmentation](/20260220-20260321/2602.18066v1-faster-training-fewer-labels-self-supervised-pretraining-for-fine-grained-bev-segmentation)  
-   标签：评分：6.0/10、query:q7
-   evidence：自监督视觉预训练方法
-10. [Dual-Tree LLM-Enhanced Negative Sampling for Implicit Collaborative Filtering](/20260220-20260321/2602.18249v1-dual-tree-llm-enhanced-negative-sampling-for-implicit-collaborative-filtering)  
+   evidence：跨模态视觉-文本交互，用于开放词汇语义分割
+8. [Enhancing Mental Health Classification with Layer-Attentive Residuals and Contrastive Feature Learning](/202603/21/2603.14075v1-enhancing-mental-health-classification-with-layer-attentive-residuals-and-contrastive-feature-learning)  
+   标签：评分：7.0/10、query:q8
+   evidence：对比特征学习用于心理健康分类，超越视觉领域
+9. [Mastering Negation: Boosting Grounding Models via Grouped Opposition-Based Learning](/202603/21/2603.12606v1-mastering-negation-boosting-grounding-models-via-grouped-opposition-based-learning)  
    标签：评分：6.0/10、query:q3
-   evidence：LLM增强的负采样与假负样本识别
-11. [Learning Cross-View Object Correspondence via Cycle-Consistent Mask Prediction](/20260220-20260321/2602.18996v1-learning-cross-view-object-correspondence-via-cycle-consistent-mask-prediction)  
+   evidence：基于分组对抗的学习，利用负样本进行视觉-语言定位
+10. [Text-Phase Synergy Network with Dual Priors for Unsupervised Cross-Domain Image Retrieval](/202603/21/2603.12711v1-text-phase-synergy-network-with-dual-priors-for-unsupervised-cross-domain-image-retrieval)  
+   标签：评分：6.0/10、query:q5
+   evidence：无监督跨域表示学习与语义对齐
+11. [Representation Learning for Spatiotemporal Physical Systems](/202603/21/2603.13227v1-representation-learning-for-spatiotemporal-physical-systems)  
    标签：评分：6.0/10、query:q2
-   evidence：自监督学习与循环一致性目标
+   evidence：时空物理系统的自监督表示学习评估
 
 
 <div class="dpr-home-promo-card">

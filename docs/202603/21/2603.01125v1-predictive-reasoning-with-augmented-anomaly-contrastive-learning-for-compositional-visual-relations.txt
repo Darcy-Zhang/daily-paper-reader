@@ -1,0 +1,636 @@
+Title: Predictive Reasoning with Augmented Anomaly Contrastive Learning for Compositional Visual Relations
+
+URL Source: https://arxiv.org/pdf/2603.01125v1
+
+Published Time: Tue, 03 Mar 2026 02:29:35 GMT
+
+Number of Pages: 12
+
+Markdown Content:
+> 1
+
+# Predictive Reasoning with Augmented Anomaly Contrastive Learning for Compositional Visual Relations 
+
+Chengtai Li, Yuting He, Jianfeng Ren, Sensior Member, IEEE, Ruibin Bai, Sensior Member, IEEE, Yitian Zhao, Member, IEEE, Heng Yu, Senior Member, IEEE, Xudong Jiang, Fellow, IEEE, 
+
+Abstract —While visual reasoning for simple analogies has re-ceived significant attention, compositional visual relations (CVR) remain relatively unexplored due to their greater complexity. To solve CVR tasks, we propose Predictive Reasoning with Aug-mented Anomaly Contrastive Learning (PR-A 2CL), i.e. , to iden-tify an outlier image given three other images that follow the same compositional rules. To address the challenge of modelling abun-dant compositional rules, an Augmented Anomaly Contrastive Learning is designed to distil discriminative and generalizable features by maximizing similarity among normal instances while minimizing similarity between normal and anomalous outliers. More importantly, a predict-and-verify paradigm is introduced for rule-based reasoning, in which a series of Predictive Anomaly Reasoning Blocks (PARBs) iteratively leverage features from three out of the four images to predict those of the remaining one. Throughout the subsequent verification stage, the PARBs progressively pinpoint the specific discrepancies attributable to the underlying rules. Experimental results on SVRT, CVR and MC 2R datasets show that PR-A 2CL significantly outperforms state-of-the-art reasoning models. 
+
+Index Terms —Abstract Visual Reasoning, Contrastive Learn-ing, Knowledge Representation, Compositional Visual Reasoning. 
+
+I. I NTRODUCTION 
+
+# VISUAL recognition has advanced significantly with the development of deep neural networks [1]–[3]. Recently, the research focus has gradually shifted from visual recog-nition of objects and attributes [4]–[6] to visual analogical reasoning of high-level concepts perceived from images and videos [7], [8]. Visual reasoning can be broadly categorized into the following areas [7]: visual question answering [9], [10], visual commonsense reasoning [11]–[13], physical rea-soning [14], [15], mathematical visual reasoning [16], [17] and abstract visual reasoning [18]–[21]. Among these tasks, Abstract Visual Reasoning (AVR) continues to attract sig-nificant research interest, as it remains a critical bottleneck for intelligent agents [22], despite substantial progress in large-scale models for computer vision [23] and natural lan-guage processing [24]. Typically, Large Language Models (LLMs) demonstrate strong generalization, achieving state-of-the-art results across diverse natural language processing [24] 
+
+This work was supported by Ningbo Science & Technology Bureau under Grant 2023Z138, 2023Z237, 2024Z110 and 2024Z124. C. Li, Y. He, J. Ren R. Bai and H. Yu are with the School of Computer Science, University of Nottingham Ningbo China, Ningbo 315100, China. C. Li, Y. Zhao is with Institute of Biomedical Engineering, Ningbo institute of materials technology and engineering, Chinese Academy of Sciences. X. Jiang is with School of Electrical & Electronic Engineering, Nanyang Technological University, Nanyang Link, 639798 Singapore. 
+
+Corresponding author: Jianfeng Ren, jianfeng.ren@nottingham.edu.cn, Yi-tian Zhao, yitian.zhao@nimte.ac.cn, a b c d e f                         
+
+> object
+> contact 𝐶
+> inside 𝑖𝑛
+> 𝑎 𝑖𝑛 𝑏 ,𝑐 𝑖𝑛 𝑑 ,𝐶1 !" ,$% ,𝐶1 &,',
+> 𝐶2 !" ,&,𝐶2 $% ,',𝐶1 ≠𝐶2
+> Predict Verify
+> Predicted
+> Image
+> Select the outlier image from
+> the four images.
+> Verify Predict
+> Predict Verify
+> Predict Verify
+> Predicted
+> Image
+> Predicted
+> Image
+> Predicted
+> Image
+
+Fig. 1. Left : A sample compositional rule in the CVR dataset. Right : Selecting an outlier from four images is converted to four predict-and-verify problems. 
+
+and multimodal tasks [25], [26]. But LLMs exhibit non-competitive performance on AVR tasks [27], revealing critical limitations in reasoning. AVR research is hence crucial to enhance modern reasoning systems and substantially improve their abstract reasoning capabilities. AVR research has achieved substantial progress on tasks like Raven’s Progressive Matrices (RPMs) [28]–[31], e.g. , on RAVENs [18], [32], [33], models including SCL [29], HCV-ARR [19], and PredRNet [20] surpass human-level reasoning accuracy. However, these datasets often involve a limited number of attributes and rules, e.g. , RAVENs [18], [32], [33] include only five attributes and four simple rules. The recently introduced Compositional Visual Relation (CVR) dataset [34] evaluates abstract visual reasoning by requiring models to identify an image that slightly deviates from a compositional rule shared across three other images. As shown in Fig. 1, com-positional rules incorporate multi-layered attribute relations, in contrast to the simpler rules in RAVENs [18], [32], [33]. In this work, we focus on solving CVR tasks [34], [35], a challenging subclass of AVR. While AVR covers a broad range of relational reasoning problems, CVR specifically requires reasoning with multiple simultaneous rules and their compo-sitional interactions. Specifically, CVR tasks present two major challenges: 1) Comprehending compositional rules is signifi-cantly more difficult than understanding simple rules, as it de-mands integrating multiple basic attributes, modelling their in-teractions, and performing high-level abstractions [34]. 2) The potentially infinite space of compositional rules severely chal-lenges the generalization ability of reasoning models when encountering unseen rule combinations during testing. To tackle these challenges, we propose Predictive 
+
+Reasoning with Augmented Anomaly Contrastive Learning 
+
+> arXiv:2603.01125v1 [cs.CV] 1 Mar 2026 2
+
+(PR -A2CL ). It integrates a visual perception module, 
+
+Augmented Anomaly Contrastive Learning (A2CL ) built on a pre-trained ResNet-50 [34], to extract robust and rule-consistent features, along with a Predictive Anomaly 
+
+Reasoning Module ( PARM ) that performs iterative rule in-ference and verification. Specifically, the proposed A2CL improves generalization by enhancing the alignment of rule-consistent features across augmented views. It promotes high feature affinity among normal samples under diverse augmen-tations to capture their intrinsic characteristics, while reducing feature similarity between normal and outlier instances to increase separability. By contrasting outliers against normal samples and enforcing consistency across augmented views, A2CL learns discriminative features that exhibit strong gener-alization across diverse scenarios. To handle complex compositional rules, we propose aPredict-And-Verify (PAV) paradigm. We first convert the task of identifying the outlier among four images into four PAV problems, as illustrated in Fig. 1. Each sub-problem involves predicting the features of a target image from the features of the other three, using the proposed Predictive Anomaly 
+
+Reasoning Block ( PARB ). The underlying principle is that the features of an outlier cannot be reliably predicted from three normal images, whereas the features of a normal image can be accurately inferred from the other two, provided the outlier is effectively suppressed. The prediction is subsequently verified against the target, and the prediction error is back-propagated to update the prediction network. Upon converging, the PARB captures the visual relations between normal images and hence identifies the outlier. Furthermore, multiple PARBs are stacked to facilitate hierarchical reasoning over compositional rules. The initial PARB primarily captures elementary attribute-level relations, such as same size or same position ,while deeper layers progressively integrate these into higher-order compositions, e.g. , “same size but different shape 
+
+and spatial layout”. This architecture mirrors the multi-level structure of CVR rules and enables the model to infer abstract compositional patterns through iterative refinement. Our contributions can be summarized as follows. 1) Our PR-A 2CL tackles the challenges of reasoning about composi-tional visual relations by extracting robust visual features and conducting abstract analogical reasoning over compositional rules. 2) A 2CL extracts discriminative features by contrasting outliers against normal images while preserving feature consis-tency across augmented views. 3) PARB embeds a predict-and-verify mechanism: it predicts the target image’s features using the other three images and updates itself by verifying predic-tions against the target. 4) PR-A 2CL significantly outperforms state-of-the-art visual reasoning models on the SVRT [36], CVR [34] and MC 2R [37] datasets. II. R ELATED WORK 
+
+A. Abstract Visual Reasoning 
+
+AVR examines the capacity for analogical reasoning on abstract visual relations across diverse scenes [7]. It requires applying relevant knowledge to unfamiliar scenarios and is widely used to assess human intelligence [7]. In literature, AVR covers diverse tasks, e.g. , Raven’s Progressive Matri-ces [28]–[31], Finding Same-different Tasks [37], [38], Ma-chine Number Reasoning [17] and Relation Game [39]. Among AVR tasks, RPMs have garnered significant research interest [28]–[31]. These tasks involve extracting visual at-tributes to analyse row/column-wise relations and infer the missing image from candidate answers. For example, Bar-rett et al. [40] encoded pairwise context-context and context-multiple-choice relations by using visual features, and repeat-edly applied a Relation Network to infer inter-panel rela-tions. Wu et al. [29] developed the Scattering Compositional Learner (SCL) to extract features from object and attribute networks, and leveraged it for abstract reasoning. He et al. 
+
+[19] introduced a hierarchical ConViT to capture multi-level features, coupled with an attention-based relational reasoner for inferring underlying relations. PredRNet employs a shallow convolutional neural network to extract visual features and di-rectly maps the eight context images to the missing one to infer abstract rules [20]. Malkinski et al. [41] developed a unified model for single-choice abstract visual reasoning, featuring an encoder-decoder reasoning framework and a Structure-Aware Dynamic Layer for adaptive feature organization across diverse reasoning tasks. Despite recent advances in AVR models [28]–[31], their reasoning capability remains largely confined to simple abstract rules, as many RPM benchmarks are constructed from such rules [18], [32], [33]. Compositionality has been extensively studied in mathemat-ics [42], logical reasoning [43], and visual reasoning [44], yet remains underexplored in high-level compositional abstract reasoning. To bridge this gap, the CVR dataset [34] was introduced to evaluate compositional understanding through flexible combinations of visual attributes. In this work, we address the challenges of compositional visual reasoning. 
+
+B. Contrastive Learning 
+
+Contrastive learning (CL) enforces representation consis-tency across augmented views of instances while improving discriminability between distinct samples [45]. CL research mainly focuses on two directions. 1) Developing training mechanisms to enhance the generalization capability of back-bones [46], [47]. SimCLR [46] enforces similarity between augmented views of the same sample while maximizing their dissimilarity from other instances, and employs a learnable nonlinear transformation to enhance feature representations. MoCo, introduced by Chen et al. [47], employs a queue to increase negative samples and a momentum encoder to maintain feature consistency across the queue. 2) Designing loss functions to better differentiate samples with varying similarity [48]–[50]. InfoNCE loss [48] follows the structure of binary cross-entropy (BCE) loss and incorporates a hyper-parameter to modulate the penalty for hard negative samples. Robinson et al. [49] constructed a tunable sample distribution to prioritize hard negative samples. Chuang et al. [50] devel-oped the Robust InfoNCE (RINCE) loss, which enforces sym-metry to enhance the robustness of learned features. Recently, consistency learning [51], [52] improves model robustness by aligning representations or predictions across modalities, 3𝑨 𝟐 CL  
+
+> Loss
+> BCE
+> Loss
+> Strong Data
+> Augmentation
+> Weak Data
+> Augmentation
+> Augmented Images Features
+> Shortcut
+
+Predictive Anomaly Reasoning Block (PARB)  
+
+> Input
+> Input Image
+> Outlier
+> Normal
+> Minimize Similarity
+> Outlier
+> Normal
+> Strongly Augmented Features
+> Weakly Augmented Features
+> Maximize Similarity
+> Minimize Similarity
+> Image
+> Encoder
+> Projection
+> PARB
+
+# …
+
+𝑲 𝟏   
+
+> PARB
+> Context Prediction
+> Predicted
+> Feature
+> Error
+
+Conv 
+
+Conv 
+
+> Output
+> Classifier
+
+Augmented Anomaly Contrastive Learning ( 𝑨 𝟐 CL ) Predictive Anomaly Reasoning Module (PARM)   
+
+> Target Shuffle
+> Fig. 2. Proposed PR-A 2CL comprises two modules: 1) A Perception Module with Augmented Anomaly Contrastive Learning (A 2CL), generating weak and strong augmented views, encoding them via ResNet-50, and hence improving feature discriminability and generalization. 2) A Predictive Anomaly Reasoning Module (PARM) built with stacked PARBs. Each block employs a predict-and-verify mechanism, which predicts the target from context features and verifies it against the target to infer latent compositional rules.
+
+views, or data sources. In this work, we investigate contrastive learning as a means of visual feature extraction, enabling models to acquire higher-level abstract features that exhibit greater generalizability and enhance reasoning capabilities. III. P ROPOSED PR-A 2 CL 
+
+A. Overview of Proposed PR-A 2CL 
+
+As shown in Fig. 1, the CVR task [34] aims to identify the outlier among four images {Xi ∈ RH×W ×C }4
+
+> i=1
+
+. Three images are generated using the same compositional rule over a set of attributes, while the outlier is produced by a slightly different rule over the same attributes. H, W , and C denote the height, width, and number of channels of images, respectively. Formally, 
+
+ˆy = FΘ(X1, X2, X3, X4; Θ) , (1) where ˆy ∈ R4 denotes the prediction scores, Θ denotes the model parameters and FΘ is the mapping function. To address the core challenges in compositional visual rea-soning, we propose PR-A 2CL, which consists of two comple-mentary modules, as shown in Fig. 2. Firstly, to tackle the chal-lenge of generalizing to unseen rule compositions and appear-ance variations at test time, we introduce a perception module with Augmented Anomaly Contrastive Learning (A 2CL). It extracts robust, rule-consistent visual features by aligning representations across augmentations while separating rule-violating outliers. Two augmentation strategies are employed to enhance the model’s generalization ability: Weak Data Augmentation (WDA) employs common image manipulations such as rotation and hue adjustment to diversify samples and expand the feature space, while Strong Data Augmentation (SDA) further improves robustness by applying masking to weakly augmented images without fundamentally altering their intrinsic attributes or semantic rules. Following [34], we adopt ResNet-50 [1] as the image encoder. The A 2CL module is designed to minimize the similarity between outliers and normal images while maximizing agreement across augmented views, resulting in highly discriminative features with strong generalization across diverse scenarios. Secondly, to tackle the challenge of reasoning over com-positional rules, the Predictive Anomaly Reasoning Module (PARM) employs a stacked predict-and-verify architecture. Specifically, the PAV paradigm transforms the outlier selec-tion task from four images into four independent prediction-verification processes. Each process utilizes three images to predict the target image, compares the prediction with the ground truth, and updates the network parameters through prediction error minimization to implicitly learn the underlying compositional rules. Unlike prior models that merely predict and verify classification labels [29], [40], this PAV paradigm is embedded within a dedicated reasoning block to enable deeper rule abstraction. A sequence of PARBs is applied to emulate the iterative human reasoning process, i.e. , earlier layers capture elementary relations, which are progressively composed into higher-level abstract structures through subse-quent PARBs. This hierarchical refinement allows the model to incrementally encode compositional rules, thereby facilitating the interpretation of increasingly complex rule structures. While PR-A 2CL is designed for CVR tasks [34], its modular architecture enables broader applicability. As shown in exper-iments on the SVRT dataset [36] in Sec. IV-B and the MC 2Rdataset [37] in Sec. IV-D, the model effectively generalizes to multi-context compositional reasoning tasks. 
+
+B. Visual Perception with A 2CL 
+
+Human cognition can be analogized to a clustering process: even without explicit recognition of an entity, humans can 4
+
+associate it with others sharing similar characteristics. Inte-grating contrastive learning into visual reasoning frameworks enhances feature representation by emphasizing attributes rel-evant to underlying rules, thereby improving both discrimina-tive power and generalization. 
+
+1) Weak/Strong Data Augmentation: Weak data augmen-tation comprises random rotations (90 ◦, 180 ◦, and 270 ◦), random hue adjustments, and random horizontal or vertical shifts [53]. Applied with probability pw, it enriches sample diversity by mixing weakly augmented and original data. Strong data augmentation operates by partitioning an image into uniformly sized blocks and applying random masking to localized regions within each block. SDA compels the model to learn from informationally sparse inputs, thereby promoting higher-level feature abstraction and enhancing robustness to image variations. To maintain consistency of the underlying semantic structure, identical augmentations are applied across all four images within a compositional reasoning sample. 
+
+2) Augmented Anomaly Contrastive Learning: The ob-jective is to learn discriminative features that exhibit strong generalization across diverse scenarios. Formally, let 
+
+[Xw 
+
+> 1
+
+, Xw 
+
+> 2
+
+, Xw 
+
+> 3
+
+, Ow] denote the weakly augmented images and [Xs 
+
+> 1
+
+, Xs 
+
+> 2
+
+, Xs 
+
+> 3
+
+, Os] the strongly augmented counterparts, where Ow and Os represent outliers, and Xwi and Xsi
+
+represent augmented normal samples. Following [46], the aug-mented images are processed by an image encoder to extract feature representations, which are then mapped via a projection layer into an embedded space suitable for contrastive learning, 
+
+[Hw 
+
+> 1
+
+, Hw 
+
+> 2
+
+, Hw 
+
+> 3
+
+, U w] = G (F([ Xw 
+
+> 1
+
+, Xw 
+
+> 2
+
+, Xw 
+
+> 3
+
+, Ow])) , (2) 
+
+[Hs 
+
+> 1
+
+, Hs 
+
+> 2
+
+, Hs 
+
+> 3
+
+, U s] = G (F([ Xs 
+
+> 1
+
+, Xs 
+
+> 2
+
+, Xs 
+
+> 3
+
+, Os])) , (3) where Hwi , Hsi , U w and U s represent the features after projection, F represents the image encoder, and G repre-sents the projection layer. Contrastive learning often benefits from generating diverse augmented views and maximizing the similarity among representations from these views [54]. In our framework, the WDA generates diverse data views while the SDA enhances data robustness. The model employs a contrastive learning strategy that aligns features from weakly and strongly augmented normal samples, while repelling those from anomalous samples, forming a feature space where samples conforming to the same compositional rules form tight clusters to ensure semantic consistency, whereas anomalies violating rule consistency are effectively pushed away. Ac-cordingly, we maximize the similarity between weakly and strongly augmented normal samples as follows, 
+
+αi = FS (Hwi , Hsi ) = Hwi T Hsi
+
+|Hwi || Hsi | , (4) where FS is the cosine similarity. Similarity between outliers is not considered here as the outliers are diverse in nature. By maximizing αi, the feature representations derived from the weakly and strongly augmented views are encouraged to maintain high mutual similarity. To enhance the discriminant power, we minimize the simi-larity between normal and outlier samples as, 
+
+βwi = FS (Hwi , U w), βsi = FS (Hsi , U s). (5) Combining all the similarities, the A 2CL loss is defined as, 
+
+LC = − 1
+
+NINIX
+
+> i=1
+
+log exp( αi)exp( βwi ) + exp( βsi ) , (6) where NI is the number of normal images. By minimizing LC ,the learned representations promote intra-class compactness and enhance inter-class separation. This significantly improves the model’s discriminative capacity for distinguishing normal from anomalous instances, while also strengthening the gen-eralization ability of features across diverse views. A2CL enforces high-level structural consistency across aug-mented views by maximizing the similarity between weakly and strongly augmented samples while minimizing the similar-ity between normal and outlier instances to separate anomalies. However, it does not explicitly model compositional rule struc-tures but instead focuses on extracting discriminative and ro-bust features to support subsequent reasoning. The integration and composition of elementary relational rules into higher-order structures are achieved by PARBs via iterative predict-and-verify operations, as detailed in the next subsection. 
+
+C. Predictive Anomaly Reasoning Module 
+
+Prior work in cognitive science indicates that human rea-soning relies on iterative cycles of hypothesis generation, testing, and refinement [22], [55], e.g. , Lake et al. charac-terized concept learning as an iterative process of refining abstract hypotheses through feedback [55]. Zador et al. further advocated that next-generation AI systems should integrate analogous iterative and corrective mechanisms to emulate human-like reasoning capabilities [22]. Inspired by cogni-tive science principles, our model incorporates an iterative predict-and-verify architecture that mirrors human reasoning over complex relational structures. This design is realized through stacked PARBs, in which each layer progressively refines relational rules by minimizing prediction errors. Such stepwise refinement not only enhances the accuracy of rule composition but also more closely emulates the feedback-driven mechanisms underlying human inference. 
+
+1) Predict-and-Verify Paradigm: Selecting an outlier from four images constitutes a mini-clustering task: three normal images form a coherent cluster under shared compositional rules, while the remaining one is the outlier. However, this formulation presents two major challenges: 1) With only three normal samples and one outlier, the limited number of instances makes it difficult to reliably estimate the cluster structure; 2) Despite adhering to the same compositional rules, the three normal images may exhibit considerable visual diversity. Relying solely on feature-level similarity is therefore inadequate for capturing underlying rule consistency and en-suring semantic alignment. To address these challenges, we reframe the mini-clustering task within a predict-and-verify paradigm. Let [F1, F2, F3, F4] denote the features of the four images. We construct four PAV instances, each taking one feature Ft as the target and the others as context to predict it, 
+
+ˆFt = FP ({Fi}i̸=t), (7) 5
+
+where FP is the prediction function. We then verify the prediction ˆFt against the target as, 
+
+˜Ft = Ft − ˆFt, (8) where ˜Ft is the prediction error. The outlier is identified as the sample with the largest prediction error, based on the intuition that its features deviate from the shared compositional rules of normal images and thus cannot be accurately predicted from the other three. In contrast, a normal image can be reliably predicted from the remaining normal images when the outlier’s influence is suppressed. The prediction network acquires inherent relational patterns by predicting target fea-tures from contextual features. Through iterative optimization, the model minimizes prediction errors and continuously refines its parameters. As a result, it produces accurate predictions for normal images that conform to consistent compositional rules, while generating significant errors for anomalous samples that violate these patterns. Consequently, the prediction error strongly correlates with semantic anomaly labels. The under-lying compositional rules are implicitly learned and enhanced during the iterative optimization. Notably, our method does not perform explicit pixel-level reconstruction from the remaining images but instead infers semantic relations and enforces compositional consistency within a structured feature space. In addition to the prediction formulated in (7), which uses the other three images as context, we also introduce an alternative prediction scheme that relies on only two of the remaining images. This design reduces contextual noise by excluding potentially inconsistent or distracting sources, thereby promoting more focused and robust relational rea-soning. Furthermore, it increases the diversity of contextual combinations during training. Both prediction strategies are integrated into our model to improve overall performance. 
+
+2) Predictive Anomaly Reasoning Block: Without loss of generality, we demonstrate one PARB that predicts the tar-get F4 from the other three features. To ensure order in-variance, F1, F2, and F3 are first shuffled. A reasoning network [20] then predicts ˆF4 from the shuffled context: 
+
+ˆF4 = FP (Fπ (F1, F2, F3)) , where Fπ denotes the permutation function. The network FP is optimized by minimizing the prediction error ˜F4 = F4 − ˆF4, enabling it to capture underlying relations among normal images and partially learn the compositional rules when F4 is not an outlier. Subse-quently, we concatenate ˜F4 with the context features, forming 
+
+˜Y 04 = [ F1, F2, F3, ˜F4], which is then processed by two convo-lutional layers, FC , to model inter-feature interactions, ˆY 04 =
+
+FC ( ˜Y 04 ). Additionally, a residual shortcut [1] is incorporated to leverage the original features Y 0 = [ F1, F2, F3, F4],
+
+Y 14 = ˆY 04 + Y 04 . (9) The other three PARBs will obtain Y 11 , Y 12 and Y 13 by choosing F1, F2 and F3 as the target, respectively. 
+
+3) Hierarchical PARB: To model complex compositional rules, PARBs are stacked K times hierarchically, with each PARB taking the output of the previous one as the input, 
+
+Y ji = Fj
+
+> PARB
+
+(Y j−1 
+
+> i
+
+), i = 1 , 2, 3, 4, (10) 
+
+Algorithm 1 Training procedures for PR-A 2CL 
+
+Input: Training samples 
+
+Output: PR-A 2CL model  
+
+> 1:
+
+Initialize PR-A 2CL model  
+
+> 2:
+
+for i = 1 to training iterations T do  
+
+> 3:
+
+// Visual Perception  
+
+> 4:
+
+Generate weakly augmented images Hwi , U w and strongly augmented images Hsi , U s; 
+
+> 5:
+
+Generate and map features into a space suitable for contrastive learning as in Eq. (2) and Eq. (3);  
+
+> 6:
+
+Calculate the A 2CL loss LC as in Eq (4), (5) and (6).  
+
+> 7:
+
+// Predictive Reasoning  
+
+> 8:
+
+for k = 1 to reasoning iterations K do  
+
+> 9:
+
+for t = 1 to the number of images N do  
+
+> 10:
+
+Predict Ft using context features as in Eq. (7);  
+
+> 11:
+
+Compute the prediction error as ˜Ft = Ft − ˆFt; 
+
+> 12:
+
+Exploit feature interaction as in Eq. ( ?? );  
+
+> 13:
+
+Utilize a residual structure to incorporate the orig-inal feature set as in Eq. (9).  
+
+> 14:
+
+end for  
+
+> 15:
+
+end for  
+
+> 16:
+
+Calculate BCE loss LBCE using Eq. (12);  
+
+> 17:
+
+Compute total loss L = LBCE + λLC ; 
+
+> 18:
+
+Update PR-A 2CL model via back-propagation.  
+
+> 19:
+
+end for 
+
+where Fj 
+
+> PARB
+
+denotes the operation of the j-th PARB and 
+
+Y 0 
+
+> i
+
+= Y 0. This iterative reasoning mechanism closely emulates human cognitive processes by executing cycles of prediction and verification, thereby progressively refining the inferred abstract rules [20]. Despite its expressive power, PARM may struggle with compositional rules involving subtle visual transformations or conflicting overlapping rules. In such cases, prediction errors may lack discriminativity between normal and anomalous images, leading to potential failures in detecting outliers, as discussed in Sec. IV-F. Two fully connected layers FFC then generate the outlier prediction score for the target Fi,
+
+ˆyi = FFC (Y Ki ), i = 1 , 2, 3, 4. (11) Finally, the Binary Cross Entropy (BCE) loss is adopted, 
+
+LBCE = − 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+[σ(yi) log σ( ˆ yi) + (1 − σ(yi)) log(1 − σ(ˆ yi))] ,
+
+(12) where σ refers to the sigmoid function, N = 4 represents the number of images in a CVR panel and yi is the one-hot encoding of ground-truth labels, i.e. , yi = 1 if the i-th image is an outlier and yi = 0 if it is a normal image. The total loss of PR-A 2CL is defined as, 
+
+L = LBCE + λLC , (13) where λ is the weighting factor for LC . Our model is trained in an end-to-end manner, where the network is updated by using both the contrastive loss LC and the BCE loss LBCE .Algo. 1 summarizes the training procedures of PR-A 2CL. 6
+
+IV. E XPERIMENTAL RESULTS 
+
+A. Experimental Settings 
+
+Three compositional datasets are used for evaluation. 
+
+SVRT [36]: A classic benchmark for analyzing basic com-positional rules. It comprises 23 tasks, each defined by two distinct rules. Each task requires binary classification to identify the underlying rule from visual examples. These rules are constructed from seven fundamental attributes: 
+
+shape , position , size , rotation , flip , inside ,and contact . However, the original formulation relies on rigid rule matching, which simplifies the problem and limits the evaluation of reasoning capabilities. To address this, we reformulate the task as a four-choice problem following the CVR dataset [34], significantly increasing its difficulty and ensuring consistency with contemporary benchmarks. 
+
+CVR [34]: A synthetically generated benchmark based on compositional abstract rules, constructed from nine funda-mental attributes. These include six object attributes: shape ,
+
+position , size , color , rotation , and flip , and three relational attributes: count , inside , and contact . These attributes form nine elementary rules, which are combined to create compositional rules. The dataset comprises 103 unique rules: 20 based on a single elementary rule, 65 combining two elementary rules, and 9 incorporating more than two. 
+
+MC 2R [37]: A challenging benchmark for abstract visual reasoning. It is designed to evaluate a model’s capacity to iden-tify subtle distinctions within complex compositional rules, rather than relying on superficial appearance matching. Each sample consists of five images: three conforming to the same rule and two outliers exhibiting minimal deviations. Rules are constructed from nine attribute types: six object-level ( shape ,
+
+position , size , color , rotation , flip ) and three relational ( count , inside , contact ). They are hierarchi-cally composed using logical ( and , or , not ), relational ( =,
+
+>, <), and arithmetic ( +, -) operators in a tree-like structure. The dataset comprises 103 distinct tasks. All three datasets, SVRT [36], CVR [34], and MC 2R [37], contain 10,000 train-ing samples, 500 validation samples, and 1,000 test samples per task. Compared to CVR, MC 2R introduces greater attribute diversity and a multi-answer format, substantially increasing difficulty and reducing shortcut learning. We compare the following state-of-the-art models. 
+
+WReN [40] utilizes a Relation Network to model inter-feature relationships for solving RPM problems. It is adapted here for solving CVR problems. 
+
+SCL [29] comprises an object network for object extraction, an attribute network for attribute encoding, and a relation network for inferring underlying relations. In SCL-ResNet-18 [29], the original encoder is replaced with ResNet-18. 
+
+PredRNet [20], a state-of-the-art model on RPMs, is adapted for CVR. It employs a four-ResBlock encoder for visual feature extraction and a Predictive Reasoning Network to model context-answer relations. 
+
+SCAR [41] achieves dynamic adaptability via its Structure-Aware Dynamic Layer, which adjusts computations and weights based on visual task structures. It represents a state-of-the-art unified model for diverse abstract reasoning tasks.                                                                                                                                            
+
+> TABLE I STATE -OF -THE -ART COMPARISON ON SVRT [36] UNDER THE SAME SETTINGS AS [34]. O UR METHOD CONSISTENTLY AND SIGNIFICANTLY OUTPERFORMS ALL BASELINES ACROSS ALL TRAINING SAMPLE SIZES .Model 20 50 100 200 500 1000 AUC 10000 ViT-Small [2] 24.7 24.8 24.9 26.6 27.6 29.8 26.4 40.0 IN-ViT-Small [2] 25.6 25.1 26.2 26.1 28.7 33.0 27.5 92.4 SCAR [41] 25.8 25.9 27.0 28.3 31.0 32.9 28.5 50.3 WReN [40] 26.0 28.2 27.9 29.7 33.0 39.7 30.8 70.3 SCL [29] 25.8 25.1 25.9 26.6 31.9 55.0 31.7 73.4 ResNet-50 [1] 29.8 31.5 32.4 33.4 41.6 54.0 37.1 96.0 SCL-ResNet-18 [29] 28.2 31.8 35.8 41.6 59.5 68.2 38.2 95.8 PredRNet [20] 31.2 32.2 33.6 37.3 44.2 51.3 38.3 96.2 SSL-ViT-Small [47] 41.7 43.2 49.4 55.5 62.7 67.1 53.3 85.3 IN-ResNet-50 [1] 36.6 40.6 40.4 49.8 72.1 83.0 53.8 93.0 CLIP-ResNet-50 [57] 34.2 35.5 44.8 49.3 81.3 89.3 55.7 97.6 CLIP-ViT-Base [57] 31.0 39.2 42.1 55.0 88.1 92.1 57.9 98.6 SSL-ResNet-50 [47] 57.5 62.2 65.0 70.0 77.1 83.5 69.2 97.7 R3PCL [37] 64.8 71.9 77.2 80.7 87.5 93.5 79.3 98.5 DBCR [35] 65.2 73.4 79.5 83.1 89.8 94.9 81.0 98.8 Proposed Method 68.5 78.5 85.9 92.1 96.9 98.2 86.7 99.4
+
+R3PCL [37] performs residual regression reasoning among image triplets and incorporates pseudo-labeled contrastive learning to enhance feature discrimination and generalization. 
+
+DBCR [35] employs a dual-branch architecture, using hier-archical regression to model intra-cluster relations and con-trastive attention to capture inter-cluster differences between normal and outlier images. 
+
+ResNet-50 [1] and ViT-Small [2] have been widely utilized for visual recognition. Following [34], they are selected as benchmark methods by adding two fully connected layers as the reasoner. In addition, IN-ResNet-50 [1] and IN-ViT-Small [2] pre-trained using the ImageNet dataset [56], SSL-ResNet-50 [47] and SSL-ViT-Small [47] utilizing MoCo-v3 [47] pre-trained with 1.03 million samples, and CLIP-ResNet-50 [57] and CLIP-ViT-Base [57] utilizing the visual encoders of CLIP [57] are also chosen for comparison. The default number of PARBs is K = 3 , and the weighting factor λ for LC is 0.1. Sec. IV-E provides detailed ablations of these two parameters. The input image resolution is 128 ×
+
+128 pixels. The maximum number of training epochs is set to 100, with early stopping after 20 epochs without improvement. The Adam optimizer is utilized with an initial learning rate of 0.0001, weight decay of 1 × 10 −4, and a batch size of 64. 
+
+B. Comparisons on SVRT Dataset 
+
+We evaluate compared methods on the SVRT dataset, re-porting results with 20, 50, 100, 200, 500, 1k, 10k training samples per task, following [34]. We observe the following from Tab. I. 1) PR-A 2CL consistently outperforms all baseline methods under every experimental condition, demonstrating its efficacy in improving feature discrimination and gener-alization, as well as validating the strength of the proposed PARM module in abstract reasoning. 2) PR-A 2CL yields significant performance improvements over the second-best method, DBCR [35], achieving margins of 3.3%, 5.1%, 6.4%, 9.0%, 7.1%, 3.3%, and 0.6% across training set sizes of 20, 50, 100, 200, 500, 1k, and 10k samples per task, respectively. These consistent gains demonstrate that PR-A 2CL sustains a 70 5 10 15 20  
+
+> Task ID
+> 0.75
+> 0.80
+> 0.85
+> 0.90
+> 0.95
+> 1.00
+> Accuracy
+> DBCR
+> Proposed
+> Fig. 3. Comparison with DBCR [35] on SVRT [36] using 1k samples per task. PR-A 2CL excels across most tasks, whereas DBCR struggles on several.
+
+robust advantage against strong competing approaches. 3) PR-A2CL attains accuracies of 98.2% with 1k training samples and 99.4% with 10k samples per task, indicating that suf-ficient data enables it to accurately model and reason over nearly all compositional rules present in the SVRT dataset. 4) Even under low-data regimes, PR-A 2CL maintains strong performance, achieving accuracies of 85.9% with 100 samples and 92.1% with 200 samples, surpassing DBCR by margins of 6.4% and 9.0%, respectively. These results underscore the model’s robustness and generalization capacity, demonstrating its suitability for abstract reasoning under limited supervision. To evaluate performance at the task level, we provide a detailed per-task accuracy comparison between PR-A 2CL and DBCR [35] under 1k training samples per task, as shown in Fig. 3. Tasks are sorted in ascending order according to DBCR’s accuracy. PR-A 2CL achieves over 90% accuracy on every task, highlighting its robust reasoning ability across the SVRT dataset. In contrast, DBCR exceeds 90% on only a subset of tasks and falls below 80% on two. We hypothesize that PR-A 2CL benefits from continuous self-refinement via its predict-and-verify mechanism, enabling it to handle complex rules consistently, whereas DBCR lacks such a capability. 
+
+C. Comparisons on CVR Dataset 
+
+Following the experimental protocol of [34], we evalu-ate PR-A 2CL against state-of-the-art methods on the CVR dataset [34] using 20, 50, 100, 200, 500, 1k, 10k samples per task. Experiments are conducted under two configurations: a unified model trained jointly on all tasks, and individual models trained per task. Results are reported in Tab. II. Most baseline results are taken from [34], [35]. For PredR-Net [20], we adapted the official implementation to CVR; some individually-trained models were rerun as needed. 
+
+1) Jointly Training One Unified Model: As shown in Tab. II, the following observations can be made under the joint training setting. 1) PR-A 2CL consistently and signif-icantly outperforms all baseline methods across all sample sizes, demonstrating its effectiveness in enhancing feature discrimination, generalization, and the ability of PARM to capture latent compositional rules. 2) Compared to the second-best method, DBCR [35], the performance gain of PR-A 2CL increases from 0.9% to 1.3%, 2.3%, and 3.0% as the number of training samples per task grows from 20 to 50, 100, and 200, respectively. This suggests that with more data, A 2CL better captures visual cues and improves reasoning. 3) With 500, 1k, and 10k samples per task, the margin over DBCR decreases to 1.1%, 1.4%, and 0.7%, respectively. We con-jecture that abundant data ( e.g. , 10k samples) allows models to approximate the underlying distribution well, narrowing performance gaps. However, collecting 10k samples per task is often impractical. Thus, prior work [34] primarily uses 1k sam-ples for comparison, under which PR-A 2CL surpasses DBCR by 1.2%. 4) Under limited training samples, many methods perform near chance-level accuracy (25%), while SSL-ResNet-50 [34] (MoCo-V3 pre-trained), R 3PCL [37], DBCR, and our method achieve significantly better performance, highlighting the generalization benefits of A 2CL. 
+
+2) Individually Training One Model for Each Task: As in-dicated in Tab. II, PR-A 2CL consistently surpasses all baseline methods under this setting across varying sample sizes. No-tably, it achieves a performance gain of 1.9% over the second-best method, DBCR [35], when using only 20 or 50 samples per task, a more substantial improvement than observed in the joint training configuration. In joint training, mixing samples from multiple tasks increases the effective quantity of training data per task. For instance, joint exposure to color and size 
+
+tasks can implicitly aid performance on composite tasks such as color & size . In contrast, individual training operates with significantly fewer samples per task. Nevertheless, our approach leverages the A 2CL module to generate augmented data views, facilitating more efficient reasoning and yielding greater performance gains under very low sample regimes (20 or 50 samples) compared to joint training. Finally, we note that models trained individually on single tasks generally underperform relative to jointly trained models, primarily due to sample scarcity. Therefore, the remainder of this paper focuses on joint training results. As shown in the last two columns of Tab. II, we compare the time complexity of each model. PR-A 2CL incurs modest com-putational overhead but maintains high efficiency and superior accuracy across all settings. Moreover, PR-A 2CL is parameter-efficient, containing only 27.8M parameters, comparable to ResNet-50-based models, yet much fewer than DBCR [35], achieving an effective accuracy-efficiency balance. 
+
+3) Comparisons on Each Compositional Rule: Fig. 4compares the per-rule reasoning accuracy of PR-A 2CL and DBCR [35] under 1k samples per task, averaged for rule pairs with multiple compositions. Key observations include: 1) PR-A2CL outperforms DBCR on most rule combinations, partic-ularly in challenging compositions such as contact+flip 
+
+and position+flip , indicating stronger capability in mod-elling multi-attribute compositions with structural dependen-cies. 2) On the diagonal (elementary rules), PR-A 2CL achieves near-perfect accuracy across all categories, while DBCR ex-hibits significant degradation on abstract rules such as shape ,
+
+rotation , and flip , suggesting limited capacity in encod-ing high-relational abstractions. 3) The most substantial gains occur in semantic-sensitive tasks like flip and rotation ,which require understanding of spatial structure and global 8
+
+TABLE II STATE -OF -THE -ART COMPARISON ON CVR [34] UNDER JOINT (LEFT ) AND INDIVIDUAL (RIGHT ) TRAINING SETTINGS . PR-A 2 CL OUTPERFORMS ALL BASELINES ACROSS ALL SAMPLE SIZES WITH ACCEPTABLE COST .Model Accuracy (%) for Using Different Numbers of Samples per Task for Joint/Individual Training Para. (M) GFLOPs 20 50 100 200 500 1000 AUC 10000 SCAR [41] 26.2/27.1 26.2/27.4 26.6/27.6 27.1/28.0 27.7/28.0 29.4/32.3 27.4/28.4 42.7/41.4 0.5 0.7 ViT-Small [2] 27.3/28.6 27.8/30.1 28.0/30.9 28.1/31.9 29.9/33.8 31.4/35.1 28.7/31.7 58.7/42.5 22.6 11.2 WReN [40] 26.8/30.0 27.6/32.0 28.5/32.9 30.1/34.1 36.4/36.3 42.3/39.0 32.0/34.1 64.5/52.5 1.5 0.3 SCL [29] 25.8/26.9 25.8/30.0 28.3/30.3 34.1/30.0 43.2/31.4 46.2/33.4 33.9/30.3 56.9/53.2 0.2 0.1 IN-ViT-Small [2] 27.9/31.7 28.2/33.6 28.6/35.3 30.0/37.8 35.6/40.3 47.2/43.6 32.9/37.0 72.4/60.5 22.6 11.2 PredRNet [20] 26.9/28.9 30.0/32.6 31.5/35.3 36.2/39.8 45.9/45.3 54.5/49.0 37.5/38.5 92.2/68.7 8.4 5.8 ResNet-50 [1] 27.5/28.0 28.2/31.1 29.9/32.5 33.9/34.0 52.1/38.7 59.2/44.8 38.4/34.9 93.7/84.0 28.0 10.8 SSL-ViT-Small [47] 39.3/46.7 39.5/51.6 40.8/54.8 44.1/57.5 53.3/62.0 60.7/65.5 46.3/56.4 81.6/76.1 22.6 11.2 SCL-ResNet-18 [29] 26.4/31.4 28.4/37.3 31.6/37.8 40.7/39.6 51.4/42.7 64.0/48.3 40.4/39.5 78.9/72.8 11.5 4.8 IN-ResNet-50 [1] 32.0/33.9 35.1/36.9 39.0/42.8 43.8/48.3 57.7/55.3 69.5/62.5 46.2/46.6 85.1/82.0 28.0 10.8 CLIP-ResNet-50 [57] 28.7/34.0 32.0/37.9 40.8/43.2 46.9/57.1 59.7/57.9 74.4/60.8 47.1/48.5 82.7/75.1 28.0 10.8 CLIP-ViT-Base [57] 31.1/33.9 37.4/45.7 43.9/49.4 56.0/53.7 68.9/54.8 78.8/56.1 52.7/48.9 88.9/74.6 22.6 11.2 SSL-ResNet-50 [47] 44.3/40.5 50.3/47.3 55.3/52.9 59.5/56.8 68.9/61.9 79.2/67.7 59.6/54.5 93.1/90.8 28.0 10.8 R3PCL [37] 44.8/40.9 52.1/49.2 57.6/54.1 63.0/60.1 76.4/71.1 88.9/86.2 63.8/60.3 95.7/93.9 29.6 12.7 DBCR [35] 46.5/45.3 53.0/51.8 60.0/59.1 70.2/66.9 83.4/81.2 90.4/89.5 67.3/65.6 96.4/94.9 73.1 11.3 Proposed Method 47.4 /47.2 54.3 /53.7 62.3 /61.0 73.2 /69.7 84.5 /82.1 91.8 /91.0 68.9 /67.5 97.1 /95.9 27.8 13.3 95 81 96 88 85 87 52 98 95                                                                 
+
+> 93 96 97 69 67 90 99 99
+> 99 100 78 92 86 99 95
+> 100 85 87 81 97 100
+> 89 75 79 71 83
+> 94 84 89 82
+> 99 98 99
+> 100 100
+> 99
+> 99 82 96 89 88 9055 98 95
+> 95 96 97 72 61 92 100 99
+> 99 100 78 94 87 100 95
+> 100 85 89 85 97 100
+> 92 78 84 74 83
+> 98 86 91 87
+> 99 98 99
+> 100 100
+> 100
+> shape
+> position
+> size
+> color
+> rotation
+> flip
+> inside
+> contact
+> count
+> shape
+> position
+> size
+> color
+> rotation
+> flip
+> inside
+> contact
+> count
+
+DBCR PR -𝐀 𝟐 CL 
+
+Fig. 4. Comparison of reasoning accuracy on specific compositional rules. PR-A 2CL outperforms DBCR [35] for almost all rules. 
+
+context. PR-A 2CL’s superiority in these areas underscores its effectiveness in extracting high-level semantics and reasoning over complex visual relationships through contrastive learning and iterative predictive reasoning. 
+
+4) Comparisons to Human Intelligence: Tab. III compares the human baseline against PR-A 2CL across 45 abstract rules on the CVR dataset under two training regimes: the standard setting with 1k samples per task as in [34], and a few-shot setting with only 20 samples per task to enable fair com-parison with human learners. While PR-A 2CL underperforms compared to humans under the few-shot condition, it surpasses human performance with 1k samples per task. Under the standard 1k samples per task setting, both humans and PR-A 2CL perform well on single-attribute elementary rules, but multi-rule composition remains difficult. PR-A²CL improves accuracy from 97.6% to 99.3% on elementary rules and from 74.0% to 89.1% on compositional tasks. It shows strong gains in spatial–semantic integrations like Position ,
+
+Flip , and Rotation combined with other attributes. While humans struggle with limited examples (only four images per trial), PR-A 2CL excels via its predict-and-verify mechanism. 
+
+TABLE III HUMAN VS . PR-A 2 CL ON CVR [34] WITH 20/1 K SAMPLES PER TASK , 
+
+> EVALUATED ON
+
+9 ELEMENTARY AND 36 COMPOSITIONAL RULES .Human PR-A 2CL, 20 PR-A 2CL, 1k Elementary 97.6 71.8 99.3 Compositional 74.0 39.2 89.1 
+
+Color & Position 57.5 26.2 98.3 
+
+Size & Contact 60.0 61.5 95.4 
+
+Contact & Rotation 30.0 65.1 94.0 
+
+Color & Flip 45.0 27.4 88.5 
+
+Count & Rotation 45.0 28.5 83.5 
+
+Under few-shot conditions, the model’s accuracy on com-positional rules drops sharply to 39.2%, significantly below the human baseline of 74.0%. The gap is largest in complex compositions such as Color & Position , Color & Flip ,and Count & Rotation , which require disentangling and integrating visual attributes into abstract structures. With min-imal supervision, PR-A 2CL fails to learn robust representa-tions, especially for subtle or rare attributes, highlighting the inherent challenge of few-shot abstract reasoning. 
+
+D. Comparisons on MC 2R Dataset 
+
+We summarize the key observations from Tab. IV as follows: 1) The proposed method consistently achieves the highest performance across all experimental settings on the MC 2R dataset, demonstrating its strong capability in handling complex multi-context compositional reasoning tasks. 2) Com-pared to the second-best method, DBCR [35], our approach exhibits consistent improvements under all data regimes. No-tably, in low-data scenarios with only 20, 50, and 100 training samples per task, the proposed model achieves accuracies of 22.7%, 32.1%, and 39.8%, outperforming DBCR by margins of 1.3%, 2.0%, and 1.6%, respectively. These improvements are especially significant given the inherent challenges of the MC 2R dataset, which is characterized by greater combinatorial complexity and higher rule diversity. 3) Even with larger 9                                                                                                                         
+
+> TABLE IV STATE -OF -THE -ART COMPARISON ON MC 2R [37] ACROSS VARYING TRAINING SAMPLE SIZES .Model 20 50 100 200 500 1,000 10,000 ViT-small [2] 10.1 10.1 10.4 10.5 11.1 11.7 14.1 SCL [29] 10.1 10.0 10.1 10.2 10.5 12.5 30.4 MRNet [58] 10.5 10.7 10.9 11.2 11.7 13.5 31.6 WReN [40] 10.6 10.5 11.0 11.0 11.6 12.6 37.6 SSL-ViT-small [47] 15.9 16.6 17.1 17.6 18.7 21.7 38.9 SCAR [41] 10.2 10.1 10.2 10.8 11.5 15.9 39.0 PredRNet [20] 11.4 12.6 13.1 15.6 23.3 41.2 59.3 ResNet-50 [1] 10.6 10.5 10.7 13.1 17.1 28.1 75.3 SSL-ResNet-50 [47] 19.4 22.7 24.9 27.4 37.7 44.9 82.3 R3PCL [37] 19.8 27.8 35.1 45.5 59.6 72.9 87.9 DBCR [35] 21.4 30.1 38.2 48.7 60.8 76.0 89.3 Proposed Method 22.7 32.1 39.8 50.3 63.1 77.4 90.4
+> TABLE V ABLATION STUDY OF MAJOR COMPONENTS ON CVR [34]. A2CL PARM 200 500 1000 59.5 68.9 79.2 67.5 79.2 88.9 66.5 77.8 85.4
+> 73.2 84.5 91.8
+> TABLE VI ABLATION OF DATA AUGMENTATION STRATEGIES .200 500 1000 No CL 66.5 77.8 85.4 WDA Only 70.8 82.2 89.1 SDA Only 67.9 79.4 87.2 A2CL 73.2 84.5 91.8
+
+training sets of 1k and 10k samples, the proposed method remains highly competitive, attaining accuracies of 77.4% and 90.4%, respectively. These results indicate that the model not only generalizes effectively under limited supervision but also scales robustly with increased data availability. 
+
+E. Ablation Studies on CVR Dataset 1) Ablation of Major Components: To assess the perfor-mance contributions of the two proposed modules, we conduct an ablation study under three data regimes: 200, 500, and 1k training samples per task. We adopt SSL-ResNet-50 [34] as the baseline, replacing its original perception and reasoning modules with the proposed A 2CL and PARM, respectively. The results are presented in Tab. V. Integrating A 2CL alone leads to accuracy improvements of 6.6%, 9.2%, and 8.7% across the three data scales, confirming its efficacy in learning discriminative and generalizable visual representations. Using only PARM yields gains of 4.9%, 7.1%, and 5.0%, indicating that the predict-and-verify reasoning paradigm more effec-tively handles complex compositional rules. The combined use of both modules further elevates performance, achieving accuracies of 70.4%, 83.9%, and 91.5% respectively. These re-sults validate the individual and complementary contributions of each module to the overall framework.                    
+
+> TABLE VII ABLATION STUDY OF KEY PARAMETERS KAND λ.
+> K1234Accuracy (%) 91.2 91.4 91.8 91.1
+> λ0.02 0.05 0.10 0.20 Accuracy (%) 91.5 91.4 91.8 91.4
+
+2) Ablation of Data Augmentation Strategies: To validate the efficacy of A 2CL, we conducted an ablation study com-paring the following configurations: No Contrastive Learning (No CL), WDA Only, SDA Only, and the proposed A 2CL. As summarized in Tab. VI, A 2CL achieves the highest reasoning accuracy across all sample sizes: 73.2%, 84.5%, and 91.8% with 200, 500, and 1k training samples per class, respectively. In comparison, the absence of contrastive learning results in a significant performance decline, yielding accuracies of only 66.5%, 77.8%, and 85.4%. While employing only weak or strong data augmentations surpasses the no-contrastive-learning baseline, both are outperformed by A 2CL. These findings indicate that contrasting strong and weak augmented views enhances the model’s ability to capture rule-consistent and perturbation-invariant semantic representations in the fea-ture space, thereby affirming the effectiveness of our A 2CL. 
+
+3) Impact of Number of PARBs: We investigate the impact of the number of PARBs ( K) in the reasoning module using 1k training samples per task, as summarized in Tab. VII. The results indicate that increasing K from 1 to 3 improves model performance from 91.2% to 91.8%, suggesting that hierarchical reasoning with multiple PARBs enhances the capture of complex compositional rules. However, increasing 
+
+K to 4 leads to a slight performance decline to 91.1%, likely due to overfitting from excessive PARB stacking. This occurs when the model adapts to noise and idiosyncrasies in the training data, rather than learning generalizable reasoning patterns, causing it to focus on spurious details rather than robust abstractions. Hence, we set K = 3 by default. 
+
+4) Impact of Weighting Factor λ: PR-A 2CL employs two loss functions: the A 2CL loss LC, which enhances the dis-criminative power and generalization of visual features, and the BCE loss LBCE . An ablation study on the weighting factor λ is presented in Tab. VII. Given that LBCE provides direct supervisory signals from the labels and LC serves as an auxiliary loss for feature enhancement, we evaluate 
+
+λ within the range of (0 .02 , 0.20) . As shown in Tab. VII, model performance remains stable across this interval, with the highest accuracy of 91.8% achieved at λ = 0 .1. This value is consequently adopted as the default. 
+
+5) t-SNE Visualization of PARBs: To depict the evolution of feature organization throughout the iterative refinement process, we include t-SNE plots for the outputs of PARB1, PARB2 and PARB3. To ensure visual clarity and mitigate overlap, 20 compositional rules was randomly selected from the total of 103. As illustrated in Fig. 5, the feature represen-tations form increasingly compact and distinct clusters across successive PARBs. This progressive separation indicates that the model refines the semantic organization within the feature 10 100 50 0 50 100             
+
+> 100
+> 50
+> 0
+> 50
+> 100
+> t-SNE for 20 Compositional Rules (PARB1) 100 50 050 100
+> 100
+> 50
+> 0
+> 50
+> 100
+> t-SNE for 20 Compositional Rules (PARB2) 100 75 50 25 025 50 75 100
+> 100
+> 75
+> 50
+> 25
+> 0
+> 25
+> 50
+> 75
+> 100
+> t-SNE for 20 Compositional Rules (PARB3)
+
+Fig. 5. t-SNE visualization of feature representations across successive PARBs, showing increased cluster compactness with deeper PARBs. 
+
+space, thereby inducing a geometric configuration that more faithfully represents the underlying compositional rules. 
+
+F. Failure Analysis on CVR Dataset 
+
+Fig. 6 shows two failure cases. On the rotation &
+
+count task, DBCR [35] fails to learn the compositional rule, whereas PR-A²CL succeeds. This task involves grouping objects into subsets and identifying both the category and count of randomly rotated objects, demanding high-level se-mantic reasoning. While DBCR struggles with such complex compositionality, PR-A 2CL shows stronger reasoning over abstract visual concepts. The position & flip task proves particularly challenging, as both DBCR and PR-A 2CL fail. This is primarily due to misinterpreting the flip rule, where the rotation acts as strong distracting noise rather than a component of the compositional rule. The rotational variability severely confuses both models, hindering accurate inference of flip-based reasoning. Notably, humans also struggle with these tasks, underscoring their inherent difficulty. Our further investigation identifies two primary failure modes: 1) Feature attention bias. In complex task settings (e.g. , position & flip ), the model exhibits a tendency to prioritize salient visual features such as object shape or 
+
+count , while overlooking more subtle yet critical attributes like flip orientation or spatial relationships. This imbalanced attention results in systematic reasoning errors. 2) Rule entan-glement and overfitting. The model fails to decouple correlated rules ( e.g. , position & flip ), overfitting to superficial training patterns rather than learning abstract, generalizable rules, especially under non-additive interactions. V. C ONCLUSION AND FUTURE WORK 
+
+While reasoning over simple abstract rules has been ex-tensively explored, compositional visual reasoning remains an understudied yet critical area. This paper introduces Pre-dictive Reasoning-Augmented Anomaly Contrastive Learn-ing (PR-A 2CL), a novel framework for compositional visual reasoning. Our method includes a visual perception module Each image contain 3 objects with the successive positions along a spatial 
+
+dimension. The flips remain the same for each position across images. 
+
+Rotation & Count 
+
+Each image contains sets of objects. Within each set objects have the same 
+
+shape and are randomly rotated. The number of objects in each set is 
+
+constant across images. 
+
+Position & Flip 
+
+DBCR 
+
+PR -A!CL 
+
+Decision 
+
+DBCR 
+
+PR -A!CL 
+
+Decision 
+
+Fig. 6. Two failure cases on the CVR dataset: 1) rotation & count :DBCR [35] fails to capture the specific compositional rule. In contrast, the proposed PR-A 2CL successfully identifies the outlier. 2) position & flip :Both DBCR [35] and PR-A 2CL fail to infer the underlying rule, primarily due to interference from random noise introduced by the rotation operation. 
+
+enhanced with Augmented Anomaly Contrastive Learning, which extracts discriminative features by leveraging multi-level data augmentations while preserving feature-space simi-larity among normal samples and separating outliers. Further-more, the predictive anomaly reasoning module employs a predict-and-verify mechanism to infer each image from the remaining three. To better understand compositional rules, we design the hierarchical PARBs to emulate human’s reasoning process. Extensive experiments on SVRT, CVR, and MC 2R11 
+
+datasets demonstrate that PR-A 2CL consistently outperforms existing state-of-the-art models across diverse settings. For future work, PR-A 2CL can be extended by incorporat-ing rule disentanglement or uncertainty modeling to improve performance on complex tasks. Structural feature disentangle-ment may yield more interpretable and independent visual at-tribute representations, while uncertainty-aware methods such as confidence calibration or counterfactual augmentation could enhance robustness in ambiguous or conflicting rule scenarios. REFERENCES [1] K. He, X. Zhang, S. Ren, and J. Sun, “Deep residual learning for image recognition,” in CVPR , 2016, pp. 770–778. [2] A. Dosovitskiy, L. Beyer, A. Kolesnikov, D. Weissenborn, X. Zhai, T. Unterthiner, M. Dehghani, M. Minderer, G. Heigold, S. Gelly et al. ,“An image is worth 16x16 words: Transformers for image recognition at scale,” in ICLR , 2020. [3] Y. He, C. Li, H. Yu, J. Ren, Z. Wang, H. Du, and Y. Xia, “Dual-branch starnet with mutual attention and u-net denoising for simultaneously recognizing keywords and speakers,” in ICONIP . Springer, 2024, pp. 286–300. [4] W. Song, X. Wang, Y. Guo, S. Li, B. Xia, and A. Hao, “CenterFormer: A novel cluster center enhanced transformer for unconstrained dental plaque segmentation,” TMM , vol. 26, pp. 10 965–10 978, 2024. [5] A. Umam, C.-K. Yang, J.-H. Chuang, and Y.-Y. Lin, “Unsupervised point cloud co-part segmentation via co-attended superpoint generation and aggregation,” TMM , vol. 26, pp. 7775–7786, 2024. [6] B. Wu, J. Xie, K. Shen, Z. Kong, J. Ren, R. Bai, R. Qu, and L. Shen, “MG-MotionLLM: A unified framework for motion comprehension and generation across multiple granularities,” in CVPR , 2025, pp. 27 849– 27 858. [7] M. Małki´ nski and J. Ma´ ndziuk, “A review of emerging research di-rections in abstract visual reasoning,” Information Fusion , vol. 91, pp. 713–736, 2023. [8] R. Pan, H. Yang, C. Li, and J. Yang, “Joint intra & inter-grained reasoning: A new look into semantic consistency of image-text retrieval,” 
+
+TMM , vol. 26, pp. 4912–4925, 2024. [9] J. Jiang and N. Zheng, “Mixphm: Redundancy-aware parameter-efficient tuning for low-resource visual question answering,” in CVPR , 2023, pp. 24 203–24 213. [10] D. Xue, S. Qian, Q. Fang, and C. Xu, “LININ: Logic integrated neural inference network for explanatory visual question answering,” TMM ,vol. 27, pp. 16–27, 2025. [11] J. Zhu, H. Wang, and B. He, “Multi-modal structure-embedding graph transformer for visual commonsense reasoning,” TMM , vol. 26, pp. 1295–1305, 2024. [12] J. Zhang, X. Wang, C. Yao, J. Ren, and X. Jiang, “Visual-linguistic cross-domain feature learning with group attention and gamma-correct gated fusion for extracting commonsense knowledge,” in ACM MM , 2024, p. 4650–4659. [13] M. Yuan, G. Jia, and B.-K. Bao, “Relation inference enhancement network for visual commonsense reasoning,” TMM , vol. 27, pp. 2221– 2231, 2025. [14] F. Baradel, N. Neverova, J. Mille, G. Mori, and C. Wolf, “Cophy: Counterfactual learning of physical dynamics,” in ICLR , 2020. [15] K. R. Allen, K. A. Smith, and J. B. Tenenbaum, “Rapid trial-and-error learning with simulation supports flexible tool use and physical reasoning,” PNAS , vol. 117, no. 47, pp. 29 302–29 310, 2020. [16] W.-Z. Dai, Q. Xu, Y. Yu, and Z.-H. Zhou, “Bridging machine learning and logical reasoning by abductive learning,” NeurIPS , vol. 32, 2019. [17] C. Li, Y. Y. Tan, Y. He, J. Ren, R. Bai, Y. Zhao, H. Yu, and X. Jiang, “DARR: A dual-branch arithmetic regression reasoning framework for solving machine number reasoning,” in AAAI , vol. 39, no. 2, 2025, pp. 1373–1382. [18] Y. Benny, N. Pekar, and L. Wolf, “Scale-localized abstract reasoning,” in CVPR , 2021, pp. 12 557–12 565. [19] W. He, J. Zhang, J. Ren, R. Bai, and X. Jiang, “Hierarchical ConViT with attention-based relational reasoner for visual analogical reasoning,” in AAAI , vol. 37, no. 1, 2023, pp. 22–30. [20] L. Yang, H. You, Z. Zhen, D. Wang, X. Wan, X. Xie, and R.-Y. Zhang, “Neural prediction errors enable analogical visual reasoning in human standard intelligence tests,” in ICML , 2023, pp. 39 572–39 583. [21] C. Li, Y. He, J. Ren, R. Bai, Y. Zhao, and X. Jiang, “Dsrf: A dynamic and scalable reasoning framework for solving rpms,” in NeurIPS , 2025. [22] A. Zador, S. Escola, B. Richards, B. ¨Olveczky, Y. Bengio, K. Boa-hen, M. Botvinick, D. Chklovskii, A. Churchland, C. Clopath et al. ,“Catalyzing next-generation artificial intelligence through neuroAI,” Nat. Commun. , vol. 14, p. 1597, 2023. [23] A. Kirillov, E. Mintun, N. Ravi, H. Mao, C. Rolland, L. Gustafson, T. Xiao, S. Whitehead, A. C. Berg, W.-Y. Lo et al. , “Segment anything,” in CVPR , 2023, pp. 4015–4026. [24] E. Kasneci, K. Seßler, S. K¨ uchemann, M. Bannert, D. Dementieva, F. Fischer, U. Gasser, G. Groh, S. G¨ unnemann, E. H¨ ullermeier et al. ,“ChatGPT for good? on opportunities and challenges of large language models for education,” Learn. Individ. Differ. , vol. 103, p. 102274, 2023. [25] L. Qu, S. Wu, H. Fei, L. Nie, and T.-S. Chua, “LayoutLLM-T2I: Eliciting layout guidance from LLM for text-to-image generation,” in 
+
+ACM MM , 2023, pp. 643–654. [26] H. Xiong, Y. Zhuge, J. Zhu, L. Zhang, and H. Lu, “3UR-LLM: An end-to-end multimodal large language model for 3D scene understanding,” 
+
+TMM , vol. 27, pp. 2899–2911, 2025. [27] G. Camposampiero, L. Houmard, B. Estermann, J. Mathys, and R. Wat-tenhofer, “Abstract visual reasoning enabled by language,” in CVPR ,2023, pp. 2642–2646. [28] W. He, J. Ren, R. Bai, and X. Jiang, “Two-stage rule-induction visual reasoning on RPMs with an application to video prediction,” Pattern Recognit. , vol. 160, p. 111151, 2025. [29] Y. Wu, H. Dong, R. Grosse, and J. Ba, “The scattering compositional learner: Discovering objects, attributes, relationships in analogical rea-soning,” arXiv preprint, arXiv:2007.04212 , 2020. [30] W. He, J. Ren, and R. Bai, “Data augmentation by morphological mixup for solving Raven’s progressive matrices,” Vis Comput , vol. 40, pp. 2457–2470, 2024. [31] W. He, J. Ren, R. Bai, and X. Jiang, “Hierarchical perceptual and predictive analogy-inference network for abstract visual reasoning,” in 
+
+ACM MM , 2024, pp. 4841–4850. [32] C. Zhang, F. Gao, B. Jia, Y. Zhu, and S.-C. Zhu, “Raven: A dataset for relational and analogical visual reasoning,” in CVPR , 2019, pp. 5317– 5327. [33] S. Hu, Y. Ma, X. Liu, Y. Wei, and S. Bai, “Stratified rule-aware network for abstract visual reasoning,” in AAAI , vol. 35, no. 2, 2021, pp. 1567– 1574. [34] A. Zerroug, M. Vaishnav, J. Colin, S. Musslick, and T. Serre, “A benchmark for compositional visual reasoning,” NeurIPS , vol. 35, pp. 29 776–29 788, 2022. [35] C. Li, G. Su, J. Ren, R. Bai, Y. Zhao, and X. Jiang, “DBCR: Exploiting both intra-cluster and extra-cluster relations for compositional reason-ing,” in ICASSP , 2025, pp. 1–5. [36] F. Fleuret, T. Li, C. Dubout, E. K. Wampler, S. Yantis, and D. Geman, “Comparing machines and humans on a visual categorization test,” 
+
+PNAS , vol. 108, no. 43, pp. 17 621–17 625, 2011. [37] C. Li, Y. He, J. Ren, R. Bai, Y. Zhao, H. Yu, and X. Jiang, “Regression residual reasoning with pseudo-labeled contrastive learning for uncov-ering multiple complex compositional relations,” in IJCAI , vol. 4, 2024, pp. 3466–3474. [38] M. Ricci, R. Cad` ene, and T. Serre, “Same-different conceptualization: a machine vision perspective,” Curr. Opin. Behav. Sci , vol. 37, pp. 47–55, 2021. [39] M. Shanahan, K. Nikiforou, A. Creswell, C. Kaplanis, D. Barrett, and M. Garnelo, “An explicitly relational neural network architecture,” in 
+
+ICML , 2020, pp. 8593–8603. [40] D. Barrett, F. Hill, A. Santoro, A. Morcos, and T. Lillicrap, “Measuring abstract reasoning in neural networks,” in ICML , 2018, pp. 511–520. [41] M. Małki´ nski and J. Ma´ ndziuk, “One self-configurable model to solve many abstract visual reasoning problems,” in AAAI , vol. 38, no. 13, 2024, pp. 14 297–14 305. [42] D. Saxton, E. Grefenstette, F. Hill, and P. Kohli, “Analysing mathemat-ical reasoning abilities of neural models,” in ICLR , 2018. [43] B. Lake and M. Baroni, “Generalization without systematicity: On the compositional skills of sequence-to-sequence recurrent networks,” in 
+
+ICML , 2018, pp. 2873–2882. [44] T. Thrush, R. Jiang, M. Bartolo, A. Singh, A. Williams, D. Kiela, and C. Ross, “Winoground: Probing vision and language models for visio-linguistic compositionality,” in CVPR , 2022, pp. 5238–5248. [45] J. Son, “Contrastive learning for space-time correspondence via self-cycle consistency,” in CVPR , 2022, pp. 14 679–14 688. [46] T. Chen, S. Kornblith, M. Norouzi, and G. Hinton, “A simple framework for contrastive learning of visual representations,” in ICML , 2020, pp. 1597–1607. 12 
+
+[47] X. Chen, S. Xie, and K. He, “An empirical study of training self-supervised vision transformer,” in ICCV , 2021, pp. 9620–9629. [48] A. v. d. Oord, Y. Li, and O. Vinyals, “Representation learning with contrastive predictive coding,” arXiv preprint arXiv:1807.03748 , 2018. [49] J. D. Robinson, C.-Y. Chuang, S. Sra, and S. Jegelka, “Contrastive learning with hard negative samples,” in ICLR , 2020. [50] C.-Y. Chuang, R. D. Hjelm, X. Wang, V. Vineet, N. Joshi, A. Torralba, S. Jegelka, and Y. Song, “Robust contrastive learning against noisy views,” in CVPR , 2022, pp. 16 670–16 681. [51] L. Nie, X. Song, and T.-S. Chua, Learning from multiple social networks .Springer Nature, 2022. [52] L. Nie, L. Qu, D. Meng, M. Zhang, Q. Tian, and A. D. Bimbo, “Search-oriented micro-video captioning,” in ACM MM , 2022, pp. 3234–3243. [53] M. Małki´ nski and J. Ma´ ndziuk, “Multi-label contrastive learning for abstract visual reasoning,” TNNLS , vol. 35, no. 2, pp. 1941–1953, 2024. [54] Y. Tian, C. Sun, B. Poole, D. Krishnan, C. Schmid, and P. Isola, “What makes for good views for contrastive learning?” NeurIPS , vol. 33, pp. 6827–6839, 2020. [55] B. M. Lake, T. D. Ullman, J. B. Tenenbaum, and S. J. Gershman, “Building machines that learn and think like people,” Behav. Brain Sci. ,vol. 40, p. e253, 2017. [56] J. Deng, W. Dong, R. Socher, L.-J. Li, K. Li, and L. Fei-Fei, “Imagenet: A large-scale hierarchical image database,” in CVPR , 2009, pp. 248–255. [57] A. Radford, J. W. Kim, C. Hallacy, A. Ramesh, G. Goh, S. Agarwal, G. Sastry, A. Askell, P. Mishkin, J. Clark et al. , “Learning transferable visual models from natural language supervision,” in ICML , 2021, pp. 8748–8763. [58] Y. Benny, N. Pekar, and L. Wolf, “Scale-localized abstract reasoning,” in CVPR , 2021, pp. 12 557–12 565.
