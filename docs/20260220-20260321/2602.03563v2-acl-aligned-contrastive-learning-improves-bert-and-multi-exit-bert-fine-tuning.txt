@@ -1,0 +1,368 @@
+Title: ACL: Aligned Contrastive Learning Improves BERT and Multi-exit BERT Fine-tuning
+
+URL Source: https://arxiv.org/pdf/2602.03563v2
+
+Published Time: Fri, 13 Feb 2026 01:37:05 GMT
+
+Number of Pages: 16
+
+Markdown Content:
+# ACL: A ligned C ontrastive Learning Improves BERT and Multi-exit BERT Fine-tuning 
+
+## Liz Li 1, , Wei Zhu 2, ∗ 
+
+> 1DataSelect AI, Xuhui, Shanghai, China
+> 2University of Hong Kong, Hong Kong, HK, China
+
+## Abstract 
+
+Despite its success in self-supervised learning, contrastive learning is less studied in the super-vised setting. In this work, we first use a set of pilot experiments to show that in the supervised setting, the cross-entropy loss objective (CE) and the contrastive learning objective often con-flict with each other, thus hindering the applica-tions of CL in supervised settings. To resolve this problem, we introduce a novel A ligned Contrastive Learning (ACL) framework. First, ACL-Embed regards label embeddings as extra augmented samples with different labels and employs contrastive learning to align the label embeddings with its samples’ representations. Second, to facilitate the optimization of ACL-Embed objective combined with the CE loss, we propose ACL-Grad, which will discard the ACL-Embed term if the two objectives are in conflict. To further enhance the performances of intermediate exits of multi-exit BERT, we further propose cross-layer ACL (ACL-CL), which is to ask the teacher exit to guide the optimization of student shallow exits. Exten-sive experiments on the GLUE benchmark re-sults in the following takeaways: (a) ACL-BRT outperforms or performs comparably with CE and CE+SCL on the GLUE tasks; (b) ACL, es-pecially CL-ACL, significantly surpasses the baseline methods on the fine-tuning of multi-exit BERT, thus providing better quality-speed tradeoffs for low-latency applications. 1
+
+## 1 Introduction 
+
+Recently, contrastive learning has been proved re-peatedly to be effective in unsupervised learning to obtain generic representations for downstream supervised tasks (Wu et al., 2018; van den Oord et al., 2018; Tian et al., 2020; He et al., 2020; Chen and He, 2021; Cui et al., 2023; Wang et al., 2024; Wenjing Yue and Wang, 2023; Zhang et al., 2023d;  
+
+> ∗Corresponding author. For any inquiries, please contact: michaelwzhu91@gmail.com.
+> 1Codes will be made publicly available upon acceptance.
+
+Zhao et al., 2023; Xu et al., 2023; Ding et al., 2022; Xin et al., 2024; Qin et al., 2023; Zhu et al., 2023; Zhu et al., 2023a,b, 2021a; Li et al., 2023; Zhu et al., 2023c; Zhang et al., 2023a; Zhu et al., 2023e; Guo et al., 2021; Zhu et al., 2021b; Zheng et al., 2023; Sun et al., 2020; Zhang et al., 2023b,c; Wang et al., 2023; Zhu et al., 2019a; Zhu, 2021a; Zhang et al., 2021; Wang et al., 2020; Li et al., 2025; Leong et al., 2025; Zhang et al., 2025; Yin et al., 2024; Zhu, 2026a,b), by asking the model to rep-resent different views of a sample as close as pos-sible and represent different samples as distinct as possible. Despite the majority of literature on con-trastive learning works in the unsupervised learn-ing setting, supervised contrastive learning has also been adapted to the supervised settings (Khosla et al., 2020). Khosla et al. (2020) construct the supervised contrastive learning (SCL) objective to ask the representations of examples in the same class to be close and those from different classes to be distant. The idea of SCL has also been de-veloped in the field of NLP (Gunel et al., 2021; Tian et al., 2024b; Hersh, 2024; Tian et al., 2024b; Hersh, 2024; Zhu et al., 2024; Zhu and Tan, 2023; Liu et al., 2022; Xie et al., 2024; Cui et al., 2023; Zheng et al., 2024; Zhu et al., 2023d; Gao et al., 2023; Zuo et al., 2022; Zhang et al., 2022; Sun et al., 2022; Zhu et al., 2021d; Zhu, 2021c; Li et al., 2019; Zhu et al., 2019c,b; Zhou et al., 2019; Zhang et al., 2025; Wang et al., 2025; Liu et al., 2025; Yi-Ge et al., 2024; Tian et al., 2024a). However, despite the good results, we argue that the current SCL approach still has room for improvements. One intuitive reason is that the SCL objective may not align with the CE objective, thus resulting in poor optimization. In this work, we first conduct a pilot experiment to show that: the gradients of SCL and CE have quite different directions, even after being jointly optimized (see Figure 2). To overcome this issue, we propose a novel contrastive learning framework,  
+
+> arXiv:2602.03563v2 [cs.CL] 12 Feb 2026 Figure 1: Our proposed ACL framework. ACL differs from the vanilla SCL objective in that it also aligns the semantic representations of input samples with the label embeddings through the contrastive learning objective. Intuitively, ACL considers the label embeddings as anchors to encourage more apparent separations of samples of different labels. Although we show a binary classification case for simplicity, the loss is generally applicable to any multi-class classification setting.
+
+Aligned Contrastive Learning (ACL) (depicted in Figure 1). Our ACL framework consists of two parts: (a) ACL-Embed, which includes the learn-able label embeddings from the classifier in the contrastive learning objective. ACL-Embed uses label embeddings as anchors to separate the repre-sentations from different classes. (b) ACL-Grad, which discards the ACL-Embed loss term if its gradient has a quite different direction (or angle > 90 ◦) than the one from CE loss. ACL-Grad makes the loss function adjustments adaptively on a given batch of samples. We further investigate whether our ACL frame-work can help to improve the multi-exit BERT fine-tuning. Multi-exit BERT installs an intermediate classifier (or exit) on each layer of BERT. Multi-exit BERT is the backbone for early exiting, a vital model inference speedup method (Teerapittayanon et al., 2016; Kaya et al., 2019; Zhou et al., 2020; Zhu, 2021b; Zhu et al., 2021c). Early exiting can adaptively decide how many layers of BERT the sample should go through before making the final prediction using one of the intermediate exits. Due to its ability to flexibly adjust the average latency, early exiting has attracted attention from academia and industry. To help improve the overall performances of multi-exit BERT, we propose a cross-layer ACL objective (ACL-CL), that is, to treat the last layer as the teacher and incorporate the teacher’s sample representations and label embeddings in the inter-mediate exit’s ACL objective. Intuitively, we use the ACL objective as a knowledge distillation ap-proach so that the stronger teacher exit can guide the optimization direction of the weaker student exit. We conduct extensive experiments and abla-tion studies on the GLUE benchmark (Wang et al., 2018a) with BERT (Devlin et al., 2019) and RoBERTa (Liu et al., 2019) backbones. For BERT/RoBERTa fine-tuning, we show that our ACL objective achieves performance improve-ments over vanilla fine-tuning or CE+SCL ap-proach (Gunel et al., 2021) on 5 of the seven clas-sification tasks. Our ACL framework is quite ef-fective in multi-exit BERT/RoBERTa fine-tuning. With the RoBERTa backbone, our ACL-CL objec-tive can outperform TinyBERT/DistillBERT at the 6-th layer without further pre-training. Our contributions are three-fold: • We propose ACL, a novel contrastive learn-ing framework in supervised settings. ACL consists of two components, ACL-Embed and ACL-Grad. • We propose the cross-layer ACL objective for multi-exit BERT fine-tuning, an effective way to distill knowledge from the deeper exits. • Experiments on the GLUE benchmark demon-strate the effectiveness of our ACL framework in BERT fine-tuning and multi-exit BERT fine-tuning. 2 Related Work 
+
+2.1 Contrastive learning Contrastive learning in the supervised setting 2
+
+Contrastive learning has been extended to the su-pervised setting. Khosla et al. (2020) propose the supervised contrastive loss (SCL) that pulls the rep-resentations of images from the same class closer while pushing those from different classes further. Gunel et al. (2021) also develops a version of SCL in the context of BERT fine-tuning. Our work complements this branch of litera-ture by extending Gunel et al. (2021) to propose a novel supervised contrastive learning objective, ACL, which includes the label embedding from the classifiers in the contrastive objectives. In addition, we propose stabilizing the CL and CE objective joint optimization adaptively based on gradient di-rections. 
+
+2.2 Multi-Exit BERT training 
+
+Adaptive inference method like early exiting (Teer-apittayanon et al., 2016; Kaya et al., 2019; Zhou et al., 2020; Zhu, 2021b; Zhu et al., 2021c) is an important branch of literature focusing on applying different parts of BERT to process different sam-ples, achieving inference speedup on average. It is in parallel with and can work together with static model compression methods (Tambe et al., 2020) like network pruning (Zhu and Gupta, 2017; Xu et al., 2020a; Fan et al., 2019; Gordon et al., 2020), student network distillation (Sun et al., 2019; Sanh et al., 2019a; Jiao et al., 2019). Early exiting requires a multi-exit BERT, a BERT backbone with an intermediate classifier (or exit) installed on each layer. Early exiting literature mainly focuses on the design of the early exiting strategies, that is, determining when an intermedi-ate exit’s prediction is suitable as the final model prediction. Score based strategies (Teerapittayanon et al., 2016; Xin et al., 2020; Kaya et al., 2019; Xin et al., 2021), prior based strategies (Sun et al., 2022) and patience based strategies (Zhou et al., 2020) have been proposed. However, the literature focuses less on the training of the multi-exit neural network, which is a major factor for early exiting performances. There are three types of training methods for training the multi-exit neural network: (a) joint training (JT) (Teerapittayanon et al., 2016), that is, all the exits are jointed optimized together 
+
+> 2See Appendix A for related works on contrastive learning in the unsupervised settings
+
+with the fine-tuning of BERT. (b) two-stage training method (2ST) (Liu et al., 2020; Xin et al., 2020), which first fine-tune the backbone BERT and the last layer’s exit till convergence, and then at the second stage, the backbone and the last exit are fixed, and the intermediate exit is trained by distill-ing knowledge from the last exit. (c) Berxit (Xin et al., 2021) propose an alternating training (ALT) method, combining 2ST and JT. Our work complements the literature on Early exiting or multi-exit neural networks by applying cross-layer contrastive learning (our ACL-CL ap-proach) to exploit the potentials of shallow BERT layers better and improve the overall performances of multi-exit BERT. 
+
+## 3 Preliminaries 
+
+In this section, we introduce the necessary back-ground for BERT early exiting. we consider the case of multi-class classification with K classes, 
+
+K = {1, 2, ..., K }. During training, the model will receive a batch {(xi, y i), i ∈ I = {1, 2, ..., N }} 
+
+containing N samples, where xi ∈ RL is the input sentence consisting of L words, and yi ∈ K is the label. 
+
+3.1 Contrastive learning in the supervised setting 
+
+Khosla et al. (2020) and Gunel et al. (2021) in-corporates samples’ label information to CL in a straightforward way. 3 It simply takes the inputs with the same label in the batch as positive samples and those from different classes as negative sam-ples. Let Φ( ·) ∈ Rd denotes an encoder that out-puts the l2 normalized final representation; Nyi is the total number of examples in the batch that have the same label as yi; τ is the scalar temperature parameter that controls the separation of classes. The supervised contrastive objective is: 
+
+s(i, j ) = exp(Φ( xi) · Φ( xj )/τ )
+
+PNk=1 exp(Φ( xi) · Φ( xk)/τ ) ,
+
+Lsup =
+
+> N
+
+X
+
+> i=1
+
+−1
+
+Nyi − 1
+
+> N
+
+X
+
+> j=1
+
+1i̸=j 1yi=yj log s(i, j ).
+
+(1) Let λ denote a scalar weighting hyperparameter, then the overall loss is a weighed average of the 
+
+> 3Reader can refer to Appendix B.1 for a brief introduc-tion to the contrastive learning objective for the unsupervised setting.
+
+CE loss (denoted as Lce ) and the SCL loss: L =(1 − λ)Lce + λLsup .Supervised contrastive learning motivates to learn the generic semantic representations that help separate the samples into different classes. How-ever, we are asking whether the optimization of CL and CE loss terms will always agree with one another? In this work, we will look closely into this aspect of SCL. 
+
+3.2 Early Exiting 
+
+Early exiting is based on multi-exit BERT, which are BERT with classifiers (or exits) at each layer. With M layers, M classifiers fm(x; θm) : X → 
+
+∆K (m = 1 , 2, ...M ) are designated at M layers of BERT, each of which maps its input to the proba-bility simplex ∆K . fm(x; θm) can take the form of a simple linear layer (linear exits) following (Zhou et al., 2020). However, in this work, we find that adding a multi-head self-attention layer to the exit (MHA exit) can boost the performances of intermediate layers. Representations of the current BERT layer, 
+
+H(m) 
+
+> i
+
+, will first be down-sampled to a smaller di-mension de (e.g., 64). Then, it will go through a Tanh activation, followed by a multi-head self-attention operation (Vaswani et al., 2017). Then the [CLS] token’s vector representation will be passed to the second Tanh activation, and the final repre-sentation in the exit is denoted as hei . hei will be fed into a linear layer to generate the predicted logits. This work considers the MHA exit as the default exit architecture. 
+
+3.3 Multi-exit BERT training 
+
+Due to the length limit, readers are referred to Appendix B.2 for other multi-exit BERT training methods. Now, we introduce the 2ST training method. 
+
+2ST . The two-stage (2ST) (Xin et al., 2020; Liu et al., 2020) training strategy 4 divides the train-ing procedure into two stages. The first stage is identical to the vanilla BERT fine-tuning, updat-ing the backbone model and only the final exit. In the second stage, we freeze all parameters updated in the first stage and fine-tune the remaining exits 
+
+> 4Due to length limit, reader are referred to Appendix B.2 for other multi-exit BERT training methods.
+
+separately: 
+
+Stage1 : Lstage 1 = LCE M (yi, f M (xi; θM )) Stage2 : Lstage 2 = LCE m , m = 1 , ..., M − 1.
+
+where LCE m = LCE m (yi, f m(xi; θm)) denotes the cross-entropy loss of m-th exit. The 2ST training’s performances can be further enhanced by treating the last exit trained in the first stage as the teacher model and conducting knowledge ditillation (Hin-ton et al., 2015), as is demonstrated by Liu et al. (2020). 
+
+## 4 Aligned Contrastive Learning 
+
+In this section, we elaborate on our ACL frame-work. The core idea of ACL is to make the con-trastive learning objective in agreement with the learning of the classifier. 
+
+4.1 Motivation 
+
+Combining an SCL objective with the CE loss could help the BERT backbone model extract generic semantic representations. However, through our preliminary experiments, we observe that the weight of the SCL loss λ has a significant impact on the model performances, and the better performances are achieved by setting λ to be rela-tively small (e.g., 0.02, 0.01). Intuitively, it seems that the SCL objective conflicts with CE loss to a certain degree. To visualize the relations and interactions be-tween CE loss and SCL loss, we conduct a pilot experiment on the RTE task from GLUE bench-mark (Wang et al., 2018b). We fine-tune two BERT models on RTE. Model A employs only the CE objective for fine-tuning, while model B uses the CE+SCL objective, following the settings from Gunel et al. (2021). We run the fine-tuning pro-cedures five times under different random seeds. Model A achieves the accuracy of 65.3 on average (with std. 0.35), and model B achieves the 65.8 on average (with std. 0.84). After adding the SCL objective, model B’s performance becomes more unstable than vanilla BERT fine-tuning. To take a closer look into the interactions be-tween CE loss and SCL loss, we separately com-pute the gradients derived from the two loss ob-jective, on the fine-tuned model A (or B) with model parameters fixed, gSCL = ∆ ΘLSCL and Figure 2: The distribution of gradient angles after the BERT model is fine-tuned on RTE with the CE objective (in blue) or the CE+SCL objective (in orange). 
+
+gCE = ∆ ΘLCE . Their angle is given by 
+
+cos γ = gSCL · gCE 
+
+|gSCL | · | gCE | ,γ = Argcos (cos γ). (2) The distribution of the gradient angles are plotted in Figure 2. We can see that, for a BERT fine-tuned solely with CE loss, the gradients’ angle γ ranges from 75 ◦ to 105 ◦, meaning that they have conflict-ing directions for optimization. The same observa-tion can be made for BERT fined-tuned with the CE+SCL objective. Joint optimization does not make the SCL objective more in alignment with the CE loss in terms of optimization directions. In summary, the above observation motivates us to align the two objectives’ optimization directions, and as a result, we may obtain better convergence. 
+
+4.2 ACL-Embed 
+
+Now we introduce our first modification to the SCL objective, which is called aligned contrastive learning via label embedding (ACL-Embed). 
+
+Label embedding The sentence representa-tion hei given out by the MHA exit will be fed into the classification layer to calculate the logits 
+
+logits i = hei Wc, (3) where W ∈ Rde×K is the learn-able parameter matrix of the classifier. Denote the k-th column vector of W as lk ∈ Rde . The CE loss objective is to maximize the dot product between hei and lyi
+
+while minimizing the dot products between hei and the other column vectors of W . Thus, one can treat 
+
+lk as a vector representation of label k.
+
+Aligned contrastive loss Note that SCL (Gunel et al., 2021) calculates the con-trastive learning objective among the samples’ representations. With the MHA exit, we consider 
+
+hei as the sample representation and feed it into the SCL objective. In contrast, we consider lk
+
+(k ∈ K ) as additional K samples {(lk, k ), k ∈ K} 
+
+to augment the current batch of samples. Thus, we will calculate the new contrastive loss Lacl 
+
+on the augmented batch of N + K samples via Equation 1. We will refer to this objective as the ACL objective. And the overall loss is given by 
+
+L = (1 − λ)Lce + λLacl .The idea of ACL-Embed is quite intuitive (de-picted in Figure 1). First, the SCL objective is sep-arated from CE loss. Meanwhile, our ACL-Embed objective combines the learning of the classifier with the contrastive loss. In this way, label embed-dings serve as anchors to encourage the representa-tions to cluster around them and thus separate away from the other classes. Note that ACL-Embed con-sists of three parts: (a) contrast among samples, which learns the generic representation across sam-ples; (b) contrast between sample representation and the label embeddings learn to align the repre-sentations with the classification task; (c) contrast among the label embeddings, which serves as regu-larization for the classifier parameters. 
+
+4.3 ACL-Grad 
+
+Although our ACL-Embed method can align the CE objective and the CL-based objective to a cer-tain extent, we still find that, during fine-tuning, the angles between gACL and gCE may be more than 90 ◦ in around 20% of the mini-batches. Thus, we propose a modification to the optimization procedure, called aligned c ontrastive l earning via gradients (ACL-Grad). ACL-Grad adaptively modifies the co-efficient λ
+
+according to the gradient angle. Denote a threshold 
+
+γthres for gradient angles, then the weight of Lacl 
+
+on the current batch is given by: 
+
+λ′
+
+=
+
+ λ, if gradient angle γ ≤ γthres 
+
+0, otherwise . (4) Intuitively, the gradient descent direction mainly follows CE loss. ACL-Embed provides an auxiliary regularization to the optimization. On a batch of samples, if the gradient angle is larger than γthres ,we will discard the gradient information from ACL-Embed to avoid being distracted. 4.4 Cross-layer ACL as cross-sample knowledge distillation 
+
+This work mainly adopts the 2ST training strategy for multi-exit BERT fine-tuning (in Section 3.3). After the BERT backbone and the last layer’s exit is fine-tuned, the intermediate exits will distill knowl-edge from the last exit to gain better performances. However, we believe that the usual knowledge dis-tillation method like (Hinton et al., 2015), feature distillation, or attention matrix distillation (Jiao et al., 2019) does not provide knowledge of the semantic relations or comparisons among different samples. In addition, the intermediate classifiers do not receive direct guidance from the last ex-its. The above analysis encourages us to propose a novel knowledge distillation method to discover the potentials of intermediate layers better. Assume we are now fine-tuning the m-th layer’s exit of BERT, which represent the batch of samples into vectors he,m i (i ∈ I ). Its classification layer has label embedding lmk . Despite the parameters are fixed, the last exit M can provide representations 
+
+he,M i (i ∈ I ) for the batch of samples and the label embeddings lMk (k ∈ K ). We propose a novel cross-layer contrastive learning objective, ACL-CL. ACL-CL calculates the contrastive loss using Equation 1 on the augmented batch of 2N + 2 K
+
+representations, including he,m i , lmk , he,M i and lMk .During the training of an intermediate exit, ACL-CL can also incorporate ACL-Grad method to make the optimization smoother. Intuitively, ACL-CL can be beneficial due to following three reasons. • First, ACL-CL objective includes the ACL-Embed objective on the intermediate layer. • Second, the shallow exit can directly learn from the label embeddings from the last exit, thus improving its representation quality. • Third, the shallow layer of BERT is less capa-ble of learning a good representation. How-ever, with our ACL-CL objective, it can learn generic features among samples from the deeper layer. ACL-CL can be seen as an effective knowl-edge distillation method for the intermediate layers, which does not only extract knowledge sample by sample but also distill knowledge on how the sam-ples are contrasted and how to form better label embeddings for classification. 
+
+## 5 Experiments 
+
+5.1 Datasets 
+
+We evaluate our proposed approach to the classi-fication tasks on GLUE benchmark (Wang et al., 2018b). We only exclude the STS-B task since it is a regression task, and we exclude the WNLI task following previous work (Devlin et al., 2018; Jiao et al., 2020; Xu et al., 2020b). 
+
+5.2 Baseline methods 
+
+In the normal BERT fine-tuning scenario, we com-pare ourselves with two strong baselines: (1) fine-tuning BERT/RoBERTa with CE loss (Devlin et al., 2018); (2) fine-tuning with CE+SCL objec-tive (Gunel et al., 2021). In order to demonstrate our ACL’s effectiveness on multi-exit BERT training and inference speedup, we compare with the following types of baselines: 
+
+Directly training of intermediate layers We experiment with the naive baseline that di-rectly utilizes the first 6 layers of the original BERT/RoBERTa with an MHA exit on the top, denoted by BERT-6L/RoBERTa-6L respectively. 
+
+Model compression methods For model pa-rameter pruning, we include the results of Layer-Drop (Fan et al., 2020) and attention head pruning (Michel et al., 2019). For knowledge distillation based pre-training, we include DistillBERT (Sanh et al., 2019b) and TinyBERT (Jiao et al., 2020). For module replacing, we include BERT-of-Theseus (Xu et al., 2020b). 
+
+Existing training methods for multi-exit BERT We compare our ACL framework with three representative multi-exit BERT training meth-ods: (a) JT (Zhou et al., 2020; Teerapittayanon et al., 2016); (b) 2ST (Xin et al., 2020; Liu et al., 2020); (c) ALT (Xin et al., 2021). We implement 2ST with both the linear exit and the MHA exit. 
+
+5.3 Experimental settings Devices We implement our ACL framework on the base of HuggingFace’s Transformers. We con-duct our experiments on Nvidia V100 16GB GPUs. 
+
+Backbone models All of the experiments are built upon the Google BERT base (Devlin et al., 2018) or RoBERTa base (Liu et al., 2019) models. 
+
+Hyper-parameter settings The hidden di-mension de in the MHA is set to 64 so that the extra parameters introduced by MHA exits will be less than 0.2% of the pre-trained models. We use the AdamW optimizer (Loshchilov and Hutter, 2019) to finetune the pre-trained models with a 0.01 weight decay. We train each backbone model and intermediate exits for 15 epochs and use a linear learning rate decay from 2e-5 to 0 with 10% of the total optimization steps as warm-up. We set the dropout rate to 0.1 for all layers. Batch size and gradient accumulation are used so that there are around two hundred gradient update steps per epoch. The temperature factor τ is chosen as 0.5, the coefficient λ is set at 0.02, and the gradient angle threshold is set to 90 ◦. We mainly adopt the 2ST training method with MHA exits for multi-exit BERT/RoBERTa training. Other hyper-parameters follow the Huggingface Transformers (Wolf et al., 2019). 
+
+5.4 Overall Comparison 
+
+Table 1 reports the main results on the GLUE benchmark with BERT and RoBERTa as the back-bone models. The last two lines of the table are the 6-th layer’s performances of the multi-exit BERT/RoBERTa enhanced by our ACL framework. All baseline models are run with the original au-thors’ open-sourced codes. 
+
+Performance comparisons for BERT fine-tuning From Table 1, we can see that by adding our ACL objective, BERT obtains performance im-provements against vanilla fine-tuning or CE+SCL on 5 of the 7 GLUE tasks. RoBERTa also benefits from the ACL objective. 
+
+Performance comparisons of efficient mod-els Table 1 also reports the comparison among model inference speedup methods. With the help of our ACL-CL objective, the intermediate exits of BERT can learn better semantic representations for the samples and the labels. As a result, ACL-BERT-6L can outperform BERT-6L. With a better backbone, ACL-RoBERTa-6L can outperform or perform comparably with the SOTA static BERT compression methods like TinyBERT. Note that TinyBERT requires that the compressed model be further pre-trained, while our method does not. 
+
+5.5 Comparisons against multi-exit BERT training methods 
+
+To further demonstrate our method’s effective-ness in improving the intermediate exits, we com-pare our ACL-RoBERTa with the previous SOTA multi-exit BERT training methods. For visualiza-tion, we plot the curve between the layer depth and the performance score (layer-score curve) in Fig-ure 3. 5 The results show that our ACL-RoBERTa outperforms the baseline multi-exit BERT training methods on most of the layers. Note that the per-formance margins on the shallow exits are more significant than those on the deeper exits, showing that our ACL framework effectively distills knowl-edge from the deeper exit to guide the shallow ones. In addition, from figure 3, we can clearly see that MHA exit significantly improve the performance of 2ST training with a simple linear head. To show that our ACL framework’s performance gains in multi-exit BERT training do not rely on the specific backbone models, we also plot the layer-score curves on the RTE and MRPC tasks with the BERT-base backbone (Figure 5 in Appendix C). The results show that ACL-BERT can also outper-form the baseline multi-exit BERT training meth-ods. 
+
+5.6 Ablation on the ACL framework 
+
+In order to analyze which components of our ACL framework are beneficial for multi-exit BERT fine-tuning, we step by step reduce our whole ACL framework into the vanilla 2ST training: (a) first, not use ACL objective during the backbone fine-tuning in the first stage; (b) second, reduce the ACL-CL to ACL-Embed on the intermediate ex-its, so the last exit will only provide logits as soft targets; (c) third, further exclude the ACL-Grad module for intermediate exits’ training; (d) fourth, substitute the ACL-Embed objective into CE+SCL; (e) fifth, drop the SCL objective. The ablation study is done on MRPC, RTE, and SST-2 tasks, with RoBERTa backbone. Table 2 reports the average performance scores across all the layers of the RoBERTa backbone. The results show that each component in our whole ACL framework is beneficial for the multi-exit BERT training procedure. Our ACL objectives can effectively guide the optimization of weak in-termediate layers and result in better performances. 
+
+5.7 Visualization of the intermediate exits’ representations 
+
+To demonstrate how our ACL objective improves the semantic representations, we draw the t-SNE plots of the semantic representations on the 3-th exit, with CE+SCL objective (in Figure 6(a) in Appendix D) or with our ACL method (in Figure 
+
+> 5Due to the length limit, layer-score curves for other GLUE tasks can be found in Figure 4 of Appendix C.
+
+Model Method #Flops CoLA MNLI MRPC QNLI QQP RTE SST-2 
+
+Full model 
+
+BERT CE 6.6G 57.3 82.9/83.4 89.6 89.5 88.7 65.3 92.8 
+
+CE+SCL 6.6G 57.9 82.6/82.7 88.7 89.7 88.5 65.8 92.1 ACL 6.6G 58.5 83.0/83.7 89.5 89.7 88.9 66.2 92.7 RoBERTa CE 6.7G 62.4 86.9/86.5 90.6 91.8 90.3 73.6 93.7 CE+SCL 6.7G 62.7 87.1/86.7 90.7 92.1 89.5 74.2 93.6 ACL 6.7G 63.1 86.8/86.9 90.8 92.3 90.2 75.3 94.2 
+
+Efficient models 
+
+BERT-6L - 3.3G 43.2 81.4/81.6 84.9 87.9 87.2 61.0 90.3 RoBERTa-6L - 3.4G 45.6 82.5/83.9 86.9 89.8 88.6 67.8 91.6 LayerDrop-6L - 3.3G 43.7 82.3/82.4 86.5 89.3 89.1 67.3 91.8 HeadPrune - 4.7G 45.7 78.0/79.7 80.2 86.1 84.7 64.5 91.0 DistilBERT (6L) - 3.3G 46.1 82.1/82.0 86.2 88.3 88.5 64.1 91.3 TinyBERT (6L) - 3.3G 46.3 83.6/83.8 87.2 90.3 89.1 68.6 91.9 BERT-of-Theseus - 3.3G 44.7 81.4/81.9 85.3 88.1 88.6 66.2 91.5 ACL-BERT-6L ACL-CL 3.3G 44.7 82.0/82.1 85.1 88.5 87.7 63.6 90.8 ACL-RoBERTa-6L ACL-CL 3.3G 46.2 83.3/83.5 87.5 90.5 88.9 69.5 92.3   
+
+> Table 1: Our ACL framework and baselines’ performance on the GLUE tasks. In this table, we mainly compare the performances of ACL on the full BERT/RoBERTa or the 6-th layer against baselines. Performance metrics for each task strictly follow the settings of the GLUE benchmark.
+> (a) MRPC (b) RTE (c) SST-2
+> Figure 3: The layer-score curves for different multi-exit BERT training methods, with the RoBERTa backbone. TinyBERT is represented as a dot since it is a static compression method.
+
+Method cross-layer average score - MRPC RTE SST-2 ACL-RoBERTa 86.9 69.8 91.3 - CE backbone 86.9 69.7 91.1 - w/o ACL-CL 86.7 69.4 91.0 - w/o ACL-Grad 86.5 69.3 90.8 - CE+SCL 86.4 69.3 90.5 - 2ST 86.3 69.2 90.6 
+
+> Table 2: Ablation study on the components of our ACL method. Cross-layer average performance scores are reported.
+
+6(b) in Appendix D). The samples are from the dev set of MRPC. With CE+SCL objective, the 3-th exit achieves the performance score of 82.8%, while the score is 83.6% under the ACL method. As is shown in Figure 6(a) and 6(b), our ACL help the model to learn more discriminative representations for the input samples, and the label embeddings learned with ACL are in alignment with the input samples from the corresponding classes. 
+
+5.8 Parameter sensitivity of the λ coefficient 
+
+We now look into how the value of co-efficient λ
+
+affects the multi-exit BERT training by setting λ to be one of { 0.005, 0.01, 0.02, 0.1, 0.5, 1.0} for both the CE+SCL method and our ACL method. The cross-layer average scores are reported in Table 3 in the Appendix E. The results show that our ACL framework is not sensitive to the values of 
+
+λ, whereas the CE+SCL method is prone to be affected by λ. This observation shows that our ACL method can conveniently apply to other tasks. 
+
+## 6 Conclusion 
+
+In this work, we take a close look at the supervised contrastive learning objective (Gunel et al., 2021) and find that the CE objective and SCL objective often conflict with each other, thus hindering better optimization. To overcome this issue, we propose the A ligned Contrastive Learning (ACL) frame-work. ACL consists of three main components: (a) ACL-Embed, which aligns the label embeddings from the classifier with the samples’ representa-tions; (b) ACL-Grad, which selectively shuts down the ACL-Embed loss term if gradients from ACL-Embed and CE have very different directions; (c) ACL-CL, which performs cross-layer contrastive learning at the shallow exit to extract knowledge from the deeper exit. Extensive experiments on the GLUE benchmark results demonstrate that: (a) our ACL framework outperforms the CE+SCL ap-proach in BERT fine-tuning; (b) ACL-CL outper-forms the existing SOTA multi-exit BERT training method. 
+
+## Limitation 
+
+Although our ACL framework is shown to be ef-fective in improving the multi-exit BERT training, it still has certain limitations that need to be ad-dressed in the future: (a) In this work, we demon-strate our framework’s performances on the sen-tence classification tasks or sentence pair classi-fication tasks. In future works, we would like to extend our work to broader tasks such as sequence labeling, relation extraction, and dependency pars-ing. (b) Our ACL framework effectively improves the training of multi-exit BERT, which suggests its value in the study of BERT inference speedup methods. We would like to investigate whether our ACL can extend to static model compression methods like the TinyBERT framework. 
+
+## Ethics Statement 
+
+Our ACL-BERT is designated to improve the fine-tuning of BERT models and the training of multi-exit BERT, providing a better backbone model for dynamic early exiting. Our work could help make the applications of natural language processing more accessible by reducing computational costs. In addition, this work can be seen as an effort to re-duce BERT-based models’ carbon footprints. Fur-thermore, It does not introduce new ethical con-cerns. 
+
+## References 
+
+Xinlei Chen and Kaiming He. 2021. Exploring simple siamese representation learning. 2021 IEEE/CVF Conference on Computer Vision and Pattern Recog-nition (CVPR) , pages 15745–15753. Ganqu Cui, Lifan Yuan, Ning Ding, Guanming Yao, Wei Zhu, Yuan Ni, Guotong Xie, Zhiyuan Liu, and Maosong Sun. 2023. Ultrafeedback: Boosting lan-guage models with high-quality feedback. ArXiv ,abs/2310.01377. Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova. 2018. Bert: Pre-training of deep bidirectional transformers for language understand-ing. arXiv preprint arXiv:1810.04805 .Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova. 2019. BERT: Pre-training of deep bidirectional transformers for language under-standing. In Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Tech-nologies, Volume 1 (Long and Short Papers) , pages 4171–4186, Minneapolis, Minnesota. Association for Computational Linguistics. Ning Ding, Yujia Qin, Guang Yang, Fu Wei, Zong-han Yang, Yusheng Su, Shengding Hu, Yulin Chen, Chi-Min Chan, Weize Chen, Jing Yi, Weilin Zhao, Xiaozhi Wang, Zhiyuan Liu, Haitao Zheng, Jianfei Chen, Yang Liu, Jie Tang, Juan Li, and Maosong Sun. 2022. Delta tuning: A comprehensive study of parameter efficient methods for pre-trained language models. ArXiv , abs/2203.06904. Angela Fan, Edouard Grave, and Armand Joulin. 2019. Reducing transformer depth on demand with struc-tured dropout. arXiv preprint arXiv:1909.11556 .Angela Fan, Edouard Grave, and Armand Joulin. 2020. Reducing transformer depth on demand with struc-tured dropout. ArXiv , abs/1909.11556. Hongchao Fang, Sicheng Wang, Meng Zhou, Jiayuan Ding, and Pengtao Xie. 2020. Cert: Contrastive self-supervised learning for language understanding. 
+
+ArXiv , abs/2005.12766. Tianyu Gao, Xingcheng Yao, and Danqi Chen. 2021. Simcse: Simple contrastive learning of sentence em-beddings. ArXiv , abs/2104.08821. Xiangxiang Gao, Wei Zhu, Jiasheng Gao, and Congrui Yin. 2023. F-pabee: Flexible-patience-based early exiting for single-label and multi-label text classifica-tion tasks. In ICASSP 2023-2023 IEEE International Conference on Acoustics, Speech and Signal Process-ing (ICASSP) , pages 1–5. IEEE. Mitchell A Gordon, Kevin Duh, and Nicholas Andrews. 2020. Compressing bert: Studying the effects of weight pruning on transfer learning. arXiv preprint arXiv:2002.08307 .Beliz Gunel, Jingfei Du, Alexis Conneau, and Ves Stoyanov. 2021. Supervised contrastive learning for pre-trained language model fine-tuning. ArXiv ,abs/2011.01403. Zhao Guo, Yuan Ni, Keqiang Wang, Wei Zhu, and Guotong Xie. 2021. Global attention decoder for Chinese spelling error correction. In Findings of the Association for Computational Linguistics: ACL-IJCNLP 2021 , pages 1419–1428, Online. Association for Computational Linguistics. Raia Hadsell, Sumit Chopra, and Yann LeCun. 2006. Dimensionality reduction by learning an invariant mapping. 2006 IEEE Computer Society Confer-ence on Computer Vision and Pattern Recognition (CVPR’06) , 2:1735–1742. Kaiming He, Haoqi Fan, Yuxin Wu, Saining Xie, and Ross B. Girshick. 2020. Momentum contrast for unsupervised visual representation learning. 2020 IEEE/CVF Conference on Computer Vision and Pat-tern Recognition (CVPR) , pages 9726–9735. William Hersh. 2024. Search still matters: informa-tion retrieval in the era of generative ai. Journal of the American Medical Informatics Association , page ocae014. Geoffrey E. Hinton, Oriol Vinyals, and Jeffrey Dean. 2015. Distilling the knowledge in a neural network. 
+
+ArXiv , abs/1503.02531. Xiaoqi Jiao, Yichun Yin, Lifeng Shang, Xin Jiang, Xiao Chen, Linlin Li, Fang Wang, and Qun Liu. 2019. Tinybert: Distilling bert for natural language under-standing. arXiv preprint arXiv:1909.10351 .Xiaoqi Jiao, Yichun Yin, Lifeng Shang, Xin Jiang, Xiao Chen, Linlin Li, Fang Wang, and Qun Liu. 2020. Tinybert: Distilling bert for natural language under-standing. ArXiv , abs/1909.10351. Y. Kaya, Sanghyun Hong, and T. Dumitras. 2019. Shallow-deep networks: Understanding and mitigat-ing network overthinking. In ICML .Prannay Khosla, Piotr Teterwak, Chen Wang, Aaron Sarna, Yonglong Tian, Phillip Isola, Aaron Maschinot, Ce Liu, and Dilip Krishnan. 2020. Super-vised contrastive learning. ArXiv , abs/2004.11362. Hui Yi Leong, Yuheng Li, Yuqing Wu, Wenwen Ouyang, Wei Zhu, Jiechao Gao, and Wei Han. 2025. Amas: Adaptively determining communication topology for llm-based multi-agent system. In Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing: Industry Track , pages 2061– 2070. Xiaonan Li, Kai Lv, Hang Yan, Tianya Lin, Wei Zhu, Yuan Ni, Guo Tong Xie, Xiaoling Wang, and Xipeng Qiu. 2023. Unified demonstration retriever for in-context learning. ArXiv , abs/2305.04320. Xiepeng Li, Zhexi Zhang, Wei Zhu, Zheng Li, Yuan Ni, Peng Gao, Junchi Yan, and Guotong Xie. 2019. Pingan smart health and SJTU at COIN - shared task: utilizing pre-trained language models and common-sense knowledge in machine reading tasks. In Pro-ceedings of the First Workshop on Commonsense Inference in Natural Language Processing , pages 93–98, Hong Kong, China. Association for Computa-tional Linguistics. Yuheng Li, Jiechao Gao, Wei Han, Wenwen Ouyang, Wei Zhu, and Hui Yi Leong. 2025. Ft-mdt: Extract-ing decision trees from medical texts via a novel low-rank adaptation method. In Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing: Industry Track , pages 65–76. Haokun Liu, Derek Tam, Mohammed Muqeeth, Jay Mo-hta, Tenghao Huang, Mohit Bansal, and Colin Raffel. 2022. Few-shot parameter-efficient fine-tuning is better and cheaper than in-context learning. ArXiv ,abs/2205.05638. Weijie Liu, Peng Zhou, Zhe Zhao, Zhiruo Wang, Haotang Deng, and Qi Ju. 2020. Fastbert: a self-distilling bert with adaptive inference time. arXiv preprint arXiv:2004.02178 .Yinhan Liu, Myle Ott, Naman Goyal, Jingfei Du, Man-dar Joshi, Danqi Chen, Omer Levy, Mike Lewis, Luke Zettlemoyer, and Veselin Stoyanov. 2019. Roberta: A robustly optimized bert pretraining ap-proach. ArXiv , abs/1907.11692. Zequan Liu, Yi Zhao, Ming Tan, Wei Zhu, and Aaron Xuxiang Tian. 2025. Para: Parameter-efficient fine-tuning with prompt aware representation adjust-ment. arXiv preprint arXiv:2502.01033 .Ilya Loshchilov and Frank Hutter. 2019. Decoupled weight decay regularization. In ICLR .Paul Michel, Omer Levy, and Graham Neubig. 2019. Are sixteen heads really better than one? In NeurIPS .Chengwei Qin, Aston Zhang, Zhuosheng Zhang, Jiaao Chen, Michihiro Yasunaga, and Diyi Yang. 2023. Is chatgpt a general-purpose natural language process-ing task solver? arXiv preprint arXiv:2302.06476 .Victor Sanh, Lysandre Debut, Julien Chaumond, and Thomas Wolf. 2019a. Distilbert, a distilled version of bert: smaller, faster, cheaper and lighter. arXiv preprint arXiv:1910.01108 .Victor Sanh, Lysandre Debut, Julien Chaumond, and Thomas Wolf. 2019b. Distilbert, a distilled version of bert: smaller, faster, cheaper and lighter. ArXiv ,abs/1910.01108. Haixia Sun, Jin Xiao, Wei Zhu, Yilong He, Sheng Zhang, Xiaowei Xu, Li Hou, Jiao Li, Yuan Ni, and Guotong Xie. 2020. Medical knowledge graph to enhance fraud, waste, and abuse detection on claim data: Model development and performance evalua-tion. JMIR Med Inform , 8(7):e17653. Siqi Sun, Yu Cheng, Zhe Gan, and Jingjing Liu. 2019. Patient knowledge distillation for bert model com-pression. arXiv preprint arXiv:1908.09355 .Tianxiang Sun, Xiangyang Liu, Wei Zhu, Zhichao Geng, Lingling Wu, Yilong He, Yuan Ni, Guotong Xie, Xu-anjing Huang, and Xipeng Qiu. 2022. A simple hash-based early exiting approach for language un-derstanding and generation. In Findings of the As-sociation for Computational Linguistics: ACL 2022 ,pages 2409–2421, Dublin, Ireland. Association for Computational Linguistics. Thierry Tambe, Coleman Hooper, Lillian Pentecost, En-Yu Yang, Marco Donato, Victor Sanh, Alexander M. Rush, David M. Brooks, and Gu-Yeon Wei. 2020. Edgebert: Optimizing on-chip inference for multi-task nlp. ArXiv , abs/2011.14203. Surat Teerapittayanon, Bradley McDanel, and H. T. Kung. 2016. Branchynet: Fast inference via early exiting from deep neural networks. 2016 23rd Inter-national Conference on Pattern Recognition (ICPR) ,pages 2464–2469. Aaron Tian, Yi Zhao, Congrui Yin, Wei Zhu, Xing Tian, and Yi Ge. 2024a. Fanlora: Fantastic loras and where to find them in large language model fine-tuning. In 
+
+Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing: Industry Track , pages 515–528. Shubo Tian, Qiao Jin, Lana Yeganova, Po-Ting Lai, Qingqing Zhu, Xiuying Chen, Yifan Yang, Qingyu Chen, Won Kim, Donald C Comeau, et al. 2024b. Opportunities and challenges for chatgpt and large language models in biomedicine and health. Brief-ings in Bioinformatics , 25(1):bbad493. Yonglong Tian, Dilip Krishnan, and Phillip Isola. 2020. Contrastive multiview coding. In ECCV .Aäron van den Oord, Yazhe Li, and Oriol Vinyals. 2018. Representation learning with contrastive predictive coding. ArXiv , abs/1807.03748. Ashish Vaswani, Noam M. Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, Lukasz Kaiser, and Illia Polosukhin. 2017. Attention is all you need. ArXiv , abs/1706.03762. Alex Wang, Amanpreet Singh, Julian Michael, Felix Hill, Omer Levy, and Samuel R. Bowman. 2018a. Glue: A multi-task benchmark and analysis plat-form for natural language understanding. In Black-boxNLP@EMNLP .Alex Wang, Amanpreet Singh, Julian Michael, Felix Hill, Omer Levy, and Samuel R Bowman. 2018b. Glue: A multi-task benchmark and analysis platform for natural language understanding. arXiv preprint arXiv:1804.07461 .Li Wang, Wei Zhu, Sihang Jiang, Sheng Zhang, Ke-qiang Wang, Yuan Ni, Guo Tong Xie, and Yanghua Xiao. 2020. Mining infrequent high-quality phrases from domain-specific corpora. Proceedings of the 29th ACM International Conference on Information & Knowledge Management .Pengfei Wang, Huanran Zheng, Silong Dai, Wenjing Yue, Wei Zhu, and Xiaoling Wang. 2024. Ts-tcd: Triplet-level cross-modal distillation for time-series forecasting using large language models. arXiv preprint arXiv:2409.14978 .Pengfei Wang, Huanran Zheng, Qi’ao Xu, Silong Dai, Yiqiao Wang, Wenjing Yue, Wei Zhu, Tianwen Qian, and Liang Zhao. 2025. Ts-htfa: Advancing time-series forecasting via hierarchical text-free alignment with large language models. Symmetry , 17(3):401. Xuwu Wang, Lihan Chen, Wei Zhu, Yuan Ni, Guo Tong Xie, Deqing Yang, and Yanghua Xiao. 2023. Multi-task entity linking with supervision from a taxon-omy. Knowledge and Information Systems , 65:4335 – 4358. Wei Zhu Wenjing Yue and Xiaoling Wang. 2023. Tcmeb: Performance evaluation of large lan-guage models based on traditional chinese medicine benchmarks. https://github.com/ywjawmw/ ShenNong-TCM-Evaluation-BenchMark .Thomas Wolf, Lysandre Debut, Victor Sanh, Julien Chaumond, Clement Delangue, Anthony Moi, Pier-ric Cistac, Tim Rault, Rémi Louf, Morgan Funtowicz, and Jamie Brew. 2019. Huggingface’s transformers: State-of-the-art natural language processing. ArXiv ,abs/1910.03771. Zhirong Wu, Yuanjun Xiong, Stella X. Yu, and Dahua Lin. 2018. Unsupervised feature learning via non-parametric instance discrimination. 2018 IEEE/CVF Conference on Computer Vision and Pattern Recog-nition , pages 3733–3742. Tianfang Xie, Tianjing Li, Wei Zhu, Wei Han, and Yi Zhao. 2024. Pedro: Parameter-efficient fine-tuning with prompt dependent representation modifi-cation. arXiv preprint arXiv:2409.17834 .Ji Xin, Raphael Tang, Jaejun Lee, Yaoliang Yu, and Jimmy Lin. 2020. Deebert: Dynamic early exit-ing for accelerating bert inference. arXiv preprint arXiv:2004.12993 .Ji Xin, Raphael Tang, Yaoliang Yu, and Jimmy Lin. 2021. Berxit: Early exiting for bert with better fine-tuning and extension to regression. In Proceedings of the 16th conference of the European chapter of the association for computational linguistics: Main Volume , pages 91–104. Yi Xin, Siqi Luo, Haodi Zhou, Junlong Du, Xiao-hong Liu, Yue Fan, Qing Li, and Yuntao Du. 2024. Parameter-efficient fine-tuning for pre-trained vision models: A survey. ArXiv , abs/2402.02242. Canwen Xu, Wangchunshu Zhou, Tao Ge, Furu Wei, and Ming Zhou. 2020a. Bert-of-theseus: Compress-ing bert by progressive module replacing. arXiv preprint arXiv:2002.02925 .Canwen Xu, Wangchunshu Zhou, Tao Ge, Furu Wei, and Ming Zhou. 2020b. Bert-of-theseus: Com-pressing bert by progressive module replacing. In 
+
+EMNLP .Lingling Xu, Haoran Xie, Si-Zhao Joe Qin, Xiaohui Tao, and Fu Lee Wang. 2023. Parameter-efficient fine-tuning methods for pretrained language mod-els: A critical review and assessment. ArXiv ,abs/2312.12148. Ellen Yi-Ge, Jiechao Gao, Wei Han, and Wei Zhu. 2024. Drum: Learning demonstration retriever for large multi-modal models. arXiv preprint arXiv:2412.07619 .Huiming Yin, Kun Wang, Ruyu Yang, Yanfang Tan, Qiang Li, Wei Zhu, and Suzi Sung. 2024. A ma-chine learning model for predicting acute exacerba-tion of in-home chronic obstructive pulmonary dis-ease patients. Computer Methods and Programs in Biomedicine , 246:108005. Jingfang Zhang, Ming Tan, Pengyu Dai, and Wei-Guo Zhu. 2023a. Leco: Improving early exiting via learned exits and comparison-based exiting mech-anism. In Annual Meeting of the Association for Computational Linguistics .Juyuan Zhang, Jiechao Gao, Wenwen Ouyang, Wei Zhu, and Hui Yi Leong. 2025. Time-llama: Adapting large language models for time series modeling via dynamic low-rank adaptation. In Proceedings of the 63rd Annual Meeting of the Association for Com-putational Linguistics (Volume 4: Student Research Workshop) , pages 1145–1157. Xinpeng Zhang, Ming Tan, Jingfan Zhang, and Wei Zhu. 2023b. Nag-ner: a unified non-autoregressive generation framework for various ner tasks. In An-nual Meeting of the Association for Computational Linguistics .Yuming Zhang, Xiangxiang Gao, Wei Zhu, and Xiaol-ing Wang. 2023c. Fastner: Speeding up inferences for named entity recognition tasks. In International Conference on Advanced Data Mining and Applica-tions .Yuming Zhang, Peng Wang, Ming Tan, and Wei-Guo Zhu. 2023d. Learned adapters are better than man-ually designed adapters. In Annual Meeting of the Association for Computational Linguistics .Zhen Zhang, Wei Zhu, Jinfan Zhang, Peng Wang, Rize Jin, and Tae-Sun Chung. 2022. PCEE-BERT: Ac-celerating BERT inference via patient and confident early exiting. In Findings of the Association for Com-putational Linguistics: NAACL 2022 , pages 327–338, Seattle, United States. Association for Computational Linguistics. Zhexi Zhang, Wei Zhu, Junchi Yan, Peng Gao, and Guowang Xie. 2021. Automatic student network search for knowledge distillation. 2020 25th Inter-national Conference on Pattern Recognition (ICPR) ,pages 2446–2453. Wayne Xin Zhao, Kun Zhou, Junyi Li, Tianyi Tang, Xiaolei Wang, Yupeng Hou, Yingqian Min, Beichen Zhang, Junjie Zhang, Zican Dong, Yifan Du, Chen Yang, Yushuo Chen, Zhipeng Chen, Jinhao Jiang, Ruiyang Ren, Yifan Li, Xinyu Tang, Zikang Liu, Peiyu Liu, Jian-Yun Nie, and Ji-Rong Wen. 2023. A Survey of Large Language Models. arXiv e-prints ,page arXiv:2303.18223. Huanran Zheng, Wei Zhu, Pengfei Wang, and Xiaol-ing Wang. 2023. Candidate soups: Fusing candi-date results improves translation quality for non-autoregressive translation. ArXiv , abs/2301.11503. Huanran Zheng, Wei Zhu, and Xiaoling Wang. 2024. Nat4at: Using non-autoregressive translation makes autoregressive translation faster and better. In Pro-ceedings of the ACM on Web Conference 2024 , pages 4181–4192. Wangchunshu Zhou, Canwen Xu, Tao Ge, Julian McAuley, Ke Xu, and Furu Wei. 2020. Bert loses patience: Fast and robust inference with early exit. 
+
+ArXiv , abs/2006.04152. Xiaofeng Zhou, Yuan Ni, Guotong Xie, Wei Zhu, Cai Chen, Tianhao Wang, and Zhigang Pan. 2019. Anal-ysis of the health information needs of diabetics in china. In MEDINFO 2019: Health and Wellbeing e-Networks for All , pages 487–491. IOS Press. Michael Zhu and Suyog Gupta. 2017. To prune, or not to prune: exploring the efficacy of pruning for model compression. arXiv preprint arXiv:1710.01878 .Wei Zhu. 2021a. Leebert: Learned early exit for bert with cross-level optimization. In Proceedings of the 59th Annual Meeting of the Association for Compu-tational Linguistics and the 11th International Joint Conference on Natural Language Processing (Vol-ume 1: Long Papers) , pages 2968–2980. Wei Zhu. 2021b. Leebert: Learned early exit for bert with cross-level optimization. In ACL .Wei Zhu. 2021c. Mvp-bert: Multi-vocab pre-training for chinese bert. In Annual Meeting of the Associa-tion for Computational Linguistics .Wei Zhu. 2026a. Mrag: Benchmarking retrieval-augmented generation for bio-medicine. arXiv preprint arXiv:2601.16503 .Wei Zhu. 2026b. Mrag: Benchmarking retrieval-augmented generation for bio-medicine. arXiv preprint arXiv:2601.21767 .Wei Zhu, Yilong He, Ling Chai, Yuanchun Fan, Yuan Ni, Guo Tong Xie, and Xiaoling Wang. 2021a. paht_nlp @ mediqa 2021: Multi-grained query focused multi-answer summarization. In Workshop on Biomedical Natural Language Processing .Wei Zhu, Wenfeng Li, Xiaoling Wang, Wendi Ji, Yuan-bin Wu, Jin Chen, Liang Chen, and Buzhou Tang. 2023a. Extracting decision trees from medical texts: An overview of the text2dt track in chip2022. In 
+
+Health Information Processing. Evaluation Track Pa-pers , pages 89–102, Singapore. Springer Nature Sin-gapore. Wei Zhu, Wenfeng Li, Xiaoling Wang, Wendi Ji, Yuan-bin Wu, Jin Chen, Liang Chen, and Buzhou Tang. 2023b. Extracting decision trees from medical texts: An overview of the text2dt track in chip2022. In 
+
+Health Information Processing. Evaluation Track Pa-pers , pages 89–102, Singapore. Springer Nature Sin-gapore. Wei Zhu, Yuan Ni, Xiaoling Wang, and Guotong Xie. 2021b. Discovering better model architectures for medical query understanding. In Proceedings of the 2021 Conference of the North American Chapter of the Association for Computational Linguistics: Hu-man Language Technologies: Industry Papers , pages 230–237, Online. Association for Computational Lin-guistics. Wei Zhu, Yuan Ni, Guo Tong Xie, Xiaofeng Zhou, and Cai Chen. 2019a. The dr-kgqa system for au-tomatically answering medication related questions in chinese. 2019 IEEE International Conference on Healthcare Informatics (ICHI) , pages 1–6. Wei Zhu, Yuan Ni, Guotong Xie, Xiaofeng Zhou, and Cai Chen. 2019b. The dr-kgqa system for automati-cally answering medication related questions in chi-nese. In 2019 IEEE International Conference on Healthcare Informatics (ICHI) , pages 1–6. IEEE. Wei Zhu and Ming Tan. 2023. SPT: Learning to se-lectively insert prompts for better prompt tuning. In Proceedings of the 2023 Conference on Empir-ical Methods in Natural Language Processing , pages 11862–11878, Singapore. Association for Computa-tional Linguistics. Wei Zhu, Aaron Xuxiang Tian, Congrui Yin, Yuan Ni, Xiaoling Wang, and Guotong Xie. 2024. Iapt: Instruction-aware prompt tuning for large language models. arXiv preprint arXiv:2405.18203 .Wei Zhu, Peifeng Wang, Yuan Ni, Guo Tong Xie, and Xiaoling Wang. 2023c. Badge: Speeding up bert inference after deployment via block-wise bypasses and divergence-based early exiting. In Annual Meet-ing of the Association for Computational Linguistics .Wei Zhu, Peng Wang, Xiaoling Wang, Yuan Ni, and Guotong Xie. 2023d. Acf: aligned contrastive fine-tuning for language and vision tasks. In ICASSP 2023-2023 IEEE International Conference on Acous-tics, Speech and Signal Processing (ICASSP) , pages 1–5. IEEE. Wei Zhu, Xiaoling Wang, Mosha Chen, and Buzhou Tang. 2023e. Overview of the promptcblue shared task in chip2023. ArXiv , abs/2312.17522. Wei Zhu, Xiaoling Wang, Yuan Ni, and Guo Tong Xie. 2021c. Gaml-bert: Improving bert early exiting by gradient aligned mutual learning. In EMNLP .Wei Zhu, Xiaoling Wang, Yuan Ni, and Guotong Xie. 2021d. GAML-BERT: Improving BERT early exit-ing by gradient aligned mutual learning. In Proceed-ings of the 2021 Conference on Empirical Methods in Natural Language Processing , pages 3033–3044, Online and Punta Cana, Dominican Republic. Asso-ciation for Computational Linguistics. Wei Zhu, Xiaoling Wang, Huanran Zheng, Mosha Chen, and Buzhou Tang. 2023. PromptCBLUE: A Chinese Prompt Tuning Benchmark for the Medical Domain. 
+
+arXiv e-prints , page arXiv:2310.14151. Wei Zhu, Xiaofeng Zhou, Keqiang Wang, Xun Luo, Xiepeng Li, Yuan Ni, and Guotong Xie. 2019c. Panlp at mediqa 2019: Pre-trained language models, trans-fer learning and knowledge distillation. In Proceed-ings of the 18th BioNLP Workshop and Shared Task ,pages 380–388. Yuhui Zuo, Wei Zhu, and Guoyong GUET Cai. 2022. Continually detection, rapidly react: Unseen rumors detection based on continual prompt-tuning. In 
+
+Proceedings of the 29th International Conference on Computational Linguistics , pages 3029–3041, Gyeongju, Republic of Korea. International Com-mittee on Computational Linguistics. 
+
+## A Additional related works 
+
+Contrastive learning in the unsupervised set-ting Contrastive learning was first proposed by Hadsell et al. (2006). Since the seminal work of InfoNCE (van den Oord et al., 2018), con-trastive learning has been widely applied in the self-supervised learning settings (Wu et al., 2018; van den Oord et al., 2018; Tian et al., 2020; He et al., 2020; Chen and He, 2021). MoCo (He et al., 2020) proposes a dictionary to maintain a negative sample set, thus increasing the number of negative sample pairs. Chen and He (2021) con-struct a positive-only contrastive learning frame-work, by using a stop-gradient operation to prevent collapsing solutions. Contrastive learning is also widely applied in NLP. CERT (Fang et al., 2020) use back-translations to generate positive views of an sentence and apply the MoCo framework for contrastive learning based pre-training. Sim-CSE (Gao et al., 2021) propose to use two separate forward passes with dropout to generate positive views and apply CL to unsupervised sentence rep-resentations. 
+
+## B Additional preliminaries 
+
+B.1 Contrastive objective in the unsupervised setting 
+
+The effectiveness of contrastive learning is widely confirmed in the self-supervised settings (Tian et al., 2020; He et al., 2020). Here we give a brief in-troduction of the self-supervised InfoNCE (van den Oord et al., 2018) objective widely used in the con-trastive learning literature. Given N training sam-ples {xi}Ni=1 with a number of augmented samples, where each sample has at least one augmented sam-ple in the dataset. Let j(i) be the index of the augmented one derived from the i-th sample, the standard contrastive loss is defined as: 
+
+Lself = 1
+
+N
+
+X
+
+> i∈I
+
+− log exp( zi · zj(i)/τ )
+
+P 
+
+> a∈A i
+
+exp( zi · za/τ ) ,
+
+(5) where zi is the normalized representation of xi,
+
+Ai := I { i} is the set of indexes of the contrastive samples, the · operation denotes the dot product and τ ∈ R+ is the temperature factor. Here, con-trastive learning treats the i-th sample as an an-chor, the j(i)-th sample is a positive sample and the remaining 2N −2 samples are negative samples regarding to the i-th sample. 
+
+B.2 Introduction to the multi-exit training methods 
+
+Here we introduce two training methods of multi-exit BERT: JT and ALT. 
+
+JT . Perhaps the most straightforward fine-tuning strategy is to minimize the sum of all classifiers’ loss functions and jointly update all parameters in the process. We refer to this strategy as JT. The loss function is: 
+
+LJT =
+
+> M
+
+X
+
+> m=1
+
+LCE m (6) where LCE m = LCE m (y, f m(x; θm)) denotes the cross-entropy loss of the m-th exit. This method is adopted by (Teerapittayanon et al., 2016; Kaya et al., 2019; Zhou et al., 2020; Zhu, 2021b) 
+
+## λ CE+SCL ACL 0.005 69.1 69.7 0.01 69.3 69.8 0.02 69.3 69.8 0.1 69.0 69.7 0.5 68.8 69.7 1.0 68.6 69.6    
+
+> Table 3: The parameter sensitivity study of the co-efficient λon the RTE task. Cross-layer average scores are reported.
+
+ALT . It alternates between two objectives (taken from Equation 6 and 2) across different epochs, and it was proposed by BERxiT (Xin et al., 2021): 
+
+Odd : Lstage 1 = LCE M (yi, f M (xi; θM )) (7) 
+
+Even : Ljoint =
+
+> M
+
+X
+
+> m=1
+
+LCE m (8) 
+
+## C Layer-score curves for GLUE tasks 
+
+In Figure 3, we present the layer-score curves for 3 of the GLUE tasks, to compare MEAL-BERT with other baseline models. Here, we present layer-score curves on the rest 4 tasks (CoLA, QNLI, QQP, MNLI) in Figure 4. In addition, we present the layer-score curves when the BERT-base is the backbone model, in Figure 5. The results show that our ACL framework also outperform other baseline multi-exit BERT training method with BERT base as the backbone. 
+
+## D The t-SNE plots on the third exit 
+
+The t-SNE plots of the semantic representations on the 3-th exit, with CE+SCL objective (in Figure 6(a)) or with our ACL method (in Figure 6(b)). 
+
+## E Results for the parameter sensitivity study 
+
+In Table 3, we will report the cross-layer average performance scores, when the weight λ varies for the CE+SCL method, or our ACL method. The backbone model is RoBERTa, and we use the RTE task for this parameter sensitivity study. (a) CoLA (b) QNLI  
+
+> (c) QQP (d) MNLI
+
+Figure 4: The layer-score curves for different multi-exit BERT training methods, with the RoBERTa backbone. The x-axis is the depth of the exit (or the number of layers before entering this exit), the y-axis is the performance metrics following GLUE (Wang et al., 2018a). The performance of TinyBERT is represented by a dot since it is a static model compression method.  
+
+> (a) MRPC (b) RTE
+
+Figure 5: The layer-score curves for different multi-exit BERT training methods, with the BERT-base backbone. (a) CE+SCL (b) ACL 
+
+Figure 6: The t-SNE plots of the semantic representations on the 3-th exit of RoBERTa fine-tuned on the MRPC task, with (a) the CE+SCL objective, or (b) our ACL objective.

@@ -1,0 +1,489 @@
+Title: Dual-Tree LLM-Enhanced Negative Sampling for Implicit Collaborative Filtering
+
+URL Source: https://arxiv.org/pdf/2602.18249v1
+
+Published Time: Mon, 23 Feb 2026 01:42:38 GMT
+
+Number of Pages: 11
+
+Markdown Content:
+# Dual-Tree LLM-Enhanced Negative Sampling for Implicit Collaborative Filtering 
+
+# Jiayi Wu 
+
+Beijing Institute of Technology Beijing, China 
+
+# Zhengyu Wu 
+
+Beijing Institute of Technology Beijing, China 
+
+# Xunkai Li 
+
+Beijing Institute of Technology Beijing, China 
+
+# Rong-Hua Li ∗
+
+lironghuabit@126.com Beijing Institute of Technology Beijing, China 
+
+# Guoren Wang 
+
+Beijing Institute of Technology Beijing, China 
+
+## Abstract 
+
+Negative sampling is a pivotal technique in implicit collaborative filtering (CF) recommendation, enabling efficient and effective train-ing by contrasting observed interactions with sampled unobserved ones. Recently, large language models (LLMs) have shown promise in recommender systems; however, research on LLM-empowered negative sampling remains underexplored. Existing methods heav-ily rely on textual information and task-specific fine-tuning, limit-ing practical applicability. To address this limitation, we propose a text-free and fine-tuning-free Dual-Tree LLM-enhanced Negative 
+
+Sampling method (DTL-NS). It consists of two modules: (i) an offline false negative identification module that leverages hierarchical in-dex trees to transform collaborative structural and latent semantic information into structured item-ID encodings for LLM inference, enabling accurate identification of false negatives; and (ii) a multi-view hard negative sampling module that combines user–item pref-erence scores with item–item hierarchical similarities from these encodings to mine high-quality hard negatives, thus improving models’ discriminative ability. Extensive experiments demonstrate the effectiveness of DTL-NS. For example, on the Amazon-sports dataset, DTL-NS outperforms the strongest baseline by 10.64% and 19.12% in Recall@20 and NDCG@20, respectively. Moreover, DTL-NS can be integrated into various implicit CF models and negative sampling methods, consistently enhancing their performance. 
+
+## CCS Concepts 
+
+• Information systems → Recommender systems .
+
+## Keywords 
+
+Implicit Collaborative Filtering, False Negative, Large Language Model, Hard Negative Sampling  
+
+> ∗Corresponding author. Permission to make digital or hard copies of all or part of this work for personal or classroom use is granted without fee provided that copies are not made or distributed for profit or commercial advantage and that copies bear this notice and the full citation on the first page. Copyrights for components of this work owned by others than the author(s) must be honored. Abstracting with credit is permitted. To copy otherwise, or republish, to post on servers or to redistribute to lists, requires prior specific permission and/or a fee. Request permissions from permissions@acm.org.
+> Conference’17, Washington, DC, USA
+> ©2026 Copyright held by the owner/author(s). Publication rights licensed to ACM. ACM ISBN 978-x-xxxx-xxxx-x/YYYY/MM https://doi.org/10.1145/nnnnnnn.nnnnnnn
+
+ACM Reference Format: 
+
+Jiayi Wu, Zhengyu Wu, Xunkai Li, Rong-Hua Li, and Guoren Wang. 2026. Dual-Tree LLM-Enhanced Negative Sampling for Implicit Collaborative Filtering. In . ACM, New York, NY, USA, 11 pages. https://doi.org/10.1145/ nnnnnnn.nnnnnnn 
+
+## 1 Introduction 
+
+Recommender systems are widely deployed on online platforms such as e-commerce [ 45 ] and news services [ 31 ] to deliver person-alized content, thereby improving information access efficiency and user experience [39]. Since explicit feedback (e.g., ratings and reviews) is often sparse and difficult to obtain [ 3], practical systems typically rely on implicit feedback derived from user behavior logs such as clicks and views [ 33 ]. As a result, Implicit collaborative filter-ing (CF) has become one of the most important modeling paradigms in modern recommender systems [ 38 ]. However, implicit feedback contains a large amount of unobserved user–item interactions [ 15 ], and naively treating all unobserved items as negative samples would severely affect training efficiency [ 4 ]. To address this issue, negative sampling is widely adopted to select a small subset of unobserved items as training negatives, thereby reducing computational cost while providing effective training supervision [35]. Existing negative sampling methods [ 14 , 28 , 42 , 46 ] mainly fo-cus on mining more challenging hard negatives to enhance the model’s ability to discriminate between positive and negative sam-ples. However, hard negatives are often highly similar to positive items, and a substantial portion of them may actually reflect users’ latent preferences that remain unobserved due to limited exposure, thereby introducing noisy supervision in the form of false nega-tives. To mitigate this issue, prior work [ 6 , 47 ] typically relies on dataset-specific heuristic rules derived from training-time observa-tions (e.g., sampling based on loss variance). These heuristics are difficult to generalize across datasets and primarily aim to reduce the likelihood of sampling false negatives, while overlooking the po-tential of false negatives to serve as latent positives. Consequently, effectively identifying false negatives from unobserved data has emerged as a key direction for improving the quality of negative sampling. Recently, large language models (LLMs) have been increasingly adopted in recommender systems due to their strong understanding and reasoning capabilities. Prior work largely falls into two lines based on the information sources leveraged by LLMs: (1) text-based approaches [ 25 , 30 ] that use LLMs as semantic encoders or profile  
+
+> arXiv:2602.18249v1 [cs.IR] 20 Feb 2026 Conference’17, July 2017, Washington, DC, USA Jiayi Wu, Zhengyu Wu, Xunkai Li, Rong-Hua Li, and Guoren Wang
+
+Figure 1: LLM-based false-negative identification accuracy. 
+
+generators to enrich user/item representations and fuse or align them with CF-based ID embeddings, but they heavily depend on tex-tual metadata; and (2) ID-only approaches [ 5 , 21 , 43 ] that treat item IDs as tokens and use LLMs as backbone recommenders to learn users’ sequential preferences via instruction-based fine-tuning, but they incur considerable training costs. Although LLMs have been shown to improve recommendation performance, their applica-tion to negative sampling remains largely underexplored. Among the limited studies, HNLMRec [ 44 ] injects user/item profiles and CF signals into prompts and fine-tunes an LLM to generate hard-negative embeddings. However, such LLM-based design faces the following limitations: (1) text dependency , as they rely on textual metadata (e.g., titles/descriptions) to construct prompts or semantic constraints; (2) fine-tuning dependency , since supervised fine-tuning (even with LoRA) still requires forward passes through the entire LLM and backpropagation to optimize the adapter parame-ters, incurring non-trivial training cost; moreover, results reported in HNLMRec suggest that, without fine-tuning, its LLM-based neg-ative embedding-generation sampler does not outperform state-of-the-art samplers. To address the above limitations, we propose DTL-NS, a text-free and fine-tuning-free LLM-enhanced negative sampling framework. DTL-NS first constructs two hierarchical index trees based on col-laborative structural information and latent semantic information, and converts each item into a compact and interpretable tree-path encoding as its structured ID representation. Leveraging this en-coding, the LLM can classify unobserved items before training. To verify the effectiveness of this design, we randomly remove 100, 1000, 10%, and 20% of positive samples from the training set to simulate false negatives, and then ask the LLM to identify these false negatives based solely on their tree-path encodings. As shown in Figure 1, Llama3-3b and Llama3-8b [ 9] achieve over 80% and 90% false-negative identification accuracy across all settings, respec-tively, indicating that LLMs can accurately detect false negatives without relying on textual metadata or any fine-tuning, and that more capable LLMs tend to yield higher identification accuracy. We then convert the detected false negatives into positive sam-ples, allowing the model to fully exploit latent preference signals in unobserved data. Moreover, DTL-NS performs LLM inference only offline before training to identify false negatives. During the training phase, DTL-NS integrates dual-tree item-item hierarchical similarity with user-item preference signals to perform multi-view hard negative sampling, thereby yielding higher-quality hard nega-tives. Our contributions are summarized as follows: 
+
+• We design a novel LLM-based false-negative identification mod-ule that leverages hierarchical index trees to transform collabo-rative structural and latent semantic information into structured ID representations, enabling accurate identification of false neg-atives without relying on textual metadata or fine-tuning. 
+
+• We develop a multi-view hard negative sampling module that combines user–item preference scores with item–item hierarchi-cal similarity to select hard negatives that are structurally and semantically closer to the positives, thus improving the model’s discriminative ability. 
+
+• By integrating the above two modules, we propose DTL-NS. Extensive experiments on three real-world and two synthetic datasets show that DTL-NS consistently outperforms the strongest baselines and can be seamlessly plugged into various implicit CF models and negative sampling methods to further improve their performance. 
+
+## 2 Related Work 2.1 Negative Sampling in Recommendation 
+
+Existing negative sampling methods mainly focus on mining harder negatives to enhance the model’s discrimination between positives and negatives. They can be roughly divided into two lines. The first samples hard negatives from real unobserved items: for example, DNS [ 42 ] and DNS(M,N) [ 28 ] build a sampling distribution from the model’s prediction scores (e.g., user–item inner products) and select the highest-scoring items as negatives. The second synthe-sizes hard negatives in the embedding space: e.g., MixGCF [ 14 ] and ANS [ 46 ] generate negative item embeddings via mixup [ 40 ] or disentangling [ 19 ] operations and then select hard negatives using the same score-based sampling strategy. However, the above meth-ods rely primarily on the single-view signal of model-predicted user–item preference scores for negative sampling, while largely overlooking the collaborative and semantic relations among items. As a result, they struggle to mine hard negatives that are struc-turally or semantically close to the positives. In contrast, DTL-NS explicitly captures item–item collaborative and semantic relations via dual-tree path encoding similarities and integrates them with user–item preference signals to construct a multi-view criterion for hard negative sampling. This multi-view design enables the sampler to discover harder-to-distinguish negatives and thereby further enhance the model’s discriminative capability. Beyond hard negative sampling, another line of work focuses on the risk of false negatives, since unobserved interactions are not always true negatives and treating them all as negatives can introduce noisy supervision. To mitigate this risk, representative methods design negative sampling distributions from different per-spectives: SRNS [ 6 ] and GDNS [ 47 ] exploit statistics from training dynamics, such as losses or gradients; RecNS [ 37 ] and RealHNS [ 23 ]leverage external information such as unclicked exposed data or cross-domain data; and AHNS [ 20 ] adaptively adjusts the hardness of sampled negatives. However, these methods mainly aim to avoid selecting false negatives during sampling, while overlooking the potential of false negatives as latent positives. In contrast, DTL-NS performs offline false-negative identification via LLM reasoning and converts the identified false negatives into positives, thereby Dual-Tree LLM-Enhanced Negative Sampling for Implicit Collaborative Filtering Conference’17, July 2017, Washington, DC, USA 
+
+strengthening positive supervision and improving the accuracy of preference learning. 
+
+## 2.2 LLM-based Recommendation and Negative Sampling 
+
+LLM-based recommendation methods have primarily focused on text-driven LLM recommenders. Existing work can be grouped into two main categories: (1) LLM as an enhancer, where LLMs leverage textual metadata such as titles and reviews to generate user and item textual profiles or extract semantic representations, which are then jointly optimized with interaction signals to enhance recommendation performance (e.g., LLM4Rec [ 30 ], RLM4Rec [ 25 ], AlphaRec [ 27 ]); and (2) LLM as a recommender, where the recom-mendation task is reformulated into an instruction-driven predic-tion task, and the LLM is fine-tuned on prompt–response pairs constructed from textual information and downstream recommen-dation objectives, enabling instruction-based recommendation (e.g., P5 [ 7], TALLRec [ 2 ], InstructRec [ 41 ]). Beyond the above text-driven approaches, another important line of work explores ID-driven LLM recommenders, which inject item IDs and collaborative sig-nals into the LLM input, either as discrete tokens or continuous embeddings, and fine-tune the LLM to learn users’ interaction pat-terns, thereby improving recommendation performance (e.g., Bin-LLM [ 43 ], LLM4IDRec [ 5], E4SRec [ 21 ]). Overall, the above methods either rely on high-quality textual metadata to introduce semantic knowledge, or require task-specific fine-tuning of LLMs, which incurs additional data construction and training costs. More impor-tantly, they primarily focus on how to use LLMs for representation learning and prediction in recommendation, whereas how to lever-age LLMs to empower negative sampling, a key training component of recommender, remains largely unexplored. In the limited work on LLM-empowered negative sampling, HNLMRec [ 44 ] constructs hybrid prompts by injecting user and item textual profiles together with pretrained CF embeddings [ 10 ], and fine-tunes an LLM with hard negative embeddings generated by MixGCF, enabling the LLM to generate hard negative embeddings for downstream recommendation. However, this approach suffers from Text Dependency and Finetuning Dependency. In contrast, DTL-NS performs offline false-negative identification via text-free, fine-tuning-free LLM reasoning, thereby alleviating false-negative risk at the source and substantially improving its applicability across datasets with limited textual metadata, while also reducing the com-putational burden by eliminating LLM fine-tuning. 
+
+## 3 Methodology 
+
+In this section, we first formalize the problem and then present our proposed method, DTL-NS. As illustrated in Figure 2, DTL-NS consists of three stages: (1) dual-tree construction & item encod-ing, which provides foundational structural/semantic encodings; (2) false-negative identification, which, together with the encodings produced in Stage 1, forms our first module, Dual-Tree LLM-based False Negative Identification (DTL-FNI); and (3) multi-view hard negative sampling, which, combined with the same encodings, con-stitutes our second module, Dual-Tree Guided Multi-View Hard Negative Sampling (DT-MHNS). 
+
+## 3.1 Problem Formalization 
+
+In the setting of implicit CF, we let U, I, and D ⊆ U ×I denote the user set, the item set, and the set of observed user–item interactions. The goal is to learn a scoring function 𝑆 𝜃 (𝑢, 𝑖 ) that ranks observed items higher than unobserved ones for each user. Due to the lack of explicit negative feedback, negative sampling is adopted for training: for each positive pair (𝑢, 𝑖 +) ∈ D , a negative item 𝑖 − is sampled as 𝑖 − ∼ 𝑞 (· | 𝑢, 𝑖 +), and the model parameters 𝜃 are learned by minimizing the Bayesian Personalized Ranking [ 26 ] (BPR) loss: 
+
+ℓ = −∑︁      
+
+> (𝑢,𝑖 +) ∈ D ,𝑖 −∼𝑞 (· | 𝑢,𝑖 +)
+
+log 𝜎  𝑆 𝜃 (𝑢, 𝑖 +) − 𝑆 𝜃 (𝑢, 𝑖 − ). (1) However, some unobserved items are not true negatives, and sam-pling them as negatives may introduce noisy supervision. To mit-igate this issue, we introduce DTL-FNI, which we formalize as a function Φ(·) . Given a user 𝑢 and the unobserved item set I \ I + 
+
+> 𝑢
+
+, Φ
+
+outputs a set of detected false negatives, which are then converted into new positive feedback to augment the training set Dtrain .
+
+ˆ𝑃 𝑢 = Φ  𝑢, 𝐼 \𝐼 +
+
+> 𝑢
+
+ , ˆD = Dtrain ∪ (𝑢, 𝑖 )| 𝑖 ∈ ˆ𝑃 𝑢 (2) where I+ 
+
+> 𝑢
+
+denotes the items observed by 𝑢 . Finally, we introduce DT-MHNS to redefine the negative sampling distribution 𝑞 (·| 𝑢, 𝑖 +)
+
+in a multi-view manner to mine harder negatives. 
+
+## 3.2 Dual-Tree LLM-based False Negative Identification (DTL-FNI) 
+
+To avoid the high cost of repeatedly invoking LLM inference during training, DTL-FNI runs the LLM entirely offline: it performs false negative identification once before training, converts the detected false negatives into positive samples, and thereby mitigates false negative risk at its source. Furthermore, to enhance applicability, we target a text-free and fine-tuning-free setting. However, directly feeding raw item IDs into an LLM is ineffective, as IDs are merely discrete symbols without interpretable semantics [ 5, 13 ]. Serializing item embeddings into numerical tokens is also problematic: contin-uous high-dimensional embeddings are misaligned with the LLM’s discrete token space and serialization incurs prohibitive token over-head [ 44 ]. Continuous prompt injection, where item embeddings are injected into the LLM’s hidden space via projection, also requires additional adapter modules and still lacks interpretable semantic anchors [ 21 , 34 ]. Taken together, these designs make it difficult for the LLM to perform effective reasoning without fine-tuning. To this end, we propose DTL-FNI, which constructs hierarchi-cal index trees and encodes items as compact, interpretable path encodings, enabling efficient and accurate offline LLM reasoning. Specifically, we build a collaborative-structure tree and a latent semantic tree: the collaborative tree captures item–item structural proximity induced by user interactions, while the semantic tree captures higher-order semantic similarity in the recommender’s embedding space. These two trees provide complementary views, so that the resulting path encodings jointly reflect interaction co-occurrence structure and latent semantic relations, offering richer relational cues for precise offline LLM reasoning. 
+
+Collaborative-structure tree construction and encoding. 
+
+We first construct an item similarity matrix based on interactions in 
+
+Dtrain . Since measuring similarity solely by co-occurrence counts Conference’17, July 2017, Washington, DC, USA Jiayi Wu, Zhengyu Wu, Xunkai Li, Rong-Hua Li, and Guoren Wang 
+
+Figure 2: The DTL-NS framework. We depict a single tree-based item encoding example, since the dual trees use node embeddings from different sources, yet share the same subsequent tree construction and item encoding procedures. 
+
+introduces popularity bias, we adopt the Jaccard coefficient [ 24 ] to normalize the overlap between user sets, enabling a more robust estimation of item similarity. For any two items 𝑖, 𝑗 ∈ I with their interacting user sets 𝑈 (𝑖 ) and 𝑈 ( 𝑗 ), their similarity is computed as: 
+
+𝑊 𝑐 𝑖 𝑗 = |𝑈 (𝑖 ) ∩ 𝑈 ( 𝑗 ) | |𝑈 (𝑖 ) ∪ 𝑈 ( 𝑗 ) | , 𝑖 ≠ 𝑗 . (3) This yields the item-item similarity matrix W𝑐 ∈ R| I | × | I | . Since 
+
+W𝑐 is highly sparse and local edge weights may be corrupted by noisy interactions (e.g., incidental clicks or accidental touches), we adopt graph Laplacian spectral embedding [ 22 ] to learn a low-dimensional, structure-preserving representation from a global perspective, which also facilitates subsequent clustering and hierar-chical tree construction. Specifically, we construct the normalized graph Laplacian matrix: 
+
+L𝑐 = I − D− 12 W𝑐 D− 12 (4) where D is the degree matrix. We then take the 𝑑 smallest non-trivial eigenvectors of L𝑐 and stack them column-wise to obtain the item embedding matrix E𝑐 ∈ R| I | × 𝑑 𝑐 . To compress continuous item embeddings into a discrete hierarchical structure for encoding, we build a balanced 𝑘 -ary hierarchical index tree T 𝑐 on top of E𝑐 .Specifically, at each node we run 𝑘 -means [ 1 ] on the embeddings of the items assigned to that node, partitioning them into 𝑘 child clusters, and recursively apply this procedure to each child cluster until the number of items in a node does not exceed 𝑚 . In the resulting tree T 𝑐 , each item 𝑖 is associated with a root-to-leaf path: 
+
+𝜋 𝑐 (𝑖 ) =  𝑛 𝑐 
+
+> 1
+
+, 𝑛 𝑐 
+
+> 2
+
+, . . . , 𝑛 𝑐 𝐿 𝑐 
+
+, (5) where 𝑛 𝑐 ℓ denotes the cluster node index at level ℓ and 𝐿 𝑐 is the depth of T 𝑐 . 𝜋 𝑐 (𝑖 ) serves as the collaborative-structure encoding of item 𝑖 , which is used for subsequent offline LLM reasoning. 
+
+Latent semantic tree construction and encoding. Since the collaborative-structure tree mainly captures user co-occurrence patterns and local neighborhood relations but struggles to model higher-order semantic associations, we construct a latent semantic tree T 𝑠 to encode higher-order semantic relations in the recom-mender’s embedding space as a complementary view. Specifically, we first pre-train an implicit CF model (e.g., LightGCN [ 10 ]) to obtain a semantic embedding for each item. We then stack all item embeddings into a matrix E𝑠 ∈ R| I | × 𝑑 𝑠 and construct the latent se-mantic tree T 𝑠 using the same balanced 𝑘 -ary recursive clustering procedure as in the collaborative-structure tree. In the resulting tree T 𝑠 , each item 𝑖 is associated with a root-to-leaf path: 
+
+𝜋 𝑠 (𝑖 ) =  𝑛 𝑠 
+
+> 1
+
+, 𝑛 𝑠 
+
+> 2
+
+, . . . , 𝑛 𝑠 𝐿 𝑠 
+
+ (6) which serves as the latent semantic encoding of item 𝑖 .Algorithm 1 describes the dual-tree construction and item en-coding procedure. (Lines 1–6) derive structural embeddings via interaction-based item similarities and Laplacian spectral embed-ding, then build the collaborative structural tree and encode items accordingly; (Lines 7–11) obtain semantic item embeddings from a Dual-Tree LLM-Enhanced Negative Sampling for Implicit Collaborative Filtering Conference’17, July 2017, Washington, DC, USA 
+
+Algorithm 1 Dual-Tree Construction & Item Encoding 
+
+Input: Training set Dtrain ⊆ U × I ; pretrained recommender 𝑔 ;tree branching factor 𝑘 ; leaf size threshold 𝑚 ; spectral embed-ding dimension 𝑑 .
+
+Output: Collaborative path codes 𝜋 𝑐 (·) , semantic path codes 𝜋 𝑠 (·) . 
+
+> 1:
+
+Construct the item-item collaborative similarity matrix 𝑊 𝑐 
+
+from Dtrain using (3).  
+
+> 2:
+
+Compute structure embeddings 𝐸 𝑐 via graph laplacian spectral embedding (keep the smallest 𝑑 non-trivial eigenvectors).  
+
+> 3:
+
+𝑇 𝑐 ← BuildKaryTree (𝐸 𝑐 , 𝑘, 𝑚 ). 
+
+> 4:
+
+for each item 𝑖 ∈ I do  
+
+> 5:
+
+Extract root-to-leaf cluster-index sequence of 𝑖 in 𝑇 𝑐 as 𝜋 𝑐 (𝑖 ). 
+
+> 6:
+
+end for  
+
+> 7:
+
+Obtain semantic item embeddings 𝐸 𝑠 from recommender 𝑔 . 
+
+> 8:
+
+𝑇 𝑠 ← BuildKaryTree (𝐸 𝑠 , 𝑘, 𝑚 ). 
+
+> 9:
+
+for each item 𝑖 ∈ I do  
+
+> 10:
+
+Extract root-to-leaf cluster-index sequence of 𝑖 in 𝑇 𝑠 as 𝜋 𝑠 (𝑖 ). 
+
+> 11:
+
+end for  
+
+> 12:
+
+Notes: BuildKaryTree (·) recursively partitions embeddings via 
+
+𝑘 -means until leaf node size ≤ 𝑚 .pretrained recommender, then construct the latent semantic tree and derive the corresponding item encodings. 
+
+LLM classification reasoning. We feed the collaborative struc-ture and latent semantic path encodings of unobserved items into the LLM, which performs offline binary classification for false nega-tive identification. Since the number of unobserved items is typically enormous, directly applying LLM reasoning to all candidates is in-feasible. Following prior work, we use a pretrained recommender to construct a finite candidate set C𝑢 for each user 𝑢 . Items in C𝑢 
+
+have high predicted scores and thus are likely to include both false negatives and hard negatives, providing a more effective candidate space for subsequent offline LLM classification. For each candidate item 𝑖 ∈ C 𝑢 , we construct an input prompt: 
+
+P ( 𝑢, 𝑖 ) =
+
+
+
+{  𝜋 𝑐 ( 𝑗 ), 𝜋 𝑠 ( 𝑗 ) }𝑗 ∈ I + 
+
+> 𝑢
+
+,  𝜋 𝑐 (𝑖 ), 𝜋 𝑠 (𝑖 )
+
+, (7) which consists of the dual-tree path encodings of the user’s his-torical items and the candidate item 𝑖 . We then feed this prompt together with a system prompt S𝑃 into the LLM to decide whether 
+
+𝑖 is a false negative for user 𝑢 :
+
+ˆ𝑦 𝑢,𝑖 = 𝑓 LLM 
+
+ P ( 𝑢, 𝑖 ), S𝑃 
+
+, ˆ𝑦 𝑢,𝑖 ∈ { positive , negative }. (8) Here, the positive label corresponds to the false negative class. We collect the candidates predicted as positive into the detected false negative set: 
+
+ˆ𝑃 𝑢 = Φ(𝑢, C𝑢 ) = { 𝑖 ∈ C 𝑢 | ˆ𝑦 𝑢,𝑖 = positive }. (9) Finally, we add ˆ𝑃 𝑢 to the training set for subsequent model training, thereby reducing noisy supervision caused by false negatives and enabling the recommender to learn user preferences more reliably.   
+
+> Condensed System Prompt S𝑃 : False Negative Identification
+
+Role: You are a sample classification module for a recom-mender system. 
+
+Input: For each user, you receive the user’s historically inter-acted items and candidate items. Each item is represented only by two hierarchical path encodings: collaborative-structure path encodings and latent semantic path encodings. 
+
+Task: Your task is to classify each candidate item into either 
+
+"positive" or "negative" based solely on path encoding similarity, which is determined by the shared prefix length between paths (longer shared prefix means higher similarity). 
+
+Output: Your output is a JSON array where each element is of the form {"item_id":<int>, "label":"positive"|"negative"} .
+
+## 3.3 Dual-Tree Guided Multi-View Hard Negative Sampling (DT-MHNS) 
+
+We now introduce DT-MHNS, a dual-tree guided multi-view hard negative sampling module that combines user–item preference scores with item–item structural and semantic similarities to mine harder negatives, thereby enhancing the model’s discriminative capability. For each user 𝑢 and its positive item 𝑖 +, we first randomly sample 𝑛 unobserved items to construct a candidate set 𝜀 𝑢 . For each candidate item 𝑖 ∈ 𝜀 𝑢 , we follow the state-of-the-art method MixGCF [ 14 ] and use mixup [ 40 ] to generate a more challenging hard negative embedding: 
+
+˜𝑒 𝑖 = 𝜆𝑒 𝑝 + ( 1 − 𝜆 )𝑒 𝑖 , 𝜆 ∼ 𝑈 (0, 1) . (10) We compute the preference score between the user embedding e𝑢 
+
+and the hard negative embedding ˜e𝑖 using the inner product: ˆ𝑟 𝑢,𝑖 =
+
+𝑒 𝑇 𝑢 ˜𝑒 𝑖 . Considering that items may have different path encoding depths, we measure the similarity between items 𝑖 and 𝑗 using the normalized longest common prefix (LCP) length [16], defined as: 
+
+sim (𝑖, 𝑗 ) = max { 𝑙 | 𝜋 (𝑖 )1: 𝑙 = 𝜋 ( 𝑗 )1: 𝑙 }
+
+min  |𝜋 (𝑖 )| , |𝜋 ( 𝑗 )|  (11) where |𝜋 (𝑖 )| denotes the effective length of the path encoding 𝜋 (𝑖 ).Based on this definition, we compute collaborative-structural and latent-semantic path similarities between the candidate item 𝑖 and the positive 𝑖 +, denoted by sim 𝑐 (𝑖 +, 𝑖 ) and sim 𝑠 (𝑖 +, 𝑖 ), respectively. Next, we unify the user–item preference signal and item–item dual-tree path encoding similarities into a scoring function for hard negative selection. Since the hardness of a negative sample is fundamentally user-dependent, we use the user–item preference score as the primary hardness signal. In contrast, the dual-tree path similarities sim 𝑐 (𝑖 +, 𝑖 ) and sim 𝑠 (𝑖 +, 𝑖 ) characterize the item–item proximity between the candidate negative and the positive item from collaborative-structural and semantic perspectives, providing item–item priors that complement the preference signal. Therefore, we introduce weights 𝛼 𝑐 and 𝛼 𝑠 to fuse these signals and control their contributions when measuring the overall hardness of a can-didate negative. 
+
+𝑆𝑐𝑜𝑟𝑒 (𝑢, 𝑖 +, 𝑖 ) = Norm 𝜀 𝑢 ( ˆ𝑟 𝑢,𝑖 ) + 𝛼 𝑐 ·sim 𝑐 (𝑖 +, 𝑖 ) + 𝛼 𝑠 ·sim 𝑠 (𝑖 +, 𝑖 ) (12) where Norm 𝜀 𝑢 ( ˆ𝑟 𝑢,𝑖 ) denotes min–max normalization [ 12 ] applied to all preference scores { ˆ𝑟 𝑢,𝑗 | 𝑗 ∈ 𝜀 𝑢 }, rescaling them to [0, 1] to Conference’17, July 2017, Washington, DC, USA Jiayi Wu, Zhengyu Wu, Xunkai Li, Rong-Hua Li, and Guoren Wang 
+
+ensure comparability with the path encoding similarities and avoid scale-induced fusion bias. Finally, based on Score (𝑢, 𝑖 +, 𝑖 ), we redefine the negative sam-pling distribution 𝑞 (· | 𝑢, 𝑖 +) and, following prior work [ 14 , 42 , 46 ], we approximate sampling from this distribution by selecting the hardest negative in the candidate set: 
+
+𝑖 − = arg max  
+
+> 𝑖 ∈𝜀 𝑢
+
+𝑆𝑐𝑜𝑟𝑒 (𝑢, 𝑖 +, 𝑖 ). (13) We take the mixup embedding ˜𝑒 𝑖 − of the selected negative item 𝑖 −
+
+(constructed by Eq. (10)) as the final hard negative embedding and use it in the subsequent BPR optimization. It is important to emphasize that the dual-tree path-encoding similarities are item-index–level proximity priors that, together with the preference score, determine which candidate item is se-lected as the negative sample 𝑖 − . Although BPR optimization uses the mixup embedding ˜𝑒 𝑖 − of the selected negative, this embedding is still derived from, and uniquely associated with, the chosen nega-tive item 𝑖 − . Therefore, the dual-tree similarities guide the selection of 𝑖 − such that the chosen negative tends to be closer to the positive item in both collaborative-structural and latent-semantic spaces. On top of this, the mixup embedding makes the prediction of this negative item for the target user more challenging, thereby en-hancing the model’s discriminative capability. The effectiveness of incorporating dual-tree similarities into hard negative sampling is further validated in our ablation study (Section 4.4). Algorithm 2 describes the overall pipeline of DTL-NS. (Lines 1–9) use the LLM to identify false negatives and convert them into positives to augment the training set for subsequent optimization. (Lines 10–22) then train the recommender with DTL-NS, where (Lines 14–18) perform dual-tree guided multi-view hard negative sampling to select informative negatives. 
+
+## 3.4 Time Complexity 
+
+The time complexity of DTL-NS mainly comes from two mod-ules: DTL-FNI and DT-MHNS. DTL-FNI mainly includes obtaining collaborative-structure and latent semantic item embeddings, with an approximate time complexity of 𝑂 (nnz (W𝑐 )𝑑 𝑐 ) + 𝑂 (|D train |) + 
+
+𝑂 (|I| 𝑑 𝑠 ), and constructing balanced 𝑘 -ary index trees in 𝑂 (|I|( 𝑑 𝑐 𝐿 𝑐 
+
++𝑑 𝑠 𝐿 𝑠 )) , where 𝑑 𝑐 , 𝑑 𝑠 denote the dimensions of the collaborative-structure and semantic embeddings, nnz (W𝑐 ) denotes the number of non-zero entries in the item similarity matrix W𝑐 , and 𝐿 𝑐 , 𝐿 𝑠 de-note the depths of the collaborative and semantic trees. Since LLM inference is not a standard algorithmic operation, we report its wall-clock time in subsequent efficiency analysis. Therefore, the time complexity of DTL-FNI is dominated by 𝑂 (nnz (W𝑐 )𝑑 𝑐 + |I|( 𝑑 𝑐 𝐿 𝑐 +
+
+𝑑 𝑠 𝐿 𝑠 )) . DT-MHNS mainly includes constructing the candidate nega-tive sets, with a cost of 𝑂 (𝑛𝑇 ), and computing the overall hardness scores, with a cost of 𝑂 (𝑛 (𝑑 𝑒 + 𝐿 𝑐 + 𝐿 𝑠 )𝑇 ), where 𝑛 denotes the size of the candidate negative set, 𝑑 𝑒 denotes the item embedding dimen-sion during training, and 𝑇 is the number of training iterations over mini-batches. Therefore, complexity of DT-MHNS is approximately 
+
+𝑂 (𝑛 (𝑑 𝑒 + 𝐿 𝑐 + 𝐿 𝑠 )𝑇 ). The overall time complexity of DTL-NS is 
+
+𝑂 (nnz (W𝑐 ) 𝑑 𝑐 + |I| ( 𝑑 𝑐 𝐿 𝑐 + 𝑑 𝑠 𝐿 𝑠 ) + 𝑇 𝑛 (𝑑 𝑒 + 𝐿 𝑐 + 𝐿 𝑠 )) .
+
+Algorithm 2 DTL-NS Training Process 
+
+Input: Training set Dtrain ⊆ U × I ; Pretrained recommender 𝑔 ;LLM classifier 𝑓 LLM with system prompt 𝑆 𝑝 ; Collaborative-view weight 𝛼 𝑐 ; Semantic-view weight 𝛼 𝑠 ; Implicit CF model rec (·) ;Number of negative candidate 𝑛 . 
+
+> 1:
+
+Obtain dual-tree path codes 𝜋 𝑐 (·) , 𝜋 𝑠 (·) call Algorithm 1.  
+
+> 2:
+
+Construct candidate item sets 𝐶 U = {𝐶 𝑢 | 𝑢 ∈ U} using 𝑔 . 
+
+> 3:
+
+ˆD ← D train . 
+
+> 4:
+
+for each user 𝑢 ∈ U do  
+
+> 5:
+
+𝐼 + 
+
+> 𝑢
+
+← { 𝑖 | ( 𝑢, 𝑖 ) ∈ D train }. 
+
+> 6:
+
+Construct prompts P(𝑢, 𝑖 ) based on 𝐼 + 
+
+> 𝑢
+
+and 𝐶 𝑢 using (7).  
+
+> 7:
+
+Use 𝑓 LLM to identify false negatives based on P(𝑢, 𝑖 ) and collect LLM-verified positives ˆ𝑃 𝑢 using (9).  
+
+> 8:
+
+ˆD ← ˆD ∪ {( 𝑢, 𝑖 ) | 𝑖 ∈ ˆ𝑃 𝑢 }. 
+
+> 9:
+
+end for  
+
+> 10:
+
+for 𝑡 = 1, 2, . . . ,𝑇 do  
+
+> 11:
+
+Sample a mini-batch of pairs 𝐷 𝑏𝑎𝑡𝑐ℎ from ˆD. 
+
+> 12:
+
+Initialize loss ℓ = 0. 
+
+> 13:
+
+for each (𝑢, 𝑖 +) ∈ 𝐷 𝑏𝑎𝑡𝑐ℎ do  
+
+> 14:
+
+Uniformly sample 𝑛 negatives to form candidate set 𝜀 𝑢 . 
+
+> 15:
+
+Obtain mixup negative embeddings { ˜e𝑖 }𝑖 ∈𝜀 𝑢 by (10).  
+
+> 16:
+
+Look up 𝜋 𝑐 (𝑖 +), 𝜋 𝑠 (𝑖 +) and {( 𝜋 𝑐 (𝑖 ), 𝜋 𝑠 (𝑖 ))} 𝑖 ∈𝜀 𝑢 from dual-tree path codes.  
+
+> 17:
+
+Compute 𝑆𝑐𝑜𝑟𝑒 (𝑢, 𝑖 +, 𝑖 ) for each 𝑖 ∈ 𝜀 𝑢 using (12).  
+
+> 18:
+
+𝑖 − ← arg max 𝑖 ∈𝜀 𝑢 𝑆𝑐𝑜𝑟𝑒 (𝑢, 𝑖 +, 𝑖 ). 
+
+> 19:
+
+ℓ = ℓ + log 𝜎 ( ˜𝑒 𝑖 − · 𝑒 𝑢 − 𝑒 𝑖 + · 𝑒 𝑢 ). 
+
+> 20:
+
+end for  
+
+> 21:
+
+Update 𝜃 of rec (·) by descending the gradients ∇𝜃 ℓ. 
+
+> 22:
+
+end for Table 1: Dataset Statistics 
+
+Dataset Users Items Interactions Density Amazon-sports 15,138 8,439 210,439 0.165% Amazon-toys 15,306 10,074 247,181 0.160% Yelp 20,206 15,674 468,033 0.148% 
+
+## 4 Experiments 
+
+To demonstrate the effectiveness of our proposed DTL-NS, we conducted extensive experiments and answered the following ques-tions: (RQ1) How does DTL-NS perform in comparison to exist-ing negative sampling and LLM-based recommendation methods? 
+
+(RQ2) How do the key hyperparameters of DTL-NS affect rec-ommendation performance? (RQ3) How does each component of DTL-NS contribute to the overall performance? (RQ4) How does DTL-NS perform when integrated into other implicit CF backbone (e.g., matrix factorization [11].) and negative sampling methods? 
+
+## 4.1 Experimental Setup 
+
+4.1.1 Datasets. We selected three widely used real-world datasets (Amazon-sports, Amazon-toys, and Yelp) and two synthetic noisy datasets (Amazon-sports-𝑟 and Amazon-toys-𝑟 ) to evaluate the effectiveness of DTL-NS. For the noisy datasets, we randomly re-moved 𝑟 % of the training interactions to simulate false negatives. Dual-Tree LLM-Enhanced Negative Sampling for Implicit Collaborative Filtering Conference’17, July 2017, Washington, DC, USA 
+
+Table 2: Performance comparison on three real-world datasets (%). The best result is bold. 
+
+Dataset Amazon-sports Amazon-toys Yelp Method R@10 N@10 R@20 N@20 R@10 N@10 R@20 N@20 R@10 N@10 R@20 N@20 RNS 8.74 5.94 12.19 6.95 7.86 5.07 11.48 6.13 8.08 5.25 13.27 6.88 DNS 10.29 7.18 13.64 8.16 9.06 6.02 12.70 7.10 8.57 5.57 13.76 7.20 SRNS 9.71 6.80 13.40 7.88 8.10 5.54 11.98 6.64 8.54 5.50 13.75 7.15 DNS(M,N) 10.38 7.29 13.62 8.24 9.26 6.30 12.49 7.27 8.82 5.69 14.03 7.33 MixGCF 10.53 7.40 14.29 8.51 9.60 6.33 13.24 7.41 8.74 5.68 14.36 7.45 AHNS 10.11 7.16 13.44 8.15 8.84 5.85 12.47 6.94 8.54 5.55 13.87 7.22 KAR 10.32 7.12 13.65 8.21 9.14 6.27 12.53 7.19 8.62 5.59 14.21 7.42 LLMRec 10.36 7.14 13.48 8.16 9.17 6.31 12.46 7.15 8.61 5.62 13.96 7.39 RLMRec 10.51 7.38 14.32 8.68 9.55 6.46 13.17 7.46 8.97 5.82 14.42 7.63 HNLMRec 10.74 7.78 14.38 8.84 10.33 7.70 13.79 8.73 9.31 6.09 14.93 7.85 DTL-NS 12.46 9.53 15.91 10.53 11.56 8.98 14.75 9.91 10.28 7.50 15.23 9.05 Table 3: Performance comparison on synthetic datasets (%). 
+
+Dataset Amazon-sports-20% Amazon-toys-20% Method R@20 N@10 N@20 R@20 N@10 N@20 RNS 10.81 5.11 6.08 10.35 4.56 5.53 DNS 12.51 6.46 7.41 11.26 5.40 6.35 SRNS 12.68 5.95 7.07 10.79 4.90 5.86 DNS(M,N) 11.76 6.37 7.16 11.57 5.65 6.61 MixGCF 12.70 6.46 7.46 11.69 5.55 6.56 AHNS 12.56 6.52 7.48 11.33 5.39 6.36 HNLMRec 13.09 7.08 8.11 11.95 6.16 7.07 DTL-NS 14.08 8.74 9.58 13.28 8.05 8.96 
+
+The Amazon-Sports and Amazon-Toys datasets 1 contain data span-ning from 2014 to 2018 from the Amazon review corpus, corre-sponding to the Sports&Outdoors and Toys&Games categories, respectively. The Yelp dataset 2 contains user interaction records from the Yelp platform spanning from 2015 to 2018. Following prior work [ 10 , 29 , 36 ], we adopt the 10-core setting for all datasets to ensure that each user and item has at least ten interactions, and then randomly split the data into training, validation, and test sets with a ratio of 8:1:1. The dataset statistics are shown in Table 1. We use the widely adopted metrics, Recall@k and NDCG@k to evaluate model performance, with k values set to {10, 20}. 
+
+4.1.2 Baselines. We compare DTL-NS with seven negative sam-pling methods: the commonly used RNS [ 26 ], three hard negative sampling methods (DNS [ 42 ], MixGCF [ 14 ], DNS(M,N) [ 28 ]), two methods targeting false negatives (SRNS [ 6], AHNS [ 20 ]) and a LLM-based negative sampling method HNLMRec [ 44 ]. In addition, we in-clude three representative LLM-enhanced recommenders (KAR [ 32 ], 
+
+> 1https://cseweb.ucsd.edu/ jmcauley/datasets/amazon_v2/index.html
+> 2https://business.yelp.com/data/resources/open-dataset/
+
+LLMRec [ 30 ], and RLMRec [ 25 ]), as complementary baselines. Note that our main comparisons focus on negative sampling methods, since DTL-NS is a negative sampling strategy; LLM-enhanced rec-ommenders follow a different paradigm and are included only as a reference. Unless otherwise specified, all baselines use the same hyperparameter settings as their original code implementations. 
+
+4.1.3 Implementation Details. Unless otherwise specified, we use LightGCN [ 10 ] as the default backbone. Llama3-8b is adopted to perform inference and identify false negatives. We initialize 64-dimensional embeddings with Xavier initialization [ 8 ] and optimize the model using Adam [ 17 ] with a learning rate of 0.001. The mini-batch size is 2048, the L2 regularization coefficient is 0.0001, and the number of layers is set to 3. In DTL-FNI, dual hierarchical index trees are constructed with a branching factor of 4 and a leaf-size threshold of 30. We set the spectral embedding dimension to 32 for the collaborative-structure tree. We also use LightGCN as the pretrained recommender to build the candidate set for LLM classification, and set the candidate size |C 𝑢 | to 20. The numbers of LLM-identified false negatives that are converted into new positives are 193,550 (Amazon-sports), 200,815 (Amazon-toys), and 43,144 (Yelp), respectively. For fair comparison, all LLM-based baselines in our experiments use Llama3-8b. For methods adopting a two-stage negative sampling strategy, we set the candidate negative pool size 
+
+|𝜀 𝑢 | to 10. To prevent data leakage, all data in the validation and test sets is excluded from the LLM-identified false negative set. To mitigate the impact of randomness, we run DTL-NS with five different random seeds and report the averaged results. 
+
+4.1.4 Experiment environment. Our experiments are conducted on a Linux server with Intel(R) Xeon(R) Gold 6240 CPU@2.60GHz, 251G RAM and 1 NVIDIA A100 80GB PCIe. Our proposed DTL-NS is implemented in Python 3.10.13, torch 2.9.0, scikit-learn 1.6.1, numpy 1.26.4, scipy 1.10.0, transformers 4.57.3, vllm 0.12.0, and CUDA 12.4.0. Our source code is available in the anonymous repository https://anonymous.4open.science/r/DTL-NS-7EF1/. Conference’17, July 2017, Washington, DC, USA Jiayi Wu, Zhengyu Wu, Xunkai Li, Rong-Hua Li, and Guoren Wang 
+
+Figure 3: Recall@20 vs. wall-clock time (in seconds). 
+
+## 4.2 Performance Comparison (RQ1) 
+
+Table 2 reports the performance of DTL-NS and the baselines on the real-world datasets. The results indicate that DTL-NS consistently achieves significant improvements over strong baselines across all datasets. Such substantial gains mainly stem from its ability to iden-tify and convert false negatives into reliable positive supervision. Specifically, DTL-NS encodes collaborative structural and semantic signals with hierarchical index-tree representations and leverages the LLM’s reasoning ability to accurately identify false negatives among unobserved items; the identified false negatives are then converted into additional positives to augment training, effectively transforming noisy signals into reliable supervision. In contrast, negative sampling baselines either ignore false negatives or merely avoid sampling them, leaving their potential as positive supervi-sion underutilized. For LLM-enhanced baselines, the improvements largely rely on textual signals, which can be noisy and may not con-sistently reflect users’ true preferences. Moreover, DTL-NS jointly considers item-item structural/semantic similarities and user-item preference scores to select more challenging hard negatives, further enhancing the model’s discriminative ability. Together, these de-signs provide cleaner and more informative training signals, leading to substantial performance gains. Table 3 reports the performance of DTL-NS and the negative sampling baselines on the synthetic noisy datasets. We can see that DTL-NS consistently achieves the best performance, with even more pronounced improvements than those observed on the real-world datasets. For example, on the Amazon-toys, and correspond-ing synthetic dataset, Recall@20 and NDCG@20 improvements over the strongest baseline increase from 6.96% to 11.12% and from 13.52% to 26.73%, respectively. These results further demonstrate that DTL-NS can effectively identify false negatives. Beyond effectiveness, we further analyze the efficiency of DTL-NS, which consists of an offline DTL-FNI stage and a training-time DT-MHNS stage. We first measure the runtime of DTL-FNI for identifying false negatives across all datasets. Using vLLM [ 18 ](with optimized KV-cache management and efficient batch sched-uling) as the inference engine, DTL-FNI takes 1,944, 2,195, and 3,655 seconds in total on the Amazon-sports, Amazon-toys, and Yelp datasets, respectively. The dominant cost of DTL-FNI comes from LLM inference. Specifically, the LLM inference time accounts for 1,937, 2,186, and 3,641 seconds, respectively. Since DTL-FNI is a one-time offline process, this cost is practical in our setting. We then compare the average per-epoch training time with and without the multi-view hard negative selection in DT-MHNS on 
+
+Figure 4: The impact of 𝛼 𝑐 and 𝛼 𝑠 .
+
+Amazon-sports, Amazon-toys, and Yelp. The average per-epoch forward-pass time increases slightly from 1.26s, 1.51s, and 1.93s to 1.57s, 1.73s, and 2.47s, indicating that the additional overhead of multi-view negative selection is marginal. Finally, we compare the overall training efficiency of DTL-NS with negative sampling baselines. As shown in Figure 3, DTL-NS converges to a higher performance within a limited wall-clock time, demonstrating its superior efficiency and effectiveness in practice. 
+
+## 4.3 Parameter Analysis (RQ2) 
+
+In this section, we analyze the impact of the parameters 𝛼 𝑐 and 
+
+𝛼 𝑠 in DTL-NS on model performance, where 𝛼 𝑐 and 𝛼 𝑠 control the contributions of the collaborative-structural and latent-semantic signals to the overall hardness score, respectively. We vary each co-efficient in {0.0, 0.1, 0.3, 0.5, 0.7, 0.9}; when studying one coefficient, we fix the other to isolate its effect. Figure 4 illustrates the impact of 𝛼 𝑐 and 𝛼 𝑠 on model perfor-mance. We observe a similar trend for both parameters: as the weight increases, the performance first improves and then degrades, with better results achieved when the weight is set to a relatively small value. In particular, setting 𝛼 𝑐 to 0.1 and 𝛼 𝑠 to 0.3 yields the highest Recall@20 and NDCG@20 on both Amazon-sports and Amazon-toys datasets. This is because moderately incorporating the item-item priors (i.e., sim (𝑐 ) (𝑖 +, 𝑖 ) for collaborative-structural signals and sim (𝑠 ) (𝑖 +, 𝑖 ) for latent-semantic signals) helps select hard negatives that are both highly confusing for the target user (with high preference scores) and close to the corresponding posi-tive item, thereby providing more informative learning signals and inducing more discriminative parameter updates, which ultimately improves model performance. Note that the hardness of a nega-tive sample is fundamentally user-dependent, and the user-item preference score should therefore remain the primary hardness signal. When 𝛼 𝑐 or 𝛼 𝑠 is large, the corresponding item-item simi-larity term receives a relatively high weight in the overall hardness score, which can weaken the preference signal and may bias the sampler toward negatives that are close to the positive item but not sufficiently challenging for the target user. As a result, the selected hard negatives become less discriminative, leading to performance degradation. 
+
+## 4.4 Ablation Study (RQ3) 
+
+In this section, we conduct experiments on the Amazon-sports and Amazon-toys datasets and design the following variant methods to validate the effectiveness of the key components and design choices in DTL-NS. MHNS : keeps only DT-MHNS for training-time multi-view hard negative sampling. FNI : keeps only DTL-FNI Dual-Tree LLM-Enhanced Negative Sampling for Implicit Collaborative Filtering Conference’17, July 2017, Washington, DC, USA 
+
+Figure 5: The impact of different variant methods. 
+
+to augment the training set, and trains the backbone with random negative sampling. DTL - NS C: uses only the collaborative structural tree for false-negative identification and multi-view hard negative sampling. DTL - NS S: relies solely on the latent semantic tree for the same process. RuleFNI : replaces LLM-based false-negative identification with a deterministic heuristic based on dual-tree path similarities; it ranks each candidate item by the summed shared-prefix similarity to the user’s interacted items, selects the top-10 items as false negatives, converts them into positives, and then trains with random negative sampling. Figure 5 compares DTL-NS with its variants, where the blue and red dashed horizontal lines denote the backbone (LightGCN) performance in terms of Recall@20 and NDCG@20, respectively, serving as reference baselines. We observe that both FNI and MHNS consistently improve over LightGCN, validating the effectiveness of DTL-FNI and DT-MHNS; moreover, combining them in DTL-NS achieves the best performance, indicating that DTL-FNI and DT-MHNS contribute complementary benefits by improving different aspects of the training signal (positive supervision enhancement vs. hard negative mining), resulting in further gains beyond using either module alone. Notably, FNI yields a larger performance gain than MHNS. This aligns with our intuition that FNI yields larger gains by converting accurately identified false negatives into posi-tive samples, thereby augmenting explicit positive supervision (i.e., what the user likes) and strengthening the learning of users’ global preference signals; in contrast, MHNS mainly reshapes the negative sampling distribution by selecting harder negatives, which primar-ily refines local decision boundaries via negative supervision (i.e., what the user may not prefer). In addition, DTL-NS consistently outperforms DTL - NS C and DTL - NS S, indicating that the collab-orative structural and latent semantic views are complementary and should be jointly leveraged. Finally, RuleFNI achieves higher Recall@20 and NDCG@20 than the backbone LightGCN, indicat-ing that shared-prefix similarity on the dual-tree path encodings can indeed identify a portion of false negatives. However, FNI con-sistently and substantially outperforms RuleFNI, suggesting that heuristics purely based on shared-prefix similarity are still much less precise than LLM-based identification. This is because, in the multi-history, multi-candidate, and dual-tree encoding setting, de-signing a deterministic rule that jointly accounts for these factors is non-trivial and often hard to generalize, thus missing cross-item and cross-view consistency cues. In contrast, the LLM benefits from robust in-context reasoning: it can aggregate evidence across mul-tiple historical items and both views, and resolve ambiguous cases 
+
+Table 4: Performance comparison integrated with MF. 
+
+Dataset Amazon-sports Amazon-toys Method R@20 N@10 N@20 R@20 N@10 N@20 RNS 10.20 5.10 5.92 8.59 3.85 4.59 DNS 10.92 5.83 6.64 10.03 4.79 5.67 SRNS 10.86 5.84 6.67 9.87 4.72 5.55 DNS(M,N) 10.65 6.01 6.73 10.40 5.29 6.11 AHNS 11.23 5.89 6.71 10.18 4.85 5.72 HNLMRec 12.11 6.35 7.21 12.13 5.56 6.57 DTL-NS 14.52 8.19 9.16 13.34 7.20 8.22 
+
+Figure 6: Performance comparison of integrating DTL-NS with different negative sampling methods. 
+
+by enforcing cross-item and cross-view consistency, yielding more accurate identification and stronger gains. 
+
+## 4.5 Integrated with Other implicit CF Model and Negative Sampling Methods (RQ4) 
+
+In this section, we investigate whether DTL-NS can be integrated into other implicit CF recommender and negative sampling meth-ods to further improve their performance. We first apply DTL-NS to a widely used matrix-factorization (MF) based CF model [ 11 ]. Table 4 reports the performance of DTL-NS and negative sampling baselines on the Amazon-sports and Amazon-toys datasets. We omit MixGCF because its hop-mixing component is designed upon GNN-based graph propagation, making it not directly applicable for MF-based CF model. As shown in Table 4, DTL-NS outperforms all baselines by a clear margin. This improvement mainly stems from LLM-assisted false negative identification, which accurately relabels false negatives as positives, thereby reducing false nega-tive noise and providing additional reliable positive supervision. Such augmented supervision enables even relatively less expressive backbones to better capture users’ preferences, leading to improved recommendation performance. Beyond this, we further integrate DTL-NS into three popular negative sampling methods, DNS, SRNS, and AHNS, yielding DNS +,SRNS +, and AHNS +. Specifically, we augment the positive set of each sampler with the false negatives identified by DTL-FNI, and incorporate item-item collaborative and semantic similarities from DT-MHNS when computing sampling scores to construct the nega-tive sampling distribution. As shown in Figure 6, DTL-NS signifi-cantly boosts the performance of these methods, mainly because it effectively mitigates their false negative risk by strengthening Conference’17, July 2017, Washington, DC, USA Jiayi Wu, Zhengyu Wu, Xunkai Li, Rong-Hua Li, and Guoren Wang 
+
+positive supervision and simultaneously selects harder negatives. Overall, these results demonstrate the strong generality and plug-and-play capability of DTL-NS. 
+
+## 5 CONCLUSION 
+
+In this paper, we study LLM-enhanced negative sampling for im-plicit CF from a new perspective: leveraging LLMs to identify false negatives. We innovatively introduce hierarchical index trees to encode collaborative-structural and latent-semantic information into structured ID, enabling an LLM to effectively identify false neg-atives without relying on textual metadata and fine-tuning, thereby improving applicability under limited text and compute. Then, we convert the identified false negatives into positive supervision, ex-plicitly guiding model to learn user preferences accurately. Based on item-item hierarchical similarities, we design a multi-view hard negative sampling strategy that mines harder negatives and en-hances model’s discriminative ability. Comprehensive experiments demonstrates the effectiveness, generality, and plug-and-play capa-bility of DTL-NS. This introduces a promising direction for negative sampling: transforming noisy implicit signals into reliable positive supervision via precise false-negative identification, thereby further improving implicit CF recommender performance. 
+
+## References 
+
+[1] Mohiuddin Ahmed, Raihan Seraj, and Syed Mohammed Shamsul Islam. 2020. The k-means algorithm: A comprehensive survey and performance evaluation. 
+
+Electronics 9, 8 (2020), 1295. [2] Keqin Bao, Jizhi Zhang, Yang Zhang, Wenjie Wang, Fuli Feng, and Xiangnan He. 2023. Tallrec: An effective and efficient tuning framework to align large language model with recommendation. In Proceedings of the 17th ACM conference on recommender systems . 1007–1014. [3] Yao Cai, Weimao Ke, Eric Cui, and Fei Yu. 2022. A deep recommendation model of cross-grained sentiments of user reviews and ratings. Information Processing & Management 59, 2 (2022), 102842. [4] Chong Chen, Weizhi Ma, Min Zhang, Chenyang Wang, Yiqun Liu, and Shaoping Ma. 2023. Revisiting negative sampling vs. non-sampling in implicit recommen-dation. ACM Transactions on Information Systems 41, 1 (2023), 1–25. [5] Lei Chen, Chen Gao, Xiaoyi Du, Hengliang Luo, Depeng Jin, Yong Li, and Meng Wang. 2025. Enhancing ID-based recommendation with large language models. 
+
+ACM Transactions on Information Systems 43, 5 (2025), 1–30. [6] Jingtao Ding, Yuhan Quan, Quanming Yao, Yong Li, and Depeng Jin. 2020. Simplify and robustify negative sampling for implicit collaborative filtering. Advances in Neural Information Processing Systems 33 (2020), 1094–1105. [7] Shijie Geng, Shuchang Liu, Zuohui Fu, Yingqiang Ge, and Yongfeng Zhang. 2022. Recommendation as language processing (rlp): A unified pretrain, personalized prompt & predict paradigm (p5). In Proceedings of the 16th ACM conference on recommender systems . 299–315. [8] Xavier Glorot and Yoshua Bengio. 2010. Understanding the difficulty of training deep feedforward neural networks. In Proceedings of the thirteenth international conference on artificial intelligence and statistics . JMLR Workshop and Conference Proceedings, 249–256. [9] Aaron Grattafiori, Abhimanyu Dubey, Abhinav Jauhri, Abhinav Pandey, Abhishek Kadian, Ahmad Al-Dahle, Aiesha Letman, Akhil Mathur, Alan Schelten, Alex Vaughan, et al . 2024. The llama 3 herd of models. arXiv preprint arXiv:2407.21783 
+
+(2024). [10] Xiangnan He, Kuan Deng, Xiang Wang, Yan Li, Yongdong Zhang, and Meng Wang. 2020. Lightgcn: Simplifying and powering graph convolution network for recommendation. In Proceedings of the 43rd International ACM SIGIR conference on research and development in Information Retrieval . 639–648. [11] Xiangnan He, Lizi Liao, Hanwang Zhang, Liqiang Nie, Xia Hu, and Tat-Seng Chua. 2017. Neural collaborative filtering. In Proceedings of the 26th international conference on world wide web . 173–182. [12] Henderi Henderi, Tri Wahyuningsih, and Efana Rahwanto. 2021. Comparison of Min-Max normalization and Z-Score Normalization in the K-nearest neighbor (kNN) Algorithm to Test the Accuracy of Types of Breast Cancer. International Journal of Informatics and Information Systems 4, 1 (2021), 13–20. [13] Wenyue Hua, Shuyuan Xu, Yingqiang Ge, and Yongfeng Zhang. 2023. How to index item ids for recommendation foundation models. In Proceedings of the Annual International ACM SIGIR Conference on Research and Development in Information Retrieval in the Asia Pacific Region . 195–204. [14] Tinglin Huang, Yuxiao Dong, Ming Ding, Zhen Yang, Wenzheng Feng, Xinyu Wang, and Jie Tang. 2021. Mixgcf: An improved training method for graph neural network-based recommender systems. In Proceedings of the 27th ACM SIGKDD Conference on Knowledge Discovery & Data Mining . 665–674. [15] Christopher C Johnson et al . 2014. Logistic matrix factorization for implicit feedback data. Advances in Neural Information Processing Systems 27, 78 (2014), 1–9. [16] Juha Kärkkäinen, Marcin Piątkowski, and Simon J Puglisi. 2017. String inference from longest-common-prefix array. In International Colloquium on Automata, Languages and Programming . Schloss Dagstuhl-Leibniz-Zentrum für Informatik, 62. [17] Diederik P Kingma and Jimmy Ba. 2015. Adam: A method for stochastic opti-mization. In The 3rd International Conference on Learning Representations .[18] Woosuk Kwon, Zhuohan Li, Siyuan Zhuang, Ying Sheng, Lianmin Zheng, Cody Hao Yu, Joseph Gonzalez, Hao Zhang, and Ion Stoica. 2023. Efficient memory management for large language model serving with pagedattention. In 
+
+Proceedings of the 29th symposium on operating systems principles . 611–626. [19] Riwei Lai, Li Chen, Yuhan Zhao, Rui Chen, and Qilong Han. 2023. Disentangled negative sampling for collaborative filtering. In Proceedings of the Sixteenth ACM International Conference on Web Search and Data Mining . 96–104. [20] Riwei Lai, Rui Chen, Qilong Han, Chi Zhang, and Li Chen. 2024. Adaptive hardness negative sampling for collaborative filtering. In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 38. 8645–8652. [21] Xinhang Li, Chong Chen, Xiangyu Zhao, Yong Zhang, and Chunxiao Xing. 2024. E4SRec: An Elegant Effective Efficient Extensible Solution of Large Language Models for Sequential Recommendation. In Proceedings of The Web Conference 2024 . ACM, 1–11. [22] George Ma, Yifei Wang, and Yisen Wang. 2023. Laplacian canonization: A min-imalist approach to sign and basis invariant spectral embedding. Advances in Neural Information Processing Systems 36 (2023), 11296–11337. [23] Haokai Ma, Ruobing Xie, Lei Meng, Xin Chen, Xu Zhang, Leyu Lin, and Jie Zhou. 2023. Exploring false hard negative sample in cross-domain recommendation. In 
+
+Proceedings of the 17th ACM conference on recommender systems . 502–514. [24] Suphakit Niwattanakul, Jatsada Singthongchai, Ekkachai Naenudorn, and Su-pachanun Wanapu. 2013. Using of Jaccard coefficient for keywords similarity. In Proceedings of the international multiconference of engineers and computer scientists , Vol. 1. 380–384. [25] Xubin Ren, Wei Wei, Lianghao Xia, Lixin Su, Suqi Cheng, Junfeng Wang, Dawei Yin, and Chao Huang. 2024. Representation learning with large language models for recommendation. In Proceedings of the ACM web conference 2024 . 3464–3475. [26] Steffen Rendle, Christoph Freudenthaler, Zeno Gantner, and Lars Schmidt-Thieme. 2009. BPR: Bayesian personalized ranking from implicit feedback. In Proceedings of the 25th Conference on Uncertainty in Artificial Intelligence .[27] Leheng Sheng, An Zhang, Yi Zhang, Yuxin Chen, Xiang Wang, and Tat-Seng Chua. [n. d.]. Language Representations Can be What Recommenders Need: Findings and Potentials. In The Thirteenth International Conference on Learning Representations .[28] Wentao Shi, Jiawei Chen, Fuli Feng, Jizhi Zhang, Junkang Wu, Chongming Gao, and Xiangnan He. 2023. On the theories behind hard negative sampling for recommendation. In Proceedings of the ACM Web Conference 2023 . 812–822. [29] Xiang Wang, Xiangnan He, Meng Wang, Fuli Feng, and Tat-Seng Chua. 2019. Neural graph collaborative filtering. In Proceedings of the 42nd international ACM SIGIR conference on Research and development in Information Retrieval . 165–174. [30] Wei Wei, Xubin Ren, Jiabin Tang, Qinyong Wang, Lixin Su, Suqi Cheng, Jun-feng Wang, Dawei Yin, and Chao Huang. 2024. Llmrec: Large language models with graph augmentation for recommendation. In Proceedings of the 17th ACM international conference on web search and data mining . 806–815. [31] Chuhan Wu, Fangzhao Wu, Yongfeng Huang, and Xing Xie. 2023. Personal-ized news recommendation: Methods and challenges. ACM Transactions on Information Systems 41, 1 (2023), 1–50. [32] Yunjia Xi, Weiwen Liu, Jianghao Lin, Xiaoling Cai, Hong Zhu, Jieming Zhu, Bo Chen, Ruiming Tang, Weinan Zhang, and Yong Yu. 2024. Towards open-world recommendation with knowledge augmentation from large language models. In 
+
+Proceedings of the 18th ACM Conference on Recommender Systems . 12–22. [33] Xin Xin, Xiangyuan Liu, Hanbing Wang, Pengjie Ren, Zhumin Chen, Jiahuan Lei, Xinlei Shi, Hengliang Luo, Joemon M Jose, Maarten de Rijke, et al . 2023. Improving implicit feedback-based recommendation through multi-behavior alignment. In Proceedings of the 46th international ACM SIGIR conference on research and development in information retrieval . 932–941. [34] Wujiang Xu, Zujie Liang, Jiaojiao Han, Xuying Ning, Wenfang Lin, Linxun Chen, Feng Wei, and Yongfeng Zhang. 2025. SLMRec: Distilling Large Language Models into Small for Sequential Recommendation. In International Conference on Learning Representations (ICLR 2025) .[35] Zhen Yang, Ming Ding, Tinglin Huang, Yukuo Cen, Junshuai Song, Bin Xu, Yuxiao Dong, and Jie Tang. 2024. Does negative sampling matter? a review with insights into its theory and applications. IEEE Transactions on Pattern Analysis Dual-Tree LLM-Enhanced Negative Sampling for Implicit Collaborative Filtering Conference’17, July 2017, Washington, DC, USA 
+
+and Machine Intelligence 46, 8 (2024), 5692–5711. [36] Zhen Yang, Ming Ding, Chang Zhou, Hongxia Yang, Jingren Zhou, and Jie Tang. 2020. Understanding negative sampling in graph representation learning. In Pro-ceedings of the 26th ACM SIGKDD international conference on knowledge discovery & data mining . 1666–1676. [37] Zhen Yang, Ming Ding, Xu Zou, Jie Tang, Bin Xu, Chang Zhou, and Hongxia Yang. 2022. Region or global? A principle for negative sampling in graph-based recommendation. IEEE Transactions on Knowledge and Data Engineering 35, 6 (2022), 6264–6277. [38] Jianwen Yin, Chenghao Liu, Jundong Li, BingTian Dai, Yun-chen Chen, Min Wu, and Jianling Sun. 2019. Online collaborative filtering with implicit feedback. In 
+
+International Conference on Database Systems for Advanced Applications . Springer, 433–448. [39] Chunxu Zhang, Guodong Long, Zijian Zhang, Zhiwei Li, Honglei Zhang, Qiang Yang, and Bo Yang. 2025. Personalized recommendation models in federated settings: A survey. IEEE Transactions on Knowledge and Data Engineering (2025). [40] Hongyi Zhang, Moustapha Cisse, Yann N Dauphin, and David Lopez-Paz. 2018. mixup: Beyond empirical risk minimization. In Proceedings of the 6th International Conference on Learning Representations .[41] Junjie Zhang, Ruobing Xie, Yupeng Hou, Xin Zhao, Leyu Lin, and Ji-Rong Wen. 2025. Recommendation as instruction following: A large language model em-powered recommendation approach. ACM Transactions on Information Systems 
+
+43, 5 (2025), 1–37. [42] Weinan Zhang, Tianqi Chen, Jun Wang, and Yong Yu. 2013. Optimizing top-n collaborative filtering via dynamic negative item sampling. In Proceedings of the 36th international ACM SIGIR conference on Research and development in information retrieval . 785–788. [43] Yang Zhang, Keqin Bao, Ming Yan, Wenjie Wang, Fuli Feng, and Xiangnan He. 2024. Text-like Encoding of Collaborative Information in Large Language Models for Recommendation. In Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) . 9181–9191. [44] Chu Zhao, Enneng Yang, Yuting Liu, Jianzhe Zhao, Guibing Guo, and Xingwei Wang. 2025. Can LLM-Driven Hard Negative Sampling Empower Collaborative Filtering? Findings and Potentials. arXiv preprint arXiv:2504.04726 (2025). [45] Kai Zhao, Yukun Zheng, Tao Zhuang, Xiang Li, and Xiaoyi Zeng. 2022. Joint learning of e-commerce search and recommendation with a unified graph neural network. In Proceedings of the Fifteenth ACM International Conference on Web Search and Data Mining . 1461–1469. [46] Yuhan Zhao, Rui Chen, Riwei Lai, Qilong Han, Hongtao Song, and Li Chen. 2023. Augmented Negative Sampling for Collaborative Filtering. In Proceedings of the 17th ACM Conference on Recommender Systems . 256–266. [47] Qiannan Zhu, Haobo Zhang, Qing He, and Zhicheng Dou. 2022. A gain-tuning dynamic negative sampler for recommendation. In Proceedings of the ACM web conference 2022 . 277–285.

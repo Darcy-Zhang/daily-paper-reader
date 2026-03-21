@@ -1,0 +1,784 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-03-21T09:38:08.981385+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 52,
+    "deep_cap": 6,
+    "deep_selected": 9,
+    "quick_candidates": 107,
+    "quick_skim_target": 11,
+    "quick_selected": 11
+  },
+  "deep_dive": [
+    {
+      "id": "2602.19367v1",
+      "title": "Time Series, Vision, and Language: Exploring the Limits of Alignment in Contrastive Representation Spaces",
+      "abstract": "The Platonic Representation Hypothesis posits that learned representations from models trained on different modalities converge to a shared latent structure of the world. However, this hypothesis has largely been examined in vision and language, and it remains unclear whether time series participate in such convergence. We first examine this in a trimodal setting and find that independently pretrained time series, vision, and language encoders exhibit near-orthogonal geometry in the absence of explicit coupling. We then apply post-hoc alignment by training projection heads over frozen encoders using contrastive learning, and analyze the resulting representations with respect to geometry, scaling behavior, and dependence on information density and input modality characteristics. Our investigation reveals that overall alignment in contrastive representation spaces improves with model size, but this alignment is asymmetric: time series align more strongly with visual representations than with text, and images can act as effective intermediaries between time series and language. We further see that richer textual descriptions improve alignment only up to a threshold; training on denser captions does not lead to further improvement. Analogous effects are observed for visual representations. Our findings shed light on considerations for building multimodal systems involving non-conventional data modalities beyond vision and language.",
+      "authors": [
+        "Pratham Yashwante",
+        "Rose Yu"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.CV"
+      ],
+      "published": "2026-02-22T22:39:37+00:00",
+      "link": "https://arxiv.org/pdf/2602.19367v1",
+      "tags": [
+        "keyword:对比学习进展",
+        "query:对比学习进展"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "trimodal contrastive alignment of time series, vision, and language encoders",
+      "llm_evidence_cn": "时间序列、视觉和语言编码器的三模态对比对齐",
+      "llm_evidence": "时间序列、视觉和语言编码器的三模态对比对齐",
+      "canonical_evidence": "时间序列、视觉和语言编码器的三模态对比对齐",
+      "llm_tldr_en": "Investigates contrastive alignment across time series, vision, and language to test Platonic Representation Hypothesis.",
+      "llm_tldr_cn": "研究时间序列、视觉和语言的对比对齐，验证柏拉图表示假说。",
+      "llm_tldr": "研究时间序列、视觉和语言的对比对齐，验证柏拉图表示假说。",
+      "llm_tags": [
+        "query:q4"
+      ],
+      "matched_query_tag": "query:q4",
+      "matched_query_text": "multimodal contrastive learning image text audio",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2602.24012v1",
+      "title": "InfoNCE Induces Gaussian Distribution",
+      "abstract": "Contrastive learning has become a cornerstone of modern representation learning, allowing training with massive unlabeled data for both task-specific and general (foundation) models. A prototypical loss in contrastive training is InfoNCE and its variants. In this work, we show that the InfoNCE objective induces Gaussian structure in representations that emerge from contrastive training. We establish this result in two complementary regimes. First, we show that under certain alignment and concentration assumptions, projections of the high-dimensional representation asymptotically approach a multivariate Gaussian distribution. Next, under less strict assumptions, we show that adding a small asymptotically vanishing regularization term that promotes low feature norm and high feature entropy leads to similar asymptotic results. We support our analysis with experiments on synthetic and CIFAR-10 datasets across multiple encoder architectures and sizes, demonstrating consistent Gaussian behavior. This perspective provides a principled explanation for commonly observed Gaussianity in contrastive representations. The resulting Gaussian model enables principled analytical treatment of learned representations and is expected to support a wide range of applications in contrastive learning.",
+      "authors": [
+        "Roy Betser",
+        "Eyal Gofer",
+        "Meir Yossef Levi",
+        "Guy Gilboa"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "eess.SP"
+      ],
+      "published": "2026-02-27T13:35:58+00:00",
+      "link": "https://arxiv.org/pdf/2602.24012v1",
+      "tags": [
+        "keyword:对比学习进展",
+        "query:对比学习进展"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "InfoNCE objective induces Gaussian structure in representations",
+      "llm_evidence_cn": "InfoNCE目标函数使表示呈现高斯结构",
+      "llm_evidence": "InfoNCE目标函数使表示呈现高斯结构",
+      "canonical_evidence": "InfoNCE目标函数使表示呈现高斯结构",
+      "llm_tldr_en": "Provides theoretical analysis showing InfoNCE induces Gaussian distribution in learned representations.",
+      "llm_tldr_cn": "理论分析表明InfoNCE使学习到的表示呈现高斯分布。",
+      "llm_tldr": "理论分析表明InfoNCE使学习到的表示呈现高斯分布。",
+      "llm_tags": [
+        "query:q9"
+      ],
+      "matched_query_tag": "query:q9",
+      "matched_query_text": "theoretical understanding of contrastive learning generalization",
+      "matched_requirement_id": "req-9",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.00193v1",
+      "title": "Multimodal Alignment Improves Generalizability of Genomic Biomarker Prediction in Computational Pathology",
+      "abstract": "Computational pathology models that use digitized histopathology whole-slide images have the potential to become a cost-effective and scalable alternative to molecular assays for the prediction of genomic biomarkers, a key task in precision oncology. However, as new genomic biomarkers are discovered or quantified, large, labeled datasets must be prospectively collected to train new models. To address this challenge, we developed MARBLE, a multimodal contrastive pretraining strategy that integrates structured biomarker knowledge into representation learning of histopathology images. MARBLE aligns histopathology-derived representations with representations of genomic biomarkers generated by a large language model (LLM) and a protein language model (PLM). This biologically informed alignment enables data-efficient generalization to novel, out-of-distribution biomarkers. Using the MSK-IMPACT cohort of over 40,000 patients across multiple biomarker panel versions, we design experiments grounded in real-world data to demonstrate the value of our proposed approach.",
+      "authors": [
+        "Ekaterina Redekop",
+        "Eric Zimmermann",
+        "Ava P Amini",
+        "Alex X Lu",
+        "Neil Tenenholtz",
+        "James Brian Hall",
+        "Lorin Crawford",
+        "Kristen A Severson"
+      ],
+      "primary_category": "q-bio.QM",
+      "categories": [
+        "q-bio.QM"
+      ],
+      "published": "2026-02-27T03:55:18+00:00",
+      "link": "https://arxiv.org/pdf/2603.00193v1",
+      "tags": [
+        "keyword:对比学习进展"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "multimodal contrastive pretraining aligning histopathology images with LLM-generated biomarker representations",
+      "llm_evidence_cn": "多模态对比预训练，对齐病理图像与LLM生成的生物标志物表示",
+      "llm_evidence": "多模态对比预训练，对齐病理图像与LLM生成的生物标志物表示",
+      "canonical_evidence": "多模态对比预训练，对齐病理图像与LLM生成的生物标志物表示",
+      "llm_tldr_en": "MARBLE uses multimodal contrastive learning to align pathology images with genomic biomarker knowledge from LLMs.",
+      "llm_tldr_cn": "MARBLE利用多模态对比学习对齐病理图像与LLM的基因组生物标志物知识。",
+      "llm_tldr": "MARBLE利用多模态对比学习对齐病理图像与LLM的基因组生物标志物知识。",
+      "llm_tags": [
+        "query:q4"
+      ],
+      "matched_query_tag": "query:q4",
+      "matched_query_text": "multimodal contrastive learning image text audio",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.02767v1",
+      "title": "ITO: Images and Texts as One via Synergizing Multiple Alignment and Training-Time Fusion",
+      "abstract": "Image-text contrastive pretraining has become a dominant paradigm for visual representation learning, yet existing methods often yield representations that remain partially organized by modality. We propose ITO, a framework addressing this limitation through two synergistic mechanisms. Multimodal multiple alignment enriches supervision by mining diverse image-text correspondences, while a lightweight training-time multimodal fusion module enforces structured cross-modal interaction. Crucially, the fusion module is discarded at inference, preserving the efficiency of standard dual-encoder architectures. Extensive experiments show that ITO consistently outperforms strong baselines across classification, retrieval, and multimodal benchmarks. Our analysis reveals that while multiple alignment drives discriminative power, training-time fusion acts as a critical structural regularizer -- eliminating the modality gap and stabilizing training dynamics to prevent the early saturation often observed in aggressive contrastive learning.",
+      "authors": [
+        "HanZpeng Liu",
+        "Yaqian Li",
+        "Zidan Wang",
+        "Shuoxi Zhang",
+        "Zonglin Zhao",
+        "Zihao Bo",
+        "Rinyoichi Takezoe",
+        "Kaiwen Long",
+        "Kun He"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI"
+      ],
+      "published": "2026-03-03T09:08:53+00:00",
+      "link": "https://arxiv.org/pdf/2603.02767v1",
+      "tags": [
+        "keyword:对比学习进展",
+        "query:对比学习进展"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "multimodal contrastive pretraining with image-text alignment",
+      "llm_evidence_cn": "图像-文本对齐的多模态对比预训练",
+      "llm_evidence": "图像-文本对齐的多模态对比预训练",
+      "canonical_evidence": "图像-文本对齐的多模态对比预训练",
+      "llm_tldr_en": "Proposes ITO framework for image-text contrastive pretraining with multiple alignment and training-time fusion, advancing multimodal CL.",
+      "llm_tldr_cn": "提出ITO框架，通过多重对齐和训练时融合改进图像-文本对比预训练，推进多模态对比学习。",
+      "llm_tldr": "提出ITO框架，通过多重对齐和训练时融合改进图像-文本对比预训练，推进多模态对比学习。",
+      "llm_tags": [
+        "query:q4"
+      ],
+      "matched_query_tag": "query:q4",
+      "matched_query_text": "multimodal contrastive learning image text audio",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.02767v2",
+      "title": "ITO: Images and Texts as One via Synergizing Multiple Alignment and Training-Time Fusion",
+      "abstract": "Image-text contrastive pretraining has become a dominant paradigm for visual representation learning, yet existing methods often yield representations that remain partially organized by modality. We propose ITO, a framework addressing this limitation through two synergistic mechanisms. Multimodal multiple alignment enriches supervision by mining diverse image-text correspondences, while a lightweight training-time multimodal fusion module enforces structured cross-modal interaction. Crucially, the fusion module is discarded at inference, preserving the efficiency of standard dual-encoder architectures. Extensive experiments show that ITO consistently outperforms strong baselines across classification, retrieval, and multimodal benchmarks. Our analysis reveals that while multiple alignment drives discriminative power, training-time fusion acts as a critical structural regularizer -- eliminating the modality gap and stabilizing training dynamics to prevent the early saturation often observed in aggressive contrastive learning.",
+      "authors": [
+        "HanZpeng Liu",
+        "Yaqian Li",
+        "Zidan Wang",
+        "Shuoxi Zhang",
+        "Zonglin Zhao",
+        "Zihao Bo",
+        "Rinyoichi Takezoe",
+        "Kaiwen Long",
+        "Kun He"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI"
+      ],
+      "published": "2026-03-03T09:08:53+00:00",
+      "link": "https://arxiv.org/pdf/2603.02767v2",
+      "tags": [
+        "keyword:对比学习进展",
+        "query:对比学习进展"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "image-text contrastive pretraining with multiple alignment",
+      "llm_evidence_cn": "图像-文本对比预训练与多对齐机制",
+      "llm_evidence": "图像-文本对比预训练与多对齐机制",
+      "canonical_evidence": "图像-文本对比预训练与多对齐机制",
+      "llm_tldr_en": "Proposes ITO for image-text contrastive learning with multimodal multiple alignment and training-time fusion.",
+      "llm_tldr_cn": "提出ITO框架，通过多模态多重对齐和训练时融合改进图像-文本对比预训练。",
+      "llm_tldr": "提出ITO框架，通过多模态多重对齐和训练时融合改进图像-文本对比预训练。",
+      "llm_tags": [
+        "query:q4"
+      ],
+      "matched_query_tag": "query:q4",
+      "matched_query_text": "multimodal contrastive learning image text audio",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.08202v1",
+      "title": "MM-TS: Multi-Modal Temperature and Margin Schedules for Contrastive Learning with Long-Tail Data",
+      "abstract": "Contrastive learning has become a fundamental approach in both uni-modal and multi-modal frameworks. This learning paradigm pulls positive pairs of samples closer while pushing negatives apart. In the uni-modal setting (e.g., image-based learning), previous research has shown that the strength of these forces can be controlled through the temperature parameter. In this work, we propose Multi-Modal Temperature and Margin Schedules (MM-TS), extending the concept of uni-modal temperature scheduling to multi-modal contrastive learning. Our method dynamically adjusts the temperature in the contrastive loss during training, modulating the attraction and repulsion forces in the multi-modal setting. Additionally, recognizing that standard multi-modal datasets often follow imbalanced, long-tail distributions, we adapt the temperature based on the local distribution of each training sample. Specifically, samples from dense clusters are assigned a higher temperature to better preserve their semantic structure. Furthermore, we demonstrate that temperature scheduling can be effectively integrated within a max-margin framework, thereby unifying the two predominant approaches in multi-modal contrastive learning: InfoNCE loss and max-margin objective. We evaluate our approach on four widely used image- and video-language datasets, Flickr30K, MSCOCO, EPIC-KITCHENS-100, and YouCook2, and show that our dynamic temperature and margin schedules improve performance and lead to new state-of-the-art results in the field.",
+      "authors": [
+        "Siarhei Sheludzko",
+        "Dhimitrios Duka",
+        "Bernt Schiele",
+        "Hilde Kuehne",
+        "Anna Kukleva"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI"
+      ],
+      "published": "2026-03-09T10:29:50+00:00",
+      "link": "https://arxiv.org/pdf/2603.08202v1",
+      "tags": [
+        "keyword:对比学习进展",
+        "query:对比学习进展"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "multi-modal temperature scheduling for contrastive learning",
+      "llm_evidence_cn": "多模态对比学习的温度调度方法",
+      "llm_evidence": "多模态对比学习的温度调度方法",
+      "canonical_evidence": "多模态对比学习的温度调度方法",
+      "llm_tldr_en": "Proposes MM-TS extending temperature scheduling to multi-modal contrastive learning with dynamic margin adjustment.",
+      "llm_tldr_cn": "提出MM-TS方法，将温度调度扩展到多模态对比学习，动态调整边界。",
+      "llm_tldr": "提出MM-TS方法，将温度调度扩展到多模态对比学习，动态调整边界。",
+      "llm_tags": [
+        "query:q4"
+      ],
+      "matched_query_tag": "query:q4",
+      "matched_query_text": "multimodal contrastive learning image text audio",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.14482v1",
+      "title": "V-JEPA 2.1: Unlocking Dense Features in Video Self-Supervised Learning",
+      "abstract": "We present V-JEPA 2.1, a family of self-supervised models that learn dense, high-quality visual representations for both images and videos while retaining strong global scene understanding. The approach combines four key components. First, a dense predictive loss uses a masking-based objective in which both visible and masked tokens contribute to the training signal, encouraging explicit spatial and temporal grounding. Second, deep self-supervision applies the self-supervised objective hierarchically across multiple intermediate encoder layers to improve representation quality. Third, multi-modal tokenizers enable unified training across images and videos. Finally, the model benefits from effective scaling in both model capacity and training data. Together, these design choices produce representations that are spatially structured, semantically coherent, and temporally consistent.   Empirically, V-JEPA 2.1 achieves state-of-the-art performance on several challenging benchmarks, including 7.71 mAP on Ego4D for short-term object-interaction anticipation and 40.8 Recall@5 on EPIC-KITCHENS for high-level action anticipation, as well as a 20-point improvement in real-robot grasping success rate over V-JEPA-2 AC. The model also demonstrates strong performance in robotic navigation (5.687 ATE on TartanDrive), depth estimation (0.307 RMSE on NYUv2 with a linear probe), and global recognition (77.7 on Something-Something-V2). These results show that V-JEPA 2.1 significantly advances the state of the art in dense visual understanding and world modeling.",
+      "authors": [
+        "Lorenzo Mur-Labadia",
+        "Matthew Muckley",
+        "Amir Bar",
+        "Mido Assran",
+        "Koustuv Sinha",
+        "Mike Rabbat",
+        "Yann LeCun",
+        "Nicolas Ballas",
+        "Adrien Bardes"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-03-15T17:02:40+00:00",
+      "link": "https://arxiv.org/pdf/2603.14482v1",
+      "tags": [
+        "keyword:对比学习进展",
+        "query:对比学习进展"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "self-supervised visual pretraining with dense features",
+      "llm_evidence_cn": "自监督视觉预训练与密集特征",
+      "llm_evidence": "自监督视觉预训练与密集特征",
+      "canonical_evidence": "自监督视觉预训练与密集特征",
+      "llm_tldr_en": "V-JEPA 2.1 advances self-supervised visual pretraining with dense predictive loss and deep self-supervision.",
+      "llm_tldr_cn": "V-JEPA 2.1通过密集预测损失和深度自监督推进自监督视觉预训练。",
+      "llm_tldr": "V-JEPA 2.1通过密集预测损失和深度自监督推进自监督视觉预训练。",
+      "llm_tags": [
+        "query:q7"
+      ],
+      "matched_query_tag": "query:q7",
+      "matched_query_text": "latest breakthrough methods in self supervised visual pretraining",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.14482v2",
+      "title": "V-JEPA 2.1: Unlocking Dense Features in Video Self-Supervised Learning",
+      "abstract": "We present V-JEPA 2.1, a family of self-supervised models that learn dense, high-quality visual representations for both images and videos while retaining strong global scene understanding. The approach combines four key components. First, a dense predictive loss uses a masking-based objective in which both visible and masked tokens contribute to the training signal, encouraging explicit spatial and temporal grounding. Second, deep self-supervision applies the self-supervised objective hierarchically across multiple intermediate encoder layers to improve representation quality. Third, multi-modal tokenizers enable unified training across images and videos. Finally, the model benefits from effective scaling in both model capacity and training data. Together, these design choices produce representations that are spatially structured, semantically coherent, and temporally consistent.   Empirically, V-JEPA 2.1 achieves state-of-the-art performance on several challenging benchmarks, including 7.71 mAP on Ego4D for short-term object-interaction anticipation and 40.8 Recall@5 on EPIC-KITCHENS for high-level action anticipation, as well as a 20-point improvement in real-robot grasping success rate over V-JEPA-2 AC. The model also demonstrates strong performance in robotic navigation (5.687 ATE on TartanDrive), depth estimation (0.307 RMSE on NYUv2 with a linear probe), and global recognition (77.7 on Something-Something-V2). These results show that V-JEPA 2.1 significantly advances the state of the art in dense visual understanding and world modeling.",
+      "authors": [
+        "Lorenzo Mur-Labadia",
+        "Matthew Muckley",
+        "Amir Bar",
+        "Mido Assran",
+        "Koustuv Sinha",
+        "Mike Rabbat",
+        "Yann LeCun",
+        "Nicolas Ballas",
+        "Adrien Bardes"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-03-15T17:02:40+00:00",
+      "link": "https://arxiv.org/pdf/2603.14482v2",
+      "tags": [
+        "keyword:对比学习进展",
+        "query:对比学习进展"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "self-supervised visual pretraining with dense predictive objectives",
+      "llm_evidence_cn": "自监督视觉预训练，采用密集预测目标",
+      "llm_evidence": "自监督视觉预训练，采用密集预测目标",
+      "canonical_evidence": "自监督视觉预训练，采用密集预测目标",
+      "llm_tldr_en": "Presents V-JEPA 2.1, a self-supervised model learning dense visual representations through masking-based predictive objectives for images and videos.",
+      "llm_tldr_cn": "提出V-JEPA 2.1，通过基于掩码的预测目标学习图像和视频的密集自监督视觉表示。",
+      "llm_tldr": "提出V-JEPA 2.1，通过基于掩码的预测目标学习图像和视频的密集自监督视觉表示。",
+      "llm_tags": [
+        "query:q7"
+      ],
+      "matched_query_tag": "query:q7",
+      "matched_query_text": "latest breakthrough methods in self supervised visual pretraining",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.18111v1",
+      "title": "BoundAD: Boundary-Aware Negative Generation for Time Series Anomaly Detection",
+      "abstract": "Contrastive learning methods for time series anomaly detection (TSAD) heavily depend on the quality of negative sample construction. However, existing strategies based on random perturbations or pseudo-anomaly injection often struggle to simultaneously preserve temporal semantic consistency and provide effective decision-boundary supervision. Most existing methods rely on prior anomaly injection, while overlooking the potential of generating hard negatives near the data manifold boundary directly from normal samples themselves. To address this issue, we propose a reconstruction-driven boundary negative generation framework that automatically constructs hard negatives through the reconstruction process of normal samples. Specifically, the method first employs a reconstruction network to capture normal temporal patterns, and then introduces a reinforcement learning strategy to adaptively adjust the optimization update magnitude according to the current reconstruction state. In this way, boundary-shifted samples close to the normal data manifold can be induced along the reconstruction trajectory and further used for subsequent contrastive representation learning. Unlike existing methods that depend on explicit anomaly injection, the proposed framework does not require predefined anomaly patterns, but instead mines more challenging boundary negatives from the model's own learning dynamics. Experimental results show that the proposed method effectively improves anomaly representation learning and achieves competitive detection performance on the current dataset.",
+      "authors": [
+        "Xiancheng Wang",
+        "Lin Wang",
+        "Zhibo Zhang",
+        "Rui Wang",
+        "Minghang Zhao"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "stat.ML"
+      ],
+      "published": "2026-03-18T13:50:59+00:00",
+      "link": "https://arxiv.org/pdf/2603.18111v1",
+      "tags": [
+        "keyword:对比学习进展"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "boundary-aware hard negative generation for contrastive learning",
+      "llm_evidence_cn": "边界感知困难负样本生成用于对比学习",
+      "llm_evidence": "边界感知困难负样本生成用于对比学习",
+      "canonical_evidence": "边界感知困难负样本生成用于对比学习",
+      "llm_tldr_en": "Proposes reconstruction-driven boundary negative generation framework that constructs hard negatives near data manifold boundary.",
+      "llm_tldr_cn": "提出基于重建的边界负样本生成框架，在数据流形边界附近构建困难负样本。",
+      "llm_tldr": "提出基于重建的边界负样本生成框架，在数据流形边界附近构建困难负样本。",
+      "llm_tags": [
+        "query:q3"
+      ],
+      "matched_query_tag": "query:q3",
+      "matched_query_text": "hard negative sampling techniques in contrastive learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2602.03563v1",
+      "title": "ACL: Aligned Contrastive Learning Improves BERT and Multi-exit BERT Fine-tuning",
+      "abstract": "Despite its success in self-supervised learning, contrastive learning is less studied in the supervised setting. In this work, we first use a set of pilot experiments to show that in the supervised setting, the cross-entropy loss objective (CE) and the contrastive learning objective often conflict with each other, thus hindering the applications of CL in supervised settings. To resolve this problem, we introduce a novel \\underline{A}ligned \\underline{C}ontrastive \\underline{L}earning (ACL) framework. First, ACL-Embed regards label embeddings as extra augmented samples with different labels and employs contrastive learning to align the label embeddings with its samples' representations. Second, to facilitate the optimization of ACL-Embed objective combined with the CE loss, we propose ACL-Grad, which will discard the ACL-Embed term if the two objectives are in conflict. To further enhance the performances of intermediate exits of multi-exit BERT, we further propose cross-layer ACL (ACL-CL), which is to ask the teacher exit to guide the optimization of student shallow exits. Extensive experiments on the GLUE benchmark results in the following takeaways: (a) ACL-BRT outperforms or performs comparably with CE and CE+SCL on the GLUE tasks; (b) ACL, especially CL-ACL, significantly surpasses the baseline methods on the fine-tuning of multi-exit BERT, thus providing better quality-speed tradeoffs for low-latency applications.",
+      "authors": [
+        "Wei Zhu"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-02-03T14:08:07+00:00",
+      "link": "https://arxiv.org/pdf/2602.03563v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "novel aligned contrastive learning framework resolving objective conflicts",
+      "llm_evidence_cn": "解决目标冲突的新型对齐对比学习框架",
+      "llm_evidence": "解决目标冲突的新型对齐对比学习框架",
+      "canonical_evidence": "解决目标冲突的新型对齐对比学习框架",
+      "llm_tldr_en": "Introduces ACL framework aligning label embeddings with samples to resolve CE-CL conflicts in supervised setting.",
+      "llm_tldr_cn": "提出ACL框架，通过对齐标签嵌入与样本，解决监督设置中交叉熵与对比学习的冲突。",
+      "llm_tldr": "提出ACL框架，通过对齐标签嵌入与样本，解决监督设置中交叉熵与对比学习的冲突。",
+      "llm_tags": [
+        "query:q9"
+      ],
+      "matched_query_tag": "query:q9",
+      "matched_query_text": "Novel contrastive loss functions and objective designs",
+      "matched_requirement_id": "req-9",
+      "selection_source": "carryover_cache",
+      "paper_id": "2602.03563v1",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2602.18811v1",
+      "title": "Learning Multi-Modal Prototypes for Cross-Domain Few-Shot Object Detection",
+      "abstract": "Cross-Domain Few-Shot Object Detection (CD-FSOD) aims to detect novel classes in unseen target domains given only a few labeled examples. While open-vocabulary detectors built on vision-language models (VLMs) transfer well, they depend almost entirely on text prompts, which encode domain-invariant semantics but miss domain-specific visual information needed for precise localization under few-shot supervision. We propose a dual-branch detector that Learns Multi-modal Prototypes, dubbed LMP, by coupling textual guidance with visual exemplars drawn from the target domain. A Visual Prototype Construction module aggregates class-level prototypes from support RoIs and dynamically generates hard-negative prototypes in query images via jittered boxes, capturing distractors and visually similar backgrounds. In the visual-guided branch, we inject these prototypes into the detection pipeline with components mirrored from the text branch as the starting point for training, while a parallel text-guided branch preserves open-vocabulary semantics. The branches are trained jointly and ensembled at inference by combining semantic abstraction with domain-adaptive details. On six cross-domain benchmark datasets and standard 1/5/10-shot settings, our method achieves state-of-the-art or highly competitive mAP.",
+      "authors": [
+        "Wanqi Wang",
+        "Jingcai Guo",
+        "Yuxiang Cai",
+        "Zhi Chen"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-02-21T12:10:48+00:00",
+      "link": "https://arxiv.org/pdf/2602.18811v1",
+      "tags": [
+        "keyword:对比学习进展",
+        "query:对比学习进展"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "dynamically generates hard-negative prototypes via jittered boxes",
+      "llm_evidence_cn": "通过抖动框动态生成难负样本原型",
+      "llm_evidence": "通过抖动框动态生成难负样本原型",
+      "canonical_evidence": "通过抖动框动态生成难负样本原型",
+      "llm_tldr_en": "Proposes multi-modal prototype learning with hard-negative generation for cross-domain few-shot detection.",
+      "llm_tldr_cn": "提出多模态原型学习，通过难负样本生成实现跨域小样本检测。",
+      "llm_tldr": "提出多模态原型学习，通过难负样本生成实现跨域小样本检测。",
+      "llm_tags": [
+        "query:q3"
+      ],
+      "matched_query_tag": "query:q3",
+      "matched_query_text": "hard negative sampling techniques in contrastive learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2602.18066v1",
+      "title": "Faster Training, Fewer Labels: Self-Supervised Pretraining for Fine-Grained BEV Segmentation",
+      "abstract": "Dense Bird's Eye View (BEV) semantic maps are central to autonomous driving, yet current multi-camera methods depend on costly, inconsistently annotated BEV ground truth. We address this limitation with a two-phase training strategy for fine-grained road marking segmentation that removes full supervision during pretraining and halves the amount of training data during fine-tuning while still outperforming the comparable supervised baseline model. During the self-supervised pretraining, BEVFormer predictions are differentiably reprojected into the image plane and trained against multi-view semantic pseudo-labels generated by the widely used semantic segmentation model Mask2Former. A temporal loss encourages consistency across frames. The subsequent supervised fine-tuning phase requires only 50% of the dataset and significantly less training time. With our method, the fine-tuning benefits from rich priors learned during pretraining boosting the performance and BEV segmentation quality (up to +2.5pp mIoU over the fully supervised baseline) on nuScenes. It simultaneously halves the usage of annotation data and reduces total training time by up to two thirds. The results demonstrate that differentiable reprojection plus camera perspective pseudo labels yields transferable BEV features and a scalable path toward reduced-label autonomous perception.",
+      "authors": [
+        "Daniel Busch",
+        "Christian Bohn",
+        "Thomas Kurbiel",
+        "Klaus Friedrichs",
+        "Richard Meyes",
+        "Tobias Meisen"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-02-20T08:37:58+00:00",
+      "link": "https://arxiv.org/pdf/2602.18066v1",
+      "tags": [
+        "keyword:对比学习进展",
+        "query:对比学习进展"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "self-supervised pretraining for visual representation learning",
+      "llm_evidence_cn": "自监督视觉预训练方法",
+      "llm_evidence": "自监督视觉预训练方法",
+      "canonical_evidence": "自监督视觉预训练方法",
+      "llm_tldr_en": "Self-supervised pretraining for BEV segmentation using temporal consistency and pseudo-labels, reducing labeled data needs.",
+      "llm_tldr_cn": "利用时序一致性和伪标签进行BEV分割的自监督预训练，减少标注数据需求。",
+      "llm_tldr": "利用时序一致性和伪标签进行BEV分割的自监督预训练，减少标注数据需求。",
+      "llm_tags": [
+        "query:q7"
+      ],
+      "matched_query_tag": "query:q7",
+      "matched_query_text": "latest breakthrough methods in self supervised visual pretraining",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2602.03563v2",
+      "title": "ACL: Aligned Contrastive Learning Improves BERT and Multi-exit BERT Fine-tuning",
+      "abstract": "Despite its success in self-supervised learning, contrastive learning is less studied in the supervised setting. In this work, we first use a set of pilot experiments to show that in the supervised setting, the cross-entropy loss objective (CE) and the contrastive learning objective often conflict with each other, thus hindering the applications of CL in supervised settings. To resolve this problem, we introduce a novel \\underline{A}ligned \\underline{C}ontrastive \\underline{L}earning (ACL) framework. First, ACL-Embed regards label embeddings as extra augmented samples with different labels and employs contrastive learning to align the label embeddings with its samples' representations. Second, to facilitate the optimization of ACL-Embed objective combined with the CE loss, we propose ACL-Grad, which will discard the ACL-Embed term if the two objectives are in conflict. To further enhance the performances of intermediate exits of multi-exit BERT, we further propose cross-layer ACL (ACL-CL), which is to ask the teacher exit to guide the optimization of student shallow exits. Extensive experiments on the GLUE benchmark results in the following takeaways: (a) ACL-BRT outperforms or performs comparably with CE and CE+SCL on the GLUE tasks; (b) ACL, especially CL-ACL, significantly surpasses the baseline methods on the fine-tuning of multi-exit BERT, thus providing better quality-speed tradeoffs for low-latency applications.",
+      "authors": [
+        "Liz Li",
+        "Wei Zhu"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-02-03T14:08:07+00:00",
+      "link": "https://arxiv.org/pdf/2602.03563v2",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "novel aligned contrastive learning framework with label embedding alignment",
+      "llm_evidence_cn": "提出对齐对比学习框架，设计新颖的对比学习目标",
+      "llm_evidence": "提出对齐对比学习框架，设计新颖的对比学习目标",
+      "canonical_evidence": "提出对齐对比学习框架，设计新颖的对比学习目标",
+      "llm_tldr_en": "Proposes ACL framework that aligns label embeddings with sample representations via contrastive learning to resolve CE-CL conflict in supervised settings.",
+      "llm_tldr_cn": "提出ACL框架，通过对比学习对齐标签嵌入与样本表示，解决监督学习中交叉熵与对比学习的冲突。",
+      "llm_tldr": "提出ACL框架，通过对比学习对齐标签嵌入与样本表示，解决监督学习中交叉熵与对比学习的冲突。",
+      "llm_tags": [
+        "query:q9"
+      ],
+      "matched_query_tag": "query:q9",
+      "matched_query_text": "Novel contrastive loss functions and objective designs",
+      "matched_requirement_id": "req-9",
+      "selection_source": "carryover_cache",
+      "paper_id": "2602.03563v2",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2602.20767v1",
+      "title": "SPP-SCL: Semi-Push-Pull Supervised Contrastive Learning for Image-Text Sentiment Analysis and Beyond",
+      "abstract": "Existing Image-Text Sentiment Analysis (ITSA) methods may suffer from inconsistent intra-modal and inter-modal sentiment relationships. Therefore, we develop a method that balances before fusing to solve the issue of vision-language imbalance intra-modal and inter-modal sentiment relationships; that is, a Semi-Push-Pull Supervised Contrastive Learning (SPP-SCL) method is proposed. Specifically, the method is implemented using a novel two-step strategy, namely first using the proposed intra-modal supervised contrastive learning to pull the relationships between the intra-modal and then performing a well-designed conditional execution statement. If the statement result is false, our method will perform the second step, which is inter-modal supervised contrastive learning to push away the relationships between inter-modal. The two-step strategy will balance the intra-modal and inter-modal relationships to achieve the purpose of relationship consistency and finally perform cross-modal feature fusion for sentiment analysis and detection. Experimental studies on three public image-text sentiment and sarcasm detection datasets demonstrate that SPP-SCL significantly outperforms state-of-the-art methods by a large margin and is more discriminative in sentiment.",
+      "authors": [
+        "Jiesheng Wu",
+        "Shengrong Li"
+      ],
+      "primary_category": "cs.MM",
+      "categories": [
+        "cs.MM"
+      ],
+      "published": "2026-02-24T10:59:59+00:00",
+      "link": "https://arxiv.org/pdf/2602.20767v1",
+      "tags": [
+        "keyword:对比学习进展"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Semi-Push-Pull Supervised Contrastive Learning for Image-Text",
+      "llm_evidence_cn": "图像文本的半推拉监督对比学习",
+      "llm_evidence": "图像文本的半推拉监督对比学习",
+      "canonical_evidence": "图像文本的半推拉监督对比学习",
+      "llm_tldr_en": "Proposes supervised contrastive learning balancing intra-modal and inter-modal sentiment relationships.",
+      "llm_tldr_cn": "提出监督对比学习平衡模态内和模态间情感关系。",
+      "llm_tldr": "提出监督对比学习平衡模态内和模态间情感关系。",
+      "llm_tags": [
+        "query:q4"
+      ],
+      "matched_query_tag": "query:q4",
+      "matched_query_text": "multimodal contrastive learning image text audio",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2602.18249v1",
+      "title": "Dual-Tree LLM-Enhanced Negative Sampling for Implicit Collaborative Filtering",
+      "abstract": "Negative sampling is a pivotal technique in implicit collaborative filtering (CF) recommendation, enabling efficient and effective training by contrasting observed interactions with sampled unobserved ones.   Recently, large language models (LLMs) have shown promise in recommender systems; however, research on LLM-empowered negative sampling remains underexplored.   Existing methods heavily rely on textual information and task-specific fine-tuning, limiting practical applicability.   To address this limitation, we propose a text-free and fine-tuning-free Dual-Tree LLM-enhanced Negative Sampling method (DTL-NS).   It consists of two modules: (i) an offline false negative identification module that leverages hierarchical index trees to transform collaborative structural and latent semantic information into structured item-ID encodings for LLM inference, enabling accurate identification of false negatives; and (ii) a multi-view hard negative sampling module that combines user-item preference scores with item-item hierarchical similarities from these encodings to mine high-quality hard negatives, thus improving models' discriminative ability.   Extensive experiments demonstrate the effectiveness of DTL-NS. For example, on the Amazon-sports dataset, DTL-NS outperforms the strongest baseline by 10.64% and 19.12% in Recall@20 and NDCG@20, respectively.   Moreover, DTL-NS can be integrated into various implicit CF models and negative sampling methods, consistently enhancing their performance.",
+      "authors": [
+        "Jiayi Wu",
+        "Zhengyu Wu",
+        "Xunkai Li",
+        "Rong-Hua Li",
+        "Guoren Wang"
+      ],
+      "primary_category": "cs.IR",
+      "categories": [
+        "cs.IR"
+      ],
+      "published": "2026-02-20T14:32:41+00:00",
+      "link": "https://arxiv.org/pdf/2602.18249v1",
+      "tags": [
+        "keyword:对比学习进展"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "LLM-enhanced negative sampling with false negative identification",
+      "llm_evidence_cn": "LLM增强的负采样与假负样本识别",
+      "llm_evidence": "LLM增强的负采样与假负样本识别",
+      "canonical_evidence": "LLM增强的负采样与假负样本识别",
+      "llm_tldr_en": "DTL-NS uses dual-tree LLM structure for negative sampling in collaborative filtering without fine-tuning.",
+      "llm_tldr_cn": "DTL-NS利用双树LLM结构进行协同过滤中的负采样，无需微调。",
+      "llm_tldr": "DTL-NS利用双树LLM结构进行协同过滤中的负采样，无需微调。",
+      "llm_tags": [
+        "query:q3"
+      ],
+      "matched_query_tag": "query:q3",
+      "matched_query_text": "hard negative sampling techniques in contrastive learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2602.09066v1",
+      "title": "Spectral Disentanglement and Enhancement: A Dual-domain Contrastive Framework for Representation Learning",
+      "abstract": "Large-scale multimodal contrastive learning has recently achieved impressive success in learning rich and transferable representations, yet it remains fundamentally limited by the uniform treatment of feature dimensions and the neglect of the intrinsic spectral structure of the learned features. Empirical evidence indicates that high-dimensional embeddings tend to collapse into narrow cones, concentrating task-relevant semantics in a small subspace, while the majority of dimensions remain occupied by noise and spurious correlations. Such spectral imbalance and entanglement undermine model generalization. We propose Spectral Disentanglement and Enhancement (SDE), a novel framework that bridges the gap between the geometry of the embedded spaces and their spectral properties. Our approach leverages singular value decomposition to adaptively partition feature dimensions into strong signals that capture task-critical semantics, weak signals that reflect ancillary correlations, and noise representing irrelevant perturbations. A curriculum-based spectral enhancement strategy is then applied, selectively amplifying informative components with theoretical guarantees on training stability. Building upon the enhanced features, we further introduce a dual-domain contrastive loss that jointly optimizes alignment in both the feature and spectral spaces, effectively integrating spectral regularization into the training process and encouraging richer, more robust representations. Extensive experiments on large-scale multimodal benchmarks demonstrate that SDE consistently improves representation robustness and generalization, outperforming state-of-the-art methods. SDE integrates seamlessly with existing contrastive pipelines, offering an effective solution for multimodal representation learning.",
+      "authors": [
+        "Jinjin Guo",
+        "Yexin Li",
+        "Zhichao Huang",
+        "Jun Fang",
+        "Zhiyuan Liu",
+        "Chao Liu",
+        "Pengzhang Liu",
+        "Qixia Jiang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-02-09T07:29:43+00:00",
+      "link": "https://arxiv.org/pdf/2602.09066v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "dual-domain contrastive framework for representation learning with spectral analysis",
+      "llm_evidence_cn": "用于表示学习的双域对比框架与谱分析",
+      "llm_evidence": "用于表示学习的双域对比框架与谱分析",
+      "canonical_evidence": "用于表示学习的双域对比框架与谱分析",
+      "llm_tldr_en": "Proposes spectral disentanglement framework addressing feature collapse in multimodal contrastive learning.",
+      "llm_tldr_cn": "提出谱解耦框架，解决多模态对比学习中的特征坍缩问题。",
+      "llm_tldr": "提出谱解耦框架，解决多模态对比学习中的特征坍缩问题。",
+      "llm_tags": [
+        "query:q4"
+      ],
+      "matched_query_tag": "query:q4",
+      "matched_query_text": "contrastive learning representation learning",
+      "matched_requirement_id": "req-4",
+      "selection_source": "carryover_cache",
+      "paper_id": "2602.09066v1",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2602.20818v1",
+      "title": "GatedCLIP: Gated Multimodal Fusion for Hateful Memes Detection",
+      "abstract": "Detecting hateful content in multimodal memes presents unique challenges, as harmful messages often emerge from the complex interplay between benign images and text. We propose GatedCLIP, a Vision-Language model that enhances CLIP's multimodal capabilities with specialized architectural improvements for hateful memes detection. Our approach introduces learned projection heads that map CLIP embeddings to a task-optimized semantic space, a dynamic gated fusion mechanism that adaptively weights visual and textual features, and a contrastive learning objective that maintains cross-modal semantic alignment. Experiments on the Hateful Memes dataset demonstrate that GatedCLIP achieves an AUROC of 0.66, substantially outperforming the CLIP baseline (AUROC 0.49) while maintaining computational efficiency with only 350K trainable parameters.",
+      "authors": [
+        "Yingying Guo",
+        "Ke Zhang",
+        "Zirong Zeng"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-02-24T11:54:54+00:00",
+      "link": "https://arxiv.org/pdf/2602.20818v1",
+      "tags": [
+        "keyword:对比学习进展"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "multimodal contrastive learning with gated fusion for vision-language tasks",
+      "llm_evidence_cn": "门控融合的多模态对比学习用于视觉语言任务",
+      "llm_evidence": "门控融合的多模态对比学习用于视觉语言任务",
+      "canonical_evidence": "门控融合的多模态对比学习用于视觉语言任务",
+      "llm_tldr_en": "Proposes GatedCLIP with dynamic gated fusion and contrastive objective for hateful memes detection",
+      "llm_tldr_cn": "提出GatedCLIP，采用动态门控融合与对比目标进行仇恨模因检测",
+      "llm_tldr": "提出GatedCLIP，采用动态门控融合与对比目标进行仇恨模因检测",
+      "llm_tags": [
+        "query:q4"
+      ],
+      "matched_query_tag": "query:q4",
+      "matched_query_text": "multimodal contrastive learning image text audio",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2602.18996v1",
+      "title": "Learning Cross-View Object Correspondence via Cycle-Consistent Mask Prediction",
+      "abstract": "We study the task of establishing object-level visual correspondence across different viewpoints in videos, focusing on the challenging egocentric-to-exocentric and exocentric-to-egocentric scenarios. We propose a simple yet effective framework based on conditional binary segmentation, where an object query mask is encoded into a latent representation to guide the localization of the corresponding object in a target video. To encourage robust, view-invariant representations, we introduce a cycle-consistency training objective: the predicted mask in the target view is projected back to the source view to reconstruct the original query mask. This bidirectional constraint provides a strong self-supervisory signal without requiring ground-truth annotations and enables test-time training (TTT) at inference. Experiments on the Ego-Exo4D and HANDAL-X benchmarks demonstrate the effectiveness of our optimization objective and TTT strategy, achieving state-of-the-art performance. The code is available at https://github.com/shannany0606/CCMP.",
+      "authors": [
+        "Shannan Yan",
+        "Leqi Zheng",
+        "Keyu Lv",
+        "Jingchen Ni",
+        "Hongyang Wei",
+        "Jiajun Zhang",
+        "Guangting Wang",
+        "Jing Lyu",
+        "Chun Yuan",
+        "Fengyun Rao"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-02-22T00:53:03+00:00",
+      "link": "https://arxiv.org/pdf/2602.18996v1",
+      "tags": [
+        "keyword:对比学习进展",
+        "query:对比学习进展"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "self-supervised learning with cycle-consistency objective",
+      "llm_evidence_cn": "自监督学习与循环一致性目标",
+      "llm_evidence": "自监督学习与循环一致性目标",
+      "canonical_evidence": "自监督学习与循环一致性目标",
+      "llm_tldr_en": "Cycle-consistent mask prediction enables self-supervised cross-view object correspondence learning.",
+      "llm_tldr_cn": "循环一致性掩码预测实现自监督跨视角物体对应学习。",
+      "llm_tldr": "循环一致性掩码预测实现自监督跨视角物体对应学习。",
+      "llm_tags": [
+        "query:q2"
+      ],
+      "matched_query_tag": "query:q2",
+      "matched_query_text": "self-supervised representation learning with contrastive objectives",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2602.09229v1",
+      "title": "Beyond the Unit Hypersphere: Embedding Magnitude in Contrastive Learning",
+      "abstract": "Cosine similarity is prevalent in contrastive learning, yet it makes an implicit assumption: embedding magnitude is noise. Prior work occasionally found dot product and cosine similarity comparable, but left unanswered WHAT information magnitude carries, WHEN it helps, and HOW to leverage it. We conduct a systematic study through a $2 \\times 2$ ablation that independently controls input-side and output-side normalization across text and vision models. Our findings reveal three key insights. First, in text retrieval, output (document) magnitude strongly correlates with relevance (Cohen's $d$ up to 1.80), yielding the largest gains on reasoning-intensive tasks. Second, input and output magnitudes serve asymmetric roles: output magnitude directly scales similarity scores while input magnitude modulates training dynamics. Third, magnitude learning benefits asymmetric tasks (text retrieval, RAG) but harms symmetric tasks (STS, text-image alignment). These findings establish a task symmetry principle: the choice between cosine and dot product depends on whether the task has distinct input roles, enabling cost-free improvements by simply removing an unnecessary constraint.",
+      "authors": [
+        "Xincan Feng",
+        "Taro Watanabe"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.IR"
+      ],
+      "published": "2026-02-09T21:53:23+00:00",
+      "link": "https://arxiv.org/pdf/2602.09229v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "systematic study of embedding magnitude in contrastive learning beyond cosine similarity",
+      "llm_evidence_cn": "对比学习中嵌入幅度的系统性研究",
+      "llm_evidence": "对比学习中嵌入幅度的系统性研究",
+      "canonical_evidence": "对比学习中嵌入幅度的系统性研究",
+      "llm_tldr_en": "Systematically studies when and how embedding magnitude improves contrastive learning beyond unit hypersphere",
+      "llm_tldr_cn": "系统研究嵌入幅度何时及如何改进对比学习",
+      "llm_tldr": "系统研究嵌入幅度何时及如何改进对比学习",
+      "llm_tags": [
+        "query:q9"
+      ],
+      "matched_query_tag": "query:q9",
+      "matched_query_text": "Novel contrastive loss functions and objective designs",
+      "matched_requirement_id": "req-9",
+      "selection_source": "carryover_cache",
+      "paper_id": "2602.09229v1",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2602.22419v1",
+      "title": "CLIP Is Shortsighted: Paying Attention Beyond the First Sentence",
+      "abstract": "CLIP models learn transferable multi-modal features via image-text contrastive learning on internet-scale data. They are widely used in zero-shot classification, multi-modal retrieval, text-to-image diffusion, and as image encoders in large vision-language models. However, CLIP's pretraining is dominated by images paired with short captions, biasing the model toward encoding simple descriptions of salient objects and leading to coarse alignment on complex scenes and dense descriptions. While recent work mitigates this by fine-tuning on small-scale long-caption datasets, we identify an important common bias: both human- and LLM-generated long captions typically begin with a one-sentence summary followed by a detailed description. We show that this acts as a shortcut during training, concentrating attention on the opening sentence and early tokens and weakening alignment over the rest of the caption. To resolve this, we introduce DeBias-CLIP, which removes the summary sentence during training and applies sentence sub-sampling and text token padding to distribute supervision across all token positions. DeBias-CLIP achieves state-of-the-art long-text retrieval, improves short-text retrieval, and is less sensitive to sentence order permutations. It is a drop-in replacement for Long-CLIP with no additional trainable parameters.",
+      "authors": [
+        "Marc-Antoine Lavoie",
+        "Anas Mahmoud",
+        "Aldo Zaimi",
+        "Arsene Fansi Tchango",
+        "Steven L. Waslander"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-02-25T21:27:00+00:00",
+      "link": "https://arxiv.org/pdf/2602.22419v1",
+      "tags": [
+        "keyword:对比学习进展",
+        "query:对比学习进展"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "analyzes and improves CLIP's multimodal contrastive learning with long captions",
+      "llm_evidence_cn": "分析并改进CLIP的长文本多模态对比学习",
+      "llm_evidence": "分析并改进CLIP的长文本多模态对比学习",
+      "canonical_evidence": "分析并改进CLIP的长文本多模态对比学习",
+      "llm_tldr_en": "Identifies and mitigates CLIP's bias toward short captions in image-text contrastive learning for better dense alignment",
+      "llm_tldr_cn": "识别并缓解CLIP在图文对比学习中对短文本的偏置，实现更好的密集对齐",
+      "llm_tldr": "识别并缓解CLIP在图文对比学习中对短文本的偏置，实现更好的密集对齐",
+      "llm_tags": [
+        "query:q4"
+      ],
+      "matched_query_tag": "query:q4",
+      "matched_query_text": "multimodal contrastive learning image text audio",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

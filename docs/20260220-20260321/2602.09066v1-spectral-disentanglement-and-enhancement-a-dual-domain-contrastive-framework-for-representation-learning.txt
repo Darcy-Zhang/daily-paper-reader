@@ -1,0 +1,670 @@
+Title: Spectral Disentanglement and Enhancement: A Dual-domain Contrastive Framework for Representation Learning
+
+URL Source: https://arxiv.org/pdf/2602.09066v1
+
+Published Time: Wed, 11 Feb 2026 01:01:47 GMT
+
+Number of Pages: 10
+
+Markdown Content:
+# Spectral Disentanglement and Enhancement: A Dual-domain Contrastive Framework for Representation Learning 
+
+# Jinjin Guo 
+
+JD.com Beijing, China umguojinjin@outlook.com 
+
+# Yexin Li ∗
+
+State Key Laboratory of General Artificial Intelligence, BIGAI Beijing, China liyexin@bigai.ai 
+
+# Zhichao Huang 
+
+JD.com Beijing, China iceshzc@gmail.com 
+
+# Jun Fang 
+
+JD.com Beijing, China fangjun8@jd.com 
+
+# Zhiyuan Liu 
+
+JD.com Beijing, China liuzhiyuan8@jd.com 
+
+# Chao Liu 
+
+JD.com Beijing, China liuchao397@jd.com 
+
+# Pengzhang Liu 
+
+JD.com Beijing, China liupengzhang@jd.com 
+
+# Qixia Jiang 
+
+JD.com Beijing, China jiangqixia@jd.com 
+
+## Abstract 
+
+Large-scale multimodal contrastive learning has recently achieved impressive success in learning rich and transferable representa-tions, yet it remains fundamentally limited by the uniform treat-ment of feature dimensions and the neglect of the intrinsic spectral structure of the learned features. Empirical evidence indicates that high-dimensional embeddings tend to collapse into narrow cones, concentrating task-relevant semantics in a small subspace, while the majority of dimensions remain occupied by noise and spurious correlations. Such spectral imbalance and entanglement undermine model generalization. We propose Spectral Disentanglement and Enhancement ( SDE ), a novel framework that bridges the gap be-tween the geometry of the embedded spaces and their spectral properties. Our approach leverages singular value decomposition to adaptively partition feature dimensions into strong signals that capture task-critical semantics, weak signals that reflect ancillary correlations, and noise representing irrelevant perturbations. A curriculum-based spectral enhancement strategy is then applied, selectively amplifying informative components with theoretical guarantees on training stability. Building upon the enhanced fea-tures, we further introduce a dual-domain contrastive loss that jointly optimizes alignment in both the feature and spectral spaces, effectively integrating spectral regularization into the training pro-cess and encouraging richer, more robust representations. Extensive experiments on large-scale multimodal benchmarks demonstrate that SDE consistently improves representation robustness and gen-eralization, outperforming state-of-the-art methods. SDE integrates  
+
+> ∗Corresponding author
+> This work is licensed under a Creative Commons Attribution 4.0 International License.
+> WWW ’26, Dubai, United Arab Emirates
+> ©2026 Copyright held by the owner/author(s). ACM ISBN 979-8-4007-2307-0/2026/04 https://doi.org/10.1145/3774904.3792528
+
+seamlessly with existing contrastive pipelines, offering an effective solution for multimodal representation learning. 
+
+## CCS Concepts 
+
+• Computing methodologies → Computer vision representa-tions .
+
+## Keywords 
+
+Multimodal Representation Learning, Contrastive Learning, Spec-tral Disentanglement, Feature Enhancement, Representation Ro-bustness and Generalization 
+
+ACM Reference Format: 
+
+Jinjin Guo, Yexin Li, Zhichao Huang, Jun Fang, Zhiyuan Liu, Chao Liu, Pengzhang Liu, and Qixia Jiang. 2026. Spectral Disentanglement and En-hancement: A Dual-domain Contrastive Framework for Representation Learning. In Proceedings of the ACM Web Conference 2026 (WWW ’26), April 13–17, 2026, Dubai, United Arab Emirates. ACM, New York, NY, USA, 10 pages. https://doi.org/10.1145/3774904.3792528 
+
+## 1 Introduction 
+
+Learning robust and generalizable representations is a fundamental challenge in deep learning, especially for large-scale neural net-works trained with massive data. Contrastive learning [ 12 , 13 ] has emerged as a powerful par-adigm for learning representations in both unsupervised and su-pervised settings, achieving state-of-the-art performance across computer vision [ 3 , 5, 6 , 10 ], natural language understanding [ 9 , 27 ], and multimodal tasks [ 19 , 26 , 36 , 38 , 42 , 45 , 46 ]. Recent advances have further extended contrastive learning frameworks by leverag-ing synthetic data generation with large language models (LLMs) [ 4,47 , 49 ], as well as feature-level interventions, such as adversarial noise injection, e.g., CLAE [ 16 ], SimCSE [ 9], and NEFTune [ 18 ], to improve robustness. Despite these advances, a critical limitation remains: most ex-isting methods treat all feature dimensions uniformly. Empirical  
+
+> arXiv:2602.09066v1 [cs.LG] 9 Feb 2026 WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates Jinjin Guo et al.
+
+studies have shown that effective embedding spaces are often con-fined within narrow cones [ 28 ]. For instance, in a 512-dimensional embedding space, vectors with a cosine similarity of 0.56—when projected onto the 512-dimensional unit hypersphere-are confined to a very tiny surface area, indicating that this seemingly moderate similarity originates from a highly concentrated region of the origi-nal feature manifold. This suggests that the effective dimensionality of learned representations is much lower than the nominal one [ 28 ]. Given this observation, we identify several key limitations of current multimodal representation learning approaches: 
+
+• Spectral imbalance . Dominant semantic features concentrate in a small subspace, while weaker signals and noise occupy the majority of dimensions, creating anisotropic embeddings that can complicate downstream optimization. 
+
+• Uniform optimization pitfalls . Standard multimodal con-trastive learning approaches treat feature dimensions equally, leading to the following issues: 
+
+– Entangled semantics—task-relevant features become insep-arable from ancillary correlations and noise; 
+
+– Suboptimal robustness—noise perturbations propagate in-discriminately across all feature dimensions; 
+
+– Limited generalization—weak or spurious correlations are amplified during optimization. While prior studies [ 14 , 32 ] leverage singular value decomposi-tion (SVD) to identify redundancy in neural networks, they focus exclusively on the parameter space, leaving the feature space largely unexplored. Our work bridges this gap by connecting empirical ob-servations of narrow embedding cones with the spectral properties of neural representations. We propose the SDE framework, where feature embeddings are dynamically disentangled and enhanced according to their spec-tral properties. SDE introduces three key innovations: (1) Spectral Disentanglement — real-time SVD is employed to partition fea-tures into strong, weak, and noise subspaces during multimodal contrastive training; (2) Spectral Enhancement — a refinement strat-egy that selectively amplifies dominant signals, normalizes weaker ones, and suppresses noise; (3) Dual-Domain Contrastive Learning — jointly regularizes alignment in both the feature and spectral spaces, thereby enhancing the robustness and generalization of the learned representations. SDE is the first study to introduce spectral-aware feature alignment within a contrastive learning framework, establishing a practical and versatile foundation for robust multi-modal representation learning. Extensive experiments demonstrate that SDE achieves superior performance on the multimodal benchmark MMEB [ 22 ] compared with state-of-the-art baselines, validating its effectiveness when integrated into existing multimodal contrastive learning pipelines. In summary, our contributions are fourfold: 
+
+• We identify the spectral structure of feature representations as a critical bottleneck in multimodal representation learning, showing that uniform optimization across feature dimensions can obscure task-relevant semantics with noise. 
+
+• We propose an adaptive spectral disentanglement and enhance-ment method, in which feature embeddings are decomposed via SVD and adaptively refined through curriculum-based spectral manipulation. 
+
+• We design a dual-domain contrastive loss that simultaneously enforces alignment across both the feature and spectral spaces, yielding more robust and generalizable representations. 
+
+• Extensive experiments on MMEB demonstrate that our ap-proach consistently outperforms state-of-the-art baselines, demonstrating the effectiveness of spectral-aware feature dis-entanglement and enhancement. 
+
+## 2 Related Work 
+
+Contrastive Representation Learning. Contrastive representation learning (CRL) aims to learn an embedding space in which sim-ilar instances are closer than dissimilar ones, and has achieved remarkable success across vision [ 3, 5, 6 , 10 ], language [ 9, 37 ], and graph domains [ 35 , 43 ]. A key factor underlying the success of CRL—particularly in vision—lies in carefully designed data aug-mentation strategies that generate diverse yet semantically con-sistent positive views, such as random cropping [ 5 ] and node or edge dropping or diffusion [43, 50]. Conversely, effective negative sampling, especially the identification of hard negatives that are semantically similar to but distinct from the anchor, is crucial for learning discriminative representations. Negative mining strategies have evolved from random sampling to hard negative mining via similarity ranking [ 39 ], adversarial generation [ 23 ], and memory bank-based approaches [ 15 ]. InfoNCE [ 33 ] remains the predomi-nant contrastive objective, maximizing mutual information through temperature-scaled similarity. Notable extensions include debiased objectives that mitigate false negatives [ 7 ] and feature decorrelation losses that eliminate the need for explicit negative samples [ 2, 44 ]. 
+
+Multimodal Representation Learning. Multimodal models learns to map heterogeneous modalities into a shared representation space [ 20 , 48 ]. Early approaches typically adopt dual-encoder ar-chitectures to align modality-specific features via contrastive ob-jectives, exemplified by CLIP [ 36 ] and ALIGN [ 19 ]. More recent work explores deeper integration of visual–linguistic representa-tions: UniIR [ 42 ] combines independently encoded embeddings through score fusion, while VISTA [ 38 ] augments text encoders with visual fusion modules. Despite achieving strong cross-modal retrieval performance, these methods often struggle to capture fine-grained semantic alignment, which limits their effectiveness on more complex multimodal tasks [ 47 ]. Vision–Language Models (VLMs) have recently emerged as dominant backbones for multi-modal embeddings, owing to their transformer-based architectures that intrinsically fuse cross-modal features. Models such as Qwen-VL [ 41 ], Phi [ 1 ], and LLaVA-Next [ 29 ] demonstrate strong gener-alization across diverse image–text compositions, particularly in instruction-following settings. This progress has spurred a growing line of VLM-based embedding methods. For example, E5-V [ 21 ] and VLM2Vec [ 22 ] convert VLMs into embedding models via instruction tuning. LLaVE [ 24 ] introduces hardness-weighted contrast with reward models to prioritize difficult negatives, while UniME [ 11 ] em-ploys a two-stage pipeline with textual knowledge distillation and hard-negative tuning. In parallel, universal representation learn-ing seeks modality-agnostic embeddings: MAGICLens [ 46 ] con-structs multimodal knowledge graphs for alignment, whereas Uni-versal [30] develops cross-modal attention mechanisms. Spectral Disentanglement and Enhancement: A Dual-domain Contrastive Framework for Representation Learning WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates 
+
+Spectral Analysis. Building on recent advances in multimodal representation learning, spectral analysis has emerged as a pow-erful tool for uncovering the fundamental properties of learned features. Empirical studies have revealed that the feature spaces of large-scale multimodal models often exhibit a pronounced cone effect, where representations are confined to narrow regions of the embedding space [ 28 ]. Further investigations [ 14 , 40 ] demon-strate that neural network parameters possess substantial spec-tral redundancy: directions associated with small singular values contribute little to critical model knowledge, whereas dominant singular directions encode task-relevant semantics. This spectral perspective offers new insights into the internal structure of learned representations. Specifically, feature embeddings can be naturally decomposed into distinct spectral bands, corresponding to strong semantic signals, ancillary correlations, and stochastic noise. Such decomposition enables principled strategies for disentangling use-ful information from irrelevant or noisy components. Recent work has leveraged this perspective in parameter space. For example, the locate-and-edit paradigm first identifies influential parameters and then selectively perturbs them to improve robustness or adap-tivity. The recent study [ 32 ] further demonstrates that parameter spaces can be partitioned into task-specific and non-task-specific subspaces, facilitating continual learning. However, these advances focus exclusively on parameter space, leaving an open gap in fea-ture space analysis. Our work bridges this gap by introducing the first feature-space spectral disentanglement framework, combin-ing insights from parameter analysis with novel adaptations for multimodal representation learning. 
+
+## 3 Methodology 
+
+In this section, we give a detailed description of SDE as illustrated by Fig. 1. It is a novel framework designed to disentangle and en-hance the spectral structure of the feature space within multimodal contrastive learning. It consists of three core components: adaptive spectral disentanglement, curriculum-based spectral enhancement, and dual-domain contrastive loss, which are given in the following. 
+
+## 3.1 Spectral Disentanglement 
+
+Suppose F ∈ R𝑚 ×𝑛 is the feature matrix with 𝑚 samples and 𝑛 fea-ture dimensions, obtained from the backbone of a vision language model (VLM). We apply SVD to analyze its spectral properties, yielding: 
+
+F = UΣV ⊤; (1) where U ∈ R𝑚 ×𝑚 and V ∈ R𝑛 ×𝑛 are unitary matrices, and Σ ∈ R𝑚 ×𝑛 
+
+contains non-negative singular values 𝜎 1 ≥ 𝜎 2 ≥ · · · ≥ 𝜎 𝑟 > 0, with 
+
+𝑟 = rank (F). Columns of V define basic directions of the features, while singular values quantify directional energy concentrations. Empirical studies [ 14 , 40 ] have shown that a substantial propor-tion of the feature space exhibits redundancy. Specifically, those associated with smaller singular values often reflect redundancy or noise. Conversely, directions corresponding to larger singular val-ues tend to encode the most salient and task-relevant information. Inspired by this observation, we propose to disentangle the fea-ture space, partitioning it into three distinct subspaces according to the magnitude of the singular values: 
+
+• Strong signal : dominant and task-specific feature dimensions that are crucial for model performance. 
+
+• Weak signal : subtle but potentially informative variations that may contribute to understanding or generalization. 
+
+• Noise : random fluctuations or irrelevant variations, often detri-mental to robustness. We determine the thresholds that define the strong, weak, and noise subspaces using the interquartile range (IQR) of the singular values [ 14 ]. Specifically, we employ the Marchenko–Pastur distri-bution [ 14 , 31 ] to establish principled bounds on the eigenvalues of random covariance matrices, thereby guiding the partitioning of the feature space. For a matrix F whose entries are independent and identically distributed with zero mean and standard deviation 𝜗 , the eigenval-ues of 𝐶 = 1 
+
+> 𝑛
+
+F⊤F converge to a distribution supported on [𝜗 2 (1 −√︁ 
+
+𝑚 /𝑛 )2, 𝜗 2 (1 +√︁ 𝑚 /𝑛 )2]. Accordingly, the singular values of F
+
+asymptotically satisfy: 
+
+𝜎 𝑖 ∈ 𝜗 (√𝑛 − √𝑚 ), 𝜗 (√𝑛 + √𝑚 ) ; (2) where 𝑖 = 1, 2, 3, . . . , 𝑟 . These theoretical bounds facilitate the es-timation of singular value quantiles, enabling partitioning of the feature dimensions into the aforementioned subspaces. Spectral disentanglement enables the separation of informative features from less useful or noisy ones during training. By explicitly identifying and partitioning these subspaces, our SDE framework lays the groundwork for enhanced representation learning. 
+
+## 3.2 Spectral Enhancement 
+
+Building upon the disentanglement of the feature space, we pro-pose a tailored spectral enhancement strategy that adaptively ma-nipulates singular values within each subspace to enhance model robustness and generalization. For the feature matrix F ∈ R𝑚 ×𝑛 and its SVD F = UΣV⊤, where Σ = diag (𝜎 1, 𝜎 2, . . . , 𝜎 𝑟 ), the enhanced feature matrix is reconstructed as: 
+
+F′ = U(Σ + ∆)V⊤; (3) where ∆ = diag (𝛿 1, 𝛿 2, ..., 𝛿 𝑟 ) is a diagonal perturbation matrix designed with distinct subspace-specific strategies. 
+
+Strong Signal Enhancement. Singular values in the strong sig-nal subspace represent principal directions containing dominant, task-relevant information. To improve robustness and mitigate over-fitting in these directions, we inject controlled adversarial noise into their magnitudes. The scale of this noise is adaptively deter-mined by both the training progress and the relative strength of each singular value: 
+
+𝛿 𝑖 = 𝛼 (𝑡 ) · 𝛾 strong · 𝜖 𝑖 , 𝜖 𝑖 ∼ 𝑁 (0, 1), if 𝑖 ∈ strong signal . (4) Here, 𝑁 (0, 1) denotes a standard normal distribution with mean 0
+
+and variance 1; the hyperparameter is defined as 𝛾 strong = 𝜎 𝑖  
+
+> 𝜎 1
+
+, where 
+
+𝜎 1 is the largest singular value, providing a natural normalization. The curriculum factor 𝛼 (𝑡 ) ∈ ( 0, 1) evolves with the training step 
+
+𝑡 , implementing a curriculum learning strategy in which strong augmentation is applied in the early stages, moderate augmentation WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates Jinjin Guo et al. Vision  Encoder 
+
+Projection  Layer 
+
+LLM 
+
+feature              
+
+> Please give acatchy dish
+> name given the food image
+> referring to steak, meat.
+> Savor the Sizzle, Unleash the Flavor –Pure
+> Steak Perfection
+
+Vision  Encoder 
+
+Projection  Layer 
+
+LLM 
+
+feature 
+
+𝐹  𝑈  Σ 𝑉 × ×  
+
+> Spectral Decomposition
+> strong weak noise
+
+𝑈  Σ + ∆ 𝑉 × ×𝐹 ′
+
+> Spectral
+> space
+
+Instance -level  contrastive 
+
+loss  Spectral  contrastive  loss 
+
+enhanced features 
+
+> Spectral
+> Enhancement
+
+Figure 1: Overview of the SDE framework. The VLM backbone jointly encodes the query, consisting of an image and text, and the target text input to produce multimodal feature representations. These features are then partitioned into strong, weak, and noise subspaces via SVD, with each subspace adaptively enhanced and reconstructed back to the feature space. Finally, a dual-domain contrastive loss—comprising instance-level alignment in the feature space and structure-aware alignment in the spectral space—is applied to improve both robustness and generalization. 
+
+in the middle stages, and weak augmentation toward the end of training. Further details are provided in the Appendix. 
+
+Weak Signal Normalization. The weak signal subspace comprises feature dimensions associated with subtle yet potentially infor-mative variations. To retain valuable diversity while maintaining stability, we employ spectral normalization, in which the weak singular values are adaptively attenuated according to their rela-tive magnitudes and the current curriculum factor. This selective normalization encourages the model to leverage subtle but poten-tially informative features without amplifying noise or irrelevant fluctuations, as defined below: 
+
+𝛿 𝑖 = −𝛼 (𝑡 ) · 𝛾 weak · 𝜎 𝑖 , if 𝑖 ∈ weak signal ; (5) where 𝛾 weak =
+
+ 𝜎 𝑖 
+
+> 𝜎 1
+
+2
+
+controls the normalization intensity. This choice suppresses weak singular values more aggressively. 
+
+Noise Suppression. Singular values identified as noise typically correspond to directions occupied by corrupting influences or ir-relevant variations. To suppress these values, especially during the initial training phase, we adopt signal-to-noise regularization [ 14 ]. The suppression degree is modulated by the estimated signal-to-noise ratio and the training progress, allowing the regularization to relax as learning stabilizes: 
+
+𝛿 𝑖 = −𝛼 (𝑡 ) · 𝛾 noise · 𝜎 𝑖 , if 𝑖 ∈ noise . (6) Here, 𝛾 noise =     
+
+> Í𝑖 ∈S∪W 𝛿 𝑖 Í𝑘 ∈N 𝛿 𝑘
+
+, where S, W, and N denote the strong, weak, and noise subspaces, respectively. It quantifies the normal-ized energy ratio between the signal subspaces S ∪ W and the noise subspace N . A larger 𝛾 noise indicates a higher proportion of signal energy relative to the noise, enabling more aggressive noise suppression. 
+
+Perturbation Analysis. In summary, the overall enhancement can be expressed as 𝚺 ′ = 𝚺 + 𝚫 , where the diagonal perturbation matrix is defined as follows: 
+
+𝚫 𝑖 = 𝛼 (𝑡 )
+
+ 
+
+> 𝜎 𝑖
+> 𝜎 1
+
+· 𝜖 𝑖 if 𝑖 ∈ strong 
+
+−
+
+ 𝜎 𝑖 
+
+> 𝜎 1
+
+2
+
+𝜎 𝑖 if 𝑖 ∈ weak 
+
+−𝛾 noise · 𝜎 𝑖 if 𝑖 ∈ noise .
+
+(7) The expected Frobenius norm of the perturbation matrix || 𝚫 || 2 
+
+> 𝐹
+
+=
+
+Í𝑟 𝑖 =1 |𝛿 𝑖 |2 satisfies the bound: 
+
+E || 𝚫 || 2
+
+> 𝐹
+
+ ≤ 𝛼 2 (𝑡 )
+
+
+
+|S| + ∑︁  
+
+> 𝑗 ∈ W
+
+ 𝜎 𝑗 
+
+𝜎 1
+
+4
+
+𝜎 2 
+
+> 𝑗
+
++ 𝛾 2
+
+> noise
+
+∑︁ 𝑘 ∈ N 
+
+𝜎 2
+
+> 𝑘
+
+
+
+; (8) where |S| is the number of strong signals, and the adversarial noise 𝜖 is assumed to follow a standard Gaussian distribution, i.e., 
+
+E[𝜖 2] = 1.In practice, since the singular values 𝜎 𝑖 monotonically decrease, the cumulative energy in both the weak and noise subspaces re-mains quite limited. As a result, the spectral enhancement induces well-controlled perturbations governed by the curriculum factor 
+
+𝛼 (𝑡 ). This ensures the spectral enhancement introduces minimal Spectral Disentanglement and Enhancement: A Dual-domain Contrastive Framework for Representation Learning WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates 
+
+instability, while adaptively promoting discriminative feature learn-ing, suppressing noise, and improving robustness and generaliza-tion throughout the training process. 
+
+## 3.3 Dual-domain Contrastive Learning 
+
+In this subsection, to fully exploit the benefits of spectral disen-tanglement and enhancement, we propose a dual-domain opti-mization paradigm that simultaneously aligns representations in both the feature space and the spectral space. This approach not only encourages instance-level alignment but also enforces global consistency of the spectral structure, leading to more robust and semantically meaningful representations. 
+
+Instance-level Alignment. Traditional contrastive learning meth-ods focus on instance-level alignment in the feature space, where similar samples are pulled closer while the dissimilar ones are pushed apart. The InfoNCE loss [ 34 ] is widely adopted to achieve this, operating on a query vector X ∈ R 𝑚 ×𝑛 and its corresponding target vector Y ∈ R 𝑚 ×𝑛 , which is denoted as: 
+
+Lfeat (X, Y) = −
+
+> 𝑚
+
+∑︁ 
+
+> 𝑖 =1
+
+log exp (𝑠 (x𝑖 , y𝑖 )/ 𝜏 )
+
+Í𝑚 𝑗 =1 exp (𝑠 (x𝑖 , y𝑗 )/ 𝜏 ) ; (9) where 𝑠 (a, b) = a⊤b  
+
+> ∥a∥2∥b∥2
+
+is the cosine similarity, 𝜏 is the temperature hyperparameter, and 𝑚 is the batch size. However, instance-level alignment alone is insufficient for cap-turing global structural consistency. Specifically, it is vulnerable to adversarial manipulations via orthogonal transformations, which preserve pairwise distances but can distort the semantic structure. For any orthogonal matrix Q with QQ ⊤ = I, we have 
+
+𝑠 (Qx , Qy ) = (Qx )⊤ (Qy )∥Qx ∥2 ∥Qy ∥2
+
+= x⊤Q⊤Qy 
+
+∥x∥2 ∥y∥2
+
+= 𝑠 (x, y). (10) This property implies that adversarial samples generated via orthogonal transformations can distort semantic structures while fooling instance-level objectives, as they preserve local distances but disrupt global geometry. Consequently, solely relying on instance-level alignment may fail to capture high-level structural consistency between modalities. 
+
+Spectral Contrastive Loss. To address the above limitation, we in-troduce a spectral contrastive loss that explicitly enforces alignment from a spectral perspective. This loss comprises two complementary components: (1) Spectral Distribution Alignment: The singular value vec-tor 𝝈 characterizes the energy distribution across latent dimensions. Aligning 𝝈 𝒙 and 𝝈 𝒚 ensures both modalities exhibit similar feature importance across dimensions. The normalized spectral distribution is defined as: 
+
+p𝑋 = w ⊙ 𝝈 𝑋 
+
+∥w ⊙ 𝝈 𝑋 ∥2
+
+, p𝑌 = w ⊙ 𝝈 𝑌 
+
+∥w ⊙ 𝝈 𝑌 ∥2
+
+; (11) where w is a predefined linearly decaying weighting vector that prioritizes the alignment of leading singular values, and 
+
+⊙ denotes the element-wise product. The Hellinger distance 
+
+then quantifies the discrepancy between p𝑋 and p𝑌 :
+
+Lhellinger = 1
+
+√2
+
+√p𝑋 − √p𝑌 2 . (12) (2) Subspace Consistency Enforcement: While spectral align-ment controls dimension-wise importance, subspace align-ment further ensures directional coherence of principal com-ponents. The top-𝑘 singular vectors V span the dominant semantic subspace. Minimizing their Gram matrix deviation enforces orthonormal alignment: 
+
+G = V⊤ 
+
+> 𝑋
+
+V𝑌 (13) 
+
+Lsubspace = 1
+
+√2𝑘 ∥G − I𝑘 ∥𝐹 ; (14) where I𝑘 is 𝑘 -dimensional identity matrix. This ensures that the principal directions remain consistently aligned across modalities. Without such a constraint, orthogonal transfor-mations could arbitrarily rotate these subspaces while pre-serving instance-level distances, thereby undermining se-mantic coherence. As shown, the necessity of spectral alignment and subspace consistency arises from the fact that orthogonal transformations preserve pairwise distances but can arbitrarily alter both the spec-tral energy distribution and principal directions. By aligning both singular value distributions and principal subspaces, our frame-work enforces a more holistic and robust alignment. The composite spectral loss is then defined as: 
+
+Lspec = 12
+
+ Lhellinger + L subspace 
+
+ . (15) Consequently, our dual-domain objective integrates both the instance-level and spectral structure alignment: 
+
+Ltotal = Lfeat (Xenhanced , Yenhanced )
+
+| {z }
+
+> instance alignment
+
++
+
+𝜆 (𝑡 ) · L spec (Xenhanced , Yenhanced )
+
+| {z }
+
+> spectral structure alignment
+
+; (16) where 𝜆 (𝑡 ) is a dynamically scheduled weighting coefficient that adapts throughout training. 𝜆 (𝑡 ) gradually decreases, shifting em-phasis toward fine-grained instance-level alignment—details of which are provided in the Appendix. This adaptive scheduling ensures robust convergence and prevents over-regularization. Here, 
+
+Xenhanced and Yenhanced denote the features obtained after spectral disentanglement and enhancement, corresponding to X and Y, re-spectively. By jointly optimizing for instance-level discrimination and global spectral consistency, our dual-domain contrastive learning frame-work leverages the strengths of both feature and structure align-ment. This design not only mitigates the vulnerability of instance-level objectives to adversarial orthogonal transformations but also ensures that the learned representations capture both local and global geometric properties for robustness and generalization. WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates Jinjin Guo et al. 
+
+## 4 Experiment 
+
+In this section, we comprehensively evaluate our proposed SDE 
+
+framework on the well-established Massive Multimodal Embedding Benchmark (MMEB) [ 22 ]. We compare SDE with recent state-of-the-art baselines, evaluating its effectiveness and generalization across a wide range of multimodal tasks, including classification, visual question answering (VQA), retrieval, and visual grounding. Due to space limitations, the main text focuses on the core ex-perimental settings and results, while additional implementation details and results are provided in the Appendix. 
+
+## 4.1 Experimental Setup 
+
+Dataset Overview. MMEB [ 22 ] is a large-scale, task-diverse bench-mark designed for evaluating multimodal embedding models. It comprises 36 datasets organized into four meta-tasks: classifica-tion, VQA, retrieval, and visual grounding. MMEB provides 20 in-distribution (IND) training datasets. Evaluation is conducted on a comprehensive test set of 36 datasets, including 20 IND and 16 out-of-distribution (OOD) datasets. This diverse composition en-ables a rigorous assessment of both robustness and generalization across multiple tasks and domains. 
+
+Metrics. For evaluation, we report 𝑃𝑟𝑒𝑐𝑖𝑠𝑖𝑜𝑛 @1 for each dataset following the existing work [ 22 ], which measures the proportion of top-ranked candidates that are positive samples. 
+
+Baselines. Following VLM2Vec [ 22 ], we experiment with differ-ent backbone models, i.e., Qwen2-VL-2B [ 41 ], LLaVA-NeXT [ 29 ]and Phi3.5-V-4B [ 1 ]. Additionally, we benchmark our results against recent advanced models: CLIP [ 36 ], BLIP2 [ 25 ], UniIR [ 42 ], Magi-cLens [ 46 ], VLM2Vec [ 22 ], UniME [ 11 ], MegaPairs [ 49 ], LLaVE [ 24 ]. 
+
+## 4.2 Main Results 
+
+From Table 1, the SDE framework consistently outperforms base-lines across the MMEB benchmark. The best-performing variant, 
+
+SDE (LLaVA-1.6-HR), utilizes the LLaVA-1.6 backbone with high-resolution image inputs and achieves an average 𝑃𝑟𝑒𝑐𝑖𝑠𝑖𝑜𝑛 @1 of 
+
+65 .6 across all 36 datasets, surpassing all compared methods. No-tably, SDE (LLaVA-1.6-HR) demonstrates robust performance across meta-task categories, with 𝑃𝑟𝑒𝑐𝑖𝑠𝑖𝑜𝑛 @1 scores of 61 .6 for classi-fication, 54 .7 for VQA, 69 .0 for retrieval, and 92 .5 for grounding, indicating strong capability in handling diverse multimodal tasks. In addition, compared to the best baseline model with fine-tuning, MegaPairs (LLaVA-1.6), our model shows a 1.5% improvement. Fur-thermore, our method achieves the highest IND and OOD scores among all models, with 71 .6 and 58 .1, respectively, highlighting its generalization ability to unseen tasks. Other SDE variants, such as SDE (Phi3.5-V) and SDE (Qwen2-VL-2B), also demonstrate notable improvements over their respective VLM2Vec baselines, with gains of +2.7 and +1.5 points in overall average 𝑃𝑟𝑒𝑐𝑖𝑠𝑖𝑜𝑛 @1 . This consistent performance boost across different backbones and resolutions suggests that our approach is broadly effective. 
+
+## 4.3 Generalization Analysis 
+
+We demonstrate in Table 1 that SDE , after being trained on a diverse set of IND tasks, can effectively generalize to OOD datasets. A natural question is whether focusing training on a single meta-task can further improve the generalization of the model to other task types. To investigate this, we train three separate models using the 
+
+SDE framework, each specialized for one meta-task: classification, VQA, and retrieval. Following the work [ 22 ], visual grounding is not included due to the limited number of training datasets. Specifically, the models are trained as follows: SDE 𝑐𝑙𝑎 is trained on 5 classification tasks; SDE 𝑣𝑞𝑎 is trained on 6 VQA tasks; and SDE 𝑟𝑒𝑡 is trained on 8
+
+retrieval tasks. We evaluate their generalization performance on the remaining cross-task datasets. Fig. 2 presents the generalization performance of each model when evaluated on unseen meta-tasks. The results reveal that SDE consistently outperforms the strong competitor VLM2Vec in all cross-task transfer scenarios, with sub-stantial improvements. For example, SDE 𝑐𝑙𝑎 , trained only on the classification task, improves VQA performance by 52%, achieving a score of 21.0 compared with 13.8 for VLM2Vec, while SDE 𝑣𝑞𝑎 en-hances retrieval performance by 59%, reaching 20.7 compared with 13.0. These results validate the robustness and generalization of the spectral disentanglement and enhancement mechanism, which enables SDE to capture richer and more generalizable multimodal semantics. Moreover, SDE 𝑟𝑒𝑡 , trained on the retrieval task, exhibits particu-larly strong performance when transferred to both classification and visual grounding tasks. Specifically, it achieves a 27% improve-ment on classification, reaching a score of 36.9 compared with 29.1 for VLM2Vec, and a 17% improvement on grounding, achieving 60.0 compared with 51.3. This substantial margin highlights the effectiveness of the spectral disentanglement and enhancement mechanism in extracting transferable and robust features from diverse retrieval scenarios. 
+
+## 4.4 Ablation Study 
+
+To systematically assess the contribution of different spectral com-ponents in our framework, we conduct an ablation study investi-gating the effect of each component—namely, the strong, weak, and noise signals. As shown in Table 2, we compare SDE variants that selectively ac-tivate different spectral components. Each ablated variant performs competitively in specific scenarios, with strong signals excelling in visual grounding and weak signals performing best on VQA. How-ever, none matches the full model’s consistent performance across all tasks. The complete SDE framework achieves the highest overall accuracy and IND performance, demonstrating that integrating all spectral components is essential for optimal generalization. Notably, the strong-signal variant attains the best OOD performance, indi-cating that dominant features provide crucial robustness against distribution shifts, while the weak and noise components contribute to task-specific refinements. 
+
+## 4.5 Qualitative Study 
+
+Fig. 3 provides compelling visual evidence of our spectral disentan-glement and enhancement mechanism. In Fig. 3 (a), strong signals exhibit the most significant growth, increasing by 66.25% from 10.42% to 17.32% of total components. Weak signals also expand substantially, rising by 57.14% from 7.75% to 12.17%, while noise components are effectively suppressed, decreasing by 13.84% from Spectral Disentanglement and Enhancement: A Dual-domain Contrastive Framework for Representation Learning WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates 
+
+Table 1: Performance comparison on the MMEB benchmark. The FF and SF subscripts under CLIP or BLIP represent feature-level fusion and score-level fusion, respectively. LR suffixes signify training and inference on low-resolution ( 336 × 336 ) images, while HR suffixes similarly denote both processes on high-resolution ( 1344 × 1344 ) images. Results report the average 𝑃𝑟𝑒𝑐𝑖𝑠𝑖𝑜𝑛 @1 
+
+across datasets, with top performances highlighted in bold and second-best scores underlined. The red numbers in parentheses indicate the relative improvement, computed as (SDE − VLM2Vec )/ VLM2Vec. 
+
+Model Per Meta-Task Score Avg Score Classification VQA Retrieval Grounding IND OOD Overall # Datasets 10 10 12 4 20 16 36 
+
+Zero-shot on MMEB 
+
+CLIP [36] 42.8 9.1 53.0 51.8 37.1 38.7 37.8 BLIP2 [25] 27.0 4.2 33.9 47.0 25.3 25.1 25.2 UniIR(BLIP 𝐹 𝐹 ) [42] 42.1 15.0 60.1 62.2 44.7 40.4 42.8 UniIR(CLIP 𝑆𝐹 ) [42] 44.3 16.2 61.8 65.3 47.1 41.7 44.7 Magiclens [46] 38.8 8.3 35.4 26.0 31.0 23.7 27.8 
+
+Fine-tuning on MMEB 
+
+CLIP-FFT 55.2 19.7 53.2 62.2 47.6 42.8 45.4 OpenCLIP-FFT 56.0 21.9 55.4 64.1 50.5 43.1 47.2 UniME(Phi3.5-V) [11] 54.6 55.9 64.5 81.8 68.2 52.7 61.3 UniME(LLaVA-1.6) [11] 60.6 52.9 67.9 85.1 68.4 57.9 63.6 MegaPairs(LLaVA-1.6) [49] 56.0 57.4 69.9 83.6 68.0 59.1 64.1 
+
+SDE (Ours )VLM2Vec(Phi3.5-V) [22] 54.8 54.9 62.3 79.5 66.5 52.0 60.1 SDE(Phi3.5-V) 54.6 60.3 63.4 78.4 69.8 51.6 61.7 (+2.7) 
+
+VLM2Vec(Qwen2-VL-2B) [22] 59.0 49.4 65.4 73.4 66.0 52.6 60.1 SDE(Qwen2-VL-2B) 60.0 51.0 66.4 72.5 66.9 52.7 61.1 (+1.5) 
+
+VLM2Vec(LLaVA-1.6-LR) [22] 54.7 50.3 56.2 64.0 61.0 47.5 55.0 SDE(LLaVA-1.6-LR) 57.2 43.6 63.6 87.7 66.3 49.8 59.0 (+7.3) 
+
+VLM2Vec(LLaVA-1.6-HR) [22] 61.2 49.9 67.4 86.1 67.5 57.1 62.9 SDE(LLaVA-1.6-HR) 61.6 54.7 69.0 92.5 71.6 58.1 65.6 (+4.3) Classification Visual Grounding Retrieval      
+
+> 15
+> 20
+> 25
+> 30
+> 35
+> 40
+> Score
+> 35.9
+> 38.7
+> 33.3 33.8
+> 13.0
+> 20.7
+> VQA-based Generalization
+> VLM 2Vec vqa
+> SDE vqa
+> Retrieval Visual Grounding Classification
+> 30
+> 35
+> 40
+> 45
+> 50
+> 55
+> 60
+> 29.1
+> 36.9
+> 51.3
+> 60.0
+> 29.1
+> 36.9
+> Retrieval-based Generalization
+> VLM 2Vec ret
+> SDE ret
+> VQA Visual Grounding Retrieval
+> 15
+> 20
+> 25
+> 30
+> 35
+> 13.8
+> 21.0
+> 35.1
+> 37.4
+> 13.8
+> 21.0
+> Classification-based Generalization
+> VLM 2Vec cla
+> SDE cla
+
+Figure 2: Cross-task generalization performance comparison between VLM2Vec and SDE . Each subplot shows the performance when trained on one meta-task, e.g., VQA, classification, or retrieval, and evaluated on other unseen tasks. Notably, SDE 
+
+demonstrates superior generalization capabilities across all scenarios. Both models employ Qwen2-VL-2B as the backbone. 
+
+81.84% to 70.51%. Fig. 3 (b) illustrates that spectral enhancement shifts the singular value distribution: the proportion of noise com-ponents with small singular values decreases, mid-range singular values remain largely stable, and dominant signals are amplified. Fig. 3 (c) shows that strong components account for 88.7% of the to-tal energy, weak components contribute 4.0%, and noise comprises only 7.3% despite representing 70.51% of the components. These quantitative visualizations demonstrate that SDE effec-tively reweights the spectral composition of learned representations WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates Jinjin Guo et al. 
+
+Table 2: The ablation study of the SDE framework on the MMEB benchmark. We compare the performance of the full SDE model with ablated variants that selectively activate different spectral components, i.e., strong, weak, and noise signals, while keeping the dual domain contrastive loss. Reported scores are the average 𝑝𝑟𝑒𝑐𝑖𝑠𝑖𝑜𝑛 @1 over the corresponding datasets. Here, SDE and its variants utilize the Qwen2-VL-2B as the backbone architecture. 
+
+Model Per Meta-Task Score Avg Score Classification VQA Retrieval Grounding IND OOD Overall # Datasets 10 10 12 4 20 16 36 
+
+SDE (Strong Only) 59.8 50.9 66.3 72.7 67.0 53.3 61.0 
+
+SDE (Weak Only) 59.0 51.4 65.9 71.0 66.8 52.6 60.5 
+
+SDE (Noise Only) 59.8 51.1 66.0 72.0 67.0 52.7 60.8 
+
+SDE (Ours) 60.0 51.0 66.4 72.5 67.1 52.7 61.1 600 900 1200 1500 1800       
+
+> Training Steps
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Percentage (%)
+> (a) Component Proportion Evolution
+> Strong
+> Weak
+> Noise
+> 0510 15
+> Magnitude
+> 10 0
+> 10 1
+> 10 2
+> Frequency (log)
+> (b) Singular Value Distribution
+> Before
+> After Enhanced
+> 0500 1000 1500
+> Top-k Components
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Cumulative Ratio
+> Strong
+> Weak
+> Noise
+> 90% Threshold
+> (c) Energy Concentration
+
+Figure 3: Qualitative examples of spectral disentanglement and enhancement. (a) Evolution of component proportions shows increasing dominance of strong signals. (b) Singular value distributions before and after enhancement, demonstrating selective amplification of meaningful features. (c) Cumulative energy distribution highlighting the concentration of semantic informa-tion in strong components. 
+
+by dynamically amplifying semantically meaningful signals while suppressing noise components. The strategy of spectral decomposi-tion and enhancement enables SDE to achieve optimal information compression - distilling representations into their most semantical components while maintaining expressiveness through preserved mid-range features, ultimately yielding compact yet highly discrim-inative embeddings. 
+
+## 5 Conclusion 
+
+In this work, we present SDE , a novel framework that advances mul-timodal representation learning by explicitly modeling and optimiz-ing the spectral properties of learned embeddings. Existing meth-ods mainly treat the feature dimensions uniformly and ignore the spectral imbalance issue. SDE provides an approach to disentangle and enhance representations in the spectral domain. Our approach introduces three key contributions: an adaptive spectral decompo-sition module that identifies and separates semantically meaning-ful components from noise, improving feature interpretability; a theoretically-motivated enhancement strategy that differentially amplifies informative spectral components, ensuring robustness and discriminative power; and a dual-domain learning objective that simultaneously optimizes feature-space discrimination and spectral-space consistency, leading to more transferable representations. Extensive experiments demonstrate that SDE -learned representa-tions achieve superior generalization across diverse multimodal tasks, outperforming existing methods on large-scale benchmarks. Our framework not only advances the theoretical understanding of spectral properties in representation learning but also provides a scalable and extensible solution for a broad range of VLMs. Future work could explore extending SDE to dynamic or sequen-tial multimodal settings, where the spectral properties of represen-tations may evolve over time. This calls for the design of adaptive mechanisms capable of tracking and adjusting spectral decomposi-tion in real time, thereby enhancing robustness in processing tem-poral data such as video or audio streams. Such an extension could further bridge the gap between static and dynamic multimodal learning, unlocking applications in areas like video understanding. 
+
+## 6 Acknowledgment 
+
+This work was partly supported by the Beijing Natural Science Foundation No. 4254079. Spectral Disentanglement and Enhancement: A Dual-domain Contrastive Framework for Representation Learning WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates 
+
+## References 
+
+[1] Marah Abdin, Jyoti Aneja, Hany Awadalla, Ahmed Awadallah, Ammar Ahmad Awan, Nguyen Bach, Amit Bahree, Arash Bakhtiari, Jianmin Bao, Harkirat Behl, et al . 2024. Phi-3 technical report: A highly capable language model locally on your phone. arXiv preprint arXiv:2404.14219 (2024). [2] Adrien Bardes, Jean Ponce, and Yann Lecun. 2022. VICReg: Variance-Invariance-Covariance Regularization For Self-Supervised Learning. In ICLR 2022-ICLR .[3] Mathilde Caron, Ishan Misra, Julien Mairal, Priya Goyal, Piotr Bojanowski, and Armand Joulin. 2020. Unsupervised learning of visual features by contrasting cluster assignments. NeurIPS 33 (2020), 9912–9924. [4] Haonan Chen, Liang Wang, Nan Yang, Yutao Zhu, Ziliang Zhao, Furu Wei, and Zhicheng Dou. 2025. mmE5: Improving Multimodal Multilingual Embeddings via High-quality Synthetic Data. arXiv preprint arXiv:2502.08468 (2025). [5] Ting Chen, Simon Kornblith, Mohammad Norouzi, and Geoffrey Hinton. 2020. A simple framework for contrastive learning of visual representations. In ICML .PmLR, 1597–1607. [6] Xinlei Chen and Kaiming He. 2021. Exploring simple siamese representation learning. In CVPR . 15750–15758. [7] Ching-Yao Chuang, Joshua Robinson, Yen-Chen Lin, Antonio Torralba, and Ste-fanie Jegelka. 2020. Debiased contrastive learning. NeurIPS 33 (2020), 8765–8775. [8] Luyu Gao, Yunyi Zhang, Jiawei Han, and Jamie Callan. 2021. Scaling Deep Contrastive Learning Batch Size under Memory Limited Setup. In Proceedings of the 6th Workshop on Representation Learning for NLP .[9] Tianyu Gao, Xingcheng Yao, and Danqi Chen. 2021. SimCSE: Simple Contrastive Learning of Sentence Embeddings. In EMNLP .[10] Jean-Bastien Grill, Florian Strub, Florent Altché, Corentin Tallec, Pierre H. Richemond, Elena Buchatskaya, Carl Doersch, Bernardo Avila Pires, Zhao-han Daniel Guo, Mohammad Gheshlaghi Azar, Bilal Piot, Koray Kavukcuoglu, Rémi Munos, and Michal Valko. 2020. Bootstrap your own latent a new approach to self-supervised learning. In NeurIPS .[11] Tiancheng Gu, Kaicheng Yang, Ziyong Feng, Xingjun Wang, Yanzhao Zhang, Dingkun Long, Yingda Chen, Weidong Cai, and Jiankang Deng. 2025. Breaking the Modality Barrier: Universal Embedding Learning with Multimodal LLMs. 
+
+arXiv preprint arXiv:2504.17432 (2025). [12] Michael Gutmann and Aapo Hyvärinen. 2010. Noise-contrastive estimation: A new estimation principle for unnormalized statistical models. In AAAI . JMLR Workshop and Conference Proceedings, 297–304. [13] Raia Hadsell, Sumit Chopra, and Yann LeCun. 2006. Dimensionality reduction by learning an invariant mapping. In CVPR , Vol. 2. IEEE, 1735–1742. [14] Eric Hartford, Lucas Atkins, Fernando Fernandes Neto, and David Golchinfar. 2024. Spectrum: Targeted Training on Signal to Noise Ratio. arXiv preprint arXiv:2406.06623 (2024). [15] Kaiming He, Haoqi Fan, Yuxin Wu, Saining Xie, and Ross Girshick. 2020. Mo-mentum contrast for unsupervised visual representation learning. In CVPR . 9729– 9738. [16] Chih-Hui Ho and Nuno Nvasconcelos. 2020. Contrastive learning with adversarial examples. NeurIPS 33 (2020), 17081–17093. [17] Edward J Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang, Weizhu Chen, et al . 2022. Lora: Low-rank adaptation of large language models. ICLR 1, 2 (2022), 3. [18] N Jain, P-y Chiang, Y Wen, J Kirchenbauer, HM Chu, G Somepalli, BR Bartoldson, B Kailkhura, A Schwarzschild, and A Saha. 2023. Neftune: Noisy Embeddings Improve Instruction Finetuning. arXiv, abs/2310.05914. [19] Chao Jia, Yinfei Yang, Ye Xia, Yi-Ting Chen, Zarana Parekh, Hieu Pham, Quoc Le, Yun-Hsuan Sung, Zhen Li, and Tom Duerig. 2021. Scaling up visual and vision-language representation learning with noisy text supervision. In ICML .PMLR, 4904–4916. [20] Chao Jia, Yinfei Yang, Ye Xia, Yi-Ting Chen, Zarana Parekh, Hieu Pham, Quoc Le, Yun-Hsuan Sung, Zhen Li, and Tom Duerig. 2021. Scaling up visual and vision-language representation learning with noisy text supervision. In ICML .PMLR, 4904–4916. [21] Ting Jiang, Minghui Song, Zihan Zhang, Haizhen Huang, Weiwei Deng, Feng Sun, Qi Zhang, Deqing Wang, and Fuzhen Zhuang. 2024. E5-v: Universal embeddings with multimodal large language models. arXiv preprint arXiv:2407.12580 (2024). [22] Ziyan Jiang, Rui Meng, Xinyi Yang, Semih Yavuz, Yingbo Zhou, and Wenhu Chen. 2024. Vlm2vec: Training vision-language models for massive multimodal embedding tasks. arXiv preprint arXiv:2410.05160 (2024). [23] Yannis Kalantidis, Mert Bulent Sariyildiz, No’e Pion, Philippe Weinzaepfel, and Diane Larlus. 2020. Hard Negative Mixing for Contrastive Learning. ArXiv 
+
+(2020). [24] Zhibin Lan, Liqiang Niu, Fandong Meng, Jie Zhou, and Jinsong Su. 2025. LLaVE: Large Language and Vision Embedding Models with Hardness-Weighted Con-trastive Learning. arXiv preprint arXiv:2503.04812 (2025). [25] Junnan Li, Dongxu Li, Silvio Savarese, and Steven Hoi. 2023. Blip-2: Bootstrapping language-image pre-training with frozen image encoders and large language models. In ICML . PMLR, 19730–19742. [26] Junnan Li, Dongxu Li, Caiming Xiong, and Steven Hoi. 2022. Blip: Bootstrapping language-image pre-training for unified vision-language understanding and generation. In ICML . PMLR, 12888–12900. [27] Zehan Li, Xin Zhang, Yanzhao Zhang, Dingkun Long, Pengjun Xie, and Meishan Zhang. 2023. Towards general text embeddings with multi-stage contrastive learning. arXiv preprint arXiv:2308.03281 (2023). [28] Victor Weixin Liang, Yuhui Zhang, Yongchan Kwon, Serena Yeung, and James Y Zou. 2022. Mind the gap: Understanding the modality gap in multi-modal con-trastive representation learning. NeurIPS 35 (2022), 17612–17625. [29] Haotian Liu, Chunyuan Li, Yuheng Li, Bo Li, Yuanhan Zhang, Sheng Shen, and Yong Jae Lee. 2024. Llavanext: Improved reasoning, ocr, and world knowledge. [30] Zhenghao Liu, Chenyan Xiong, Yuanhuiyi Lv, Zhiyuan Liu, and Ge Yu. 2022. Universal vision-language dense retrieval: Learning a unified representation space for multi-modal retrieval. arXiv preprint arXiv:2209.00179 (2022). [31] Vladimir A Marčenko and Leonid Andreevich Pastur. 1967. Distribution of eigenvalues for some sets of random matrices. Mathematics of the USSR-Sbornik 
+
+1, 4 (1967), 457. [32] Nikhil Shivakumar Nayak, Krishnateja Killamsetty, Ligong Han, Abhishek Bhand-waldar, Prateek Chanda, Kai Xu, Hao Wang, Aldo Pareja, Oleg Silkin, Mustafa Eyceoz, et al . 2025. Sculpting Subspaces: Constrained Full Fine-Tuning in LLMs for Continual Learning. arXiv preprint arXiv:2504.07097 (2025). [33] Aaron van den Oord, Yazhe Li, and Oriol Vinyals. 2018. Representation learning with contrastive predictive coding. arXiv preprint arXiv:1807.03748 (2018). [34] Aaron van den Oord, Yazhe Li, and Oriol Vinyals. 2018. Representation learning with contrastive predictive coding. arXiv preprint arXiv:1807.03748 (2018). [35] Jiezhong Qiu, Qibin Chen, Yuxiao Dong, Jing Zhang, Hongxia Yang, Ming Ding, Kuansan Wang, and Jie Tang. 2020. Gcc: Graph contrastive coding for graph neural network pre-training. In SIGKDD . 1150–1160. [36] Alec Radford, Jong Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh, Sandhini Agarwal, Girish Sastry, Amanda Askell, Pamela Mishkin, Jack Clark, et al . 2021. Learning transferable visual models from natural language supervision. In ICML . PMLR, 8748–8763. [37] Nils Reimers and Iryna Gurevych. 2019. Sentence-bert: Sentence embeddings using siamese bert-networks. arXiv preprint arXiv:1908.10084 (2019). [38] Weiming Ren, Huan Yang, Jie Min, Cong Wei, and Wenhu Chen. 2024. VISTA: Enhancing Long-Duration and High-Resolution Video Understanding by Video Spatiotemporal Augmentation. arXiv preprint arXiv:2412.00927 (2024). [39] Joshua Robinson, Ching-Yao Chuang, Suvrit Sra, and Stefanie Jegelka. 2021. CONTRASTIVE LEARNING WITH HARD NEGATIVE SAMPLES. In ICLR .[40] Pratyusha Sharma, Jordan T Ash, and Dipendra Misra. 2023. The truth is in there: Improving reasoning in language models with layer-selective rank reduction. 
+
+arXiv preprint arXiv:2312.13558 (2023). [41] Peng Wang, Shuai Bai, Sinan Tan, Shijie Wang, Zhihao Fan, Jinze Bai, Keqin Chen, Xuejing Liu, Jialin Wang, Wenbin Ge, et al . 2024. Qwen2-vl: Enhancing vision-language model’s perception of the world at any resolution. arXiv preprint arXiv:2409.12191 (2024). [42] Cong Wei, Yang Chen, Haonan Chen, Hexiang Hu, Ge Zhang, Jie Fu, Alan Ritter, and Wenhu Chen. 2024. Uniir: Training and benchmarking universal multimodal information retrievers. In European Conference on Computer Vision . Springer, 387–404. [43] Yuning You, Tianlong Chen, Yongduo Sui, Ting Chen, Zhangyang Wang, and Yang Shen. 2020. Graph contrastive learning with augmentations. NeurIPS 33 (2020), 5812–5823. [44] Jure Zbontar, Li Jing, Ishan Misra, Yann LeCun, and Stéphane Deny. 2021. Barlow twins: Self-supervised learning via redundancy reduction. In ICML . PMLR, 12310– 12320. [45] Xiaohua Zhai, Basil Mustafa, Alexander Kolesnikov, and Lucas Beyer. 2023. Sig-moid loss for language image pre-training. In ICCV . 11975–11986. [46] Kai Zhang, Yi Luan, Hexiang Hu, Kenton Lee, Siyuan Qiao, Wenhu Chen, Yu Su, and Ming-Wei Chang. 2024. Magiclens: Self-supervised image retrieval with open-ended instructions. arXiv preprint arXiv:2403.19651 (2024). [47] Xin Zhang, Yanzhao Zhang, Wen Xie, Mingxin Li, Ziqi Dai, Dingkun Long, Pengjun Xie, Meishan Zhang, Wenjie Li, and Min Zhang. 2024. GME: Im-proving Universal Multimodal Retrieval by Multimodal LLMs. arXiv preprint arXiv:2412.16855 (2024). [48] Yuhao Zhang, Hang Jiang, Yasuhide Miura, Christopher D. Manning, and Curtis P. Langlotz. 2022. Contrastive Learning of Medical Visual Representations from Paired Images and Text. In Proceedings of the 7th Machine Learning for Healthcare Conference . PMLR. [49] Junjie Zhou, Zheng Liu, Ze Liu, Shitao Xiao, Yueze Wang, Bo Zhao, Chen Jason Zhang, Defu Lian, and Yongping Xiong. 2024. MegaPairs: Massive Data Synthesis For Universal Multimodal Retrieval. arXiv preprint arXiv:2412.14475 (2024). [50] Yanqiao Zhu, Yichen Xu, Feng Yu, Qiang Liu, Shu Wu, and Liang Wang. 2020. Deep graph contrastive representation learning. arXiv preprint arXiv:2006.04131 
+
+(2020). WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates Jinjin Guo et al. 
+
+## A Implementation Setting 
+
+Our implementation builds on the Qwen2-VL-2B architecture [ 41 ], following the methodological framework of VLM2Vec [ 22 ]. For parameter-efficient fine-tuning, we integrate LoRA adapters [ 17 ]with a rank of 8 across all trainable layers. The detailed training configuration is as follows. 
+
+• Hardware . Experiments are conducted on 8× H800 GPUs (80 GB VRAM per device). 
+
+• Data Processing . High-resolution images are tokenized into sequences of up to 4, 096 tokens, with a maximum of 100 , 000 
+
+samples per dataset to ensure balanced resource allocation. 
+
+• Optimization . Optimization is performed using a linear learn-ing rate scheduler, with an initial rate of 2 × 10 −5 over 2, 000 
+
+training steps, including 200 warmup iterations. 
+
+• Batch Handling . Each GPU processes a local batch of 256 samples. To mitigate memory constraints, we leverage Grad-Cache [ 8 ] with chunk sizes of 4 for both query and candidate embeddings, enabling efficient gradient computation across distributed units. 
+
+• Hyperparameter setting . The temperature 𝜏 in Eq. 9 is con-sistently set to 0.02 across different VLM scales. The curricu-lum factor 𝛼 (𝑡 ) in Eq. 7 is defined as a piecewise function of training step 𝑡 , where 𝑇 is the total steps and 𝑝 = 𝑡 /𝑇 indicates the training progress: 
+
+𝛼 (𝑡 ) =
+
+
+
+(0.8 − 0.15 𝛽 ) [ 1 − cos (6𝜋𝑡 /𝑇 )] , 𝑝 < 0.15 
+
+(0.4 − 0.08 𝛽 ) [ 1 + cos (3𝜋 (𝑡 /𝑇 − 0.15 ))] , 0.15 ≤ 𝑝 < 0.5
+
+(0.1 − 0.02 𝛽 ) [ 1 − cos (2𝜋 (𝑡 /𝑇 − 0.5))] , 𝑝 ≥ 0.5
+
+where 𝛽 = log (batch_size /256 + 1)/ log (8) is the batch scaling factor. This formulation implements a curriculum learning strategy with strong augmentation in early stages ( 𝑝 < 0.15 ), moderate augmentation in middle stages ( 0.15 ≤ 𝑝 < 0.5), and weak augmentation in final stages ( 𝑝 ≥ 0.5). The dynamically scheduled weight 𝜆 (𝑡 ) in Eq. 16 follows a piecewise cosine schedule defined over normalized training progress. It is given by: 
+
+𝜆 (𝑡 ) =
+
+
+
+0.05 + 0.015 
+
+
+
+1 − cos 
+
+ 𝜋𝑡 
+
+0.3
+
+ 
+
+, 0 ≤ 𝑝 < 0.30.08 , 0.3 ≤ 𝑝 < 0.70.08 − 0.025 
+
+
+
+1 − cos 
+
+ 𝜋 (𝑡 − 0.7)
+
+0.3
+
+ 
+
+. 0.7 ≤ 𝑝 ≤ 1
+
+Such a design stabilizes training by emphasizing the spectral loss in the middle phase while reducing its influence toward the end. The evolution of both 𝛼 (𝑡 ) and 𝜆 (𝑡 ) throughout training is illustrated in Figure 4. 0% 20% 40% 60% 80% 100%             
+
+> Training Progress
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> (t)
+> (a) Curriculum factor 𝛼 (𝑡 )0% 20% 40% 60% 80% 100%
+> Training Progress
+> 0.04
+> 0.06
+> 0.08
+> (t)(b) Dynamic weight 𝜆 (𝑡 )
+
+Figure 4: Hyperparameter scheduling patterns during train-ing: (a) illustrates the decay of the curriculum factor 𝛼 (𝑡 ),while (b) shows the dynamically scheduled weighting coeffi-cient 𝜆 (𝑡 ).
+
+## B Complexity Discussion 
+
+To address computational efficiency concerns, our SVD-based de-composition is performed on a globally gathered batch, ensuring all GPUs process identical unified data and avoid fragmentation. Empirical benchmarks demonstrate that SDE introduces minimal overhead compared to VLM2VEC: 
+
+• Time Overhead : Only +2.87% per-step time (195.26s → 200.87s) 
+
+• Throughput : Merely −3.05% decrease (1.31 → 1.27 samples/s) 
+
+• Memory : Nearly zero additional usage The overhead remains below 3% across batch sizes from 64 to 1024, confirming that SDE scales efficiently without introducing computa-tional or memory bottlenecks. This validates the practical viability of our approach in large-scale distributed training scenarios. 
+
+## C Ablation Study on Loss Objectives 
+
+We empirically evaluate the effectiveness of our dual-domain con-trastive learning loss by comparing several SDE variants trained with different loss objectives. To measure resilience to input per-turbations, we randomly perturb 5% of each test dataset using orthogonal transformations (Eq. 10). 
+
+Table 3: The ablation study of the SDE framework and its vari-ants with different loss objectives on the MMEB benchmark. For example, SDE -feat means that it only employs instance-level contrastive loss in the feature space. Here, SDE and its variant utilize Qwen2-VL-2B as the backbone with a small batch size of 16 for efficiency. 
+
+Model Loss Objective Avg Score Overall Perturbed overall(5%) 
+
+SDE -feat Lfeat 45.8 41.9 
+
+SDE -S Lfeat + L hellinger 46.0 42.6 
+
+SDE -U Lfeat + L subspace 46.2 43.0 
+
+SDE (Ours) Lfeat + L spec 48.8 47.8 
+
+As shown in Table 3, the full SDE model, which incorporates both instance-level and spectral structure alignment through the com-posite spectral contrastive loss L𝑓 𝑒𝑎𝑡 + L 𝑠𝑝𝑒𝑐 , achieves the highest 
+
+𝑃𝑟𝑒𝑐𝑖𝑠𝑖𝑜𝑛 @1 on clean data at 48.8 and maintains superior perfor-mance under input perturbation, reaching 47.8, with the smallest performance degradation of 2.0%. The feature-level alignment term 
+
+L𝑓 𝑒𝑎𝑡 alone shows significant vulnerability to perturbations, ex-hibiting an 8.5% drop. Spectral components provide increasing robustness, as demonstrated by the Hellinger loss with a 7.4% drop and the Subspace loss with a 6.9% drop. These results demonstrate that feature-level discrimination and spectral-level consistency of-fer complementary advantages, and their combination yields both high accuracy and enhanced robustness.
