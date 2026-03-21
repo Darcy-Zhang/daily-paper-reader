@@ -696,38 +696,41 @@
           </div>
 
           <div style="font-weight:500; margin-bottom:4px; display:flex; align-items:center; gap:4px;">
-            用于「总结整篇论文」的大模型（推荐选择 Gemini 3 Flash）
+            用于「总结整篇论文」的大模型（推荐选择 deepseek-v3.2）
             <span class="secret-model-tip">!
               <span class="secret-model-tip-popup">
-                按照 Thinking（思考模式）的高负载场景估算：<br/>
+                这里展示的是百炼兼容模式下更适合论文总结/问答的模型类型：<br/>
                 <br/>
-                总结：15k 输入 + 4k 输出（含思考）<br/>
-                提问：16.1k 输入 + 2k 输出（含思考）<br/>
+                - deepseek-v3.2：长文本与推理能力较强，适合作为默认模型<br/>
+                - kimi-k2.5：长上下文与总结场景表现稳定<br/>
+                - glm-5：综合能力均衡<br/>
+                - MiniMax-M2.5：适合通用问答与生成<br/>
+                - qwen3.5-plus：Qwen 系列中的高质量通用选项<br/>
                 <br/>
-                模型 · 约价（单次）：<br/>
-                - Gemini 3 Flash：总结 ¥0.0195，提问 ¥0.0141（不到 2 分钱，100 篇论文约 2 元）<br/>
-                - DeepSeek V3：总结 ¥0.0294，提问 ¥0.0267（不到 3 分钱，长输出性价比极高）<br/>
-                - GPT-5：总结 ¥0.0588，提问 ¥0.0401（约 6 分钱）<br/>
-                - Gemini 3 Pro：总结 ¥0.0780，提问 ¥0.0562（约 8 分钱，一篇论文不到 1 毛钱）
+                如需进一步控制成本或质量，建议先在百炼控制台确认你已开通对应模型，再回到这里选择。
               </span>
             </span>
           </div>
           <div style="font-size:13px; margin-bottom:6px;">
             <label style="display:flex; align-items:center; gap:6px; margin-bottom:2px;">
-              <input type="radio" name="secret-setup-summarize-model" value="gemini-3-flash-preview-thinking-1000" checked />
-              <span>Gemini 3 Flash（思考版，推荐）</span>
+              <input type="radio" name="secret-setup-summarize-model" value="deepseek-v3.2" checked />
+              <span>deepseek-v3.2 · 默认推荐</span>
             </label>
             <label style="display:flex; align-items:center; gap:6px; margin-bottom:2px;">
-              <input type="radio" name="secret-setup-summarize-model" value="deepseek-v3.2" />
-              <span>DeepSeek V3.2 · 深度思考</span>
+              <input type="radio" name="secret-setup-summarize-model" value="kimi-k2.5" />
+              <span>kimi-k2.5 · 长文总结</span>
             </label>
             <label style="display:flex; align-items:center; gap:6px; margin-bottom:2px;">
-              <input type="radio" name="secret-setup-summarize-model" value="gpt-5-chat" />
-              <span>GPT-5 Chat · 通用高质量对话</span>
+              <input type="radio" name="secret-setup-summarize-model" value="glm-5" />
+              <span>glm-5 · 综合均衡</span>
+            </label>
+            <label style="display:flex; align-items:center; gap:6px; margin-bottom:2px;">
+              <input type="radio" name="secret-setup-summarize-model" value="MiniMax-M2.5" />
+              <span>MiniMax-M2.5 · 通用生成</span>
             </label>
             <label style="display:flex; align-items:center; gap:6px;">
-              <input type="radio" name="secret-setup-summarize-model" value="gemini-3-pro-preview" />
-              <span>Gemini 3 Pro（更强思考能力）</span>
+              <input type="radio" name="secret-setup-summarize-model" value="qwen3.5-plus" />
+              <span>qwen3.5-plus · Qwen 通用增强</span>
             </label>
           </div>
         </div>
@@ -939,10 +942,11 @@
               apiKey: platoKey,
               baseUrl: summarizedBaseUrl,
               models: [
-                'gemini-3-flash-preview-thinking-1000',
                 'deepseek-v3.2',
-                'gpt-5-chat',
-                'gemini-3-pro-preview-thinking-1000',
+                'kimi-k2.5',
+                'glm-5',
+                'MiniMax-M2.5',
+                'qwen3.5-plus',
               ],
             },
           ],
