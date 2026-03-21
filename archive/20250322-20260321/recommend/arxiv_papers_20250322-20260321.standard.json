@@ -1,16 +1,1610 @@
 {
   "mode": "standard",
-  "generated_at": "2026-03-21T05:21:27.121755+00:00",
+  "generated_at": "2026-03-21T07:45:35.897877+00:00",
   "stats": {
     "mode": "standard",
-    "tag_count": 0,
-    "deep_divecandidates": 0,
-    "deep_cap": null,
-    "deep_selected": 0,
-    "quick_candidates": 0,
-    "quick_skim_target": 10,
-    "quick_selected": 0
+    "tag_count": 1,
+    "deep_divecandidates": 65,
+    "deep_cap": 6,
+    "deep_selected": 30,
+    "quick_candidates": 132,
+    "quick_skim_target": 11,
+    "quick_selected": 11
   },
-  "deep_dive": [],
-  "quick_skim": []
+  "deep_dive": [
+    {
+      "id": "2602.19322v1",
+      "title": "US-JEPA: A Joint Embedding Predictive Architecture for Medical Ultrasound",
+      "abstract": "Ultrasound (US) imaging poses unique challenges for representation learning due to its inherently noisy acquisition process. The low signal-to-noise ratio and stochastic speckle patterns hinder standard self-supervised learning methods relying on a pixel-level reconstruction objective. Joint-Embedding Predictive Architectures (JEPAs) address this drawback by predicting masked latent representations rather than raw pixels. However, standard approaches depend on hyperparameter-brittle and computationally expensive online teachers updated via exponential moving average. We propose US-JEPA, a self-supervised framework that adopts the Static-teacher Asymmetric Latent Training (SALT) objective. By using a frozen, domain-specific teacher to provide stable latent targets, US-JEPA decouples student-teacher optimization and pushes the student to expand upon the semantic priors of the teacher. In addition, we provide the first rigorous comparison of all publicly available state-of-the-art ultrasound foundation models on UltraBench, a public dataset benchmark spanning multiple organs and pathological conditions. Under linear probing for diverse classification tasks, US-JEPA achieves performance competitive with or superior to domain-specific and universal vision foundation model baselines. Our results demonstrate that masked latent prediction provides a stable and efficient path toward robust ultrasound representations.",
+      "authors": [
+        "Ashwath Radhachandran",
+        "Vedrana Ivezić",
+        "Shreeram Athreya",
+        "Ronit Anilkumar",
+        "Corey W. Arnold",
+        "William Speier"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-02-22T19:56:56+00:00",
+      "link": "https://arxiv.org/pdf/2602.19322v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "Joint-Embedding Predictive Architecture (JEPA) specifically for medical ultrasound imaging",
+      "llm_evidence_cn": "面向医学超声的联合嵌入预测架构JEPA",
+      "llm_evidence": "面向医学超声的联合嵌入预测架构JEPA",
+      "canonical_evidence": "面向医学超声的联合嵌入预测架构JEPA",
+      "llm_tldr_en": "US-JEPA applies Joint-Embedding Predictive Architecture to medical ultrasound with static-teacher SALT objective",
+      "llm_tldr_cn": "US-JEPA将JEPA应用于医学超声并采用静态教师SALT目标",
+      "llm_tldr": "US-JEPA将JEPA应用于医学超声并采用静态教师SALT目标",
+      "llm_tags": [
+        "query:q1"
+      ],
+      "matched_query_tag": "query:q1",
+      "matched_query_text": "Joint-Embedding",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2602.01456v1",
+      "title": "Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations",
+      "abstract": "Joint-Embedding Predictive Architectures (JEPA) learn view-invariant representations and admit projection-based distribution matching for collapse prevention. Existing approaches regularize representations towards isotropic Gaussian distributions, but inherently favor dense representations and fail to capture the key property of sparsity observed in efficient representations. We introduce Rectified Distribution Matching Regularization (RDMReg), a sliced two-sample distribution-matching loss that aligns representations to a Rectified Generalized Gaussian (RGG) distribution. RGG enables explicit control over expected $\\ell_0$ norm through rectification, while preserving maximum-entropy up to rescaling under expected $\\ell_p$ norm constraints. Equipping JEPAs with RDMReg yields Rectified LpJEPA, which strictly generalizes prior Gaussian-based JEPAs. Empirically, Rectified LpJEPA learns sparse, non-negative representations with favorable sparsity-performance trade-offs and competitive downstream performance on image classification benchmarks, demonstrating that RDMReg effectively enforces sparsity while preserving task-relevant information.",
+      "authors": [
+        "Yilun Kuang",
+        "Yash Dagade",
+        "Tim G. J. Rudner",
+        "Randall Balestriero",
+        "Yann LeCun"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.CV"
+      ],
+      "published": "2026-02-01T21:49:30+00:00",
+      "link": "https://arxiv.org/pdf/2602.01456v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Joint-Embedding Predictive Architecture with novel regularization",
+      "llm_evidence_cn": "联合嵌入预测架构与新颖正则化",
+      "llm_evidence": "联合嵌入预测架构与新颖正则化",
+      "canonical_evidence": "联合嵌入预测架构与新颖正则化",
+      "llm_tldr_en": "Rectified LpJEPA extends JEPA with sparse maximum-entropy representations via rectified generalized Gaussian distribution matching",
+      "llm_tldr_cn": "Rectified LpJEPA通过矫正广义高斯分布匹配将JEPA扩展为稀疏最大熵表示",
+      "llm_tldr": "Rectified LpJEPA通过矫正广义高斯分布匹配将JEPA扩展为稀疏最大熵表示",
+      "llm_tags": [
+        "query:q1"
+      ],
+      "matched_query_tag": "query:q1",
+      "matched_query_text": "Joint-Embedding",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2602.01905v1",
+      "title": "Learning Sparse Visual Representations via Spatial-Semantic Factorization",
+      "abstract": "Self-supervised learning (SSL) faces a fundamental conflict between semantic understanding and image reconstruction. High-level semantic SSL (e.g., DINO) relies on global tokens that are forced to be location-invariant for augmentation alignment, a process that inherently discards the spatial coordinates required for reconstruction. Conversely, generative SSL (e.g., MAE) preserves dense feature grids for reconstruction but fails to produce high-level abstractions. We introduce STELLAR, a framework that resolves this tension by factorizing visual features into a low-rank product of semantic concepts and their spatial distributions. This disentanglement allows us to perform DINO-style augmentation alignment on the semantic tokens while maintaining the precise spatial mapping in the localization matrix necessary for pixel-level reconstruction. We demonstrate that as few as 16 sparse tokens under this factorized form are sufficient to simultaneously support high-quality reconstruction (2.60 FID) and match the semantic performance of dense backbones (79.10% ImageNet accuracy). Our results highlight STELLAR as a versatile sparse representation that bridges the gap between discriminative and generative vision by strategically separating semantic identity from spatial geometry. Code available at https://aka.ms/stellar.",
+      "authors": [
+        "Theodore Zhengde Zhao",
+        "Sid Kiblawi",
+        "Jianwei Yang",
+        "Naoto Usuyama",
+        "Reuben Tan",
+        "Noel C Codella",
+        "Tristan Naumann",
+        "Hoifung Poon",
+        "Mu Wei"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-02-02T10:12:17+00:00",
+      "link": "https://arxiv.org/pdf/2602.01905v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "bridges generative SSL (MAE) and semantic SSL (DINO) via spatial-semantic factorization",
+      "llm_evidence_cn": "通过空间-语义分解桥接生成式与语义自监督学习",
+      "llm_evidence": "通过空间-语义分解桥接生成式与语义自监督学习",
+      "canonical_evidence": "通过空间-语义分解桥接生成式与语义自监督学习",
+      "llm_tldr_en": "STELLAR unifies generative and contrastive SSL by factorizing features into semantic concepts and spatial distributions",
+      "llm_tldr_cn": "STELLAR通过特征分解统一生成式与对比自监督学习",
+      "llm_tldr": "STELLAR通过特征分解统一生成式与对比自监督学习",
+      "llm_tags": [
+        "query:q7"
+      ],
+      "matched_query_tag": "query:q7",
+      "matched_query_text": "Bridging generative and contrastive learning methods",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2602.02093v1",
+      "title": "Cell-JEPA: Latent Representation Learning for Single-Cell Transcriptomics",
+      "abstract": "Single-cell foundation models learn by reconstructing masked gene expression, implicitly treating technical noise as signal. With dropout rates exceeding 90%, reconstruction objectives encourage models to encode measurement artifacts rather than stable cellular programs. We introduce Cell-JEPA, a joint-embedding predictive architecture that shifts learning from reconstructing sparse counts to predicting in latent space. The key insight is that cell identity is redundantly encoded across genes. We show predicting cell-level embeddings from partial observations forces the model to learn dropout-robust features. On cell-type clustering, Cell-JEPA achieves 0.72 AvgBIO in zero-shot transfer versus 0.53 for scGPT, a 36% relative improvement. On perturbation prediction within a single cell line, Cell-JEPA improves absolute-state reconstruction but not effect-size estimation, suggesting that representation learning and perturbation modeling address complementary aspects of cellular prediction.",
+      "authors": [
+        "Ali ElSheikh",
+        "Rui-Xi Wang",
+        "Weimin Wu",
+        "Yibo Wen",
+        "Payam Dibaeinia",
+        "Jennifer Yuntong Zhang",
+        "Jerry Yao-Chieh Hu",
+        "Mei Knudson",
+        "Sudarshan Babu",
+        "Shao-Hua Sun",
+        "Aly A. Khan",
+        "Han Liu"
+      ],
+      "primary_category": "cs.CE",
+      "categories": [
+        "cs.CE"
+      ],
+      "published": "2026-02-02T13:38:04+00:00",
+      "link": "https://arxiv.org/pdf/2602.02093v1",
+      "tags": [
+        "keyword:生成对比学习"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "joint-embedding predictive architecture for representation learning",
+      "llm_evidence_cn": "联合嵌入预测架构用于表示学习",
+      "llm_evidence": "联合嵌入预测架构用于表示学习",
+      "canonical_evidence": "联合嵌入预测架构用于表示学习",
+      "llm_tldr_en": "Proposes Cell-JEPA, a joint-embedding predictive architecture for single-cell transcriptomics representation learning.",
+      "llm_tldr_cn": "提出Cell-JEPA，面向单细胞转录组学的联合嵌入预测架构。",
+      "llm_tldr": "提出Cell-JEPA，面向单细胞转录组学的联合嵌入预测架构。",
+      "llm_tags": [
+        "query:q1"
+      ],
+      "matched_query_tag": "query:q1",
+      "matched_query_text": "Joint-Embedding",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2602.02381v1",
+      "title": "Self-Supervised Learning from Structural Invariance",
+      "abstract": "Joint-embedding self-supervised learning (SSL), the key paradigm for unsupervised representation learning from visual data, learns from invariances between semantically-related data pairs. We study the one-to-many mapping problem in SSL, where each datum may be mapped to multiple valid targets. This arises when data pairs come from naturally occurring generative processes, e.g., successive video frames. We show that existing methods struggle to flexibly capture this conditional uncertainty. As a remedy, we introduce a latent variable to account for this uncertainty and derive a variational lower bound on the mutual information between paired embeddings. Our derivation yields a simple regularization term for standard SSL objectives. The resulting method, which we call AdaSSL, applies to both contrastive and distillation-based SSL objectives, and we empirically show its versatility in causal representation learning, fine-grained image understanding, and world modeling on videos.",
+      "authors": [
+        "Yipeng Zhang",
+        "Hafez Ghaemi",
+        "Jungyoon Lee",
+        "Shahab Bakhtiari",
+        "Eilif B. Muller",
+        "Laurent Charlin"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-02-02T17:44:44+00:00",
+      "link": "https://arxiv.org/pdf/2602.02381v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Joint-embedding self-supervised learning with variational regularization for one-to-many mappings",
+      "llm_evidence_cn": "联合嵌入自监督学习，针对一对多映射的变分正则化",
+      "llm_evidence": "联合嵌入自监督学习，针对一对多映射的变分正则化",
+      "canonical_evidence": "联合嵌入自监督学习，针对一对多映射的变分正则化",
+      "llm_tldr_en": "Introduces latent variable and variational lower bound to improve joint-embedding SSL for generative processes",
+      "llm_tldr_cn": "引入潜变量和变分下界改进联合嵌入SSL处理生成过程",
+      "llm_tldr": "引入潜变量和变分下界改进联合嵌入SSL处理生成过程",
+      "llm_tags": [
+        "query:q1"
+      ],
+      "matched_query_tag": "query:q1",
+      "matched_query_text": "Joint-Embedding",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2602.02620v1",
+      "title": "CryoLVM: Self-supervised Learning from Cryo-EM Density Maps with Large Vision Models",
+      "abstract": "Cryo-electron microscopy (cryo-EM) has revolutionized structural biology by enabling near-atomic-level visualization of biomolecular assemblies. However, the exponential growth in cryo-EM data throughput and complexity, coupled with diverse downstream analytical tasks, necessitates unified computational frameworks that transcend current task-specific deep learning approaches with limited scalability and generalizability. We present CryoLVM, a foundation model that learns rich structural representations from experimental density maps with resolved structures by leveraging the Joint-Embedding Predictive Architecture (JEPA) integrated with SCUNet-based backbone, which can be rapidly adapted to various downstream tasks. We further introduce a novel histogram-based distribution alignment loss that accelerates convergence and enhances fine-tuning performance. We demonstrate CryoLVM's effectiveness across three critical cryo-EM tasks: density map sharpening, density map super-resolution, and missing wedge restoration. Our method consistently outperforms state-of-the-art baselines across multiple density map quality metrics, confirming its potential as a versatile model for a wide spectrum of cryo-EM applications.",
+      "authors": [
+        "Weining Fu",
+        "Kai Shu",
+        "Kui Xu",
+        "Qiangfeng Cliff Zhang"
+      ],
+      "primary_category": "q-bio.QM",
+      "categories": [
+        "q-bio.QM",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-02-02T13:36:36+00:00",
+      "link": "https://arxiv.org/pdf/2602.02620v1",
+      "tags": [
+        "keyword:生成对比学习"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Joint-Embedding Predictive Architecture (JEPA)",
+      "llm_evidence_cn": "采用联合嵌入预测架构(JEPA)",
+      "llm_evidence": "采用联合嵌入预测架构(JEPA)",
+      "canonical_evidence": "采用联合嵌入预测架构(JEPA)",
+      "llm_tldr_en": "CryoLVM uses JEPA for self-supervised learning on cryo-EM density maps, enabling scalable structural representation learning.",
+      "llm_tldr_cn": "CryoLVM利用JEPA进行冷冻电镜密度图的自监督学习，实现可扩展的结构表示学习。",
+      "llm_tldr": "CryoLVM利用JEPA进行冷冻电镜密度图的自监督学习，实现可扩展的结构表示学习。",
+      "llm_tags": [
+        "query:q1"
+      ],
+      "matched_query_tag": "query:q1",
+      "matched_query_text": "Joint-Embedding",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2602.02620v2",
+      "title": "CryoLVM: Self-supervised Learning from Cryo-EM Density Maps with Large Vision Models",
+      "abstract": "Cryo-electron microscopy (cryo-EM) has revolutionized structural biology by enabling near-atomic-level visualization of biomolecular assemblies. However, the exponential growth in cryo-EM data throughput and complexity, coupled with diverse downstream analytical tasks, necessitates unified computational frameworks that transcend current task-specific deep learning approaches with limited scalability and generalizability. We present CryoLVM, a foundation model that learns rich structural representations from experimental density maps with resolved structures by leveraging the Joint-Embedding Predictive Architecture (JEPA) integrated with SCUNet-based backbone, which can be rapidly adapted to various downstream tasks. We further introduce a novel histogram-based distribution alignment loss that accelerates convergence and enhances fine-tuning performance. We demonstrate CryoLVM's effectiveness across three critical cryo-EM tasks: density map sharpening, density map super-resolution, and missing wedge restoration. Our method consistently outperforms state-of-the-art baselines across multiple density map quality metrics, confirming its potential as a versatile model for a wide spectrum of cryo-EM applications.",
+      "authors": [
+        "Weining Fu",
+        "Kai Shu",
+        "Kui Xu",
+        "Qiangfeng Cliff Zhang"
+      ],
+      "primary_category": "q-bio.QM",
+      "categories": [
+        "q-bio.QM",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-02-02T13:36:36+00:00",
+      "link": "https://arxiv.org/pdf/2602.02620v2",
+      "tags": [
+        "keyword:生成对比学习"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Joint-Embedding Predictive Architecture JEPA for self-supervised learning",
+      "llm_evidence_cn": "联合嵌入预测架构JEPA用于自监督学习",
+      "llm_evidence": "联合嵌入预测架构JEPA用于自监督学习",
+      "canonical_evidence": "联合嵌入预测架构JEPA用于自监督学习",
+      "llm_tldr_en": "CryoLVM uses JEPA architecture for self-supervised representation learning from cryo-EM density maps.",
+      "llm_tldr_cn": "CryoLVM使用JEPA架构从冷冻电镜密度图进行自监督表示学习。",
+      "llm_tldr": "CryoLVM使用JEPA架构从冷冻电镜密度图进行自监督表示学习。",
+      "llm_tags": [
+        "query:q1"
+      ],
+      "matched_query_tag": "query:q1",
+      "matched_query_text": "Joint-Embedding",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2602.02894v1",
+      "title": "DoubleTake: Contrastive Reasoning for Faithful Decision-Making in Medical Imaging",
+      "abstract": "Accurate decision making in medical imaging requires reasoning over subtle visual differences between confusable conditions, yet most existing approaches rely on nearest neighbor retrieval that returns redundant evidence and reinforces a single hypothesis. We introduce a contrastive, document-aware reference selection framework that constructs compact evidence sets optimized for discrimination rather than similarity by explicitly balancing visual relevance, embedding diversity, and source-level provenance using ROCO embeddings and metadata. While ROCO provides large-scale image-caption pairs, it does not specify how references should be selected for contrastive reasoning, and naive retrieval frequently yields near-duplicate figures from the same document. To address this gap, we release a reproducible reference selection protocol and curated reference bank that enable a systematic study of contrastive retrieval in medical image reasoning. Building on these contrastive evidence sets, we propose Counterfactual-Contrastive Inference, a confidence-aware reasoning framework that performs structured pairwise visual comparisons and aggregates evidence using margin-based decision rules with faithful abstention. On the MediConfusion benchmark, our approach achieves state-of-the-art performance, improving set-level accuracy by nearly 15% relative to prior methods while reducing confusion and improving individual accuracy.",
+      "authors": [
+        "Daivik Patel",
+        "Shrenik Patel"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.LG"
+      ],
+      "published": "2026-02-02T23:00:39+00:00",
+      "link": "https://arxiv.org/pdf/2602.02894v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "contrastive reasoning for medical imaging decision-making",
+      "llm_evidence_cn": "医学影像决策的对比推理方法",
+      "llm_evidence": "医学影像决策的对比推理方法",
+      "canonical_evidence": "医学影像决策的对比推理方法",
+      "llm_tldr_en": "Contrastive framework for faithful medical imaging decisions using diverse evidence selection and ROCO embeddings.",
+      "llm_tldr_cn": "利用多样化证据选择与ROCO嵌入实现可靠的医学影像对比决策。",
+      "llm_tldr": "利用多样化证据选择与ROCO嵌入实现可靠的医学影像对比决策。",
+      "llm_tags": [
+        "query:q10"
+      ],
+      "matched_query_tag": "query:q10",
+      "matched_query_text": "how does contrastive learning improve medical image classification with limited annotations",
+      "matched_requirement_id": "req-10",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2602.04021v1",
+      "title": "Group Contrastive Learning for Weakly Paired Multimodal Data",
+      "abstract": "We present GROOVE, a semi-supervised multi-modal representation learning approach for high-content perturbation data where samples across modalities are weakly paired through shared perturbation labels but lack direct correspondence. Our primary contribution is GroupCLIP, a novel group-level contrastive loss that bridges the gap between CLIP for paired cross-modal data and SupCon for uni-modal supervised contrastive learning, addressing a fundamental gap in contrastive learning for weakly-paired settings. We integrate GroupCLIP with an on-the-fly backtranslating autoencoder framework to encourage cross-modally entangled representations while maintaining group-level coherence within a shared latent space. Critically, we introduce a comprehensive combinatorial evaluation framework that systematically assesses representation learners across multiple optimal transport aligners, addressing key limitations in existing evaluation strategies. This framework includes novel simulations that systematically vary shared versus modality-specific perturbation effects enabling principled assessment of method robustness. Our combinatorial benchmarking reveals that there is not yet an aligner that uniformly dominates across settings or modality pairs. Across simulations and two real single-cell genetic perturbation datasets, GROOVE performs on par with or outperforms existing approaches for downstream cross-modal matching and imputation tasks. Our ablation studies demonstrate that GroupCLIP is the key component driving performance gains. These results highlight the importance of leveraging group-level constraints for effective multi-modal representation learning in scenarios where only weak pairing is available.",
+      "authors": [
+        "Aditya Gorla",
+        "Hugues Van Assel",
+        "Jan-Christian Huetter",
+        "Heming Yao",
+        "Kyunghyun Cho",
+        "Aviv Regev",
+        "Russell Littman"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "q-bio.QM",
+        "stat.ML"
+      ],
+      "published": "2026-02-03T21:11:06+00:00",
+      "link": "https://arxiv.org/pdf/2602.04021v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "GroupCLIP novel group-level contrastive loss",
+      "llm_evidence_cn": "GroupCLIP新颖组级对比损失",
+      "llm_evidence": "GroupCLIP新颖组级对比损失",
+      "canonical_evidence": "GroupCLIP新颖组级对比损失",
+      "llm_tldr_en": "Introduces group-level contrastive loss bridging CLIP and SupCon for weakly-paired multimodal data.",
+      "llm_tldr_cn": "提出组级对比损失，连接CLIP与SupCon处理弱配对多模态数据。",
+      "llm_tldr": "提出组级对比损失，连接CLIP与SupCon处理弱配对多模态数据。",
+      "llm_tags": [
+        "query:q9"
+      ],
+      "matched_query_tag": "query:q9",
+      "matched_query_text": "Novel contrastive loss functions and objective designs",
+      "matched_requirement_id": "req-9",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2602.04547v1",
+      "title": "OmniRad: A Radiological Foundation Model for Multi-Task Medical Image Analysis",
+      "abstract": "Radiological analysis increasingly benefits from pretrained visual representations that can support heterogeneous downstream tasks across imaging modalities. In this work, we introduce OmniRad, a self-supervised radiological foundation model pretrained on 1.2 million medical images, designed with radiology-inspired principles emphasizing representation reuse and cross-task transferability. We evaluate the pretrained encoder under multiple downstream adaptation regimes, including lightweight task-specific adapters with a frozen backbone as well as full end-to-end fine-tuning for classification, allowing us to assess both representation quality and task-specific performance. OmniRad is evaluated on a broad suite of public benchmarks spanning classification and segmentation across multiple modalities. On the MedMNISTv2 collection, OmniRad improves classification F1 by up to 2.05% over competing foundation models. For dense prediction, OmniRad attains mean Dice score improvements across six MedSegBench datasets when using frozen representations. Qualitative analyses and latent-space visualizations suggest improved feature clustering and modality-related separation.",
+      "authors": [
+        "Luca Zedda",
+        "Andrea Loddo",
+        "Cecilia Di Ruberto"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI"
+      ],
+      "published": "2026-02-04T13:38:51+00:00",
+      "link": "https://arxiv.org/pdf/2602.04547v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "self-supervised radiological foundation model for multi-task medical analysis",
+      "llm_evidence_cn": "自监督放射学基础模型用于多任务医学分析",
+      "llm_evidence": "自监督放射学基础模型用于多任务医学分析",
+      "canonical_evidence": "自监督放射学基础模型用于多任务医学分析",
+      "llm_tldr_en": "OmniRad: 1.2M medical image pretraining for radiological representation learning",
+      "llm_tldr_cn": "OmniRad：基于120万张医学图像预训练的放射学表示学习",
+      "llm_tldr": "OmniRad：基于120万张医学图像预训练的放射学表示学习",
+      "llm_tags": [
+        "query:q5"
+      ],
+      "matched_query_tag": "query:q5",
+      "matched_query_text": "medical image analysis radiology pathology",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2602.04643v1",
+      "title": "MTS-JEPA: Multi-Resolution Joint-Embedding Predictive Architecture for Time-Series Anomaly Prediction",
+      "abstract": "Multivariate time series underpin modern critical infrastructure, making the prediction of anomalies a vital necessity for proactive risk mitigation. While Joint-Embedding Predictive Architectures (JEPA) offer a promising framework for modeling the latent evolution of these systems, their application is hindered by representation collapse and an inability to capture precursor signals across varying temporal scales. To address these limitations, we propose MTS-JEPA, a specialized architecture that integrates a multi-resolution predictive objective with a soft codebook bottleneck. This design explicitly decouples transient shocks from long-term trends, and utilizes the codebook to capture discrete regime transitions. Notably, we find this constraint also acts as an intrinsic regularizer to ensure optimization stability. Empirical evaluations on standard benchmarks confirm that our approach effectively prevents degenerate solutions and achieves state-of-the-art performance under the early-warning protocol.",
+      "authors": [
+        "Yanan He",
+        "Yunshi Wen",
+        "Xin Wang",
+        "Tengfei Ma"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-02-04T15:11:29+00:00",
+      "link": "https://arxiv.org/pdf/2602.04643v1",
+      "tags": [
+        "keyword:生成对比学习"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Joint-Embedding Predictive Architecture JEPA for time-series",
+      "llm_evidence_cn": "时间序列联合嵌入预测架构JEPA",
+      "llm_evidence": "时间序列联合嵌入预测架构JEPA",
+      "canonical_evidence": "时间序列联合嵌入预测架构JEPA",
+      "llm_tldr_en": "Proposes MTS-JEPA with multi-resolution predictive objective and soft codebook for time-series anomaly prediction.",
+      "llm_tldr_cn": "提出MTS-JEPA架构，结合多分辨率预测目标与软码本用于时间序列异常预测。",
+      "llm_tldr": "提出MTS-JEPA架构，结合多分辨率预测目标与软码本用于时间序列异常预测。",
+      "llm_tags": [
+        "query:q1"
+      ],
+      "matched_query_tag": "query:q1",
+      "matched_query_text": "Joint-Embedding",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2602.05639v1",
+      "title": "Joint Embedding Variational Bayes",
+      "abstract": "We introduce Variational Joint Embedding (VJE), a framework that synthesizes joint embedding and variational inference to enable self-supervised learning of probabilistic representations in a reconstruction-free, non-contrastive setting. Compared to energy-based predictive objectives that optimize pointwise discrepancies, VJE maximizes a symmetric conditional evidence lower bound (ELBO) for a latent-variable model defined directly on encoder embeddings. We instantiate the conditional likelihood with a heavy-tailed Student-$t$ model using a polar decomposition that explicitly decouples directional and radial factors to prevent norm-induced instabilities during training. VJE employs an amortized inference network to parameterize a diagonal Gaussian variational posterior whose feature-wise variances are shared with the likelihood scale to capture anisotropic uncertainty without auxiliary projection heads. Across ImageNet-1K, CIFAR-10/100, and STL-10, VJE achieves performance comparable to standard non-contrastive baselines under linear and k-NN evaluation. We further validate these probabilistic semantics through one-class CIFAR-10 anomaly detection, where likelihood-based scoring under the proposed model outperforms comparable self-supervised baselines.",
+      "authors": [
+        "Amin Oji",
+        "Paul Fieguth"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "stat.ML"
+      ],
+      "published": "2026-02-05T13:18:53+00:00",
+      "link": "https://arxiv.org/pdf/2602.05639v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Variational Joint Embedding for self-supervised probabilistic representations",
+      "llm_evidence_cn": "变分联合嵌入用于自监督概率表征",
+      "llm_evidence": "变分联合嵌入用于自监督概率表征",
+      "canonical_evidence": "变分联合嵌入用于自监督概率表征",
+      "llm_tldr_en": "VJE synthesizes joint embedding with variational inference for non-contrastive SSL.",
+      "llm_tldr_cn": "VJE将联合嵌入与变分推断结合用于非对比自监督学习。",
+      "llm_tldr": "VJE将联合嵌入与变分推断结合用于非对比自监督学习。",
+      "llm_tags": [
+        "query:q1"
+      ],
+      "matched_query_tag": "query:q1",
+      "matched_query_text": "Joint-Embedding",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2602.09477v2",
+      "title": "Weakly Supervised Contrastive Learning for Histopathology Patch Embeddings",
+      "abstract": "Digital histopathology whole slide images (WSIs) provide gigapixel-scale high-resolution images that are highly useful for disease diagnosis. However, digital histopathology image analysis faces significant challenges due to the limited training labels, since manually annotating specific regions or small patches cropped from large WSIs requires substantial time and effort. Weakly supervised multiple instance learning (MIL) offers a practical and efficient solution by requiring only bag-level (slide-level) labels, while each bag typically contains multiple instances (patches). Most MIL methods directly use frozen image patch features generated by various image encoders as inputs and primarily focus on feature aggregation. However, feature representation learning for encoder pretraining in MIL settings has largely been neglected.   In our work, we propose a novel feature representation learning framework called weakly supervised contrastive learning (WeakSupCon) that incorporates bag-level label information during training. Our method does not rely on instance-level pseudo-labeling, yet it effectively separates patches with different labels in the feature space. Experimental results demonstrate that the image features generated by our WeakSupCon method lead to improved downstream MIL performance compared to self-supervised contrastive learning approaches in three datasets. Our related code is available at github.com/BzhangURU/Paper_WeakSupCon_for_MIL",
+      "authors": [
+        "Bodong Zhang",
+        "Xiwen Li",
+        "Hamid Manoochehri",
+        "Xiaoya Tang",
+        "Deepika Sirohi",
+        "Beatrice S. Knudsen",
+        "Tolga Tasdizen"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-02-10T07:17:11+00:00",
+      "link": "https://arxiv.org/pdf/2602.09477v2",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "weakly supervised contrastive learning for histopathology with limited annotations",
+      "llm_evidence_cn": "有限标注下的病理学弱监督对比学习",
+      "llm_evidence": "有限标注下的病理学弱监督对比学习",
+      "canonical_evidence": "有限标注下的病理学弱监督对比学习",
+      "llm_tldr_en": "Weakly supervised contrastive learning for histopathology patch embeddings addressing limited annotation challenges.",
+      "llm_tldr_cn": "解决标注受限问题的病理学弱监督对比学习。",
+      "llm_tldr": "解决标注受限问题的病理学弱监督对比学习。",
+      "llm_tags": [
+        "query:q10"
+      ],
+      "matched_query_tag": "query:q10",
+      "matched_query_text": "how does contrastive learning improve medical image classification with limited annotations",
+      "matched_requirement_id": "req-10",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2602.16019v1",
+      "title": "MedProbCLIP: Probabilistic Adaptation of Vision-Language Foundation Model for Reliable Radiograph-Report Retrieval",
+      "abstract": "Vision-language foundation models have emerged as powerful general-purpose representation learners with strong potential for multimodal understanding, but their deterministic embeddings often fail to provide the reliability required for high-stakes biomedical applications. This work introduces MedProbCLIP, a probabilistic vision-language learning framework for chest X-ray and radiology report representation learning and bidirectional retrieval. MedProbCLIP models image and text representations as Gaussian embeddings through a probabilistic contrastive objective that explicitly captures uncertainty and many-to-many correspondences between radiographs and clinical narratives. A variational information bottleneck mitigates overconfident predictions, while MedProbCLIP employs multi-view radiograph encoding and multi-section report encoding during training to provide fine-grained supervision for clinically aligned correspondence, yet requires only a single radiograph and a single report at inference. Evaluated on the MIMIC-CXR dataset, MedProbCLIP outperforms deterministic and probabilistic baselines, including CLIP, CXR-CLIP, and PCME++, in both retrieval and zero-shot classification. Beyond accuracy, MedProbCLIP demonstrates superior calibration, risk-coverage behavior, selective retrieval reliability, and robustness to clinically relevant corruptions, underscoring the value of probabilistic vision-language modeling for improving the trustworthiness and safety of radiology image-text retrieval systems.",
+      "authors": [
+        "Ahmad Elallaf",
+        "Yu Zhang",
+        "Yuktha Priya Masupalli",
+        "Jeong Yang",
+        "Young Lee",
+        "Zechun Cao",
+        "Gongbo Liang"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI"
+      ],
+      "published": "2026-02-17T21:20:32+00:00",
+      "link": "https://arxiv.org/pdf/2602.16019v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "probabilistic contrastive learning for medical radiograph-report retrieval with limited annotations",
+      "llm_evidence_cn": "概率对比学习用于医学影像报告检索，应对标注有限场景",
+      "llm_evidence": "概率对比学习用于医学影像报告检索，应对标注有限场景",
+      "canonical_evidence": "概率对比学习用于医学影像报告检索，应对标注有限场景",
+      "llm_tldr_en": "MedProbCLIP adapts vision-language models with probabilistic contrastive objectives for reliable chest X-ray and radiology report retrieval.",
+      "llm_tldr_cn": "MedProbCLIP采用概率对比目标适配视觉语言模型，实现可靠的胸片与影像报告检索。",
+      "llm_tldr": "MedProbCLIP采用概率对比目标适配视觉语言模型，实现可靠的胸片与影像报告检索。",
+      "llm_tags": [
+        "query:q10"
+      ],
+      "matched_query_tag": "query:q10",
+      "matched_query_text": "how does contrastive learning improve medical image classification with limited annotations",
+      "matched_requirement_id": "req-10",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2602.17162v1",
+      "title": "JEPA-DNA: Grounding Genomic Foundation Models through Joint-Embedding Predictive Architectures",
+      "abstract": "Genomic Foundation Models (GFMs) have largely relied on Masked Language Modeling (MLM) or Next Token Prediction (NTP) to learn the language of life. While these paradigms excel at capturing local genomic syntax and fine-grained motif patterns, they often fail to capture the broader functional context, resulting in representations that lack a global biological perspective. We introduce JEPA-DNA, a novel pre-training framework that integrates the Joint-Embedding Predictive Architecture (JEPA) with traditional generative objectives. JEPA-DNA introduces latent grounding by coupling token-level recovery with a predictive objective in the latent space by supervising a CLS token. This forces the model to predict the high-level functional embeddings of masked genomic segments rather than focusing solely on individual nucleotides. JEPA-DNA extends both NTP and MLM paradigms and can be deployed either as a standalone from-scratch objective or as a continual pre-training enhancement for existing GFMs. Our evaluations across a diverse suite of genomic benchmarks demonstrate that JEPA-DNA consistently yields superior performance in supervised and zero-shot tasks compared to generative-only baselines. By providing a more robust and biologically grounded representation, JEPA-DNA offers a scalable path toward foundation models that understand not only the genomic alphabet, but also the underlying functional logic of the sequence.",
+      "authors": [
+        "Ariel Larey",
+        "Elay Dahan",
+        "Amit Bleiweiss",
+        "Raizy Kellerman",
+        "Guy Leib",
+        "Omri Nayshool",
+        "Dan Ofer",
+        "Tal Zinger",
+        "Dan Dominissini",
+        "Gideon Rechavi",
+        "Nicole Bussola",
+        "Simon Lee",
+        "Shane O'Connell",
+        "Dung Hoang",
+        "Marissa Wirth",
+        "Alexander W. Charney",
+        "Nati Daniel",
+        "Yoli Shavit"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "q-bio.GN"
+      ],
+      "published": "2026-02-19T08:20:51+00:00",
+      "link": "https://arxiv.org/pdf/2602.17162v1",
+      "tags": [
+        "keyword:生成对比学习"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "JEPA bridges generative and predictive objectives for genomic pretraining",
+      "llm_evidence_cn": "JEPA桥接生成与预测目标用于基因组预训练",
+      "llm_evidence": "JEPA桥接生成与预测目标用于基因组预训练",
+      "canonical_evidence": "JEPA桥接生成与预测目标用于基因组预训练",
+      "llm_tldr_en": "Introduces JEPA-DNA combining Joint-Embedding Predictive Architecture with generative objectives for genomic foundation models.",
+      "llm_tldr_cn": "提出JEPA-DNA，将联合嵌入预测架构与生成目标结合用于基因组基础模型。",
+      "llm_tldr": "提出JEPA-DNA，将联合嵌入预测架构与生成目标结合用于基因组基础模型。",
+      "llm_tags": [
+        "query:profile-1:composite"
+      ],
+      "matched_query_tag": "query:profile-1:composite",
+      "matched_query_text": "Papers central to 衔接生成式学习与对比学习方法, especially work that connects or combines: Joint-Embedding; deep representation learning techniques; self-supervised pretraining frameworks; contrastive learning representation learning; medical image analysis radiology pathology; augmentation strategies for contrastive learning; Bridging generative and contrastive learning methods; Improving sample efficiency in contrastive representation learning; Novel contrastive loss functions and objective designs; how does contrastive learning improve medical image classification with limited annotations.",
+      "matched_requirement_id": "req-composite-profile-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2602.17689v1",
+      "title": "Robust Pre-Training of Medical Vision-and-Language Models with Domain-Invariant Multi-Modal Masked Reconstruction",
+      "abstract": "Medical vision-language models show strong potential for joint reasoning over medical images and clinical text, but their performance often degrades under domain shift caused by variations in imaging devices, acquisition protocols, and reporting styles. Existing multi-modal pre-training methods largely overlook robustness, treating it as a downstream adaptation problem. In this work, we propose Robust Multi-Modal Masked Reconstruction (Robust-MMR), a self-supervised pre-training framework that explicitly incorporates robustness objectives into masked vision-language learning. Robust-MMR integrates asymmetric perturbation-aware masking, domain-consistency regularization, and modality-resilience constraints to encourage domain-invariant representations. We evaluate Robust-MMR on multiple medical vision-language benchmarks, including medical visual question answering (VQA-RAD, SLAKE, VQA-2019), cross-domain image-text classification (MELINDA), and robust image-caption retrieval (ROCO). Robust-MMR achieves 78.9% cross-domain accuracy on VQA-RAD, outperforming the strongest baseline by 3.8 percentage points, and reaches 74.6% and 77.0% accuracy on SLAKE and VQA-2019, respectively. Under perturbed evaluation, Robust-MMR improves VQA-RAD accuracy from 69.1% to 75.6%. For image-text classification, cross-domain MELINDA accuracy increases from 70.3% to 75.2%, while retrieval experiments show a reduction in mean rank degradation from over 16 to 4.1 under perturbation. Qualitative results further demonstrate improved clinical reasoning for disease detection and structural abnormality assessment. These findings show that explicitly modeling robustness during pre-training leads to more reliable and transferable medical vision-language representations for real-world deployment.",
+      "authors": [
+        "Melika Filvantorkaman",
+        "Mohsen Piri"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "cs.CL",
+        "cs.CV"
+      ],
+      "published": "2026-02-06T01:20:56+00:00",
+      "link": "https://arxiv.org/pdf/2602.17689v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "self-supervised medical vision-language pretraining with masked reconstruction bridging generative and contrastive objectives",
+      "llm_evidence_cn": "自监督医学视觉语言预训练，掩码重建桥接生成与对比目标",
+      "llm_evidence": "自监督医学视觉语言预训练，掩码重建桥接生成与对比目标",
+      "canonical_evidence": "自监督医学视觉语言预训练，掩码重建桥接生成与对比目标",
+      "llm_tldr_en": "Robust-MMR: self-supervised medical vision-language pretraining framework combining masked reconstruction with domain-invariant learning for radiology applications.",
+      "llm_tldr_cn": "Robust-MMR：结合掩码重建与域不变学习的医学视觉语言自监督预训练框架。",
+      "llm_tldr": "Robust-MMR：结合掩码重建与域不变学习的医学视觉语言自监督预训练框架。",
+      "llm_tags": [
+        "query:profile-1:composite"
+      ],
+      "matched_query_tag": "query:profile-1:composite",
+      "matched_query_text": "Papers central to 衔接生成式学习与对比学习方法, especially work that connects or combines: Joint-Embedding; deep representation learning techniques; self-supervised pretraining frameworks; contrastive learning representation learning; medical image analysis radiology pathology; augmentation strategies for contrastive learning; Bridging generative and contrastive learning methods; Improving sample efficiency in contrastive representation learning; Novel contrastive loss functions and objective designs; how does contrastive learning improve medical image classification with limited annotations.",
+      "matched_requirement_id": "req-composite-profile-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2602.17901v1",
+      "title": "MeDUET: Disentangled Unified Pretraining for 3D Medical Image Synthesis and Analysis",
+      "abstract": "Self-supervised learning (SSL) and diffusion models have advanced representation learning and image synthesis. However, in 3D medical imaging, they remain separate: diffusion for synthesis, SSL for analysis. Unifying 3D medical image synthesis and analysis is intuitive yet challenging, as multi-center datasets exhibit dominant style shifts, while downstream tasks rely on anatomy, and site-specific style co-varies with anatomy across slices, making factors unreliable without explicit constraints. In this paper, we propose MeDUET, a 3D Medical image Disentangled UnifiEd PreTraining framework that performs SSL in the Variational Autoencoder (VAE) latent space which explicitly disentangles domain-invariant content from domain-specific style. The token demixing mechanism serves to turn disentanglement from a modeling assumption into an empirically identifiable property. Two novel proxy tasks, Mixed-Factor Token Distillation (MFTD) and Swap-invariance Quadruplet Contrast (SiQC), are devised to synergistically enhance disentanglement. Once pretrained, MeDUET is capable of (i) delivering higher fidelity, faster convergence, and improved controllability for synthesis, and (ii) demonstrating strong domain generalization and notable label efficiency for analysis across diverse medical benchmarks. In summary, MeDUET converts multi-source heterogeneity from an obstacle into a learning signal, enabling unified pretraining for 3D medical image synthesis and analysis. The code is available at https://github.com/JK-Liu7/MeDUET .",
+      "authors": [
+        "Junkai Liu",
+        "Ling Shao",
+        "Le Zhang"
+      ],
+      "primary_category": "eess.IV",
+      "categories": [
+        "eess.IV",
+        "cs.CV",
+        "cs.GT"
+      ],
+      "published": "2026-02-19T23:45:23+00:00",
+      "link": "https://arxiv.org/pdf/2602.17901v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "unifies generative diffusion models and self-supervised learning for 3D medical images",
+      "llm_evidence_cn": "统一3D医学图像的生成式扩散模型与自监督学习",
+      "llm_evidence": "统一3D医学图像的生成式扩散模型与自监督学习",
+      "canonical_evidence": "统一3D医学图像的生成式扩散模型与自监督学习",
+      "llm_tldr_en": "MeDUET bridges generative synthesis and SSL analysis via disentangled VAE latent space pretraining",
+      "llm_tldr_cn": "MeDUET通过解耦VAE潜空间预训练桥接生成与判别学习",
+      "llm_tldr": "MeDUET通过解耦VAE潜空间预训练桥接生成与判别学习",
+      "llm_tags": [
+        "query:q7"
+      ],
+      "matched_query_tag": "query:q7",
+      "matched_query_text": "Bridging generative and contrastive learning methods",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2602.19091v1",
+      "title": "CREM: Compression-Driven Representation Enhancement for Multimodal Retrieval and Comprehension",
+      "abstract": "Multimodal Large Language Models (MLLMs) have shown remarkable success in comprehension tasks such as visual description and visual question answering. However, their direct application to embedding-based tasks like retrieval remains challenging due to the discrepancy between output formats and optimization objectives. Previous approaches often employ contrastive fine-tuning to adapt MLLMs for retrieval, but at the cost of losing their generative capabilities. We argue that both generative and embedding tasks fundamentally rely on shared cognitive mechanisms, specifically cross-modal representation alignment and contextual comprehension. To this end, we propose CREM (Compression-driven Representation Enhanced Model), with a unified framework that enhances multimodal representations for retrieval while preserving generative ability. Specifically, we introduce a compression-based prompt design with learnable chorus tokens to aggregate multimodal semantics and a compression-driven training strategy that integrates contrastive and generative objectives through compression-aware attention. Extensive experiments demonstrate that CREM achieves state-of-the-art retrieval performance on MMEB while maintaining strong generative performance on multiple comprehension benchmarks. Our findings highlight that generative supervision can further improve the representational quality of MLLMs under the proposed compression-driven paradigm.",
+      "authors": [
+        "Lihao Liu",
+        "Yan Wang",
+        "Biao Yang",
+        "Da Li",
+        "Jiangxia Cao",
+        "Yuxiao Luo",
+        "Xiang Chen",
+        "Xiangyu Wu",
+        "Wei Yuan",
+        "Fan Yang",
+        "Guiguang Ding",
+        "Tingting Gao",
+        "Guorui Zhou"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-02-22T08:09:51+00:00",
+      "link": "https://arxiv.org/pdf/2602.19091v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "bridges generative and contrastive learning for multimodal retrieval",
+      "llm_evidence_cn": "桥接生成式与对比学习用于多模态检索",
+      "llm_evidence": "桥接生成式与对比学习用于多模态检索",
+      "canonical_evidence": "桥接生成式与对比学习用于多模态检索",
+      "llm_tldr_en": "CREM unifies generative MLLMs with contrastive retrieval via compression-driven representation enhancement without sacrificing either capability",
+      "llm_tldr_cn": "CREM通过压缩驱动表示增强统一生成式MLLM与对比检索，不牺牲任一能力",
+      "llm_tldr": "CREM通过压缩驱动表示增强统一生成式MLLM与对比检索，不牺牲任一能力",
+      "llm_tags": [
+        "query:q7"
+      ],
+      "matched_query_tag": "query:q7",
+      "matched_query_text": "Bridging generative and contrastive learning methods",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2602.19907v1",
+      "title": "Gradient based Severity Labeling for Biomarker Classification in OCT",
+      "abstract": "In this paper, we propose a novel selection strategy for contrastive learning for medical images. On natural images, contrastive learning uses augmentations to select positive and negative pairs for the contrastive loss. However, in the medical domain, arbitrary augmentations have the potential to distort small localized regions that contain the biomarkers we are interested in detecting. A more intuitive approach is to select samples with similar disease severity characteristics, since these samples are more likely to have similar structures related to the progression of a disease. To enable this, we introduce a method that generates disease severity labels for unlabeled OCT scans on the basis of gradient responses from an anomaly detection algorithm. These labels are used to train a supervised contrastive learning setup to improve biomarker classification accuracy by as much as 6% above self-supervised baselines for key indicators of Diabetic Retinopathy.",
+      "authors": [
+        "Kiran Kokilepersaud",
+        "Mohit Prabhushankar",
+        "Ghassan AlRegib",
+        "Stephanie Trejo Corona",
+        "Charles Wykoff"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.LG"
+      ],
+      "published": "2026-02-23T14:46:08+00:00",
+      "link": "https://arxiv.org/pdf/2602.19907v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "novel contrastive learning strategy for medical images with limited annotations",
+      "llm_evidence_cn": "针对有限标注医学图像的对比学习新策略",
+      "llm_evidence": "针对有限标注医学图像的对比学习新策略",
+      "canonical_evidence": "针对有限标注医学图像的对比学习新策略",
+      "llm_tldr_en": "Proposes gradient-based severity labeling as augmentation-free contrastive strategy for OCT biomarker classification.",
+      "llm_tldr_cn": "提出基于梯度的严重程度标注作为无需增强的对比学习策略用于OCT生物标志物分类。",
+      "llm_tldr": "提出基于梯度的严重程度标注作为无需增强的对比学习策略用于OCT生物标志物分类。",
+      "llm_tags": [
+        "query:q10"
+      ],
+      "matched_query_tag": "query:q10",
+      "matched_query_text": "how does contrastive learning improve medical image classification with limited annotations",
+      "matched_requirement_id": "req-10",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2602.20423v1",
+      "title": "MedCLIPSeg: Probabilistic Vision-Language Adaptation for Data-Efficient and Generalizable Medical Image Segmentation",
+      "abstract": "Medical image segmentation remains challenging due to limited annotations for training, ambiguous anatomical features, and domain shifts. While vision-language models such as CLIP offer strong cross-modal representations, their potential for dense, text-guided medical image segmentation remains underexplored. We present MedCLIPSeg, a novel framework that adapts CLIP for robust, data-efficient, and uncertainty-aware medical image segmentation. Our approach leverages patch-level CLIP embeddings through probabilistic cross-modal attention, enabling bidirectional interaction between image and text tokens and explicit modeling of predictive uncertainty. Together with a soft patch-level contrastive loss that encourages more nuanced semantic learning across diverse textual prompts, MedCLIPSeg effectively improves data efficiency and domain generalizability. Extensive experiments across 16 datasets spanning five imaging modalities and six organs demonstrate that MedCLIPSeg outperforms prior methods in accuracy, efficiency, and robustness, while providing interpretable uncertainty maps that highlight local reliability of segmentation results. This work demonstrates the potential of probabilistic vision-language modeling for text-driven medical image segmentation.",
+      "authors": [
+        "Taha Koleilat",
+        "Hojat Asgariandehkordi",
+        "Omid Nejati Manzari",
+        "Berardino Barile",
+        "Yiming Xiao",
+        "Hassan Rivaz"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.CL"
+      ],
+      "published": "2026-02-23T23:46:05+00:00",
+      "link": "https://arxiv.org/pdf/2602.20423v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "data-efficient medical image segmentation with patch-level contrastive loss and limited annotations",
+      "llm_evidence_cn": "有限标注下基于对比学习的医学图像分割",
+      "llm_evidence": "有限标注下基于对比学习的医学图像分割",
+      "canonical_evidence": "有限标注下基于对比学习的医学图像分割",
+      "llm_tldr_en": "MedCLIPSeg adapts CLIP for data-efficient medical segmentation using patch-level contrastive learning",
+      "llm_tldr_cn": "MedCLIPSeg利用对比学习实现数据高效的医学图像分割",
+      "llm_tldr": "MedCLIPSeg利用对比学习实现数据高效的医学图像分割",
+      "llm_tags": [
+        "query:q10"
+      ],
+      "matched_query_tag": "query:q10",
+      "matched_query_text": "how does contrastive learning improve medical image classification with limited annotations",
+      "matched_requirement_id": "req-10",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.04803v1",
+      "title": "Guiding Diffusion-based Reconstruction with Contrastive Signals for Balanced Visual Representation",
+      "abstract": "The limited understanding capacity of the visual encoder in Contrastive Language-Image Pre-training (CLIP) has become a key bottleneck for downstream performance. This capacity includes both Discriminative Ability (D-Ability), which reflects class separability, and Detail Perceptual Ability (P-Ability), which focuses on fine-grained visual cues. Recent solutions use diffusion models to enhance representations by conditioning image reconstruction on CLIP visual tokens. We argue that such paradigms may compromise D-Ability and therefore fail to effectively address CLIP's representation limitations. To address this, we integrate contrastive signals into diffusion-based reconstruction to pursue more comprehensive visual representations. We begin with a straightforward design that augments the diffusion process with contrastive learning on input images. However, empirical results show that the naive combination suffers from gradient conflict and yields suboptimal performance. To balance the optimization, we introduce the Diffusion Contrastive Reconstruction (DCR), which unifies the learning objective. The key idea is to inject contrastive signals derived from each reconstructed image, rather than from the original input, into the diffusion process. Our theoretical analysis shows that the DCR loss can jointly optimize D-Ability and P-Ability. Extensive experiments across various benchmarks and multi-modal large language models validate the effectiveness of our method. The code is available at https://github.com/boyuh/DCR.",
+      "authors": [
+        "Boyu Han",
+        "Qianqian Xu",
+        "Shilong Bao",
+        "Zhiyong Yang",
+        "Ruochen Cui",
+        "Xilin Zhao",
+        "Qingming Huang"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-03-05T04:45:49+00:00",
+      "link": "https://arxiv.org/pdf/2603.04803v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "integrates contrastive signals into diffusion-based reconstruction",
+      "llm_evidence_cn": "将对比信号融入扩散重建",
+      "llm_evidence": "将对比信号融入扩散重建",
+      "canonical_evidence": "将对比信号融入扩散重建",
+      "llm_tldr_en": "Combines diffusion models with contrastive learning to improve visual representations beyond CLIP limitations",
+      "llm_tldr_cn": "结合扩散模型与对比学习提升视觉表征",
+      "llm_tldr": "结合扩散模型与对比学习提升视觉表征",
+      "llm_tags": [
+        "query:q7"
+      ],
+      "matched_query_tag": "query:q7",
+      "matched_query_text": "Bridging generative and contrastive learning methods",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.07113v1",
+      "title": "Efficient Chest X-ray Representation Learning via Semantic-Partitioned Contrastive Learning",
+      "abstract": "Self-supervised learning (SSL) has emerged as a powerful paradigm for Chest X-ray (CXR) analysis under limited annotations. Yet, existing SSL strategies remain suboptimal for medical imaging. Masked image modeling allocates substantial computation to reconstructing high-frequency background details with limited diagnostic value. Contrastive learning, on the other hand, often depends on aggressive augmentations that risk altering clinically meaningful structures. We introduce Semantic-Partitioned Contrastive Learning (S-PCL), an efficient pre-training framework tailored for CXR representation learning. Instead of reconstructing pixels or relying on heavy augmentations, S-PCL randomly partitions patch tokens from a single CXR into two non-overlapping semantic subsets. Each subset provides a complementary but incomplete view. The encoder must maximize agreement between these partitions, implicitly inferring global anatomical layout and local pathological cues from partial evidence. This semantic partitioning forms an internal bottleneck that enforces long-range dependency modeling and structural coherence. S-PCL eliminates the need for hand-crafted augmentations, auxiliary decoders, and momentum encoders. The resulting architecture is streamlined, computationally efficient, and easy to scale. Extensive experiments on large-scale CXR benchmarks, including ChestX-ray14, CheXpert, RSNA Pneumonia and SIIM-ACR Pneumothorax, show that S-PCL achieves competitive performance while attaining the lowest GFLOPs and superior accuracy among existing SSL approaches.",
+      "authors": [
+        "Wangyu Feng",
+        "Shawn Young",
+        "Lijian Xu"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-03-07T08:52:23+00:00",
+      "link": "https://arxiv.org/pdf/2603.07113v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "contrastive learning for chest X-ray with limited annotations",
+      "llm_evidence_cn": "有限标注下胸部X光对比学习",
+      "llm_evidence": "有限标注下胸部X光对比学习",
+      "canonical_evidence": "有限标注下胸部X光对比学习",
+      "llm_tldr_en": "S-PCL enables efficient chest X-ray representation learning via semantic-partitioned contrastive pretraining.",
+      "llm_tldr_cn": "S-PCL通过语义分区对比预训练实现高效胸部X光表示学习。",
+      "llm_tldr": "S-PCL通过语义分区对比预训练实现高效胸部X光表示学习。",
+      "llm_tags": [
+        "query:q10"
+      ],
+      "matched_query_tag": "query:q10",
+      "matched_query_text": "how does contrastive learning improve medical image classification with limited annotations",
+      "matched_requirement_id": "req-10",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.09955v1",
+      "title": "From Semantics to Pixels: Coarse-to-Fine Masked Autoencoders for Hierarchical Visual Understanding",
+      "abstract": "Self-supervised visual pre-training methods face an inherent tension: contrastive learning (CL) captures global semantics but loses fine-grained detail, while masked image modeling (MIM) preserves local textures but suffers from \"attention drift\" due to semantically-agnostic random masking. We propose C2FMAE, a coarse-to-fine masked autoencoder that resolves this tension by explicitly learning hierarchical visual representations across three data granularities: semantic masks (scene-level), instance masks (object-level), and RGB images (pixel-level). Two synergistic innovations enforce a strict top-down learning principle. First, a cascaded decoder sequentially reconstructs from scene semantics to object instances to pixel details, establishing explicit cross-granularity dependencies that parallel decoders cannot capture. Second, a progressive masking curriculum dynamically shifts the training focus from semantic-guided to instance-guided and finally to random masking, creating a structured learning path from global context to local features. To support this framework, we construct a large-scale multi-granular dataset with high-quality pseudo-labels for all 1.28M ImageNet-1K images. Extensive experiments show that C2FMAE achieves significant performance gains on image classification, object detection, and semantic segmentation, validating the effectiveness of our hierarchical design in learning more robust and generalizable representations.",
+      "authors": [
+        "Wenzhao Xiang",
+        "Yue Wu",
+        "Hongyang Yu",
+        "Feng Gao",
+        "Fan Yang",
+        "Xilin Chen"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.LG"
+      ],
+      "published": "2026-03-10T17:51:12+00:00",
+      "link": "https://arxiv.org/pdf/2603.09955v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "bridges generative MIM and contrastive learning, hierarchical visual representations",
+      "llm_evidence_cn": "桥接生成式MIM与对比学习，分层视觉表示",
+      "llm_evidence": "桥接生成式MIM与对比学习，分层视觉表示",
+      "canonical_evidence": "桥接生成式MIM与对比学习，分层视觉表示",
+      "llm_tldr_en": "C2FMAE unifies contrastive learning and masked autoencoding via coarse-to-fine hierarchical reconstruction.",
+      "llm_tldr_cn": "C2FMAE通过由粗到细的分层重建统一对比学习与掩码自编码。",
+      "llm_tldr": "C2FMAE通过由粗到细的分层重建统一对比学习与掩码自编码。",
+      "llm_tags": [
+        "query:q7"
+      ],
+      "matched_query_tag": "query:q7",
+      "matched_query_text": "Bridging generative and contrastive learning methods",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.12594v1",
+      "title": "Maximizing Incremental Information Entropy for Contrastive Learning",
+      "abstract": "Contrastive learning has achieved remarkable success in self-supervised representation learning, often guided by information-theoretic objectives such as mutual information maximization. Motivated by the limitations of static augmentations and rigid invariance constraints, we propose IE-CL (Incremental-Entropy Contrastive Learning), a framework that explicitly optimizes the entropy gain between augmented views while preserving semantic consistency. Our theoretical framework reframes the challenge by identifying the encoder as an information bottleneck and proposes a joint optimization of two components: a learnable transformation for entropy generation and an encoder regularizer for its preservation. Experiments on CIFAR-10/100, STL-10, and ImageNet demonstrate that IE-CL consistently improves performance under small-batch settings. Moreover, our core modules can be seamlessly integrated into existing frameworks. This work bridges theoretical principles and practice, offering a new perspective in contrastive learning.",
+      "authors": [
+        "Jiansong Zhang",
+        "Zhuoqin Yang",
+        "Xu Wu",
+        "Xiaoling Luo",
+        "Peizhong Liu",
+        "Linlin Shen"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-03-13T02:51:37+00:00",
+      "link": "https://arxiv.org/pdf/2603.12594v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "novel contrastive loss via incremental entropy maximization",
+      "llm_evidence_cn": "通过增量熵最大化设计新颖对比损失",
+      "llm_evidence": "通过增量熵最大化设计新颖对比损失",
+      "canonical_evidence": "通过增量熵最大化设计新颖对比损失",
+      "llm_tldr_en": "Proposes IE-CL framework optimizing entropy gain between augmented views with learnable transformations.",
+      "llm_tldr_cn": "提出IE-CL框架，优化增强视图间的熵增益与可学习变换。",
+      "llm_tldr": "提出IE-CL框架，优化增强视图间的熵增益与可学习变换。",
+      "llm_tags": [
+        "query:q9"
+      ],
+      "matched_query_tag": "query:q9",
+      "matched_query_text": "Novel contrastive loss functions and objective designs",
+      "matched_requirement_id": "req-9",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.14647v1",
+      "title": "TopoCL: Topological Contrastive Learning for Medical Imaging",
+      "abstract": "Contrastive learning (CL) has become a powerful approach for learning representations from unlabeled images. However, existing CL methods focus predominantly on visual appearance features while neglecting topological characteristics (e.g., connectivity patterns, boundary configurations, cavity formations) that provide valuable cues for medical image analysis. To address this limitation, we propose a new topological CL framework (TopoCL) that explicitly exploits topological structures during contrastive learning for medical imaging. Specifically, we first introduce topology-aware augmentations that control topological perturbations using a relative bottleneck distance between persistence diagrams, preserving medically relevant topological properties while enabling controlled structural variations. We then design a Hierarchical Topology Encoder that captures topological features through self-attention and cross-attention mechanisms. Finally, we develop an adaptive mixture-of-experts (MoE) module to dynamically integrate visual and topological representations. TopoCL can be seamlessly integrated with existing CL methods. We evaluate TopoCL on five representative CL methods (SimCLR, MoCo-v3, BYOL, DINO, and Barlow Twins) and five diverse medical image classification datasets. The experimental results show that TopoCL achieves consistent improvements: an average gain of +3.26% in linear probe classification accuracy with strong statistical significance, verifying its effectiveness.",
+      "authors": [
+        "Guangyu Meng",
+        "Pengfei Gu",
+        "Peixian Liang",
+        "John P. Lalor",
+        "Erin Wolf Chambers",
+        "Danny Z. Chen"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI"
+      ],
+      "published": "2026-03-15T23:03:53+00:00",
+      "link": "https://arxiv.org/pdf/2603.14647v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "contrastive learning for medical imaging with topology-aware augmentations",
+      "llm_evidence_cn": "用于医学成像的对比学习与拓扑感知增强",
+      "llm_evidence": "用于医学成像的对比学习与拓扑感知增强",
+      "canonical_evidence": "用于医学成像的对比学习与拓扑感知增强",
+      "llm_tldr_en": "TopoCL introduces topological contrastive learning with structure-preserving augmentations for medical images.",
+      "llm_tldr_cn": "TopoCL引入拓扑对比学习与结构保持增强用于医学图像。",
+      "llm_tldr": "TopoCL引入拓扑对比学习与结构保持增强用于医学图像。",
+      "llm_tags": [
+        "query:q10"
+      ],
+      "matched_query_tag": "query:q10",
+      "matched_query_text": "how does contrastive learning improve medical image classification with limited annotations",
+      "matched_requirement_id": "req-10",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.15263v1",
+      "title": "IConE: Batch Independent Collapse Prevention for Self-Supervised Representation Learning",
+      "abstract": "Self-supervised learning (SSL) has revolutionized representation learning, with Joint-Embedding Architectures (JEAs) emerging as an effective approach for capturing semantic features. Existing JEAs rely on implicit or explicit batch interaction -- via negative sampling or statistical regularization -- to prevent representation collapse. This reliance becomes problematic in regimes where batch sizes must be small, such as high-dimensional scientific data, where memory constraints and class imbalance make large, well-balanced batches infeasible. We introduce IConE (Instance-Contrasted Embeddings), a framework that decouples collapse prevention from the training batch size. Rather than enforcing diversity through batch statistics, IConE maintains a global set of learnable auxiliary instance embeddings regularized by an explicit diversity objective. This transfers the anti-collapse mechanism from the transient batch to a dataset-level embedding space, allowing stable training even when batch statistics are unreliable, down to batch size 1. Across diverse 2D and 3D biomedical modalities, IConE outperforms strong contrastive and non-contrastive baselines throughout the small-batch regime (from B=1 to B=64) and demonstrates marked robustness to severe class imbalance. Geometric analysis shows that IConE preserves high intrinsic dimensionality in the learned representations, preventing the collapse observed in existing JEAs as batch sizes shrink.",
+      "authors": [
+        "Konstantinos Almpanakis",
+        "Anna Kreshuk"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.LG"
+      ],
+      "published": "2026-03-16T13:28:09+00:00",
+      "link": "https://arxiv.org/pdf/2603.15263v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Joint-Embedding Architectures with batch-independent collapse prevention",
+      "llm_evidence_cn": "联合嵌入架构，实现批次无关的表征坍塌预防",
+      "llm_evidence": "联合嵌入架构，实现批次无关的表征坍塌预防",
+      "canonical_evidence": "联合嵌入架构，实现批次无关的表征坍塌预防",
+      "llm_tldr_en": "Introduces IConE for batch-independent collapse prevention in Joint-Embedding Architectures, decoupling collapse prevention from batch size constraints.",
+      "llm_tldr_cn": "提出IConE框架，实现联合嵌入架构的批次无关坍塌预防，将坍塌预防与批次大小解耦。",
+      "llm_tldr": "提出IConE框架，实现联合嵌入架构的批次无关坍塌预防，将坍塌预防与批次大小解耦。",
+      "llm_tags": [
+        "query:q1"
+      ],
+      "matched_query_tag": "query:q1",
+      "matched_query_text": "Joint-Embedding",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.15553v1",
+      "title": "Self-Distillation of Hidden Layers for Self-Supervised Representation Learning",
+      "abstract": "The landscape of self-supervised learning (SSL) is currently dominated by generative approaches (e.g., MAE) that reconstruct raw low-level data, and predictive approaches (e.g., I-JEPA) that predict high-level abstract embeddings. While generative methods provide strong grounding, they are computationally inefficient for high-redundancy modalities like imagery, and their training objective does not prioritize learning high-level, conceptual features. Conversely, predictive methods often suffer from training instability due to their reliance on the non-stationary targets of final-layer self-distillation. We introduce Bootleg, a method that bridges this divide by tasking the model with predicting latent representations from multiple hidden layers of a teacher network. This hierarchical objective forces the model to capture features at varying levels of abstraction simultaneously. We demonstrate that Bootleg significantly outperforms comparable baselines (+10% over I-JEPA) on classification of ImageNet-1K and iNaturalist-21, and semantic segmentation of ADE20K and Cityscapes.",
+      "authors": [
+        "Scott C. Lowe",
+        "Anthony Fuller",
+        "Sageev Oore",
+        "Evan Shelhamer",
+        "Graham W. Taylor"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.LG"
+      ],
+      "published": "2026-03-16T17:13:27+00:00",
+      "link": "https://arxiv.org/pdf/2603.15553v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "bridges generative MAE and predictive I-JEPA via hidden layer self-distillation",
+      "llm_evidence_cn": "通过隐藏层自蒸馏桥接生成式MAE与预测式I-JEPA",
+      "llm_evidence": "通过隐藏层自蒸馏桥接生成式MAE与预测式I-JEPA",
+      "canonical_evidence": "通过隐藏层自蒸馏桥接生成式MAE与预测式I-JEPA",
+      "llm_tldr_en": "Proposes Bootleg to bridge generative and predictive self-supervised learning via predicting latent representations from multiple hidden layers.",
+      "llm_tldr_cn": "提出Bootleg方法，通过预测多隐藏层潜在表示桥接生成式与预测式自监督学习。",
+      "llm_tldr": "提出Bootleg方法，通过预测多隐藏层潜在表示桥接生成式与预测式自监督学习。",
+      "llm_tags": [
+        "query:profile-1:composite"
+      ],
+      "matched_query_tag": "query:profile-1:composite",
+      "matched_query_text": "Papers central to 衔接生成式学习与对比学习方法, especially work that connects or combines: Joint-Embedding; deep representation learning techniques; self-supervised pretraining frameworks; contrastive learning representation learning; medical image analysis radiology pathology; augmentation strategies for contrastive learning; Bridging generative and contrastive learning methods; Improving sample efficiency in contrastive representation learning; Novel contrastive loss functions and objective designs; how does contrastive learning improve medical image classification with limited annotations.",
+      "matched_requirement_id": "req-composite-profile-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.17110v1",
+      "title": "Pixel-level Counterfactual Contrastive Learning for Medical Image Segmentation",
+      "abstract": "Image segmentation relies on large annotated datasets, which are expensive and slow to produce. Silver-standard (AI-generated) labels are easier to obtain, but they risk introducing bias. Self-supervised learning, needing only images, has become key for pre-training. Recent work combining contrastive learning with counterfactual generation improves representation learning for classification but does not readily extend to pixel-level tasks. We propose a pipeline combining counterfactual generation with dense contrastive learning via Dual-View (DVD-CL) and Multi-View (MVD-CL) methods, along with supervised variants that utilize available silver-standard annotations. A new visualisation algorithm, the Color-coded High Resolution Overlay map (CHRO-map) is also introduced. Experiments show annotation-free DVD-CL outperforms other dense contrastive learning methods, while supervised variants using silver-standard labels outperform training on the silver-standard labeled data directly, achieving $\\sim$94% DSC on challenging data. These results highlight that pixel-level contrastive learning, enhanced by counterfactuals and silver-standard annotations, improves robustness to acquisition and pathological variations.",
+      "authors": [
+        "Marceau Lafargue-Hauret",
+        "Raghav Mehta",
+        "Fabio De Sousa Ribeiro",
+        "Mélanie Roschewitz",
+        "Ben Glocker"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.LG"
+      ],
+      "published": "2026-03-17T20:07:14+00:00",
+      "link": "https://arxiv.org/pdf/2603.17110v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "counterfactual generation combined with dense contrastive learning for medical segmentation",
+      "llm_evidence_cn": "反事实生成结合密集对比学习用于医学分割",
+      "llm_evidence": "反事实生成结合密集对比学习用于医学分割",
+      "canonical_evidence": "反事实生成结合密集对比学习用于医学分割",
+      "llm_tldr_en": "Bridges generative and contrastive learning via counterfactual generation for medical image segmentation",
+      "llm_tldr_cn": "通过反事实生成衔接生成式与对比学习用于医学图像分割",
+      "llm_tldr": "通过反事实生成衔接生成式与对比学习用于医学图像分割",
+      "llm_tags": [
+        "query:profile-1:composite"
+      ],
+      "matched_query_tag": "query:profile-1:composite",
+      "matched_query_text": "Papers central to 衔接生成式学习与对比学习方法, especially work that connects or combines: Joint-Embedding; deep representation learning techniques; self-supervised pretraining frameworks; contrastive learning representation learning; medical image analysis radiology pathology; augmentation strategies for contrastive learning; Bridging generative and contrastive learning methods; Improving sample efficiency in contrastive representation learning; Novel contrastive loss functions and objective designs; how does contrastive learning improve medical image classification with limited annotations.",
+      "matched_requirement_id": "req-composite-profile-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.17514v1",
+      "title": "EI: Early Intervention for Multimodal Imaging based Disease Recognition",
+      "abstract": "Current methods for multimodal medical imaging based disease recognition face two major challenges. First, the prevailing \"fusion after unimodal image embedding\" paradigm cannot fully leverage the complementary and correlated information in the multimodal data. Second, the scarcity of labeled multimodal medical images, coupled with their significant domain shift from natural images, hinders the use of cutting-edge Vision Foundation Models (VFMs) for medical image embedding. To jointly address the challenges, we propose a novel Early Intervention (EI) framework. Treating one modality as target and the rest as reference, EI harnesses high-level semantic tokens from the reference as intervention tokens to steer the target modality's embedding process at an early stage. Furthermore, we introduce Mixture of Low-varied-Ranks Adaptation (MoR), a parameter-efficient fine-tuning method that employs a set of low-rank adapters with varied ranks and a weight-relaxed router for VFM adaptation. Extensive experiments on three public datasets for retinal disease, skin lesion, and keen anomaly classification verify the effectiveness of the proposed method against a number of competitive baselines.",
+      "authors": [
+        "Qijie Wei",
+        "Hailan Lin",
+        "Xirong Li"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-03-18T09:21:52+00:00",
+      "link": "https://arxiv.org/pdf/2603.17514v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "medical image embedding with limited labels via multimodal intervention",
+      "llm_evidence_cn": "通过多模态干预实现有限标注医学图像嵌入",
+      "llm_evidence": "通过多模态干预实现有限标注医学图像嵌入",
+      "canonical_evidence": "通过多模态干预实现有限标注医学图像嵌入",
+      "llm_tldr_en": "Early Intervention framework tackles scarce labeled medical images via cross-modal guidance",
+      "llm_tldr_cn": "早期干预框架通过跨模态引导解决医学图像标注稀缺问题",
+      "llm_tldr": "早期干预框架通过跨模态引导解决医学图像标注稀缺问题",
+      "llm_tags": [
+        "query:q10"
+      ],
+      "matched_query_tag": "query:q10",
+      "matched_query_text": "how does contrastive learning improve medical image classification with limited annotations",
+      "matched_requirement_id": "req-10",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.18655v1",
+      "title": "Multiscale Switch for Semi-Supervised and Contrastive Learning in Medical Ultrasound Image Segmentation",
+      "abstract": "Medical ultrasound image segmentation faces significant challenges due to limited labeled data and characteristic imaging artifacts including speckle noise and low-contrast boundaries. While semi-supervised learning (SSL) approaches have emerged to address data scarcity, existing methods suffer from suboptimal unlabeled data utilization and lack robust feature representation mechanisms. In this paper, we propose Switch, a novel SSL framework with two key innovations: (1) Multiscale Switch (MSS) strategy that employs hierarchical patch mixing to achieve uniform spatial coverage; (2) Frequency Domain Switch (FDS) with contrastive learning that performs amplitude switching in Fourier space for robust feature representations. Our framework integrates these components within a teacher-student architecture to effectively leverage both labeled and unlabeled data. Comprehensive evaluation across six diverse ultrasound datasets (lymph nodes, breast lesions, thyroid nodules, and prostate) demonstrates consistent superiority over state-of-the-art methods. At 5\\% labeling ratio, Switch achieves remarkable improvements: 80.04\\% Dice on LN-INT, 85.52\\% Dice on DDTI, and 83.48\\% Dice on Prostate datasets, with our semi-supervised approach even exceeding fully supervised baselines. The method maintains parameter efficiency (1.8M parameters) while delivering superior performance, validating its effectiveness for resource-constrained medical imaging applications. The source code is publicly available at https://github.com/jinggqu/Switch",
+      "authors": [
+        "Jingguo Qu",
+        "Xinyang Han",
+        "Yao Pu",
+        "Man-Lik Chui",
+        "Simon Takadiyi Gunda",
+        "Ziman Chen",
+        "Jing Qin",
+        "Ann Dorothy King",
+        "Winnie Chiu-Wing Chu",
+        "Jing Cai",
+        "Michael Tin-Cheung Ying"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI"
+      ],
+      "published": "2026-03-19T09:20:37+00:00",
+      "link": "https://arxiv.org/pdf/2603.18655v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "contrastive learning for medical ultrasound segmentation with limited labels",
+      "llm_evidence_cn": "对比学习用于有限标注的医学超声分割",
+      "llm_evidence": "对比学习用于有限标注的医学超声分割",
+      "canonical_evidence": "对比学习用于有限标注的医学超声分割",
+      "llm_tldr_en": "Switch framework combines semi-supervised learning with frequency-domain contrastive learning for medical ultrasound segmentation under data scarcity.",
+      "llm_tldr_cn": "Switch框架结合半监督学习与频域对比学习，解决医学超声分割数据稀缺问题。",
+      "llm_tldr": "Switch框架结合半监督学习与频域对比学习，解决医学超声分割数据稀缺问题。",
+      "llm_tags": [
+        "query:q10"
+      ],
+      "matched_query_tag": "query:q10",
+      "matched_query_text": "how does contrastive learning improve medical image classification with limited annotations",
+      "matched_requirement_id": "req-10",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2602.01626v1",
+      "title": "Toward Enhancing Representation Learning in Federated Multi-Task Settings",
+      "abstract": "Federated multi-task learning (FMTL) seeks to collaboratively train customized models for users with different tasks while preserving data privacy. Most existing approaches assume model congruity (i.e., the use of fully or partially homogeneous models) across users, which limits their applicability in realistic settings. To overcome this limitation, we aim to learn a shared representation space across tasks rather than shared model parameters. To this end, we propose Muscle loss, a novel contrastive learning objective that simultaneously aligns representations from all participating models. Unlike existing multi-view or multi-model contrastive methods, which typically align models pairwise, Muscle loss can effectively capture dependencies across tasks because its minimization is equivalent to the maximization of mutual information among all the models' representations. Building on this principle, we develop FedMuscle, a practical and communication-efficient FMTL algorithm that naturally handles both model and task heterogeneity. Experiments on diverse image and language tasks demonstrate that FedMuscle consistently outperforms state-of-the-art baselines, delivering substantial improvements and robust performance across heterogeneous settings.",
+      "authors": [
+        "Mehdi Setayesh",
+        "Mahdi Beitollahi",
+        "Yasser H. Khalil",
+        "Hongliang Li"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-02-02T04:39:36+00:00",
+      "link": "https://arxiv.org/pdf/2602.01626v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "novel contrastive learning objective called Muscle loss",
+      "llm_evidence_cn": "提出名为Muscle loss的新型对比学习目标函数",
+      "llm_evidence": "提出名为Muscle loss的新型对比学习目标函数",
+      "canonical_evidence": "提出名为Muscle loss的新型对比学习目标函数",
+      "llm_tldr_en": "Proposes Muscle loss, a multi-model contrastive objective that aligns representations across all participating models simultaneously rather than pairwise.",
+      "llm_tldr_cn": "提出Muscle损失函数，实现多模型对比学习中的全局表示对齐而非成对对齐。",
+      "llm_tldr": "提出Muscle损失函数，实现多模型对比学习中的全局表示对齐而非成对对齐。",
+      "llm_tags": [
+        "query:q9"
+      ],
+      "matched_query_tag": "query:q9",
+      "matched_query_text": "Novel contrastive loss functions and objective designs",
+      "matched_requirement_id": "req-9",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2602.01116v1",
+      "title": "Logic-Oriented Retriever Enhancement via Contrastive Learning",
+      "abstract": "Large language models (LLMs) struggle in knowledge-intensive tasks, as retrievers often overfit to surface similarity and fail on queries involving complex logical relations. The capacity for logical analysis is inherent in model representations but remains underutilized in standard training. LORE (Logic ORiented Retriever Enhancement) introduces fine-grained contrastive learning to activate this latent capacity, guiding embeddings toward evidence aligned with logical structure rather than shallow similarity. LORE requires no external upervision, resources, or pre-retrieval analysis, remains index-compatible, and consistently improves retrieval utility and downstream generation while maintaining efficiency. The datasets and code are publicly available at https://github.com/mazehart/Lore-RAG.",
+      "authors": [
+        "Wenxuan Zhang",
+        "Yuan-Hao Jiang",
+        "Changyong Qi",
+        "Rui Jia",
+        "Yonghe Wu"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-02-01T09:30:04+00:00",
+      "link": "https://arxiv.org/pdf/2602.01116v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "contrastive learning for representation learning, fine-grained contrastive objectives",
+      "llm_evidence_cn": "对比学习表示学习，细粒度对比目标函数",
+      "llm_evidence": "对比学习表示学习，细粒度对比目标函数",
+      "canonical_evidence": "对比学习表示学习，细粒度对比目标函数",
+      "llm_tldr_en": "LORE uses fine-grained contrastive learning to enhance retriever embeddings for logical structure alignment.",
+      "llm_tldr_cn": "LORE利用细粒度对比学习增强检索器嵌入，实现逻辑结构对齐。",
+      "llm_tldr": "LORE利用细粒度对比学习增强检索器嵌入，实现逻辑结构对齐。",
+      "llm_tags": [
+        "query:q4"
+      ],
+      "matched_query_tag": "query:q4",
+      "matched_query_text": "contrastive learning representation learning",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2602.00937v1",
+      "title": "CLAMP: Contrastive Learning for 3D Multi-View Action-Conditioned Robotic Manipulation Pretraining",
+      "abstract": "Leveraging pre-trained 2D image representations in behavior cloning policies has achieved great success and has become a standard approach for robotic manipulation. However, such representations fail to capture the 3D spatial information about objects and scenes that is essential for precise manipulation. In this work, we introduce Contrastive Learning for 3D Multi-View Action-Conditioned Robotic Manipulation Pretraining (CLAMP), a novel 3D pre-training framework that utilizes point clouds and robot actions. From the merged point cloud computed from RGB-D images and camera extrinsics, we re-render multi-view four-channel image observations with depth and 3D coordinates, including dynamic wrist views, to provide clearer views of target objects for high-precision manipulation tasks. The pre-trained encoders learn to associate the 3D geometric and positional information of objects with robot action patterns via contrastive learning on large-scale simulated robot trajectories. During encoder pre-training, we pre-train a Diffusion Policy to initialize the policy weights for fine-tuning, which is essential for improving fine-tuning sample efficiency and performance. After pre-training, we fine-tune the policy on a limited amount of task demonstrations using the learned image and action representations. We demonstrate that this pre-training and fine-tuning design substantially improves learning efficiency and policy performance on unseen tasks. Furthermore, we show that CLAMP outperforms state-of-the-art baselines across six simulated tasks and five real-world tasks.",
+      "authors": [
+        "I-Chun Arthur Liu",
+        "Krzysztof Choromanski",
+        "Sandy Huang",
+        "Connor Schenck"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "published": "2026-01-31T23:32:54+00:00",
+      "link": "https://arxiv.org/pdf/2602.00937v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "contrastive learning for 3D multi-view pretraining",
+      "llm_evidence_cn": "三维多视角对比学习预训练",
+      "llm_evidence": "三维多视角对比学习预训练",
+      "canonical_evidence": "三维多视角对比学习预训练",
+      "llm_tldr_en": "Proposes CLAMP framework using contrastive learning for 3D robotic manipulation pretraining",
+      "llm_tldr_cn": "提出CLAMP框架用对比学习进行三维机器人操作预训练",
+      "llm_tldr": "提出CLAMP框架用对比学习进行三维机器人操作预训练",
+      "llm_tags": [
+        "query:q4"
+      ],
+      "matched_query_tag": "query:q4",
+      "matched_query_text": "contrastive learning representation learning",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2602.02334v2",
+      "title": "VQ-Style: Disentangling Style and Content in Motion with Residual Quantized Representations",
+      "abstract": "Human motion data is inherently rich and complex, containing both semantic content and subtle stylistic features that are challenging to model. We propose a novel method for effective disentanglement of the style and content in human motion data to facilitate style transfer. Our approach is guided by the insight that content corresponds to coarse motion attributes while style captures the finer, expressive details. To model this hierarchy, we employ Residual Vector Quantized Variational Autoencoders (RVQ-VAEs) to learn a coarse-to-fine representation of motion. We further enhance the disentanglement by integrating codebook learning with contrastive learning and a novel information leakage loss to organize the content and the style across different codebooks. We harness this disentangled representation using our simple and effective inference-time technique Quantized Code Swapping, which enables motion style transfer without requiring any fine-tuning for unseen styles. Our framework demonstrates strong versatility across multiple inference applications, including style transfer, style removal, and motion blending.",
+      "authors": [
+        "Fatemeh Zargarbashi",
+        "Dhruv Agrawal",
+        "Jakob Buhmann",
+        "Martin Guay",
+        "Stelian Coros",
+        "Robert W. Sumner"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-02-02T16:58:17+00:00",
+      "link": "https://arxiv.org/pdf/2602.02334v2",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "integrates VAE generative model with contrastive learning for disentanglement",
+      "llm_evidence_cn": "将VAE生成模型与对比学习结合用于解耦",
+      "llm_evidence": "将VAE生成模型与对比学习结合用于解耦",
+      "canonical_evidence": "将VAE生成模型与对比学习结合用于解耦",
+      "llm_tldr_en": "Combines RVQ-VAE with contrastive learning and information leakage loss for style-content disentanglement in motion.",
+      "llm_tldr_cn": "结合残差量化VAE、对比学习和信息泄漏损失实现运动中风格与内容的解耦。",
+      "llm_tldr": "结合残差量化VAE、对比学习和信息泄漏损失实现运动中风格与内容的解耦。",
+      "llm_tags": [
+        "query:q7"
+      ],
+      "matched_query_tag": "query:q7",
+      "matched_query_text": "Bridging generative and contrastive learning methods",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2602.01639v1",
+      "title": "ReCALL: Recalibrating Capability Degradation for MLLM-based Composed Image Retrieval",
+      "abstract": "Composed Image Retrieval (CIR) aims to retrieve target images based on a hybrid query comprising a reference image and a modification text. Early dual-tower Vision-Language Models (VLMs) struggle with cross-modality compositional reasoning required for this task. Recently, adapting generative Multimodal Large Language Models (MLLMs) for retrieval offers a promising direction. However, we identify that this adaptation strategy overlooks a fundamental issue: adapting a generative MLLM into a single-embedding discriminative retriever triggers a paradigm conflict, which leads to Capability Degradation - the deterioration of native fine-grained reasoning after retrieval adaptation. To address this challenge, we propose ReCALL (Recalibrating Capability Degradation), a model-agnostic framework that follows a diagnose-generate-refine pipeline: Firstly, we diagnose cognitive blind spots of the retriever via self-guided informative instance mining. Next, we generate corrective instructions and triplets by CoT prompting the foundation MLLM and conduct quality control with VQA-based consistency filtering. Finally, we refine the retriever through continual training on these triplets with a grouped contrastive scheme, thereby internalizing fine-grained visual-semantic distinctions and realigning the discriminative embedding space of retriever with intrinsic compositional reasoning within the MLLM. Extensive experiments on CIRR and FashionIQ show that ReCALL consistently recalibrates degraded capabilities and achieves state-of-the-art performance. Code will be released soon.",
+      "authors": [
+        "Tianyu Yang",
+        "ChenWei He",
+        "Xiangzhao Hao",
+        "Tianyue Wang",
+        "Jiarui Guo",
+        "Haiyun Guo",
+        "Leigang Qu",
+        "Jinqiao Wang",
+        "Tat-Seng Chua"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-02-02T04:52:54+00:00",
+      "link": "https://arxiv.org/pdf/2602.01639v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "bridging generative MLLM to discriminative retriever addressing paradigm conflict",
+      "llm_evidence_cn": "桥接生成式MLLM与判别式检索器，解决范式冲突",
+      "llm_evidence": "桥接生成式MLLM与判别式检索器，解决范式冲突",
+      "canonical_evidence": "桥接生成式MLLM与判别式检索器，解决范式冲突",
+      "llm_tldr_en": "ReCALL addresses the conflict between generative and discriminative paradigms when adapting MLLMs for image retrieval.",
+      "llm_tldr_cn": "ReCALL解决将生成式多模态大语言模型适配为图像检索时生成与判别范式冲突问题。",
+      "llm_tldr": "ReCALL解决将生成式多模态大语言模型适配为图像检索时生成与判别范式冲突问题。",
+      "llm_tags": [
+        "query:q7"
+      ],
+      "matched_query_tag": "query:q7",
+      "matched_query_text": "Bridging generative and contrastive learning methods",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2602.02841v2",
+      "title": "Semantics-Aware Generative Latent Data Augmentation for Learning in Low-Resource Domains",
+      "abstract": "Despite strong performance in data-rich regimes, deep learning often underperforms in the data-scarce settings common in practice. While foundation models (FMs) trained on massive datasets demonstrate strong generalization by extracting general-purpose features, they can still suffer from scarce labeled data during downstream fine-tuning. To address this, we propose GeLDA, a semantics-aware generative latent data augmentation framework that leverages conditional diffusion models to synthesize samples in an FM-induced latent space. Because this space is low-dimensional and concentrates task-relevant information compared to the input space, GeLDA enables efficient, high-quality data generation. GeLDA conditions generation on auxiliary feature vectors that capture semantic relationships among classes or subdomains, facilitating data augmentation in low-resource domains. We validate GeLDA in two large-scale recognition tasks: (a) in zero-shot language-specific speech emotion recognition, GeLDA improves the Whisper-large baseline's unweighted average recall by 6.13%; and (b) in long-tailed image classification, it achieves 74.7% tail-class accuracy on ImageNet-LT, setting a new state-of-the-art result.",
+      "authors": [
+        "Jaesung Bae",
+        "Minje Kim"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-02-02T21:43:54+00:00",
+      "link": "https://arxiv.org/pdf/2602.02841v2",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "generative latent data augmentation bridging generative and representation learning",
+      "llm_evidence_cn": "生成式隐空间数据增强，连接生成式与表示学习",
+      "llm_evidence": "生成式隐空间数据增强，连接生成式与表示学习",
+      "canonical_evidence": "生成式隐空间数据增强，连接生成式与表示学习",
+      "llm_tldr_en": "GeLDA uses conditional diffusion models for semantic-aware latent augmentation in low-resource domains.",
+      "llm_tldr_cn": "GeLDA利用条件扩散模型在低资源域进行语义感知的隐空间增强。",
+      "llm_tldr": "GeLDA利用条件扩散模型在低资源域进行语义感知的隐空间增强。",
+      "llm_tags": [
+        "query:q7"
+      ],
+      "matched_query_tag": "query:q7",
+      "matched_query_text": "Bridging generative and contrastive learning methods",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2602.02769v1",
+      "title": "BiTimeCrossNet: Time-Aware Self-Supervised Learning for Pediatric Sleep",
+      "abstract": "We present BiTimeCrossNet (BTCNet), a multimodal self-supervised learning framework for long physiological recordings such as overnight sleep studies. While many existing approaches train on short segments treated as independent samples, BTCNet incorporates information about when each segment occurs within its parent recording, for example within a sleep session. BTCNet further learns pairwise interactions between physiological signals via cross-attention, without requiring task labels or sequence-level supervision.   We evaluate BTCNet on pediatric sleep data across six downstream tasks, including sleep staging, arousal detection, and respiratory event detection. Under frozen-backbone linear probing, BTCNet consistently outperforms an otherwise identical non-time-aware variant, with gains that generalize to an independent pediatric dataset. Compared to existing multimodal self-supervised sleep models, BTCNet achieves strong performance, particularly on respiration-related tasks.",
+      "authors": [
+        "Saurav Raj Pandey",
+        "Harlin Lee"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-02-02T20:23:28+00:00",
+      "link": "https://arxiv.org/pdf/2602.02769v1",
+      "tags": [
+        "keyword:生成对比学习"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "self-supervised learning framework with cross-attention",
+      "llm_evidence_cn": "自监督学习框架与交叉注意力机制",
+      "llm_evidence": "自监督学习框架与交叉注意力机制",
+      "canonical_evidence": "自监督学习框架与交叉注意力机制",
+      "llm_tldr_en": "Time-aware self-supervised framework for multimodal physiological recordings using cross-attention without labels.",
+      "llm_tldr_cn": "时序感知的多模态自监督框架，无需标签利用交叉注意力。",
+      "llm_tldr": "时序感知的多模态自监督框架，无需标签利用交叉注意力。",
+      "llm_tags": [
+        "query:q3"
+      ],
+      "matched_query_tag": "query:q3",
+      "matched_query_text": "self-supervised pretraining frameworks",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2602.02080v1",
+      "title": "Learning Half-Spaces from Perturbed Contrastive Examples",
+      "abstract": "We study learning under a two-step contrastive example oracle, as introduced by Mansouri et. al. (2025), where each queried (or sampled) labeled example is paired with an additional contrastive example of opposite label. While Mansouri et al. assume an idealized setting, where the contrastive example is at minimum distance of the originally queried/sampled point, we introduce and analyze a mechanism, parameterized by a non-decreasing noise function $f$, under which this ideal contrastive example is perturbed. The amount of perturbation is controlled by $f(d)$, where $d$ is the distance of the queried/sampled point to the decision boundary. Intuitively, this results in higher-quality contrastive examples for points closer to the decision boundary. We study this model in two settings: (i) when the maximum perturbation magnitude is fixed, and (ii) when it is stochastic.   For one-dimensional thresholds and for half-spaces under the uniform distribution on a bounded domain, we characterize active and passive contrastive sample complexity in dependence on the function $f$. We show that, under certain conditions on $f$, the presence of contrastive examples speeds up learning in terms of asymptotic query complexity and asymptotic expected query complexity.",
+      "authors": [
+        "Aryan Alavi Razavi Ravari",
+        "Farnam Mansouri",
+        "Yuxin Chen",
+        "Valentio Iverson",
+        "Adish Singla",
+        "Sandra Zilles"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-02-02T13:27:23+00:00",
+      "link": "https://arxiv.org/pdf/2602.02080v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "perturbation mechanism for contrastive examples improving sample quality near decision boundary",
+      "llm_evidence_cn": "对比样本扰动机制提升决策边界附近样本质量",
+      "llm_evidence": "对比样本扰动机制提升决策边界附近样本质量",
+      "canonical_evidence": "对比样本扰动机制提升决策边界附近样本质量",
+      "llm_tldr_en": "Analyzes perturbed contrastive examples with noise-controlled perturbation to improve contrastive learning sample efficiency near decision boundaries.",
+      "llm_tldr_cn": "分析扰动对比样本，通过噪声控制扰动提升决策边界附近的对比学习样本效率。",
+      "llm_tldr": "分析扰动对比样本，通过噪声控制扰动提升决策边界附近的对比学习样本效率。",
+      "llm_tags": [
+        "query:q6"
+      ],
+      "matched_query_tag": "query:q6",
+      "matched_query_text": "augmentation strategies for contrastive learning",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2602.03910v1",
+      "title": "CONRep: Uncertainty-Aware Vision-Language Report Drafting Using Conformal Prediction",
+      "abstract": "Automated radiology report drafting (ARRD) using vision-language models (VLMs) has advanced rapidly, yet most systems lack explicit uncertainty estimates, limiting trust and safe clinical deployment. We propose CONRep, a model-agnostic framework that integrates conformal prediction (CP) to provide statistically grounded uncertainty quantification for VLM-generated radiology reports. CONRep operates at both the label level, by calibrating binary predictions for predefined findings, and the sentence level, by assessing uncertainty in free-text impressions via image-text semantic alignment. We evaluate CONRep using both generative and contrastive VLMs on public chest X-ray datasets. Across both settings, outputs classified as high confidence consistently show significantly higher agreement with radiologist annotations and ground-truth impressions than low-confidence outputs. By enabling calibrated confidence stratification without modifying underlying models, CONRep improves the transparency, reliability, and clinical usability of automated radiology reporting systems.",
+      "authors": [
+        "Danial Elyassirad",
+        "Benyamin Gheiji",
+        "Mahsa Vatanparast",
+        "Amir Mahmoud Ahmadzadeh",
+        "Seyed Amir Asef Agah",
+        "Mana Moassefi",
+        "Meysam Tavakoli",
+        "Shahriar Faghani"
+      ],
+      "primary_category": "eess.IV",
+      "categories": [
+        "eess.IV"
+      ],
+      "published": "2026-02-03T15:02:40+00:00",
+      "link": "https://arxiv.org/pdf/2602.03910v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "radiology report drafting with vision-language models on chest X-ray",
+      "llm_evidence_cn": "基于视觉-语言模型的胸部X光放射学报告生成",
+      "llm_evidence": "基于视觉-语言模型的胸部X光放射学报告生成",
+      "canonical_evidence": "基于视觉-语言模型的胸部X光放射学报告生成",
+      "llm_tldr_en": "CONRep adds uncertainty quantification to automated radiology report generation.",
+      "llm_tldr_cn": "CONRep为自动放射学报告生成添加不确定性量化。",
+      "llm_tldr": "CONRep为自动放射学报告生成添加不确定性量化。",
+      "llm_tags": [
+        "query:q5"
+      ],
+      "matched_query_tag": "query:q5",
+      "matched_query_text": "medical image analysis radiology pathology",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2602.03123v1",
+      "title": "Beyond Cropping and Rotation: Automated Evolution of Powerful Task-Specific Augmentations with Generative Models",
+      "abstract": "Data augmentation has long been a cornerstone for reducing overfitting in vision models, with methods like AutoAugment automating the design of task-specific augmentations. Recent advances in generative models, such as conditional diffusion and few-shot NeRFs, offer a new paradigm for data augmentation by synthesizing data with significantly greater diversity and realism. However, unlike traditional augmentations like cropping or rotation, these methods introduce substantial changes that enhance robustness but also risk degrading performance if the augmentations are poorly matched to the task. In this work, we present EvoAug, an automated augmentation learning pipeline, which leverages these generative models alongside an efficient evolutionary algorithm to learn optimal task-specific augmentations. Our pipeline introduces a novel approach to image augmentation that learns stochastic augmentation trees that hierarchically compose augmentations, enabling more structured and adaptive transformations. We demonstrate strong performance across fine-grained classification and few-shot learning tasks. Notably, our pipeline discovers augmentations that align with domain knowledge, even in low-data settings. These results highlight the potential of learned generative augmentations, unlocking new possibilities for robust model training.",
+      "authors": [
+        "Judah Goldfeder",
+        "Shreyes Kaliyur",
+        "Vaibhav Sourirajan",
+        "Patrick Minwan Puma",
+        "Philippe Martin Wyder",
+        "Yuhang Hu",
+        "Jiong Lin",
+        "Hod Lipson"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI"
+      ],
+      "published": "2026-02-03T05:29:26+00:00",
+      "link": "https://arxiv.org/pdf/2602.03123v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "bridging generative models and augmentation for representation learning",
+      "llm_evidence_cn": "连接生成模型与增强用于表示学习",
+      "llm_evidence": "连接生成模型与增强用于表示学习",
+      "canonical_evidence": "连接生成模型与增强用于表示学习",
+      "llm_tldr_en": "EvoAug automates task-specific augmentation learning using generative models like diffusion and NeRF.",
+      "llm_tldr_cn": "EvoAug利用扩散和NeRF等生成模型自动化任务特定增强学习。",
+      "llm_tldr": "EvoAug利用扩散和NeRF等生成模型自动化任务特定增强学习。",
+      "llm_tags": [
+        "query:q7"
+      ],
+      "matched_query_tag": "query:q7",
+      "matched_query_text": "Bridging generative and contrastive learning methods",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2602.02841v1",
+      "title": "Semantics-Aware Generative Latent Data Augmentation for Learning in Low-Resource Domains",
+      "abstract": "Despite strong performance in data-rich regimes, deep learning often underperforms in the data-scarce settings common in practice. While foundation models (FMs) trained on massive datasets demonstrate strong generalization by extracting general-purpose features, they can still suffer from scarce labeled data during downstream fine-tuning. To address this, we propose GeLDA, a semantics-aware generative latent data augmentation framework that leverages conditional diffusion models to synthesize samples in an FM-induced latent space. Because this space is low-dimensional and concentrates task-relevant information compared to the input space, GeLDA enables efficient, high-quality data generation. GeLDA conditions generation on auxiliary feature vectors that capture semantic relationships among classes or subdomains, facilitating data augmentation in low-resource domains. We validate GeLDA in two large-scale recognition tasks: (a) in zero-shot language-specific speech emotion recognition, GeLDA improves the Whisper-large baseline's unweighted average recall by 6.13%; and (b) in long-tailed image classification, it achieves 74.7% tail-class accuracy on ImageNet-LT, setting a new state-of-the-art result.",
+      "authors": [
+        "Jae-Sung Bae",
+        "Minje Kim"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-02-02T21:43:54+00:00",
+      "link": "https://arxiv.org/pdf/2602.02841v1",
+      "tags": [
+        "keyword:生成对比学习",
+        "query:生成对比学习"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "generative latent data augmentation bridging generative and representation learning",
+      "llm_evidence_cn": "生成式潜在数据增强连接生成与表示学习",
+      "llm_evidence": "生成式潜在数据增强连接生成与表示学习",
+      "canonical_evidence": "生成式潜在数据增强连接生成与表示学习",
+      "llm_tldr_en": "Proposes GeLDA using conditional diffusion for latent space augmentation in low-resource domains.",
+      "llm_tldr_cn": "提出GeLDA框架，利用条件扩散模型在低资源域进行潜在空间数据增强。",
+      "llm_tldr": "提出GeLDA框架，利用条件扩散模型在低资源域进行潜在空间数据增强。",
+      "llm_tags": [
+        "query:q7"
+      ],
+      "matched_query_tag": "query:q7",
+      "matched_query_text": "Bridging generative and contrastive learning methods",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
 }

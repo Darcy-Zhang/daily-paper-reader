@@ -1,0 +1,208 @@
+Title: Logic-Oriented Retriever Enhancement via Contrastive Learning
+
+URL Source: https://arxiv.org/pdf/2602.01116v1
+
+Published Time: Tue, 03 Feb 2026 02:16:38 GMT
+
+Number of Pages: 5
+
+Markdown Content:
+LOGIC-ORIENTED RETRIEVER ENHANCEMENT VIA CONTRASTIVE LEARNING 
+
+Wenxuan Zhang 1, Yuan-Hao Jiang 1, Changyong Qi 1, Rui Jia 1, Yonghe Wu 21Shanghai Institute of Artificial Intelligence for Education, East China Normal University, China 
+
+> 2
+
+Education Technology, East China Normal University, China 
+
+ABSTRACT 
+
+Large language models (LLMs) struggle in knowledge-intensive tasks, as retrievers often overfit to surface similarity and fail on queries involving complex logical relations. The capacity for logical analysis is inherent in model representa-tions but remains underutilized in standard training. LORE (Logic ORiented Retriever Enhancement) introduces fine-grained contrastive learning to activate this latent capacity, guiding embeddings toward evidence aligned with logical structure rather than shallow similarity. LORE requires no external supervision, resources, or pre-retrieval analysis, re-mains index-compatible, and consistently improves retrieval utility and downstream generation while maintaining ef-ficiency. The datasets and code are publicly available at 
+
+https://github.com/mazehart/Lore-RAG .
+
+Index Terms — Large Language Models (LLMs), Retrieval-Augmented Generation (RAG), Contrastive Learning 
+
+1. INTRODUCTION 
+
+Large language models (LLMs) have achieved significant progress across a wide range of natural language processing tasks [1, 2], yet they remain limited in knowledge-intensive scenarios, often exhibiting factual hallucinations, stale knowl-edge, and poor traceability. These limitations reduce relia-bility and make it difficult to deploy LLMs in high-stakes applications where correctness and verifiability are critical [3, 4]. Therefore, retrieval-augmented generation (RAG) has emerged as a practical remedy [5]. By following a ”retrieve-then-generate” paradigm, RAG retrieves external knowledge sources through embedding models via vector matching and then passes them to large models, thereby mitigating hallu-cination problems and enhancing interpretability and source traceability [6, 7]. In practice, a persistent gap exists: while embedding mod-els perform well on direct and straightforward queries, their effectiveness significantly degrades when handling queries disturbed with complex logical expressions. As shown in the figure, existing open-source embedding models, even with large parameter counts, cannot avoid the difficulties brought by queries disturbed with complex logical expressions. This 
+
+> Corresponding author: yhwu@deit.ecnu.edu.cn
+
+Fig. 1 . Impact of complex logical expressions on embed-ding model performance. Results on MSMARCO dataset show significant performance degradation across different embedding models when queries are disturbed with complex logical expressions, highlighting the vulnerability of current embedding approaches to complex logical structures. is because their similarity-driven nature causes them to of-ten favor surface-level lexical overlap rather than faithfully representing and satisfying the complex logical requirements of queries, leading to fragile evidence sets that fail to meet query requirements [8]. A natural response is to analyze or decompose queries using powerful LLMs before retrieval [9, 10]. However, this ”LLM-in-the-loop” strategy introduces non-trivial costs and latency, and relies on knowledge graphs and other structures constructed for datasets. This paper takes a different path: rather than adding more LLM computation, we pose a ques-tion—do existing open-source embedding models already contain untapped capacity to represent complex linguistic structures? Can targeted contrastive learning activate this ca-pacity, enabling retrievers to directly encode complex logical structures and salience rather than relying solely on surface similarity? This paper presents LORE, an embedding enhancement method through contrastive learning for improving retrievers. Based on existing datasets, LORE does not invoke large mod-els to assist embedding after queries and before retrieval, but rather retrains the embedding model using fine-grained con-trastive knowledge annotated by large models after pretrain-ing, emphasizing signals related to complex logical expres-           
+
+> arXiv:2602.01116v1 [cs.CL] 1 Feb 2026 Query: “Annie Morton, a long-time vegetarian and advocate for organic lifestyle choices who co-founded Tsi-La Organics ,
+> and Terry Richardson, whose biography by Andrew Morton was released in November 2001, are both notable fi gures ; who is
+> older?”
+> Chunks: [
+> “Annie Morton: Annie Morton (born October 8, 1970) is an American model born in Pennsylvania.”,
+> ……
+> “Annie Morton: A long time vegetarian, an advocate for organic lifestyle choices and natural healthcare. ”
+> “Annie Morton: She co-founded Tsi-La Organics, a "Green Luxury" company that creates and sells vegan, …… ”，
+> “Madonna (book): Madonna is a biography by English author Andrew Morton, chronicling the life of American …… ”
+> …… ]
+> Labels: [ Positive, Negative , Positive, Distractor (Negative) ，Distractor (Negative) ，Distractor (Negative)…… ]
+> Discourse Relation: "Parallel"
+> 1. Select appropriate discourse relations from
+> Rhetorical Structure Theory (RST) based on the
+> chosen distractor chunks.
+> Query: “Who is older, Annie Morton or Terry Richardson?”
+> Chunks: [
+> “Annie Morton: Annie Morton (born October 8, 1970) is an American model born in Pennsylvania.”,
+> ……
+> “Annie Morton: A long time vegetarian, an advocate for organic lifestyle choices and natural healthcare.”
+> “Annie Morton: She co-founded Tsi-La Organics, a "Green Luxury" company that creates and sells vegan, ……” ，
+> “Madonna (book): Madonna is a biography by English author Andrew Morton, chronicling the life of American ……”
+> …… ]
+> Labels: [ True, False ,True, False, False, False…… ]
+> Original example
+> Disturbed example
+> 2. Rewrite the query by fusing the original question
+> with distractor information using the selected discourse
+> relations, while keeping the original meaning.
+
+Fig. 2 . An illustration of Query Rewriting . The left side shows an original example with query, chunks, and labels, while the right side presents the corresponding modified example with enriched query, discourse relation, and distractor annotations. sions. The contributions of this paper are three-fold: • This paper proposes LORE, an embedding model en-hancement paradigm that integrates large model knowl-edge in the post-pretrain stage, providing a simple con-trastive fine-tuning method. • This paper constructs an open-source fine-grained con-trastive learning dataset based on existing open-source. • This paper validates the consistent gains of LORE on multiple tasks featuring queries disturbed with complex logical expressions, with improvements on unlabeled tasks particularly demonstrating the effectiveness of the proposed method. 
+
+2. RELATED WORK Beyond similarity. Recent methods have begun to address the limitations caused by RAG’s reliance on similarity. ME-TRAG attempts to use changes in LLM answer accuracy on downstream tasks as supervision signals to fine-tune the re-trieval embedding model, training it to identify retrieval con-tent that helps improve LLM answer accuracy on downstream tasks [10]. Meanwhile, Mindful-RAG combines LLM’s inter-nal knowledge with external knowledge graphs, first analyz-ing query intent through LLMs, then integrating knowledge graphs to introduce context alignment and result verification in the retrieval process, thereby reducing errors and ambiguity in complex reasoning [9]. 
+
+Limitations. These methods improve utility through task feedback, intent modeling, or external knowledge structures, but often introduce additional overhead and rely on exter-nal supervision or resources, hindering transferability across different tasks. While they leverage large model knowledge to enhance embedding model performance, the fundamen-tal capabilities of embedding models are not improved in this process. Therefore, a key question is: how to equip retrievers with understanding of queries with complex log-ical expressions, enabling them to directly encode queries and prioritize evidence that conforms to the query’s logical structure, while maintaining efficiency and avoiding depen-dence on pre-retrieval LLM analysis, external supervision, and external knowledge structures [8]. 
+
+Positioning. This paper proposes LORE, a contrastive post-training method to activate the latent capacity of open-source embedding models in representing queries with complex log-ical expressions, enabling retrievers to directly encode logical structure rather than relying on surface similarity, thereby im-proving retrieval performance at the fundamental capability level of embeddings. 
+
+3. METHOD 3.1. Dataset Construction Fine-grained Chunk Categories The construction starts from a base corpus with query q, candidate chunks {ck}, and boolean labels yk ∈ { True , False }. For each q, a subset of False-labeled chunks is sampled as distractors, each selected distractor is assigned its original chunk index as a source identifier, and an LLM is prompted to rewrite q into a more natural query that embeds some distractor content while pre-serving the original meaning. The distractor usage is then mapped back to chunk indices and three tiers are constructed for each q and candidate set C(q):- Positive (P) : chunks with yk = True that are sufficient to answer the query. - Distractor (N1) : False-labeled chunks that were used by the LLM in the rewritten question as distractors, appearing relevant to the question but providing no help in answering it. - Negative (N2) : other False-labeled chunks not used in the rewrite. The three tiers are denoted as P, N1, and N2. When only a portion of the dataset is rewritten, the remaining samples retain their original queries and boolean labels, which are mapped to these tiers for consistency. 
+
+Query Rewriting The dataset construction follows a two-step process as illustrated in Figure 2. First, appropriate discourse relations from Rhetorical Structure Theory (RST) [11] are selected based on the chosen chunks. Eight common rela-tions—Sequential, Transitional, Supplementary, Contrastive, Causal, Parallel, Hypothetical, and Explanatory—serve as guidelines. Second, the query is rewritten by fusing the original question with distractor information using the se-lected discourse relations, resulting in a modified example with enriched query and discourse relation annotations. The constructed training dataset, CoEnTrain, is released. 
+
+3.2. Contrastive Learning Contrastive loss The framework employs two separate encoders: a query encoder Mq and a document encoder 
+
+Md. Queries and chunks are embedded into a shared vector space using the respective encoders. Let hq = Mq (q) and 
+
+hk = Md(ck) denote the normalized embeddings, and sk the cosine similarity between the query and the k-th candidate chunk: 
+
+hq , hk ∈ Rd, s k = cos( hq , hk).
+
+For each (q, C(q)) , temperature scaling and negative-tier weighting are applied in logit space. Let ˜sk denote the ad-justed similarity: 
+
+˜sk =
+
+
+
+sk/τ, k ∈ P
+
+sk/τ + log( β), k ∈ N1 
+
+sk/τ + log( α), k ∈ N2 
+
+(β > α > 0) .
+
+The differential weighting β > α is crucial for handling com-plex logical expressions, as it ensures that distractors (N1) receive stronger penalties than negatives (N2), forcing the model to learn fine-grained distinctions. The probability for a positive sample k ∈ P is computed using only negative sam-ples (N1 and N2) in the denominator: 
+
+pk = exp(˜ sk)
+
+P   
+
+> t∈N1∪N2
+
+exp(˜ st) + exp(˜ sk) , k ∈ P.
+
+Following the InfoNCE framework [12], the objective mini-mized for a query q is 
+
+L(q) = − 1
+
+|P |
+
+X
+
+> k∈P
+
+log pk.
+
+This design scales distractor/negative samples in logit space (with β > α ), excludes positives from the denominator to avoid dilution, and emphasizes the hierarchical separation P ≻ N1 ≻ N2 to improve understanding of complex logical expressions. 
+
+Training process The document encoder Md is kept frozen with pre-trained parameters, while the query encoder Mq is fine-tuned during training. Based on the embeddings and sim-ilarities defined above, the contrastive loss serves as the op-timization objective. Formally, the query encoder parameters 
+
+θq are optimized by 
+
+θ∗ 
+
+> q
+
+= arg min 
+
+> θq
+
+Eq∼D L(q),
+
+where D denotes the training set. 
+
+Fig. 3 . Training and validation loss curves (upper) and chunk score evolution for different chunk categories (lower) during Qwen3-Embedding-0.6B fine-tuning. 
+
+4. EXPERIMENTS 4.1. Experimental Setup Datasets Experiments are conducted on three widely-used public datasets: HotpotQA [13], MS MARCO [14], and MuSiQue [15]. For training and validation sets, Query Rewriting is performed and fine-grained category contrastive information is annotated on MS MARCO data, while Hot-potQA and MuSiQue datasets remain unannotated. For test sets, Query Rewriting is applied to all datasets while pre-serving the original test sets for comparison. The rewritten test sets undergo manual screening to ensure they meet the rewriting requirements. 
+
+Models and Baselines Experiments are conducted using two embedding models: Qwen3 Embedding [16] and BGE M3-Embedding [17]. The effectiveness of LORE is compared against raw models and traditional contrastive learning ap-proaches on both raw test sets and disturbed test sets. 
+
+Evaluation Metrics Retrieval performance is primarily eval-uated using positive recall at top-k positions (@3, @5, @10), which measures the proportion of relevant chunks success-fully retrieved within the top-k results. For Query Rewrit-ing test sets, the recall rates of distractor samples are also recorded. 
+
+Experimental Setup Model training is conducted on a single A800 GPU. The learning rate is set to 1 × 10 −5, temperature parameter τ = 0 .05 , and tier-weighted parameters α = 1 .0,
+
+β = 3 .0. Training is performed for 1 epoch with batch size 32. For reproducibility, three models with different random seeds (0, 1, 2) are trained and the mean and standard deviation across runs are reported. Table 1 . Recall of positive chunks and distractor chunks. 
+
+Recall HotpotQA Musique MSMARCO Raw Dataset Disturbed Dataset Raw Dataset Disturbed Dataset Raw Dataset Disturbed Dataset P↑ P↑ N1 ↓ P↑ P↑ N1 ↓ P↑ P↑ N1 ↓
+
+Qwen/Qwen3-Embedding-0.6B @3 Raw Model 56.37 ±0.00 33.76 ±0.00 70.03 ±0.00 59.07 ±0.00 39.55 ±0.00 83.88 ±0.00 62.63 ±0.00 46.98 ±0.00 84.25 ±0.00 
+
++InfoNCE 70.87 ±0.40 59.71 ±0.56 50.51 ±1.06 67.23 ±0.42 53.65 ±0.47 70.36 ±1.16 68.39 ±0.25 51.63 ±0.40 82.03 ±0.56 
+
++LORE 70.72 ±0.09 65.45 ±0.54 23.81 ±1.39 66.68 ±0.52 59.28 ±0.34 36.87 ±2.06 68.35 ±0.23 69.30 ±0.35 20.15 ±0.87 
+
+@5 Raw Model 68.04 ±0.00 49.23 ±0.00 81.59 ±0.00 70.13 ±0.00 56.38 ±0.00 88.80 ±0.00 82.41 ±0.00 73.25 ±0.00 93.34 ±0.00 
+
++InfoNCE 81.96 ±0.20 74.77 ±0.68 69.65 ±1.13 79.93 ±0.34 70.03 ±0.23 81.25 ±0.85 84.96 ±0.03 76.68 ±0.24 92.71 ±0.05 
+
++LORE 81.84 ±0.44 77.79 ±0.34 39.73 ±2.09 79.41 ±0.30 73.32 ±0.05 52.81 ±1.76 85.06 ±0.31 85.77 ±0.22 44.22 ±0.78 
+
+@10 Raw Model 80.55 ±0.00 69.13 ±0.00 90.96 ±0.00 84.28 ±0.00 77.46 ±0.00 92.09 ±0.00 96.75 ±0.00 96.70 ±0.00 99.45 ±0.00 
+
++InfoNCE 92.61 ±0.08 89.30 ±0.21 86.95 ±0.64 92.81 ±0.23 88.75 ±0.17 89.97 ±0.29 96.75 ±0.00 96.70 ±0.00 99.45 ±0.00 
+
++LORE 92.45 ±0.02 89.62 ±0.32 62.84 ±2.28 92.37 ±0.16 88.87 ±0.06 74.66 ±0.96 96.75 ±0.00 96.70 ±0.00 99.45 ±0.00 
+
+BAAI/bge-m3 @3 Raw Model 64.68 ±0.00 40.04 ±0.00 71.84 ±0.00 60.12 ±0.00 42.33 ±0.00 84.07 ±0.00 68.10 ±0.00 48.95 ±0.00 84.02 ±0.00 
+
++InfoNCE 71.53 ±0.17 57.77 ±0.62 53.96 ±0.89 66.51 ±0.06 52.94 ±0.09 73.48 ±0.36 70.21 ±0.27 52.49 ±0.29 80.93 ±0.21 
+
++LORE 70.76 ±0.22 65.57 ±0.58 20.43 ±1.38 65.88 ±0.08 59.94 ±0.53 25.80 ±2.78 70.52 ±0.23 69.28 ±0.08 22.80 ±0.75 
+
+@5 Raw Model 76.09 ±0.00 58.24 ±0.00 82.89 ±0.00 71.96 ±0.00 60.28 ±0.00 88.23 ±0.00 85.25 ±0.00 75.20 ±0.00 93.51 ±0.00 
+
++InfoNCE 83.06 ±0.23 73.74 ±0.11 72.22 ±0.57 77.85 ±0.05 69.19 ±0.16 84.02 ±0.20 85.98 ±0.18 78.17 ±0.20 92.31 ±0.20 
+
++LORE 82.52 ±0.11 77.59 ±0.38 33.05 ±2.09 77.28 ±0.23 72.29 ±0.06 40.00 ±3.06 86.20 ±0.21 86.10 ±0.09 44.89 ±0.60 
+
+@10 Raw Model 88.28 ±0.00 78.86 ±0.00 92.47 ±0.00 86.58 ±0.00 81.27 ±0.00 91.69 ±0.00 96.75 ±0.00 96.70 ±0.00 99.45 ±0.00 
+
++InfoNCE 93.26 ±0.03 89.14 ±0.12 87.55 ±0.21 91.69 ±0.05 87.78 ±0.07 90.90 ±0.13 96.75 ±0.00 96.70 ±0.00 99.45 ±0.00 
+
++LORE 93.10 ±0.08 89.49 ±0.61 54.90 ±2.96 91.37 ±0.08 88.36 ±0.09 61.53 ±2.59 96.75 ±0.00 96.70 ±0.00 99.45 ±0.00 
+
+4.2. Results and Analysis Training Dynamics Figure 3 shows the learning progression of LORE. Initially, the model favors distractor (N1) samples over positive (P) samples due to surface-level lexical overlap, despite N1 being irrelevant for answering queries. During training, Distractor (N1) sample scores consis-tently decrease and eventually converge with negative (N2) samples at lower levels, while positive (P) samples main-tain relatively stable scores and establish clear dominance. This progressive separation validates the effectiveness of the tier-weighted contrastive loss design. 
+
+Retrieval Performance As shown in Table 1, both InfoNCE and LORE significantly outperform the Raw Model on both Raw Dataset and Disturbed Dataset. Since only the query encoder Mq is fine-tuned in the experiments, this demon-strates that contrastive learning can enhance the model’s un-derstanding of queries, thereby improving retrieval perfor-mance. However, compared to InfoNCE, LORE, which uti-lizes fine-grained annotations from large language models, achieves more significant improvements. 
+
+Generalization Capability Only MSMARCO received fine-grained annotations in the training set, yet both HotpotQA and MuSiQue datasets also benefit from this approach. This indicates that the LORE method possesses cross-task gen-eralization effects. When constructing sufficiently general and rich fine-grained datasets, broader performance improve-ments in embedding models across various tasks can be antic-ipated. This transferability demonstrates the practical value of LORE in real-world applications where comprehensive anno-tation of all target domains is often impractical. 
+
+5. LIMITATIONS AND CONCLUSION 
+
+Existing embedding models are limited by their training cor-pora and pretraining paradigms, resulting in insufficient com-prehension of queries with complex logical expressions and an overreliance on surface-level similarity. Previous work has mainly focused on using large models in specific scenarios to enhance performance, rather than improving the foundational capabilities of embedding models. To address this, queries disturbed with complex logical expressions are constructed based on Rhetorical Structure Theory (RST), and fine-grained contrastive annotations across three chunk categories are ap-plied. Contrastive learning enables embedding models to bet-ter capture complex logical expressions while remaining fully compatible with existing methods, reducing the need for ad-ditional task-specific designs. Despite demonstrated effectiveness, the approach is con-strained by the diversity of logical structures and datasets. Its generalization requires further investigation. Future direc-tions include developing agent-based data annotation systems over more realistic queries with complex logical expressions, allowing the transfer of large models’ query-intent under-standing to smaller embedding models via contrastive learn-ing, thereby strengthening their foundational capabilities. 6. ACKNOWLEDGMENTS 
+
+This work was supported by the Major Program of National Fund of Philosophy and Social Science of China (Grant No. 21&ZD238). 
+
+7. REFERENCES 
+
+[1] Tom B. Brown, Benjamin Mann, Nick Ryder, et al., “Language models are few-shot learners,” in Advances in Neural Information Processing Systems 33: Annual Conference on Neural Information Processing Systems 2020, NeurIPS 2020, December 6-12, 2020, virtual ,Hugo Larochelle, Marc’Aurelio Ranzato, Raia Hadsell, Maria-Florina Balcan, and Hsuan-Tien Lin, Eds., 2020. [2] Muhammad Arslan, Hussam Ghanem, Saba Munawar, and Christophe Cruz, “A survey on rag with llms,” Pro-cedia computer science , vol. 246, pp. 3781–3790, 2024. [3] Lei Huang, Weijiang Yu, Weitao Ma, Weihong Zhong, Zhangyin Feng, Haotian Wang, Qianglong Chen, Wei-hua Peng, Xiaocheng Feng, Bing Qin, et al., “A sur-vey on hallucination in large language models: Princi-ples, taxonomy, challenges, and open questions,” ACM Transactions on Information Systems , vol. 43, no. 2, pp. 1–55, 2025. [4] Junyi Li, Xiaoxue Cheng, Xin Zhao, Jian-Yun Nie, and Ji-Rong Wen, “Halueval: A large-scale hallucination evaluation benchmark for large language models,” in 
+
+Proceedings of the 2023 Conference on Empirical Meth-ods in Natural Language Processing, EMNLP 2023, Singapore, December 6-10, 2023 , Houda Bouamor, Juan Pino, and Kalika Bali, Eds. 2023, pp. 6449–6464, Association for Computational Linguistics. [5] Patrick Lewis, Ethan Perez, Aleksandra Piktus, Fabio Petroni, Vladimir Karpukhin, Naman Goyal, Heinrich K¨ uttler, Mike Lewis, Wen-tau Yih, Tim Rockt¨ aschel, et al., “Retrieval-augmented generation for knowledge-intensive nlp tasks,” Advances in neural information processing systems , vol. 33, pp. 9459–9474, 2020. [6] Jinhao Jiang, Kun Zhou, Zican Dong, Keming Ye, Wayne Xin Zhao, and Ji-Rong Wen, “Structgpt: Ageneral framework for large language model to reason over structured data,” arXiv preprint arXiv:2305.09645 ,2023. [7] Parth Sarthi, Salman Abdullah, Aditi Tuli, Shubh Khanna, Anna Goldie, and Christopher D Manning, “Raptor: Recursive abstractive processing for tree-organized retrieval,” in The Twelfth International Con-ference on Learning Representations , 2024. [8] Laura Caspari, Kanishka Ghosh Dastidar, Saber Zer-houdi, Jelena Mitrovic, and Michael Granitzer, “Beyond benchmarks: Evaluating embedding model similarity for retrieval augmented generation systems,” arXiv preprint arXiv:2407.08275 , 2024. [9] Garima Agrawal, Tharindu Kumarage, Zeyad Al-ghamdi, and Huan Liu, “Mindful-rag: A study of points of failure in retrieval augmented generation,” in 2024 2nd International Conference on Foundation and Large Language Models (FLLM) . IEEE, 2024, pp. 607–611. [10] Chunjing Gan, Dan Yang, Binbin Hu, Hanxiao Zhang, Siyuan Li, Ziqi Liu, Yue Shen, Lin Ju, Zhiqiang Zhang, Jinjie Gu, et al., “Similarity is not all you need: Endow-ing retrieval augmented generation with multi layered thoughts,” arXiv preprint arXiv:2405.19893 , 2024. [11] William C Mann and Sandra A Thompson, “Rhetori-cal structure theory: Toward a functional theory of text organization,” Text - Interdisciplinary Journal for the Study of Discourse , vol. 8, no. 3, pp. 243–281, 1988. [12] Aaron van den Oord, Yazhe Li, and Oriol Vinyals, “Rep-resentation learning with contrastive predictive coding,” 
+
+arXiv preprint arXiv:1807.03748 , 2018. [13] Zhilin Yang, Peng Qi, Saizheng Zhang, Yoshua Bengio, William W. Cohen, Ruslan Salakhutdinov, and Christo-pher D. Manning, “HotpotQA: A dataset for diverse, ex-plainable multi-hop question answering,” in Conference on Empirical Methods in Natural Language Processing (EMNLP) , 2018. [14] Tri Nguyen, Mir Rosenberg, Xia Song, Jianfeng Gao, Saurabh Tiwary, Rangan Majumder, and Li Deng, “MS MARCO: A human generated machine reading compre-hension dataset,” CoRR , vol. abs/1611.09268, 2016. [15] Harsh Trivedi, Niranjan Balasubramanian, Tushar Khot, and Ashish Sabharwal, “ musique: Multihop questions via single-hop question composition,” Transactions of the Association for Computational Linguistics , vol. 10, pp. 539–554, 2022. [16] Yanzhao Zhang, Mingxin Li, Dingkun Long, Xin Zhang, Huan Lin, Baosong Yang, Pengjun Xie, An Yang, Dayiheng Liu, Junyang Lin, Fei Huang, and Jingren Zhou, “Qwen3 embedding: Advancing text embedding and reranking through foundation models,” 
+
+arXiv preprint arXiv:2506.05176 , 2025. [17] Jianlv Chen, Shitao Xiao, Peitian Zhang, Kun Luo, Defu Lian, and Zheng Liu, “Bge m3-embedding: Multi-lingual, multi-functionality, multi-granularity text em-beddings through self-knowledge distillation,” 2024.

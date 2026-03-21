@@ -1,0 +1,705 @@
+Title: CLAMP: Contrastive Learning for 3D Multi-View Action-Conditioned Robotic Manipulation Pretraining
+
+URL Source: https://arxiv.org/pdf/2602.00937v1
+
+Published Time: Tue, 03 Feb 2026 02:14:07 GMT
+
+Number of Pages: 16
+
+Markdown Content:
+# CLAMP: Contrastive Learning for 3D Multi-View Action-Conditioned Robotic Manipulation Pretraining 
+
+I-Chun Arthur Liu ∗† , Krzysztof Choromanski ∗, Sandy Huang ∗, Connor Schenck ∗∗Google DeepMind †University of Southern California 
+
+Abstract —Leveraging pre-trained 2D image representations in behavior cloning policies has achieved great success and has become a standard approach for robotic manipulation. However, such representations fail to capture the 3D spatial information about objects and scenes that is essential for precise manipulation. In this work, we introduce Contrastive Learning for 3D Multi-View Action-Conditioned Robotic Manipulation Pretraining (CLAMP), a novel 3D pre-training framework that utilizes point clouds and robot actions. From the merged point cloud computed from RGB-D images and camera extrinsics, we re-render multi-view four-channel image observations with depth and 3D coordinates, including dynamic wrist views, to provide clearer views of target objects for high-precision ma-nipulation tasks. The pre-trained encoders learn to associate the 3D geometric and positional information of objects with robot action patterns via contrastive learning on large-scale simulated robot trajectories. During encoder pre-training, we pre-train a Diffusion Policy to initialize the policy weights for fine-tuning, which is essential for improving fine-tuning sample efficiency and performance. After pre-training, we fine-tune the policy on a limited amount of task demonstrations using the learned image and action representations. We demonstrate that this pre-training and fine-tuning design substantially improves learning efficiency and policy performance on unseen tasks. Furthermore, we show that CLAMP outperforms state-of-the-art baselines across six simulated tasks and five real-world tasks. 
+
+I. I NTRODUCTION 
+
+Contrastive pre-training on internet-scale image–text pairs has become a standard approach for learning strong computer vision backbones [37, 60, 32]. However, an analogous standard approach has not emerged in robotics due to the limited availability of large-scale robot data. Moreover, it remains unclear which modalities and image representations, such as RGB, point clouds, or voxel grids, are best suited for pre-training. Pre-training in robotics is further complicated by high-dimensional state and action spaces. Recent works on robotic manipulation [24, 33] have ex-plored leveraging web-scale images, videos, and text with simulated and real-world robot data for pre-training. However, it is not well understood which data sources contribute most to policy fine-tuning performance. Moreover, these approaches do not pre-train on 3D data or incorporate 3D perception, which provides the spatial information robots need to plan and act effectively in the physical world. A recent work, 3D-MVP [36], proposes a 3D multi-view pre-training framework using masked autoencoders for manipulation. This method learns image representations through image reconstruction, but 
+
+Fig. 1: CLAMP is a 3D pre-training framework for robotic manipulation. We contrastively pre-train an image encoder with fixed and dynamic multi-view observations, an action encoder with histories of action chunks, and a text encoder with spatial and temporal object- and task-level information. CLAMP learns image and action representations that improve downstream policy fine-tuning efficiency and performance. The bottom figure compares the ALOHA Unleashed evalu-ation curves during fine-tuning without and with CLAMP on the Mug on Plate task. it does not leverage robot action data during pre-training. We hypothesize that 3D perception and robot actions are valuable pre-training modalities because they are fundamental to how robots perceive and act in the world. In this work, we propose Contrastive Learning for 3D Multi-View Action-Conditioned Robotic Manipulation 
+
+Pretraining ( CLAMP ). We contrastively pre-train an image encoder, a text encoder, and an action encoder on large-scale simulated robot data by pulling positive image–text, im-age–action, and text–action pairs closer together while pushing negative pairs apart. See Figure 1 for an overview. 
+
+> arXiv:2602.00937v1 [cs.RO] 31 Jan 2026
+
+(i) Contrastive pre-training on simulated robot data 
+
+and Di ff usion Policy pre-training 
+
+> Noisy
+> Actions
+> Diffusion
+> Timestep
+
+(ii) Di ff usion Policy  fi ne-tuning and inference           
+
+> Frozen
+> Image
+> Embedding
+> Frozen
+> Action
+> Embedding
+> CNN
+> X-Attn
+> CNN
+> Proprioception
+> Transformer Encoder
+> Transformer Decoder
+> MLP
+> MLP
+> Noise  [ϵt+1 ϵt+2…ϵt+49  ϵt+50 ]
+> at+1+ϵt+1
+> …
+> at+50 +ϵt+50
+> depth-xyz 224 ×1120 ×
+> Image Encoder
+> (ViT)
+> “place the can opener in the left
+> compartment of the caddy, can
+> opener (83, 16, 27), screwdriver
+> (83, 40, 27),…, task progress 65”
+> Text Encoder
+> (CLIP)
+> Action Encoder
+> (Transformer)
+> 1
+> Sigmoid loss
+> at−1…at−Hat−2
+> 1
+> 2
+> 2
+> 3
+> 3
+> 4
+> 5
+> 45
+> MLP
+> Pre-train the Diffusion Policy from (ii) in parallel
+
+Fig. 2: Overview of CLAMP . (i): CLAMP consists of three encoders: image, action and text. The image encoder is a Vision Transformer (ViT) [8] that takes five multi-view observations (overhead, back-right, front-left, wrist-left, and wrist-right) as input. These views are rendered from a merged point cloud and include depth and 3D coordinates. The action encoder is a Transformer encoder that takes a history of previous actions ( at−1, . . . , a t−H ) as input. The text input includes a general task description, each object’s name and normalized position in the global coordinate frame, and an integer indicating task progress, and is processed by a CLIP [37] text encoder. The intuition is to learn image and action representations that capture correlations between action patterns and robot states as observed in images, grounded by text that describes the spatial and temporal information about the objects and task. We also pre-train a Diffusion Policy [65] in parallel. (ii): The Diffusion Policy is first initialized with the pre-trained weights from stage (i) and use the frozen CLAMP encoders to extract image and action embeddings. These embeddings are fed into a Transformer encoder together with RGB feature maps from ResNet-50 backbones and proprioceptive features from the robot to predict noise of shape 50 ×14 for the next 50 actions ( ϵt+1 , . . . , ϵ t+50 ). For image representation, we re-render multi-view four-channel observations from the merged point cloud that include depth and 3D coordinates, using fixed viewpoints and dynamic wrist views, which provide clearer observations for high-precision manipulation tasks. We apply STRING [39] relative positional encoding to the image encoder, enabling tokens from different views that correspond to nearby regions in 3D space to be correlated. For action data, we use a history of previous actions. Our intuition is that many manipulation tasks share common action patterns or trajectory segments that can be learned during pre-training, thereby reducing the amount of task-specific learning required during fine-tuning. For text, we extract object spatial relationships and task progress from the simulator and use this information to ground image and action representations. Note that the text encoder is used exclusively during pre-training; therefore, CLAMP does not rely on privi-leged state information during policy deployment. In addition, we also pre-train a Diffusion Policy, the visuomotor controller for the robot, in parallel to initialize the policy for fine-tuning. We find that appropriate initialization substantially improves fine-tuning efficiency and performance. We then fine-tune the policy using task-specific demonstrations for each task. In summary, our contributions are as follows: (i) We intro-duce a novel 3D contrastive pre-training framework for robotic manipulation that leverages robot actions and dynamic wrist views. (ii) We are the first to apply STRING relative positional encoding using 3D coordinates derived from point clouds. (iii) We show that dynamic wrist views are critical for strong results on high-precision tasks, and that pre-training both the encoders and the policy yields substantially better performance than pre-training the encoders alone. (iv) Extensive empiri-cal results show that CLAMP pre-training greatly improves sample efficiency and policy performance during fine-tuning, outperforming state-of-the-art baselines. II. R ELATED WORK 
+
+Contrastive learning has seen significant interest in recent years [20] with success on tasks such as view-invariant dense object features [40, 19] and robotic manipulation [14]. One major area of interest in contrastive learning has been train-ing large-scale vision encoders. Modern approaches such as CLIP [37], ALIGN [26], COCA [54], OpenCLIP [5], SigLIP [60], Florence [56], InternVL [4], and EVA [9, 10, 42] use contrastive learning to create semantically meaningful image embeddings by aligning vision encoders with text embeddings derived from image captions. TIPS [32] takes this a step further by introducing additional loss terms to maintain spatial features as well as semantic features in the image embeddings. ULIP [51] and ULIP-2 [52] lift contrastive learning into 3D by aligning a 3D encoder with pre-aligned text and image encoders. In this paper, we utilize contrastive learning to pre-train 3D, text, and action encoders. Interfacing unordered point clouds with learned models has been a challenge in computer vision and robotics. PointNet [34] and PointNet++ [35] showed early success by utilizing an MLP and max pooling layers for object classification and segmentation. PointMLP [30] added to this a lightweight geo-metric affine module and residual connections. DGCNN [46] takes a different approach, applying a convolutional kernel on a graph neural network constructed from the point cloud. The advent of transformers [45], operating on sets of tokens, cre-ated natural opportunities for new point-cloud model architec-tures. PCT [15] and Point Transformer [63] used point-based features directly as the tokens for the self-attention mechanism. However, these methods required significant downsampling of the point cloud to acheive tractability, even when utilizing local attention. Point-BERT [55] solved this by first pooling local regions of points together using a mini PointNet, and generating one token per region. This methodology has been used and iterated on successfully by many follow-on works [66, 23, 50, 21, 61, 48, 49] with ULIP [51] and ULIP-2 [52] evaluating both PointNet and Point-BERT as point-cloud encoder backbones. An alternative approach to Point-BERT style architectures is the multi-view projection approach, i.e., projecting the point cloud to multiple virtual image planes and applying standard 2D image architectures to the resulting images. This has shown success for point-cloud text alignment [62, 68], point-cloud captioning [31], shape classification and recognition [12, 16, 17], and 3D visual scene grounding [22]. Prior work in robotics has shown that these point-cloud encoders increase performance. DP3 [59] showed improved success rate across 72 simulation tasks using a PointNet-style backbone. ArticuBot [47] and HACMan [67] utilized PointNet++ backbones to solve articulated object and non-prehensile manipulation tasks respectively. PerAct [41] and GNFactor [58] voxelize their point clouds and feed them into a Perceiver Transformer [25] showing high success rates across multiple tasks. Act3D [11] generates point clouds from multiple RGB-D images, samples potential keypoints in a course-to-fine manner, and cross-attends them to select grasp points. RVT [13] and 3D-MVP [36] took the multi-view projection approach and used five orthogonal image planes (1 for each cardinal direction plus a top-down view) to maximize view coverage of the point cloud, yielding significant gains in success rate. Lift3D [27] combined both the multi-view projection approach with a Point-BERT backbone by using projection to get features from 2D models, then averaging them over views in the point cloud and generating embeddings using Point-BERT. In our work, we found the multi-view approach worked best (see Sec. V-C), with three fixed views (overhead, front-left, and back-right) and two dynamic views (a view attached to the wrist of each arm). III. M ETHODOLOGY 
+
+A. Problem Formulation 
+
+In contrastive pre-training, we aim to learn a model ψ
+
+that generates image and action embeddings that can be utilized to improve downstream fine-tuning of a behavior cloning policy. Given a mini-batch of image-text-action triplets 
+
+B = {(I1, T 1, A 1), . . . , (In, T n, A n)}, the contrastive objec-tive pulls the embeddings of matched triplets (Ii, T i, A i)
+
+closer together while pushing apart embeddings of mismatched triplets (Ii, T j , A k) for i̸ = j and i̸ = k. We denote the per-pixel 4-channel image observation by I ∈ RHI ×WI ×4,where HI and WI are the image height and width, and the four channels (D, X, Y, Z ) correspond to depth and 3D coordinates. Let T be a text string containing (i) a high-level task description, (ii) each object’s name and its normalized position in the global coordinate frame, and (iii) an integer indicating task progress. Note that privileged information, such as an object’s name and position, is obtained from the simulator and is used only during contrastive pre-training. A
+
+denotes the history of previous actions from a dual-arm robot: 
+
+At = {At−1, . . . , A t−H }, where H is the action chunk size and missing terms are zero-padded if t − H < 0.In policy fine-tuning, the objective is to train apolicy ϵθ , parameterized by θ, that learns from adataset of expert demonstrations D = {E1, . . . , E M } where 
+
+Ei = ( I1, I R 
+
+> 1
+
+, A 1, a1, . . . , I t, I Rt , A t, at) for a demonstration with t time steps, leveraging pretrained model ψ. Here, IR
+
+denotes an RGB image observation IR ∈ RHR×WR×3 where 
+
+(HR, W R) may differ from (HI , W I ), and a denotes the target joint positions for the robot. Note that both I and IR can be obtained from a standard RGB-D camera. 
+
+B. Contrastive Pre-training 
+
+Rendering. Given RGB-D images captured from a set of cameras, we construct a scene point cloud using the known camera intrinsics and extrinsics. Following [59], we omit RGB colors from the point cloud for better appearance gen-eralization. We apply 3D bounding-box cropping and voxel-grid downsampling to remove points outside the workspace and reduce point density. We then re-render the scene from five virtual viewpoints, each with depth and 3D coordinates: overhead, front-left, back-right, wrist-left, and wrist-right. The virtual wrist cameras are defined from the left and right gripper poses, with a small offset for improved visibility. These wrist views reduce occlusion during object manipulation. We empirically find that these dynamic views outperform stan-dard orthogonal views and are particularly effective on high-precision tasks. 
+
+Model Architecture. The encoders in CLAMP consist of an image encoder f (·), a text encoder g(·), and an action encoder 
+
+h(·). For the image encoder, we use a Vision Transformer (ViT) [8] with STRING [39] relative positional encoding. Specifically, we use a 94M-parameter, 12-layer, 768-wide, B/16 model with 12 attention heads and multihead atten-tion pooling (MAP) [29]. For STRING, we use the Cayley STRING formulation, where the 3D coordinates for relative positional encodings are computed as the average global XYZ of the point-cloud points within each image patch. Because the coordinates are in the global coordinate frame, attention be-tween image patches from different images can be seamlessly attenuated by the STRING mechanism without any additional modification. More analysis is provided in Sec. III-D. The text encoder takes a tokenized text [38, 53] with 256 tokens as input, and we train a CLIP text encoder [37] on these tokens. We use a 277M-parameter, 12-layer, 768-wide model with 12 attention heads. The action encoder is a standard Transformer encoder with MAP pooling. We use an 18M-parameter, 2-layer, 768-wide model with 12 attention heads. Each encoder outputs a 768-dimensional embedding. 
+
+Contrastive Loss. The encoders are trained to minimize a SigLIP-style loss [60] over the three modality pairs: image-text, image-action, and text-action. 
+
+LImageText = − 1
+
+|B| 
+
+> |B|
+
+X
+
+> i=1
+> |B|
+
+X
+
+> j=1
+
+log 11 + e ℓij (−t x⊤  
+
+> iyj+b
+
+))
+
+!
+
+(1) 
+
+LImageAction = − 1
+
+|B| 
+
+> |B|
+
+X
+
+> i=1
+> |B|
+
+X
+
+> k=1
+
+log 11 + e ℓik (−t x⊤  
+
+> izk+b
+
+))
+
+!
+
+(2) 
+
+LTextAction = − 1
+
+|B| 
+
+> |B|
+
+X
+
+> j=1
+> |B|
+
+X
+
+> k=1
+
+log 11 + e ℓjk (−t y⊤  
+
+> jzk+b
+
+))
+
+!
+
+(3) where xi = f (Ii) 
+
+> ∥f(Ii)∥2
+
+, yi = g(Ti)
+
+> ∥g(Ti)∥2
+
+, and zi = h(Ai)
+
+> ∥h(Ai)∥2
+
+. ℓij ,
+
+ℓik , ℓjk are the labels for image-text, image-action, and text-action inputs, respectively; they are set to 1 for matched pairs and to −1 otherwise. Bias b and temperature t are learnable scaling parameters that help stabilize training and prevent overly large updates early on. Following [60], we initialize 
+
+b = −10 and t = exp(log 10) = 10 . The total loss of CLAMP encoders is 13 (LImageText + LImageAction + LTextAction ).This formulation encourages paired modalities to be close while pushing unpaired modalities apart in a shared embedding space. The intuition is to learn action patterns or representa-tions that can be used to infer future states, while also learning image representations that can be used to infer the history of preceding robot actions, conditioned on text describing the task type, the spatial arrangement of objects in the scene, and the temporal progress of the task. 
+
+C. Diffusion Policy Pre-training and Fine-Tuning 
+
+Diffusion Policy Architecture. The Diffusion Policy is based on the architecture proposed by Zhao et al. [65]. It has been shown to excel at handling multimodal action distributions [6, 65], which is essential for challenging tasks with multiple action modes (e.g., grasp-to-place vs. grasp-to-hand-over-to-place) or for learning from demonstrations collected by different human operators. We use the Denoising Diffusion Probabilistic Model (DDPM) formulation [18, 6]. During training, a denoising step k is randomly selected. Conditioned on k, we randomly sample random noise ϵk with corresponding variance. The training objective of the noise prediction network ϵθ is to predict the injected noise ϵk:
+
+L = MSE 
+
+
+
+ϵk, ϵ θ (Ot, a0 
+
+> t
+
++ ϵk, k )
+
+
+
+. At test time, the policy samples an action by iteratively denoising an action sequence: 
+
+ak−1 
+
+> t
+
+= α
+
+
+
+akt − γ ϵ θ (Ot, akt , k ) + N (0 , σ 2I)
+
+
+
+, (4) where akt is sampled from Gaussian noise; α, γ, and σ are determined by the DDPM noise schedule; N (0 , σ 2I) denotes additive Gaussian noise; and Ot is the observation at time t. We use a 192M-parameter Diffusion Policy with a 4-layer, 768-wide Transformer encoder with 8 attention heads and a 7-layer, 768-wide Transformer decoder with 8 attention heads. Following [65], we apply action chunking with a chunk size of 50, and the policy outputs 14 absolute target joint positions. For each camera’s RGB image, we use a separate ResNet-50 vision backbone initialized with weights pretrained on ImageNet classification [7]. We extract feature maps from the stage-four output of ResNet. These feature maps are con-catenated with unpooled frozen image and action embeddings from pretrained CLAMP encoders, taken before MAP pooling, along with features from the robot’s proprioception. We add positional embeddings before feeding the resulting tokens into the encoder. The encoder latents are then passed to the decoder together with a noised action chunk, a learnable positional embedding, and an one-hot encoding of the diffusion timestep. Finally, the decoder output is passed through a projection head to predict noise with shape 50 × 14 for the next 50 actions. 
+
+Pre-training and Fine-Tuning. For pre-training, we train the policy on the same dataset used to pre-train the CLAMP encoders for simulated tasks. For real-world tasks, we pre-train the policy on real-world training data, since weights learned from real data provide better initialization due to reduced sim-to-real gap compared with policies pre-trained on simulated data. Note that frozen image and action embeddings are not used during policy pre-training because the policy is trained in parallel with the encoders. For fine-tuning, we initialize all policy weights, including each ResNet backbone, from the pre-trained checkpoint. This pre-training initialization is essential for achieving high fine-tuning sample efficiency and performance, as shown in Table I. Our key insight is to pre-train both the encoders and the policy before fine-tuning the policy. See Figure 2 for an overview of the model architecture for pre-training and fine-tuning, and refer to Appendix VII-C for implementation details. 
+
+D. Theoretical Analysis 
+
+CLAMP is the first model that applies STRING [39] relative positional encoding (RPE) mechanism with coordinate vectors coming directly from the (x, y, z ) coordinates of points from the point cloud (rather than by leveraging depth, as it was the case in the 3D-STRING variants from [39]). 
+
+a) Multi-view setting with STRING: CLAMP solves in an elegant way the problem of modeling the correlations between tokens coming from different 2D-views. Rather than leveraging non-trivial methods for finding matchings between patches from different views, but corresponding to the same or similar regions of 3D space, CLAMP does it implicitly via STRING positional encoding, associating with every token its coordinate vector, pointing to the center of mass of the set of visible points corresponding to the token. Those coordinate vectors are then used in STRING for positional encoding (see: Fig. 3). Below, we explain the mechanism in greater depth. Fig. 3: Pictorial desciption of the STRING mechanism applied in CLAMP’s image encoder to correlate tokens form different views corresponding to similar regions of the 3D space. Tokens from different 2D views are concatenated, but also equipped with STRING positional encoding mechanism [39]. Consequently, the attention score between two highlighted tokens from two different views will be modulated by a function that depends only on the vector ri,j ∈ R3 between the centers of mass of two sub-point clouds (highlighted in red and blue correspondingly) of the visible sets of points related to those tokens. 
+
+Lemma 3.1: Consider two tokens: tP1 and tP2 of the image encoder’s self-attention module used in CLAMP, correspond-ing to visible sub-point clouds P1 and P2 respectively. Denote by (qP1 , kP1 ) ∈ RdQK × RdQK and (qP2 , kP2 ) ∈ RdQK ×
+
+RdQK their corresponding query-key vector-pairs and by ri,j ∈
+
+R3 a vector joining the center of mass of Pi with the center of mass of Pj for i, j ∈ { 1, 2}. For a given vector u ∈ RdQK , de-note by u(C) its representation in the coordinate system C (we assume that the canonical system C(e1, ..., edQK ) is the default one, thus: u(C(e1, ..., edQK )) = u). Then the not-normalized logit score si,j of the self-attention module in CLAMP’s image encoder is given as follows, for α(v, w) ∈ [0 , π ] denoting an angle between vectors v, w, learnable coordinate system L
+
+and linear functions δk (k = 1 , ..., l = dQK  
+
+> 2
+
+; without loss of generality, we assume that query/key dim is even): 
+
+si,j =
+
+> l−1
+
+X
+
+> k=0
+
+∥qPi (L)[2 k, 2k + 1] ∥2∥kPj (L)[2 k, 2k + 1] ∥2·· cos  α(qPi (L)[2 k, 2k + 1] , kPj (L)[2 k, 2k + 1]) + δk(ri,j )
+
+(5) Lemma 3.1 sheds a light on the mechanism used in CLAMP to correlate tokens corresponding to sub-point clouds within different distances from each other (proof in Appendix VII-A). 
+
+Tokens encoding the same sub-point cloud: In that scenario, ri,j = 0 and thus δk(ri,j ) = 0 (since δk is a linear function). Since coordinate system change is an isometry, by Lemma 3.1, it is easy to see that the formula for si,j reduces to: si,j = q⊤Pi kPj . Thus we obtain a regular attention score. It turns out that STRING method applied in CLAMP has the ability to modulate large attention values of the regular attention mechanism in such a way that larger distances 
+
+∥ri,j ∥2 between centers of the sub-point clouds imply smaller modulated attention scores. Intuitively, this is a very useful property, since the mechanism is capable of implicitly learning the 3D structure of the input, correlating tokens from different views, but corresponding to the same or similar regions of space (by explicitly reducing attention scores for sub-point clouds within larger distances from each other). The following is true: 
+
+Lemma 3.2: Take some T > 0 and ϕ ∈ [0 , π 
+
+> 3
+
+]. Consider two sub-point clouds Pi and Pj with the corresponding vector 
+
+ri,j joining their centers of masses. Take a translated version 
+
+bPj (r) of Pj such that the vector joining the centers of masses becomes r = ηri,j for some η ∈ R. Assume that the query 
+
+qPi ∈ RdQK and key kPj ∈ RdQK are taken from the ball 
+
+B(0 , R ) centered at zero and of radius R and that the absolute values of all their dimensions are lower-bounded by some r > 
+
+0. Then there exists ϵ(R, r, ϕ ) > 0 and a linear function δ =
+
+δ(r) such that the logit score si,j (r) corresponding to Pi and 
+
+bPj (r) is a decreasing function of ∥r∥2 for |η| ∈ [2 T ϕ, T (π −
+
+ϕ)] if the cosine similarity between qPi and kPj is ≥ 1 − ϵ.
+
+Proof: Consider a function: f : RdQK × RdQK → R
+
+defined as follows: 
+
+f (x, y) =  
+
+> dQK
+> 2−1
+
+max  
+
+> k=0
+
+arccos( x[2 k, 2k + 1] ⊤y[2 k, 2k + 1] 
+
+∥x[2 k, 2k + 1] ∥2∥y[2 k, 2k + 1] ∥2
+
+)
+
+(6) Denote by L(r) > 0 the Lipschitz constant of the function 
+
+f in the region {(x, y) : x, y ∈ B(0 , R ), |x[i]|, |y[i]| ≥
+
+r; i = 0 , 1, ..., d QK − 1}. Note that since r > 0, L(r) is well defined (i.e. is finite). Straightforward trigonometric analysis then leads to the conclusion that if ϵ > 0 is chosen to be small enough such that: L(r) · 2R sin( arccos(1 −ϵ)2 ) ≤ ϕ then the fol-lowing holds: each angle αk ∈ [0 , π ] between qPi [2 k, 2k + 1] 
+
+and kPj [2 k, 2k + 1] for k = 0 , 1, ..., dQK  
+
+> 2
+
+is upper-bounded by 
+
+ϕ. Define δ(r) as follows: δ(r) = 1 
+
+> T
+> r⊤ri,j
+> ∥ri,j ∥22
+
+(in other words: 
+
+δ(r) = 1 
+
+> T
+
+η). But then for |η| ∈ [2 T ϕ, T (π − ϕ)] , the cos -expression from Eq. 5 is a decreasing function of ∥r∥2 (note that the vanishing cos -expression corresponds to the regular logit score si,j = q⊤Pi kPj , as discussed above). That completes the proof. Lemma 3.2 quantifies the intuition that high attention scores between tokens for which the corresponding sub-point clouds are close do not change much when the STRING-based modulation is applied, whereas those for pairs of tokens with larger distances can significantly decrease. Lemma 3.2 does it in the curated setting with one query-key pair and varying distances via the translation operation, whereas in the most general setting, we have many pairs and the analysis is more convoluted. Note however that the fact that angles αk can correspond to the learnable (rather than canonical, as in the proof of Lemma 3.2) coordinate system L (see: Lemma 3.1) makes δ learning easier. Even random L are useful, since they tend to distribute the norm of the queries/keys uniformly across different dimensions. This leads to the less constrained statements (for instance, the assumption about the lower bound on the absolute values of query/key dimensions is not needed). IV. E VALUATION 
+
+We utilized the ALOHA 2 model from Mujoco Menagerie [44, 57] for our simulation environment, the same model used in ALOHA Unleashed [65]. This is a bimanual tabletop environment with two arms attached on either side of a table. In simulation, we use a two-camera setup with front-left and back-right views. These cameras are placed on opposite corners of the table, 70 cm above the surface, and pointed at the center of the table. In the real world, we use a four-camera setup consisting of the two views used in simulation and a wrist-mounted camera on each robot arm. All cameras record RGB-D images. The simulation and real robots were identical. We follow the same simulation evaluation protocol as in [65]: we perform 50 evaluations per checkpoint every 40k training steps and report the maximum evaluation score across all checkpoints. We also report the maximum success rate across all checkpoints for real-world experiments, and we evaluated at most two checkpoints per method per task. 
+
+A. Evaluation Tasks 
+
+Simulation. Can Opener in Caddy : Six objects are placed on the table: a caddy, screwdriver, magnifier, can opener, thumb drive, and scissors. They are evenly spaced in the 2 × 3 grid. The caddy, screwdriver, and magnifier may appear in any of the three top positions, while the can opener, thumb drive, and scissors may appear in any of the three bottom positions. Objects are randomly rotated by ±90 degrees. The robot must grasp the can opener and place it in the left caddy. 
+
+Screwdriver in Caddy : Same setup as Can Opener in Caddy , but objects are randomly rotated by 
+
+±180 degrees. The robot must grasp the screwdriver and place it in the right caddy. 
+
+Pen in Container : Six objects are placed on the table: a plate, bowl, container, mug, pen, and banana. They are also evenly spaced in a 2 × 3 grid. The plate, bowl, and container may appear in any of the three top positions, while the mug, pen, and banana may appear in any of the three bottom positions. Objects are randomly rotated by ±180 degrees. The robot must grasp the pen and place it in the container. 
+
+Mug on Plate : Same setup as Pen in Container .The robot must grasp the mug and place it on the plate. 
+
+Plate on Rack : Two objects are placed on the table: a plate and drying rack. The drying rack is placed in the top half of the workspace, and the plate in the bottom half of the workspace. The drying rack’s z-axis orientation is randomly varied by ±86.4 degrees. The robot must grasp the plate and place it into one of the dividers in the drying rack. 
+
+Drawer Open : A drawer is randomly placed in the workspace and rotated by ±45 degrees. The robot must open the bottom drawer. 
+
+Real-World. Open Drawers : a drawer is randomly placed in the workspace and rotated by ±90 degrees. The robot must open both the top and bottom drawers, with partial success awarded if the bottom drawer is opened. 
+
+Close Drawers : Same setup as Open Drawers , but with the drawers already open. The robot must close both the top and bottom drawers, with partial success awarded if the top drawer is closed. 
+
+Mug on Plate : Same setup as the Mug on Plate task in simulation. The robot must grasp the mug and place it on the plate, with partial success awarded for a successful grasp of the mug. 
+
+Plate on Rack : Same setup as the Plate on Rack 
+
+task in simulation, but the drying rack’s z-axis orientation is randomly varied by ±45 degrees. The robot must grasp the plate and place it into one of the dividers in the drying rack, with partial success awarded for a successful grasp of the plate. 
+
+Recycle Cans : Two trash bins are placed at the top-right of the workspace, and three soda cans are placed in the center. The cans are randomly rotated by ±45 degrees. The robot must grasp at least two cans and place them in the bins, with partial success awarded for grasping and placing one can. See Figure 6 for examples of the initial configurations for each real-world task. 
+
+B. Datasets 
+
+The datasets are collected using a combination of a VLA policy in simulation and teleoperation in real, as described in the following sections. 
+
+Sim Data. The sim data was collected using a pre-trained VLA (vision-language-action) model. Specifically, we used Gemini Robotics 1.5 (GR1.5) [43], which takes camera im-ages, a text command, and robot proprioception as inputs and outputs target joint positions. It generated data across 48 tasks from which we only kept episodes that successfully completed the task. It averaged 11,533 successful episodes per task for a total of 553,592 episodes to be used for pre-training our encoders (though not uniformly distributed across tasks, see Appendix VII-E). Additionally we generated 4,500 episodes for 6 of the tasks to be used for fine-tuning the policies. TABLE I: Results from simulation experiments comparing CLAMP against five baselines, averaged over three training seeds. The ‘CLAMP Encoders Only’ variants pre-train only the encoders, while the policy is fine-tuned from scratch.                                                            
+
+> Method Can Opener Screwdriver Pen in Mug on Plate on Drawer in Caddy in Caddy Container Plate Rack Open
+> VLA Backbone 7.3% 38.0% 2.0% 14.7% 56.7% 33.3% ALOHA Unleashed 68.0% 78.0% 16.0% 54.0% 76.0% 80.7% Pretrained ALOHA Unleashed 70.0% 86.7% 20.7% 62.0% 76.7% 88.7% ACT 34.0% 82.0% 9.3% 38.7% 70.0% 44.7% Pretrained ACT 7.3% 20.0% 0.7% 6.0% 29.3% 16.7% ACT with CLAMP Encoders Only 72.7% 92.0% 10.7% 62.7% 88.7% 28.0% ALOHA Unleashed with CLAMP Encoders Only 71.3% 83.3% 34.0% 86.0% 88.7% 82.7% ALOHA Unleashed with CLAMP 94.0% 98.0% 51.3% 95.3% 92.7% 95.3%
+
+Fig. 4: Evaluation curves comparing our method (green) to baselines across three seeds in simulation. All methods are trained on 4500 demonstrations for 1M environment steps and evaluated for 50 trials per checkpoint every 40K steps. In total, 358,510,758 image–text-action triplets were used for pre-training, while each method was fine-tuned on a single task using 4,500 demonstrations. Note that the pre-training tasks do not overlap with the fine-tuning tasks. See Appendix VII-E for a list of pre-training tasks and count of successful episodes per task. 
+
+Real Data. Experienced operators used the teleoperation system [65] to collect demonstrations: 500 each for Open Drawers and Close Drawers , 100 each for Mug on Plate and Plate on Rack , and 63 for Recycle Cans .
+
+C. Baselines 
+
+We compare CLAMP against strong baseline methods: VLA Backbone , ALOHA Unleashed [65], Pretrained ALOHA Unleashed , Action Chunking with Transformers (ACT) 
+
+[64], and Pretrained ACT . VLA Backbone is a VLA model with the π0 architecture [2], pre-trained on the same dataset used for CLAMP pre-training. Note that this model is trained from scratch and does not use pretrained weights from Phys-ical Intelligence, the company that produced π0. ALOHA Unleashed and ACT are state-of-the-art imitation learning methods for bimanual manipulation, and ‘Pretrained’ denotes pre-training on the same dataset as CLAMP. V. R ESULTS 
+
+A. Sim Results 
+
+Table I reports the maximum success rate across all check-points in simulation, averaged over three training seeds, with evaluations conducted over 50 trials every 40k steps. The top five rows correspond to baseline methods, while the bottom three rows show the same baselines with CLAMP pre-training. ACT with CLAMP pre-training outperforms its non-pretrained counterpart on five of the six tasks. All variants of ALOHA Unleashed with CLAMP pre-training outperform the non-pretrained ALOHA Unleashed across all tasks. Notably, ‘ALOHA Unleashed with CLAMP’ significantly surpasses all baselines on every task. On the whole, methods with CLAMP pre-training exhibit substantial performance gains, demonstrating the benefits of leveraging learned image and action representations during fine-tuning. Moreover, we show that pre-training the encoders and the policy in parallel further improves fine-tuning performance. Figure 4 illustrates the evaluation curves of our method (green line) and the baselines, averaged over three training seeds. ALOHA Unleashed with CLAMP pre-training shows strong performance at very early training stages, indicating significant gains in sample efficiency and overall performance due to pre-training. On challenging tasks such as Pen in Container , its performance continues to improve with more TABLE II: Real-world experiment results comparing CLAMP with baseline.                                   
+
+> Method Open Drawers Close Drawers Mug on Plate Plate on Rack Recycle Cans
+> Partial Success Partial Success Partial Success Partial Success Partial Success ALOHA Unleashed 2 / 10 0 / 10 8 / 10 0 / 10 4 / 10 3 / 10 8 / 10 8 / 10 9 / 10 5 / 10 ALOHA Unleashed with CLAMP 8 / 10 7 / 10 8 / 10 5 / 10 8 / 10 8 / 10 9 / 10 8 / 10 10 / 10 6 / 10
+
+Fig. 5: Successful rollouts of our method on the ALOHA robot. Top: Mug on Plate . Bottom: Open Drawers .TABLE III: Ablation experiment results in simulation, aver-aged over three seeds.                              
+
+> Variation Can Opener Pen in Mug on in Caddy Container Plate
+> Without virtual wrist views -2.6% -22.0% -28.6% Standard virtual five views [36] -9.3% -9.3% -6.6% Pre-training w/o text encoder +0.7% -2.0% 0.0% Replace ViT [8] with DP3 [59] -15.3% -15.3% -7.3% Without STRING [39] -2.0% -3.3% -4.6% Without pre-training encoders -9.3% -7.3% -4.6% Unfrozen encoders (fine-tuning) -23.3% -16.0% -3.3% ACT with CLAMP -67.4% -10.7% -59.4%
+
+training. See Appendix VII-B for the pre-training results. 
+
+B. Real-World Results 
+
+Real-world results are reported in Table II, with example rollouts of our method shown in Figure 5. Our method outperforms the baseline on four out of five tasks, while maintaining comparable performance on Plate on Rack .For Open Drawers and Close Drawers , our method successfully opens and closes both drawers, whereas the baseline struggles with the final drawer. In Mug on Plate ,our method shows noticeable improvements in grasping and placing the mug compared to the baseline. For Plate on Rack and Recycle Cans , we observe slightly better grasp-ing performance, while placement performance is comparable between our method and the baseline. We hypothesize that these two tasks are relatively simple and that the training data is less diverse, which may limit the performance gains over the baseline. 
+
+C. Ablations 
+
+We ablate key design choices of CLAMP in Table III. Ex-periments are conducted in simulation on Can Opener in Caddy , Pen in Container , and Mug on Plate , and results are averaged over three training seeds. As shown in the first two rows, incorporating virtual wrist views substantially improves performance, especially on high-precision tasks such as Pen in Container and Mug on Plate . Moreover, the standard virtual five-view setup used in related work (e.g., [36]) underperforms our virtual five-view configuration (overhead, front-left, back-right, wrist-left, and wrist-right). In row three, we show that including a text encoder dur-ing pre-training yields better performance. We also observe anecdotally that the variant with the text encoder performs noticeably better than the variant without one in real-world experiments. In the following, we ablate the image encoder. Replacing the ViT encoder with a point-cloud encoder (DP3) results in worse performance. Removing STRING positional encoding from ViT, which eliminates learned correlations between tokens from different image patches, also degrades performance. As shown in rows six and seven, it is preferable to pre-train the encoders and keep them frozen during fine-tuning. Finally, the last row shows that ACT with CLAMP performs poorly; we hypothesize this is due to ACT’s limited ability to effectively learn from multimodal demonstrations. VI. C ONCLUSION 
+
+In this paper, we introduce CLAMP, a 3D action-conditioned pre-training framework for robotic manipulation. We use contrastive learning to train an image encoder on 3D multi-view observations, a text encoder on simulator-derived privileged state information, and an action encoder on histories of previous actions. The objective pulls positive image–text, image–action, and text–action pairs together while pushing negative pairs apart. Our intuition is that we can learn common action patterns, which are shared across many manipulation tasks, with corresponding image representation through pre-training, grounded by text that encodes object spatial relationships and task progress. We then leverage the learned image and action representations to fine-tune a Diffu-sion Policy, which is pre-trained in parallel with the encoders, using a limited number of task demonstrations. We show substantial gains in sample efficiency and final performance over state-of-the-art pretrained and non-pretrained baselines in both simulation and real-world experiments. REFERENCES 
+
+[1] Lucas Beyer, Xiaohua Zhai, and Alexander Kolesnikov. Big vision. https://github.com/google-research/big vision, 2022. [2] Kevin Black, Noah Brown, Danny Driess, Adnan Es-mail, Michael Equi, Chelsea Finn, Niccolo Fusai, Lachy Groom, Karol Hausman, Brian Ichter, Szymon Jakubczak, Tim Jones, Liyiming Ke, Sergey Levine, Adrian Li-Bell, Mohith Mothukuri, Suraj Nair, Karl Pertsch, Lucy Xiaoyang Shi, James Tanner, Quan Vuong, Anna Walling, Haohuan Wang, and Ury Zhilinsky. π0: A Vision-Language-Action Flow Model for General Robot Control. arXiv preprint arXiv:2410.24164 , 2024. [3] James Bradbury, Roy Frostig, Peter Hawkins, Matthew James Johnson, Chris Leary, Dougal Maclaurin, George Necula, Adam Paszke, Jake VanderPlas, Skye Wanderman-Milne, and Qiao Zhang. JAX: composable transformations of Python+NumPy programs, 2018. URL http://github.com/jax-ml/jax. [4] Zhe Chen, Jiannan Wu, Wenhai Wang, Weijie Su, Guo Chen, Sen Xing, Muyan Zhong, Qinglong Zhang, Xizhou Zhu, Lewei Lu, et al. Internvl: Scaling up vision foun-dation models and aligning for generic visual-linguistic tasks. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , pages 24185– 24198, 2024. [5] Mehdi Cherti, Romain Beaumont, Ross Wightman, Mitchell Wortsman, Gabriel Ilharco, Cade Gordon, Christoph Schuhmann, Ludwig Schmidt, and Jenia Jit-sev. Reproducible scaling laws for contrastive language-image learning. In Proceedings of the IEEE/CVF confer-ence on computer vision and pattern recognition , pages 2818–2829, 2023. [6] Cheng Chi, Siyuan Feng, Yilun Du, Zhenjia Xu, Eric Cousineau, Benjamin Burchfiel, and Shuran Song. Dif-fusion policy: Visuomotor policy learning via action diffusion. In Proceedings of Robotics: Science and Systems (RSS) , 2023. [7] Jia Deng, Wei Dong, Richard Socher, Li-Jia Li, Kai Li, and Li Fei-Fei. Imagenet: A large-scale hierarchical image database. In 2009 IEEE Conference on Computer Vision and Pattern Recognition , pages 248–255, 2009. doi: 10.1109/CVPR.2009.5206848. [8] Alexey Dosovitskiy, Lucas Beyer, Alexander Kolesnikov, Dirk Weissenborn, Xiaohua Zhai, Thomas Unterthiner, Mostafa Dehghani, Matthias Minderer, Georg Heigold, Sylvain Gelly, Jakob Uszkoreit, and Neil Houlsby. An image is worth 16x16 words: Transformers for image recognition at scale. In 9th International Conference on Learning Representations, ICLR 2021, Virtual Event, Austria, May 3-7, 2021 . OpenReview.net, 2021. URL https://openreview.net/forum?id=YicbFdNTTy. [9] Yuxin Fang, Wen Wang, Binhui Xie, Quan Sun, Ledell Wu, Xinggang Wang, Tiejun Huang, Xinlong Wang, and Yue Cao. Eva: Exploring the limits of masked visual representation learning at scale. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , pages 19358–19369, 2023. [10] Yuxin Fang, Quan Sun, Xinggang Wang, Tiejun Huang, Xinlong Wang, and Yue Cao. Eva-02: A visual represen-tation for neon genesis. Image and Vision Computing ,149:105171, 2024. [11] Theophile Gervet, Zhou Xian, Nikolaos Gkanatsios, and Katerina Fragkiadaki. Act3d: 3d feature field transform-ers for multi-task robotic manipulation. In Conference on Robot Learning , pages 3949–3965. PMLR, 2023. [12] Ankit Goyal, Hei Law, Bowei Liu, Alejandro Newell, and Jia Deng. Revisiting point cloud shape classification with a simple and effective baseline. In International con-ference on machine learning , pages 3809–3820. PMLR, 2021. [13] Ankit Goyal, Jie Xu, Yijie Guo, Valts Blukis, Yu-Wei Chao, and Dieter Fox. Rvt: Robotic view transformer for 3d object manipulation. In Conference on Robot Learning , pages 694–710. PMLR, 2023. [14] Christian Graf, David B Adrian, Joshua Weil, Miroslav Gabriel, Philipp Schillinger, Markus Spies, Heiko Neu-mann, and Andras Gabor Kupcsik. Learning dense visual descriptors using image augmentations for robot manipulation tasks. In conference on Robot Learning ,pages 871–880. PMLR, 2023. [15] Meng-Hao Guo, Jun-Xiong Cai, Zheng-Ning Liu, Tai-Jiang Mu, Ralph R Martin, and Shi-Min Hu. Pct: Point cloud transformer. Computational visual media , 7(2): 187–199, 2021. [16] Abdullah Hamdi, Silvio Giancola, and Bernard Ghanem. Mvtn: Multi-view transformation network for 3d shape recognition. In Proceedings of the IEEE/CVF interna-tional conference on computer vision , pages 1–11, 2021. [17] Abdullah Hamdi, Silvio Giancola, and Bernard Ghanem. Voint cloud: Multi-view point cloud representation for 3d understanding. arXiv preprint arXiv:2111.15363 , 2021. [18] Jonathan Ho, Ajay Jain, and Pieter Abbeel. De-noising diffusion probabilistic models. arXiv preprint arxiv:2006.11239 , 2020. [19] Ji Hou, Saining Xie, Benjamin Graham, Angela Dai, and Matthias Nießner. Pri3d: Can 3d priors help 2d representation learning? In Proceedings of the IEEE/CVF International Conference on Computer Vision , pages 5693–5702, 2021. [20] Haigen Hu, Xiaoyuan Wang, Yan Zhang, Qi Chen, and Qiu Guan. A comprehensive survey on contrastive learning. Neurocomputing , 610:128645, 2024. [21] Jiangyong Huang, Silong Yong, Xiaojian Ma, Xiongkun Linghu, Puhao Li, Yan Wang, Qing Li, Song-Chun Zhu, Baoxiong Jia, and Siyuan Huang. An embodied general-ist agent in 3d world. arXiv preprint arXiv:2311.12871 ,2023. [22] Shijia Huang, Yilun Chen, Jiaya Jia, and Liwei Wang. Multi-view transformer for 3d visual grounding. In 
+
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pages 15524–15533, 2022. [23] Xiaoshui Huang, Zhou Huang, Sheng Li, Wentao Qu, Tong He, Yuenan Hou, Yifan Zuo, and Wanli Ouyang. Frozen clip transformer is an efficient point cloud en-coder. In Proceedings of the AAAI Conference on Artifi-cial Intelligence , volume 38, pages 2382–2390, 2024. [24] Physical Intelligence, Kevin Black, Noah Brown, James Darpinian, Karan Dhabalia, Danny Driess, Adnan Es-mail, Michael Equi, Chelsea Finn, Niccolo Fusai, Manuel Y. Galliker, Dibya Ghosh, Lachy Groom, Karol Hausman, Brian Ichter, Szymon Jakubczak, Tim Jones, Liyiming Ke, Devin LeBlanc, Sergey Levine, Adrian Li-Bell, Mohith Mothukuri, Suraj Nair, Karl Pertsch, Allen Z. Ren, Lucy Xiaoyang Shi, Laura Smith, Jost To-bias Springenberg, Kyle Stachowicz, James Tanner, Quan Vuong, Homer Walke, Anna Walling, Haohuan Wang, Lili Yu, and Ury Zhilinsky. π0.5: a vision-language-action model with open-world generalization, 2025. URL https://arxiv.org/abs/2504.16054. [25] Andrew Jaegle, Sebastian Borgeaud, Jean-Baptiste Alayrac, Carl Doersch, Catalin Ionescu, David Ding, Skanda Koppula, Daniel Zoran, Andrew Brock, Evan Shelhamer, et al. Perceiver io: A general architec-ture for structured inputs & outputs. arXiv preprint arXiv:2107.14795 , 2021. [26] Chao Jia, Yinfei Yang, Ye Xia, Yi-Ting Chen, Zarana Parekh, Hieu Pham, Quoc Le, Yun-Hsuan Sung, Zhen Li, and Tom Duerig. Scaling up visual and vision-language representation learning with noisy text supervision. In 
+
+International conference on machine learning , pages 4904–4916. PMLR, 2021. [27] Yueru Jia, Jiaming Liu, Sixiang Chen, Chenyang Gu, Zhilve Wang, Longzan Luo, Xiaoqi Li, Pengwei Wang, Zhongyuan Wang, Renrui Zhang, et al. Lift3d policy: Lifting 2d foundation models for robust 3d robotic ma-nipulation. In Proceedings of the Computer Vision and Pattern Recognition Conference , pages 17347–17358, 2025. [28] Diederik P. Kingma and Jimmy Ba. Adam: A method for stochastic optimization. In Yoshua Bengio and Yann LeCun, editors, 3rd International Conference on Learning Representations, ICLR 2015, San Diego, CA, USA, May 7-9, 2015, Conference Track Proceedings ,2015. URL http://arxiv.org/abs/1412.6980. [29] Juho Lee, Yoonho Lee, Jungtaek Kim, Adam Kosiorek, Seungjin Choi, and Yee Whye Teh. Set transformer: A framework for attention-based permutation-invariant neural networks. In International conference on machine learning , pages 3744–3753. PMLR, 2019. [30] Xu Ma, Can Qin, Haoxuan You, Haoxi Ran, and Yun Fu. Rethinking network design and local geometry in point cloud: A simple residual mlp framework. arXiv preprint arXiv:2202.07123 , 2022. [31] Zijing Ma, Zhi Yang, Aihua Mao, Shuyi Wen, Ran Yi, and Yongjin Liu. A multi-view projection-based object-aware graph network for dense captioning of point clouds. Computers & Graphics , 126:104156, 2025. [32] Kevis-Kokitsi Maninis, Kaifeng Chen, Soham Ghosh, Arjun Karpur, Koert Chen, Ye Xia, Bingyi Cao, Daniel Salz, Guangxing Han, Jan Dlabal, et al. Tips: Text-image pretraining with spatial awareness. arXiv preprint arXiv:2410.16512 , 2024. [33] NVIDIA, :, Johan Bjorck, Fernando Casta˜ neda, Nikita Cherniadev, Xingye Da, Runyu Ding, Linxi ”Jim” Fan, Yu Fang, Dieter Fox, Fengyuan Hu, Spencer Huang, Joel Jang, Zhenyu Jiang, Jan Kautz, Kaushil Kundalia, Lawrence Lao, Zhiqi Li, Zongyu Lin, Kevin Lin, Guilin Liu, Edith Llontop, Loic Magne, Ajay Mandlekar, Avnish Narayan, Soroush Nasiriany, Scott Reed, You Liang Tan, Guanzhi Wang, Zu Wang, Jing Wang, Qi Wang, Jiannan Xiang, Yuqi Xie, Yinzhen Xu, Zhenjia Xu, Seonghyeon Ye, Zhiding Yu, Ao Zhang, Hao Zhang, Yizhou Zhao, Ruijie Zheng, and Yuke Zhu. Gr00t n1: An open foundation model for generalist humanoid robots, 2025. URL https://arxiv.org/abs/2503.14734. [34] Charles R Qi, Hao Su, Kaichun Mo, and Leonidas J Guibas. Pointnet: Deep learning on point sets for 3d classification and segmentation. In Proceedings of the IEEE conference on computer vision and pattern recog-nition , pages 652–660, 2017. [35] Charles Ruizhongtai Qi, Li Yi, Hao Su, and Leonidas J Guibas. Pointnet++: Deep hierarchical feature learning on point sets in a metric space. Advances in neural information processing systems , 30, 2017. [36] Shengyi Qian, Kaichun Mo, Valts Blukis, David FFouhey, Dieter Fox, and Ankit Goyal. 3d-mvp: 3d multi-view pretraining for manipulation. In Proceedings of the Computer Vision and Pattern Recognition Conference ,pages 22530–22539, 2025. [37] Alec Radford, Jong Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh, Sandhini Agarwal, Girish Sastry, Amanda Askell, Pamela Mishkin, Jack Clark, et al. Learning transferable visual models from natural lan-guage supervision. In International conference on ma-chine learning , pages 8748–8763. PmLR, 2021. [38] Colin Raffel, Noam Shazeer, Adam Roberts, Katherine Lee, Sharan Narang, Michael Matena, Yanqi Zhou, Wei Li, and Peter J Liu. Exploring the limits of transfer learning with a unified text-to-text transformer. Journal of machine learning research , 21(140):1–67, 2020. [39] Connor Schenck, Isaac Reid, Mithun George Jacob, Alex Bewley, Joshua Ainslie, David Rendleman, Deepali Jain, Mohit Sharma, Avinava Dubey, Ayzaan Wahid, et al. Learning the ropes: Better 2d and 3d position encodings with string. arXiv preprint arXiv:2502.02562 , 2025. [40] Tanner Schmidt, Richard Newcombe, and Dieter Fox. Self-supervised visual descriptor learning for dense cor-respondence. IEEE Robotics and Automation Letters , 2 (2):420–427, 2016. [41] Mohit Shridhar, Lucas Manuelli, and Dieter Fox. Perceiver-actor: A multi-task transformer for robotic ma-nipulation. In Conference on Robot Learning , pages 785– 799. PMLR, 2023. [42] Quan Sun, Yuxin Fang, Ledell Wu, Xinlong Wang, and Yue Cao. Eva-clip: Improved training techniques for clip at scale. arXiv preprint arXiv:2303.15389 , 2023. [43] Gemini Robotics Team, Abbas Abdolmaleki, Saminda Abeyruwan, Joshua Ainslie, Jean-Baptiste Alayrac, Montserrat Gonzalez Arenas, Ashwin Balakrishna, Nathan Batchelor, Alex Bewley, Jeff Bingham, Michael Bloesch, Konstantinos Bousmalis, Philemon Brakel, An-thony Brohan, Thomas Buschmann, Arunkumar Byravan, Serkan Cabi, Ken Caluwaerts, Federico Casarini, Chris-tine Chan, Oscar Chang, London Chappellet-Volpini, Jose Enrique Chen, Xi Chen, Hao-Tien Lewis Chi-ang, Krzysztof Choromanski, Adrian Collister, David B. D’Ambrosio, Sudeep Dasari, Todor Davchev, Meet Ki-rankumar Dave, Coline Devin, Norman Di Palo, Tianli Ding, Carl Doersch, Adil Dostmohamed, Yilun Du, De-bidatta Dwibedi, Sathish Thoppay Egambaram, Michael Elabd, Tom Erez, Xiaolin Fang, Claudio Fantacci, Cody Fong, Erik Frey, Chuyuan Fu, Ruiqi Gao, Marissa Giustina, Keerthana Gopalakrishnan, Laura Graesser, Oliver Groth, Agrim Gupta, Roland Hafner, Steven Hansen, Leonard Hasenclever, Sam Haves, Nicolas Heess, Brandon Hernaez, Alex Hofer, Jasmine Hsu, Lu Huang, Sandy H. Huang, Atil Iscen, Mithun George Jacob, Deepali Jain, Sally Jesmonth, Abhishek Jindal, Ryan Julian, Dmitry Kalashnikov, M. Emre Karagozler, Stefani Karp, Matija Kecman, J. Chase Kew, Donnie Kim, Frank Kim, Junkyung Kim, Thomas Kipf, Sean Kirmani, Ksenia Konyushkova, Li Yang Ku, Yuheng Kuang, Thomas Lampe, Antoine Laurens, Tuan Anh Le, Isabel Leal, Alex X. Lee, Tsang-Wei Edward Lee, Guy Lever, Jacky Liang, Li-Heng Lin, Fangchen Liu, Shang-bang Long, Caden Lu, Sharath Maddineni, Anirudha Ma-jumdar, Kevis-Kokitsi Maninis, Andrew Marmon, Sergio Martinez, Assaf Hurwitz Michaely, Niko Milonopoulos, Joss Moore, Robert Moreno, Michael Neunert, Francesco Nori, Joy Ortiz, Kenneth Oslund, Carolina Parada, Emilio Parisotto, Amaris Paryag, Acorn Pooley, Thomas Power, Alessio Quaglino, Haroon Qureshi, Rajkumar Vasudeva Raju, Helen Ran, Dushyant Rao, Kanishka Rao, Isaac Reid, David Rendleman, Krista Reymann, Miguel Ri-vas, Francesco Romano, Yulia Rubanova, Peter Pas-tor Sampedro, Pannag R Sanketi, Dhruv Shah, Mo-hit Sharma, Kathryn Shea, Mohit Shridhar, Charles Shu, Vikas Sindhwani, Sumeet Singh, Radu Soricut, Rachel Sterneck, Ian Storz, Razvan Surdulescu, Jie Tan, Jonathan Tompson, Saran Tunyasuvunakool, Jake Varley, Grace Vesom, Giulia Vezzani, Maria Bauza Villalonga, Oriol Vinyals, Ren´ e Wagner, Ayzaan Wahid, Stefan Welker, Paul Wohlhart, Chengda Wu, Markus Wulfmeier, Fei Xia, Ted Xiao, Annie Xie, Jinyu Xie, Peng Xu, Sichun Xu, Ying Xu, Zhuo Xu, Jimmy Yan, Sherry Yang, Skye Yang, Yuxiang Yang, Hiu Hong Yu, Wenhao Yu, Wentao Yuan, Yuan Yuan, Jingwei Zhang, Tingnan Zhang, Zhiyuan Zhang, Allan Zhou, Guangyao Zhou, and Yuxiang Zhou. Gemini robotics 1.5: Pushing the frontier of generalist robots with advanced embodied reasoning, thinking, and motion transfer, 2025. URL https://arxiv.org/abs/2510.03342. [44] Emanuel Todorov, Tom Erez, and Yuval Tassa. Mujoco: A physics engine for model-based control. In 2012 IEEE/RSJ international conference on intelligent robots and systems , pages 5026–5033. IEEE, 2012. [45] Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N Gomez, Łukasz Kaiser, and Illia Polosukhin. Attention is all you need. Advances in neural information processing systems , 30, 2017. [46] Yue Wang, Yongbin Sun, Ziwei Liu, Sanjay E Sarma, Michael M Bronstein, and Justin M Solomon. Dynamic graph cnn for learning on point clouds. ACM Transac-tions on Graphics (tog) , 38(5):1–12, 2019. [47] Yufei Wang, Ziyu Wang, Mino Nakura, Pratik Bhowal, Chia-Liang Kuo, Yi-Ting Chen, Zackory Erickson, and David Held. Articubot: Learning universal articulated object manipulation policy via large scale simulation. 
+
+arXiv preprint arXiv:2503.03045 , 2025. [48] Xiaoyang Wu, Yixing Lao, Li Jiang, Xihui Liu, and Hengshuang Zhao. Point transformer v2: Grouped vector attention and partition-based pooling. Advances in Neu-ral Information Processing Systems , 35:33330–33342, 2022. [49] Xiaoyang Wu, Li Jiang, Peng-Shuai Wang, Zhijian Liu, Xihui Liu, Yu Qiao, Wanli Ouyang, Tong He, and Hengshuang Zhao. Point transformer v3: Simpler faster stronger. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , pages 4840– 4851, 2024. [50] Runsen Xu, Xiaolong Wang, Tai Wang, Yilun Chen, Jiangmiao Pang, and Dahua Lin. Pointllm: Empowering large language models to understand point clouds. In 
+
+European Conference on Computer Vision , pages 131– 147. Springer, 2024. [51] Le Xue, Mingfei Gao, Chen Xing, Roberto Mart´ ın-Mart´ ın, Jiajun Wu, Caiming Xiong, Ran Xu, Juan Carlos Niebles, and Silvio Savarese. Ulip: Learning a unified representation of language, images, and point clouds for 3d understanding. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition ,pages 1179–1189, 2023. [52] Le Xue, Ning Yu, Shu Zhang, Artemis Panagopoulou, Junnan Li, Roberto Mart´ ın-Mart´ ın, Jiajun Wu, Caiming Xiong, Ran Xu, Juan Carlos Niebles, et al. Ulip-2: Towards scalable multimodal pre-training for 3d under-standing. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pages 27091– 27101, 2024. [53] Linting Xue, Noah Constant, Adam Roberts, Mihir Kale, Rami Al-Rfou, Aditya Siddhant, Aditya Barua, and Colin Raffel. mt5: A massively multilingual pre-trained text-to-text transformer. In Proceedings of the 2021 conference of the North American chapter of the association for computational linguistics: Human language technolo-gies , pages 483–498, 2021. [54] Jiahui Yu, Zirui Wang, Vijay Vasudevan, Legg Yeung, Mojtaba Seyedhosseini, and Yonghui Wu. Coca: Con-trastive captioners are image-text foundation models. 
+
+arXiv preprint arXiv:2205.01917 , 2022. [55] Xumin Yu, Lulu Tang, Yongming Rao, Tiejun Huang, Jie Zhou, and Jiwen Lu. Point-bert: Pre-training 3d point cloud transformers with masked point modeling. In Pro-ceedings of the IEEE/CVF conference on computer vision and pattern recognition , pages 19313–19322, 2022. [56] Lu Yuan, Dongdong Chen, Yi-Ling Chen, Noel Codella, Xiyang Dai, Jianfeng Gao, Houdong Hu, Xuedong Huang, Boxin Li, Chunyuan Li, et al. Florence: A new foundation model for computer vision. arXiv preprint arXiv:2111.11432 , 2021. [57] K. Zakka, Y. Tassa, and MuJoCo Menagerie Contribu-tors. MuJoCo Menagerie: A collection of high-quality simulation models for MuJoCo. http://github.com/ google-deepmind/mujoco menagerie, 2022. URL http: //github.com/google-deepmind/mujoco menagerie. Ac-cessed: 2025-12-15. [58] Yanjie Ze, Ge Yan, Yueh-Hua Wu, Annabella Macaluso, Yuying Ge, Jianglong Ye, Nicklas Hansen, Li Erran Li, and Xiaolong Wang. Gnfactor: Multi-task real robot learning with generalizable neural feature fields. In 
+
+Conference on robot learning , pages 284–301. PMLR, 2023. [59] Yanjie Ze, Gu Zhang, Kangning Zhang, Chenyuan Hu, Muhan Wang, and Huazhe Xu. 3D Diffusion Policy: Generalizable Visuomotor Policy Learning via Simple 3D Representations. In Proceedings of Robotics: Science and Systems , Delft, Netherlands, July 2024. [60] Xiaohua Zhai, Basil Mustafa, Alexander Kolesnikov, and Lucas Beyer. Sigmoid loss for language image pre-training. In Proceedings of the IEEE/CVF international conference on computer vision , pages 11975–11986, 2023. [61] Renrui Zhang, Ziyu Guo, Peng Gao, Rongyao Fang, Bin Zhao, Dong Wang, Yu Qiao, and Hongsheng Li. Point-m2ae: multi-scale masked autoencoders for hierarchical point cloud pre-training. Advances in neural information processing systems , 35:27061–27074, 2022. [62] Renrui Zhang, Ziyu Guo, Wei Zhang, Kunchang Li, Xu-peng Miao, Bin Cui, Yu Qiao, Peng Gao, and Hongsheng Li. Pointclip: Point cloud understanding by clip. In 
+
+Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , pages 8552–8562, 2022. [63] Hengshuang Zhao, Li Jiang, Jiaya Jia, Philip HS Torr, and Vladlen Koltun. Point transformer. In Proceedings of the IEEE/CVF international conference on computer vision , pages 16259–16268, 2021. [64] Tony Z. Zhao, Vikash Kumar, Sergey Levine, and Chelsea Finn. Learning Fine-Grained Bimanual Manip-ulation with Low-Cost Hardware. 2023. [65] Tony Z Zhao, Jonathan Tompson, Danny Driess, Pete Florence, Kamyar Ghasemipour, Chelsea Finn, and Ayzaan Wahid. Aloha unleashed: A simple recipe for robot dexterity. arXiv preprint arXiv:2410.13126 , 2024. [66] Junsheng Zhou, Jinsheng Wang, Baorui Ma, Yu-Shen Liu, Tiejun Huang, and Xinlong Wang. Uni3d: Explor-ing unified 3d representation at scale. arXiv preprint arXiv:2310.06773 , 2023. [67] Wenxuan Zhou, Bowen Jiang, Fan Yang, Chris Paxton, and David Held. Hacman: Learning hybrid actor-critic maps for 6d non-prehensile manipulation. arXiv preprint arXiv:2305.03942 , 2023. [68] Xiangyang Zhu, Renrui Zhang, Bowei He, Ziyu Guo, Ziyao Zeng, Zipeng Qin, Shanghang Zhang, and Peng Gao. Pointclip v2: Prompting clip and gpt for pow-erful 3d open-world learning. In Proceedings of the IEEE/CVF international conference on computer vision ,pages 2639–2650, 2023. VII. A PPENDIX 
+
+A. Proof of Lemma 3.1 Proof: Note that, by applying the definition of the Cayley-STRING variant, used in this paper, the not-normalized logits score si,j between tokens corresponding to Pi and to Pj
+
+respectively, is given as: 
+
+si,j = ( q′Pi )⊤k′Pj , (7) for q′Pi and k′Pj defined as follows: 
+
+q′Pi = PRoPE( ri)P⊤qPi , k′Pj = PRoPE( rj )P⊤kPj (8) and where P is a learnable orthonormal matrix. Here 
+
+RoPE( v) stands for the block-diagonal matrix with dQK 
+
+> 2
+
+(2 × 2) -blocks, each given as a 2-dimensional rotation with the rotation angle defined as: δk(v) for the block index k and linear function δk (in other words, RoPE encodes rotation operation consisting of the disjoint Givens rotations; the angles of these Givens rotations are simple linear functions of the positions of the corresponding tokens). Therefore, we have: 
+
+si,j = q⊤Pi PRoPE ⊤(ri)P⊤PRoPE( rj )P⊤kPj (9) 
+
+= v⊤Pi RoPE( rj − ri)wPj (10) for vectors vPi and wPj defined as: 
+
+vPi = P⊤qPi
+
+wPj = P⊤kPj
+
+(11) The last equality follows from the fact that P⊤P = I (since 
+
+P is an orthonormal matrix) and the transpose of the (2 ×
+
+2) rotation matrix is a matrix of the rotation by the negated angle. But this completes the proof since: ri,j = rj − ri and furthermore one can define: 
+
+qPi (L) = vPi , kPj (L) = wPj (12) (thus the new coordinate system L is effectively given by the orthonormal matrix P⊤). 
+
+B. Pre-training Results 
+
+Figure 7 shows the retrieval results of the CLAMP encoders on six multimodal retrieval tasks on the validation examples. To ensure diversity and accurate assessment, we select exam-ples from the validation set using the following criteria: (1) the time step is a multiple of 10, and (2) the workspace is evenly divided into a 3 × 3 grid, and the first object’s position has not previously appeared in any grid cell. This results in a total of 3216 examples. As shown in the figure, the CLAMP encoders perform particularly well on tasks that involve retrieving the previous action, highlighting the potential usefulness of the learned action representation. To further examine this representation, we visualize the SigLIP pairwise matching probabilities for image-to-previous-action and previous-action-to-image retrieval on an unseen task in Figure 8. The model correctly retrieves all examples for both tasks, suggesting that the learned image and action representations generalize and can transfer to unseen tasks. Open Drawer  Close Drawer  
+
+> Mug on Plate
+> Plate on Rack Recycle Cans
+
+Fig. 6: Examples of initial configurations for the real-world tasks. 
+
+C. Implementation Details 
+
+Contrastive Pre-training. We implement the pre-training pipeline in JAX [3] using the Big Vision framework [1]. We train for 100,000 steps on 64 TPUv4 chips with a batch size of 2048. For image preprocessing, we use a voxel size of 0.001 for voxel-grid downsampling. If the point cloud contains more than 0.3M points, we randomly subsample to 0.3M; otherwise, we pad with points at the origin (0,0,0) to reach 0.3M points. Each virtual view has dimensions 224 × 224 × 4, and we tile the views horizontally to form a 224 × 1120 × 4 input. The action encoder uses a feed-forward dimension of 2048 and a dropout rate of 0.1. Both the image and text encoders use a 3072-dimensional MLP. We use the Adam [28] optimizer with b2 = 0 .999 and a cosine-decay learning-rate schedule, a base learning rate of 1e − 4 and 5% warm-up steps during training. 
+
+Diffusion Policy Pre-training and Fine-Tuning. We imple-ment Diffusion Policy in JAX using an internal robot learning framework. We train for 1M steps on an NVIDIA H100 GPU with a batch size of 8. We use the Adam optimizer with a weight decay of 1e−4 and a linear learning-rate schedule from 0.0 to 1e − 4 over 5000 transition steps for pre-training and from 0.0 to 1e−5 over the same transition steps for fine-tuning. We use 848 ×480 ×3 RGB images as input to ResNet and apply photometric distortions. The Transformer encoder and decoder (a) Image → Previous Action Recall@5 (b) Image → Text Recall@5 (c) Previous Action → Text Recall@5         
+
+> (d) Previous Action →Image Recall@5 (e) Text →Image Recall@5 (f) Text →Previous Action Recall@5
+
+Fig. 7: Recall@5 results for cross-modal retrieval tasks on the validation data during pre-training. TABLE IV: Additional ablation studies.        
+
+> Variation Can Opener In Caddy
+> Image random cropping -2.0% Pre-training decoder only -10.0% Dome images -42.0% Pooled encoder features (fine-tuning) -12.0% Absolute Cartesian control 0.0% Relative Cartesian control -40.0%
+
+use a feed-forward dimension of 3200 and a dropout rate of 0.1. Observations are normalized using the mean and standard deviation computed from the pre-training data, and actions are normalized using the minimum and maximum values from the same dataset. 
+
+D. Additional Experimental Results 
+
+Table IV presents additional ablations of CLAMP on Can Opener in Caddy in simulation. In the first row, we apply random cropping to images during training and center crop-ping during inference, which results in worse performance. In the second row, instead of pre-training the entire Diffusion Policy, we pre-train only the Transformer decoder, which also degrades performance. In the third row, we evaluate a 16-view setup constructed using a dome-like structure, where each camera looks at the center of the workspace and the final image has dimensions of 96 ×1536 ×4. However, this performs worse than the five-view setup proposed in the paper. In the fourth row, instead of using unpooled features from the frozen CLAMP encoders, we feed MAP-pooled features (together with ResNet and proprioceptive features) into the Transformer encoder; this highlights the importance of using unpooled features from the frozen encoders. In the last two rows, we evaluate two additional action spaces: absolute Cartesian control and relative Cartesian control. We find that absolute Cartesian control performs similarly to absolute joint-space control, whereas relative Cartesian control performs worse. Figure 9 shows the evaluation curves of our method (green line) and the baselines, averaged over three training seeds, under a low-data regime. ALOHA Unleashed with CLAMP outperforms all methods in terms of learning efficiency and maximum success rate across all checkpoints. Compared to the same variant trained on more data (Figure 4), this variant performs suboptimally, suggesting that CLAMP fine-tuning is best suited to settings where the fine-tuning dataset is sufficiently large and diverse. 
+
+E. Dataset Generation Details 1) GR1.5 tasks and episode counts:  
+
+> •
+
+multitoolsmagnifierincaddy_left : 47,679  
+
+> •
+
+multitoolsscrewdriverincaddy_left : 42,466  
+
+> •
+
+multitoolsmagnifierincaddy_right : 47,613  
+
+> •
+
+handoverpen : 39,603  
+
+> •
+
+multitoolsscissorsincaddy_right : 42,167  
+
+> •
+
+multitoolscanopenerincaddy_right : 42,069  
+
+> •
+
+multitoolsscissorsincaddy_left : 40,568  
+
+> •
+
+multitoysraccooninbasket : 40,409  
+
+> •
+
+multitoysfireengineinbasket : 31,745  
+
+> •
+
+multitoystraininbasket : 22,867  
+
+> •
+
+multidiningbananainbowl_vislighting :9,469  
+
+> •
+
+multidiningbananainbowl_visbackground :8,519  
+
+> •
+
+multilunch_redgrape_right : 8,342  
+
+> •
+
+multidiningbananainbowl : 7,890  
+
+> •
+
+multibanana_camperturb_rot10deg : 7,871  
+
+> •
+
+multilunch_greengrape_left : 7,409  
+
+> •
+
+multifruitteabottleinbowl : 6,780  
+
+> •
+
+marker_camperturb_intrin10 : 6,444  
+
+> •
+
+multitools2_screwdriver_left : 5,965  
+
+> •
+
+laptopclose : 5,818 96.4% 0.0% 0.4% 0.0% 0.0% 0.0% [-0.25869507 -0.3383789 0.824488    
+
+> -0.23704445 -0.18513854 0.14518937
+> 1.465 ...
+
+0.0% 47.8% 0.0% 0.0% 0.0% 0.0% [-0.06954759 -0.5366508 1.1559877    
+
+> 0.07009456 -0.29787704 -0.15480053
+> 1.476 ...
+
+0.0% 0.0% 20.4% 0.0% 0.0% 0.0% [-3.9564630e-01 -2.8735882e-01    
+
+> 6.2467319e-01 -2.7211538e-01
+> 4.7088596e-01 -7. ...
+
+0.0% 0.0% 0.0% 84.8% 0.0% 0.0% [-0.39514887 0.19055675     
+
+> 0.11370778 -0.1485491 0.65906495
+> -0.9628853 1.5 ...
+
+0.0% 0.0% 0.0% 0.0% 30.1% 0.0% [-0.36614206 0.39799744 0.0841628    
+
+> -0.14897703 0.53772086 -0.25896543
+> 1.388 ...
+
+0.0% 0.0% 0.0% 0.0% 0.0% 60.9% [-0.0189586 -0.76731604 1.1030492    
+
+> -0.08137186 -0.23344138 -0.01054483
+> 0.117 ...
+
+50.2% 1.3% 0.0% 0.0% 0.0% 0.0% [-0.03545148 -0.64554846 1.2249042    
+
+> -0.06972276 -0.40483055 0.10972372
+> 0.083 ...
+
+0.2% 16.3% 0.0% 0.0% 0.0% 0.0% [-0.09053492 -0.623636 1.2015427    
+
+> -0.08158735 -0.299061 -0.05692682
+> 0.118 ...
+
+0.0% 0.0% 34.6% 0.0% 0.0% 0.0% [-0.31965527 0.04330682     
+
+> 0.27039364 -0.20898353 0.532113
+> -0.7829603 1.5 ...
+
+0.0% 0.0% 0.0% 60.9% 0.0% 0.0% [-0.0189586 -0.76731604 1.1030492    
+
+> -0.08137186 -0.23344138 -0.01054483
+> 0.117 ...
+
+0.0% 0.0% 0.0% 0.0% 73.8% 0.0% [-0.11260013 -0.6591337 1.1576476    
+
+> -0.05455574 -0.37516764 -0.04432944
+> 1.477 ...
+
+0.0% 0.0% 0.0% 0.0% 0.0% 83.9% [-0.15148115 0.23049308 0.4095893    
+
+> -0.01255598 0.62930214 -0.31796318
+> 0.491 ...
+
+Fig. 8: SigLIP pairwise matching probabilities on an unseen task: image-to-previous-action (top) and previous-action-to-image (bottom). CLAMP correctly retrieves all image–previous-action pairs on both tasks. 
+
+Fig. 9: Evaluation curves comparing our method (green) with baselines across three seeds in simulation under a low-data regime. All methods are trained on 100 demonstrations for 1M environment steps and evaluated over 50 trials per checkpoint every 40K steps. Note that the y-axis ticks in the Pen in Container plot differ for improved visualization. 
+
+• microwaveclose : 5,642 
+
+• marker_camperturb_rot10deg : 5,608 
+
+• multidiningbananainbowl_reasoning1 : 5,454 
+
+• multitools2_hammer_left : 5,421 
+
+• multilunch_redgrape_left : 5,327 
+
+• multilunch_greengrape_right : 5,248 
+
+• glassonrack : 5,175 
+
+• multibanana_camperturb_pos10cm : 4,965 
+
+• multitools2_hammer_right : 4,932 
+
+• multibanana_camperturb_intrin10 : 4,854 
+
+• fruitbowl : 4,853 
+
+• multibanana_camperturb_pos5cm : 4,692 
+
+• bowlonrack : 4,380 
+
+• multidiningbananainbowl_control : 4,133 
+
+• multitoolsscissorsincaddy_right : 4,118 
+
+• multidiningbananainbowl_reasoning0 : 3,924 
+
+• multibanana_frozencam_overhead : 3,910 
+
+• multibanana_frozencam_bothextcams : 1,267 
+
+• marker_camperturb_pos5cm : 468 
+
+• marker_frozencam_overhead : 370 • microwaveopen : 310  
+
+> •
+
+multilegoblocksinbag : 294  
+
+> •
+
+marker_frozencam_bothextcams : 263  
+
+> •
+
+marker_frozencam_bothwristcams : 253  
+
+> •
+
+spooninholder : 78  
+
+> •
+
+marker_camperturb_pos10cm : 55  
+
+> •
+
+utensilsinholder : 37  
+
+> •
+
+multibanana_frozencam_bothwristcams : 12  
+
+> •
+
+multitoysvehiclesinbasket : 2

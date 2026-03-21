@@ -1,0 +1,1278 @@
+Title: MTS-JEPA: Multi-Resolution Joint-Embedding Predictive Architecture for Time-Series Anomaly Prediction
+
+URL Source: https://arxiv.org/pdf/2602.04643v1
+
+Published Time: Thu, 05 Feb 2026 02:19:55 GMT
+
+Number of Pages: 21
+
+Markdown Content:
+# MTS-JEPA: Multi-Resolution Joint-Embedding Predictive Architecture for Time-Series Anomaly Prediction 
+
+Yanan He 1 Yunshi Wen 2 Xin Wang 3
+
+Tengfei Ma 3
+
+Abstract 
+
+Multivariate time series underpin modern critical infrastructure, making the prediction of anoma-lies a vital necessity for proactive risk mitigation. While Joint-Embedding Predictive Architectures (JEPA) offer a promising framework for modeling the latent evolution of these systems, their applica-tion is hindered by representation collapse and an inability to capture precursor signals across vary-ing temporal scales. To address these limitations, we propose MTS-JEPA, a specialized architec-ture that integrates a multi-resolution predictive objective with a soft codebook bottleneck. This design explicitly decouples transient shocks from long-term trends, and utilizes the codebook to capture discrete regime transitions. Notably, we find this constraint also acts as an intrinsic regu-larizer to ensure optimization stability. Empirical evaluations on standard benchmarks confirm that our approach effectively prevents degenerate so-lutions and achieves state-of-the-art performance under the early-warning protocol. 
+
+1. Introduction 
+
+Multivariate time series constitute the backbone of modern critical infrastructure. These systems range from industrial manufacturing to server operations. Within such complex environments, the primary objective extends beyond mere observation. The goal is to anticipate risks before they manifest as catastrophic failures. We focus on this task of anomaly prediction. This differs fundamentally from standard anomaly detection and forecasting (Park et al., 2025). Detection is inherently reactive and identifies faults only after their occurrence (Ruff et al., 2018; Xu et al., 2022). Forecasting typically regresses numerical values and  
+
+> 1
+
+Purdue University, West Lafayette, IN, USA 2 Rensselaer Polytechnic Institute, Troy, NY, USA 3 Stony Brook Univer-sity, Stony Brook, NY, USA . Correspondence to: Tengfei Ma 
+
+<tengfei.ma@stonybrook.edu >.
+
+Preprint. February 5, 2026. 
+
+is prone to high-frequency noise (Zhou et al., 2021). In contrast, anomaly prediction (Jhin et al., 2023; Zhao et al., 2024) aims to capture precursor patterns indicative of future instability. However, achieving this is non-trivial. Real-world data is characterized by stochastic volatility that often obscures early warning signals. Many existing methods still rely heavily on point-wise reconstruction or regression. This tendency risks overfitting to unpredictable fluctuations. It underscores the need for a paradigm that effectively models high-level system dynamics rather than raw data points. Motivated by this need, predictive world models have emerged to reason about the underlying evolution of an envi-ronment. Joint-Embedding Predictive Architectures (JEPA) represent a significant advancement in this direction (As-sran et al., 2023). The core principle involves predicting missing information within an abstract latent space rather than reconstructing raw input signals. This design forces the model to capture high-level state transitions while ignoring unpredictable details. Such a mechanism naturally aligns with multivariate time series, where stochastic volatility of-ten masks the true evolution of system states. Consequently, representation-space predictive modeling offers a robust pathway for identifying early warning signals compared to precise numerical regression. While preliminary adaptations to time series exist (Ennadir et al., 2025), the stability and failure modes of JEPA objectives in this continuous domain remain poorly understood. Concretely, this deficiency manifests as two primary chal-lenges. The first is representation collapse, a phenomenon intrinsic to the self-distillation objective of latent-space pre-diction. In the absence of negative samples, the optimization landscape admits a degenerate solution where the encoder maps diverse inputs to a constant vector. Theoretical anal-ysis confirms that this effectively reduces the embedding covariance rank to zero (Chen & He, 2021; Tian et al., 2021), yielding a vanishing training loss but a feature space devoid of discriminative information. The second challenge in-volves the multi-scale nature of anomaly precursors. As illustrated in Figure 1a, standard JEPA architectures oper-ate at a fixed temporal granularity. However, anomalous signals in real-world systems are rarely confined to a sin-1
+
+> arXiv:2602.04643v1 [cs.LG] 4 Feb 2026
+
+MTS-JEPA: Multi-Resolution JEPA for Time-Series Anomaly Prediction Online  
+
+> Encoder
+> EMA
+> Encoder
+> Predictor Context
+> Target Loss
+
+(a) Standard Single-Resolution JEPA Online    
+
+> Encoder
+> Context
+> Target Downsample
+> Multi-Resolution Target Input
+> Target
+> ...
+> Target
+> EMA
+> Encoder
+> ...
+> Multi-Resolution Predictions
+> Loss
+> Loss
+> ...
+> ...
+> ...
+> Loss
+
+(b) Proposed Multi-Resolution JEPA 
+
+Figure 1. Comparison between standard single-resolution JEPA (A) and the proposed multi-resolution JEPA (B). 
+
+gle sampling rate. They often manifest as precursors dis-tributed across distinct frequency bands or temporal reso-lutions (Wang et al., 2024; Liu et al., 2022a). Therefore, a single-resolution model inevitably fails to capture dynamics that evolve outside its specific observational scale. To address these limitations, we propose the Multi-resolution Time-Series JEPA (MTS-JEPA). First, we em-ploy a multi-resolution predictive objective. Unlike single-scale models (Figure 1a), our parallel latent pathways explic-itly capture multi-scale dynamics, spanning both transient shocks and evolving trends (Figure 1b). Second, we incorpo-rate a soft codebook bottleneck (Van Den Oord et al., 2017; Gong et al., 2019). We adopt this discrete structure primar-ily to suit anomaly prediction, as it compels the model to capture temporal evolution as definable regime transitions rather than unstructured drift. Meanwhile, we observe and demonstrate that this design yields a vital secondary benefit: it acts as an intrinsic regularizer, mitigating representation collapse without explicit negative sampling. Together, they make MTS-JEPA more suitable and stable for anomaly pre-diction. In summary, our main contributions are: • World Model for Anomaly Prediction: We formulate time-series anomaly prediction as representation-space predictive modeling with JEPA-style targets, and show that modeling latent evolution is well suited for early warning. • Multi-Resolution JEPA: We propose the first multi-resolution architecture within the JEPA framework for time-series. This novel design enables the model to cap-ture scale-variant precursors, ranging from sudden shocks to slow drifts, which single-resolution baselines fail to detect. • Soft Codebook Bottleneck: We introduce differentiable quantization to enforce a discrete inductive bias, sharpen-ing the distinction between normal patterns and structural anomalies. Furthermore, this constraint naturally stabi-lizes the optimization landscape and prevents represen-tation collapse, ensuring the predictor learns meaningful semantic transitions rather than converging toward trivial, degenerate solutions. 
+
+2. Related Works 
+
+Anomaly Prediction. Time-series research has largely followed two directions: forecasting and detection. Fore-casting approaches primarily learn trajectory regression ob-jectives (Zhou et al., 2021; Liu et al., 2024) and are typically evaluated on value prediction accuracy rather than early-warning separability. In contrast, detection methods score the current window and are benchmarked under reactive protocols (Ruff et al., 2018; Xu et al., 2022). Consequently, there is growing interest in moving beyond reactive detec-tion toward early-warning settings, where the goal is to antic-ipate future abnormality or failure risk ahead of time (Jhin et al., 2023; Zhao et al., 2024; Park et al., 2025). How-ever, many existing formulations remain tied to input-space objectives or detector adaptations, suggesting the value of exploring representation-space predictive models that em-phasize latent dynamics over local noise, especially when precursors unfold across multiple time horizons. Another line of work related to our method is vector-quantized (VQ) representation learning (Van Den Oord et al., 2017), which has been adapted for time-series anomaly detection (Lee et al., 2023; 2024; Wen et al., 2025); however, our method differs essentially in the target task, representation granular-ity, and predictive framework. 
+
+Joint Embedding Predictive Architectures. Self-supervised learning for time series is often built on masked modeling, as in PatchTST (Nie et al., 2023), or contrastive learning over augmented views, as in TS2Vec (Yue et al., 2022). In parallel, Joint-Embedding Predictive Architectures (JEPA) formulate predictive world models by forecasting future representations directly in latent 2MTS-JEPA: Multi-Resolution JEPA for Time-Series Anomaly Prediction 
+
+space, as demonstrated by I-JEPA for images and V-JEPA for videos (Assran et al., 2023; Bardes et al., 2024). By emphasizing latent predictability, JEPA encourages higher-level, state-like representations, which aligns naturally with time series as noisy observations of underlying evolving processes. Recent efforts have begun to adapt JEPA to time series, including TS-JEPA (Ennadir et al., 2025). However, JEPA-style predictive world models remain less explored for complex time-series systems, and stabilizing latent-space self-distillation objectives on continuous, non-stationary time series remains practically challenging. 
+
+Multi-Scale Dynamics. Multi-resolution modeling is widely used in representation learning to capture both global context and local detail, especially in computer vision (Lin et al., 2017). Time series share a similar multi-scale na-ture, where long-term trends coexist with fast local varia-tions. Recent time-series models such as Pyraformer (Liu et al., 2022b) and TimeMixer (Wang et al., 2024) incorpo-rate multi-scale structure through pyramid-style attention or multi-granularity mixing. In most cases, scale is introduced to improve forecasting accuracy or efficiency, rather than to explicitly model state evolution at multiple temporal rates. A less explored direction is to incorporate multi-scale struc-ture into predictive world models, so that latent states can be propagated across different time scales. This perspec-tive is particularly relevant for anomaly prediction, where early signs may appear as slow drift or short-lived shocks. These observations point to multi-scale latent dynamics as a natural ingredient for early warning. 
+
+3. Method 
+
+3.1. Problem Setup 
+
+Consider a multivariate time series x ∈ RT ×V . We partition 
+
+x into a sequence of non-overlapping windows {Wt}Nt=1 ,where each window Wt ∈ RTw ×V contains Tw time steps. Our goal is to learn a representation from the current win-dow Wt to anticipate the anomaly status of the subsequent window Wt+1 , enabling proactive intervention by forecast-ing whether the next window will be anomalous. 
+
+Framework Overview. This proactive setting is difficult in practice because precursor cues are often weak, non-stationary, and may emerge at different temporal scales, making stable self-supervised prediction nontrivial. We propose a new JEPA framework to solve this challenging task. (1) To expose such scale-variant precursors, we con-struct dual-resolution inputs that disentangle local volatil-ities from global trends, described next in Section 3.2. As illustrated in Figure 2, MTS-JEPA then adopts an asymmet-ric teacher–student design: an online context branch pre-dicts future latent states from the current window, while a momentum-updated target branch provides supervision. The asymmetry imposes a deliberate information gap: the online branch observes only the fine-grained view, yet is super-vised to match multi-scale targets produced from both fine and coarse views, encouraging scale-aware representations. (2) In addition, a soft codebook bottleneck is introduced to impose a discrete inductive bias for anomaly prediction by mapping continuous features to prototype-anchored code distributions, as formalized in Section 3.3. 
+
+3.2. Input Formulation and Multi-Scale Views 
+
+To make scale-variant precursor patterns learnable under a unified predictive objective, we build dual-scale views from each raw window. We first apply RevIN (Kim et al., 2022) to Wt, yielding the normalized window ˆWt. The affine statistics are cached to invert normalization for the reconstruction loss. We then construct two views at different resolutions: 
+
+Fine View (Patching). We tokenize ˆWt into P patches of length L (where Tw = P · L), forming the fine-grained representation: 
+
+Xfine  
+
+> t
+
+= Patch( ˆWt) ∈ RP ×L×V . (1) 
+
+Coarse View (Downsampling). Simultaneously, we gen-erate a global view by averaging every P time points (Ap-pendix A.2) to capture low-frequency trends. The resulting sequence of length L is treated as a single patch, aligning its dimensionality with the patch-based format: 
+
+Xcoarse  
+
+> t
+
+= DownAvg P ( ˆWt) ∈ R1×L×V . (2) The Online Branch processes only Xfine  
+
+> t
+
+, while the Target Branch encodes both resolutions at t+1 for supervision. This asymmetry serves as a structural inductive bias, com-pelling the model to encapsulate multi-scale semantics. Con-sequently, to bridge this deliberate information gap, we next detail the architectural machinery constructed to orchestrate the flow from partial local observations to stable global predictions. 
+
+3.3. Architecture 
+
+MTS-JEPA couples a shared encoder, a soft codebook, a dual-resolution predictor, and an auxiliary decoder. 
+
+Encoder. Weak and scale-variant precursors call for rep-resentations that are predictable and comparable across res-olutions. We therefore use a shared encoder E to embed raw windows into a compact latent space, using a channel-independent input formulation. Implemented as a residual CNN tokenizer followed by a Transformer backbone, E
+
+supports variable-length inputs, so both fine-grained patch 3MTS-JEPA: Multi-Resolution JEPA for Time-Series Anomaly Prediction EMA  Encoder   
+
+> EMA Codebook
+> Context Patches
+> Target Patches
+> Reconstruction Loss
+> Fine Target
+> Coarse Target Coarse Prediction Loss
+> (a) Data Processing & Splitting
+> (c) Target Branch
+> Online Encoder
+> Online Codebook
+> Decoder
+> Coarse Prediction
+> Fine Prediction
+> (b) Context Branch
+> Coarse Predictor
+> Fine Predictor
+> Online Codebook
+> Continuous Latent Codebook-Aligned Latent
+> Codebook Loss
+> (e) Codebook Branch (d) Reconstruction Branch
+> Time Series Input
+> Downsample
+> Fine Prediction Loss
+
+Figure 2. Overview of the MTS-JEPA framework for time series representation learning. 
+
+sequences and a single coarse-grained token are processed with the same parameters. Thus, a single encoder maps both resolutions into the same embedding space. (i) Online encoder ( Eθ ): ht = Eθ (Xfine  
+
+> t
+
+). Operating under partial observation, Eθ receives only the fine-grained view. It is trained to align with targets pro-duced from both fine and coarse views (via the mo-mentum teacher), which pressures the online repre-sentation to internalize global context from local evi-dence. (ii) EMA encoder ( Eξ ): A momentum-updated copy of the online encoder with holistic visibility. It processes both fine and coarse views to generate comprehensive, multi-scale targets: hfine  
+
+> t+1
+
+= Eξ (Xfine 
+
+> t+1
+
+) and hcoarse  
+
+> t+1
+
+=
+
+Eξ (Xcoarse  
+
+> t+1
+
+).However, continuous encoder features often entangle nui-sance variations. To mitigate this, we introduce a soft code-book that projects features onto a finite set of prototypes. This discretization not only captures regime-like patterns but also imposes an explicit geometric constraint on the latent space, which, as we detail next, is crucial for ensuring both representation stability and expressiveness. 
+
+Codebook. Formally, we implement this projection via a differentiable bottleneck Q that maps continuous encoder features into a finite set of learnable prototypes {ck}Kk=1 ⊂
+
+RD . For each patch representation ht,i ∈ RD , Q outputs a soft code distribution pt,i ∈ ∆K−1, where ∆K−1 := 
+
+{p ∈ RK : p ⪰ 0, 1⊤p = 1 }. We parameterize pt,i via temperature-scaled cosine similarity: 
+
+pt,i,k = exp  ¯ht,i , ¯ck /τ 
+
+PKj=1 exp  ¯ht,i , ¯cj /τ , (3) where ¯ht,i and ¯ck denote ℓ2-normalized vectors. We stack these patch-wise distributions to form the window-level code sequence Πt := [ pt, 1; . . . ; pt,P ] ∈ RP ×K , which serves as the predictor input. In parallel, we compute the expected code embedding zt,i := PKk=1 pt,i,k ck ∈ RD ,which is used by the auxiliary decoder for reconstruction. Since pt,i ∈ ∆K−1, the soft embedding zt,i = P 
+
+> k
+
+pt,i,k ck
+
+constitutes a convex combination of finitely many proto-types and therefore remains within the bounded convex hull of {ck}. This boundedness provides an explicit geometric constraint on the latent space, preventing unbounded feature excursions and improving score stability; a formal upper bound is given in Appendix A.3.1. Complementarily, Ap-pendix A.3.2 derives a strictly positive lower bound on the batch variance, i.e., Tr(Cov( z)) > 0, providing a suffi-cient non-collapse certificate. Together, these bounds ensure that Πt provides a compact, regime-level description of the window that is both stable and expressive. 
+
+Predictor. With the latent dynamics discretized into a sta-ble code sequence Πt, the remaining challenge is to forecast the system’s evolution. Recognizing that anomalies often originate from conflicting temporal scales, we employ a dual-branch predictor to explicitly decouple these dynamics. Both branches operate on the same history Πt but target distinct future resolutions: (i) Fine Predictor (Micro-Dynamics): To capture high-frequency volatility and local point anomalies, a 4MTS-JEPA: Multi-Resolution JEPA for Time-Series Anomaly Prediction 
+
+Transformer maps Πt to a sequence of fine-grained predictions ˆΠfine  
+
+> t+1
+
+∈ RP ×K . This branch preserves the patch-wise resolution, ensuring that transient dis-turbances are not smoothed out. (ii) Coarse Predictor (Macro-Dynamics): To distill low-frequency trends and global distribution shifts, a learn-able query token q aggregates the entire history into a single global prediction ˆΠcoarse  
+
+> t+1
+
+∈ R1×K via cross-attention: 
+
+ˆΠcoarse  
+
+> t+1
+
+= CrossAttn  q, Πt
+
+. (4) This mechanism forces the model to abstract away local noise and focus on the trajectory of the system state. For supervision, the EMA branch generates the correspond-ing multi-scale targets Πfine  
+
+> t+1
+
+and Πcoarse  
+
+> t+1
+
+using the shared codebook Q.
+
+Decoder. Because prediction alone can encourage overly abstract codes, an auxiliary decoder D reconstructs the input patches Xfine  
+
+> t
+
+from the online soft-quantized embeddings 
+
+zt to retain signal-level semantics. The reconstruction is evaluated after inverting RevIN using the cached statistics. MTS-JEPA achieves proactive anomaly prediction via multi-resolution forecasting of regime-level dynamics from the current window. We next formalize the unified training objective in Section 3.4. 
+
+3.4. Optimization Objective 
+
+We first introduce the notation used to define the three cou-pled objectives. Let pt,i ∈ RK denote the online soft code distribution for patch i at window t (Eq. 3), satisfying 
+
+pt,i ≥ 0 and 1⊤pt,i = 1 . Let zt,i = PKk=1 pt,i,k ck be the corresponding soft-quantized latent. The fine predictor outputs ˆpfine  
+
+> t+1 ,i
+
+and latent ˆzt+1 ,i for each patch, while the coarse predictor outputs a single distribution ˆpcoarse  
+
+> t+1
+
+. All targets pfine 
+
+> t+1 ,i
+
+, pcoarse  
+
+> t+1
+
+and zt+1 ,i are produced by the EMA (target) branch. 
+
+Overall objective. We optimize the online encoder, code-book, predictors, and decoder using three terms: 
+
+L = Lpred + Lcode + λr Lrec . (5) With the overall objective in place, we detail each term next. 
+
+(A) Predictive Objective ( Lpred ). We supervise online predictions using EMA targets at both fine (patch) and coarse (window) resolutions, so that the representation is jointly shaped by local precursors and global trends. 
+
+Lpred = λf
+
+ Lfine KL + γLfine MSE 
+
+| {z }
+
+> Local Structure
+
++ λcLcoarse KL 
+
+| {z }
+
+> Global Dynamics
+
+. (6) The fine-grained components align code distributions and stabilize latent features, while the coarse objective captures high-level semantics: 
+
+Lfine KL = X
+
+> i
+
+DKL (pfine  
+
+> t+1 ,i
+
+∥ ˆpfine 
+
+> t+1 ,i
+
+), (7) 
+
+Lfine MSE = X
+
+> i
+
+∥zt+1 ,i − ˆzt+1 ,i ∥22, (8) 
+
+Lcoarse KL = DKL (pcoarse  
+
+> t+1
+
+∥ ˆpcoarse  
+
+> t+1
+
+). (9) Here, DKL denotes the Kullback–Leibler divergence. λf
+
+and λc balance patch-level supervision with window-level consistency. Since the targets p are probability vectors produced by the softmax codebook (i.e., p ∈ ∆K−1), KL provides a principled objective for distributional alignment in the code space, rather than treating codes as unconstrained Euclidean regressands. In addition, the momentum-updated EMA branch yields slowly varying targets, which stabilizes self-distillation and makes KL matching better conditioned during training. 
+
+(B) Codebook Objective ( Lcode ). A well-behaved bottle-neck requires more than defining soft assignments: during training, the code space must stay synchronized with the en-coder features, and the assignment distributions must avoid becoming either overly diffuse or collapsed to a few in-dices. Accordingly, we regularize the soft codebook with (i) prototype–feature alignment and (ii) dual-entropy calibra-tion:              
+
+> Lcode =λemb Lemb +λcom Lcom
+> |{z }
+> Codebook alignment
+> +λsample ent Lsample ent −λbatch ent Lbatch ent
+> |{z }
+> Entropy
+> .
+
+(10) The alignment terms couple continuous encoder features 
+
+ht,i with their soft-quantized embeddings zt,i via a bidirec-tional objective: 
+
+Lemb = P 
+
+> i
+
+∥ sg( zt,i ) − ht,i ∥22, (11) 
+
+Lcom = P 
+
+> i
+
+∥zt,i − sg( ht,i )∥22, (12) where sg( ·) denotes the stop-gradient operator. Meanwhile, we calibrate the assignment distributions through dual-entropy control: 
+
+Lsample ent = E[H(p)] , Lbatch ent = H(E[p]) . (13) In particular, minimizing Lsample ent sharpens per-sample as-signments and encourages decisive code selection, whereas maximizing Lbatch ent promotes diverse code usage across the 5MTS-JEPA: Multi-Resolution JEPA for Time-Series Anomaly Prediction                                                                                                                                                                                     
+
+> Table 1. Performance comparison on four benchmark datasets. All metrics are reported in percentage (%) and averaged over five independent runs. Best baselines are underlined.
+> Models MSL SMAP SWaT PSM
+> F1 AUC Prec Rec F1 AUC Prec Rec F1 AUC Prec Rec F1 AUC Prec Rec K-Means 20.63 52.17 19.27 31.34 8.74 39.82 10.52 10.16 14.45 62.20 7.99 77.05 42.75 51.37 30.40 78.89 DeepSVDD 23.46 53.67 14.78 73.87 22.05 44.07 12.90 81.99 15.28 58.22 12.65 20.00 44.45 49.95 30.31 89.38 LSTM-VAE 22.42 55.22 20.84 32.43 22.77 52.97 14.35 55.39 54.60 79.91 64.92 50.07 56.73 71.95 49.32 66.86 iTransformer 27.25 64.61 16.71 75.40 33.00 60.91 22.67 64.32 70.49 82.10 98.17 55.00 54.12 63.09 37.37 98.29 TimesNet 28.44 59.70 30.31 36.59 27.78 57.01 17.98 62.81 67.20 83.24 90.87 54.42 52.64 56.12 35.76 99.71 PAD 21.67 55.97 12.19 97.78 26.92 59.79 18.15 55.00 69.75 83.71 81.54 62.79 57.82 73.84 57.54 58.57 TS-JEPA 25.49 60.33 17.10 56.84 26.57 57.38 18.23 49.73 71.95 80.33 84.32 62.76 53.32 66.10 36.95 96.29 PatchTST 26.98 60.43 75.00 16.45 30.06 61.62 21.76 49.06 70.64 81.93 94.03 57.58 58.17 75.76 64.68 52.86 TS2Vec 23.48 64.86 31.45 18.82 32.81 61.48 23.81 52.81 67.00 83.76 80.95 57.17 48.43 72.13 32.39 95.96
+> MTS-JEPA 33.58 66.08 35.87 40.80 33.64 65.41 24.24 56.02 72.89 84.95 98.00 58.05 61.61 77.85 55.01 72.00
+
+dataset, mitigating index collapse. Together, these terms keep the prototype set aligned with the evolving feature space while maintaining stable, informative code distribu-tions for downstream prediction. 
+
+(C) Reconstruction Objective ( Lrec ). To anchor latent representations and prevent collapse, we minimize the re-construction error between the input patches and their re-constructions (after denormalization): 
+
+Lrec =
+
+> P
+
+X
+
+> i=1
+
+ˆXt,i − Xt,i 
+
+> 22
+
+. (14) Here ˆXt,i is denormalized using the cached RevIN statistics of window t before computing Lrec .
+
+4. Experiments 
+
+4.1. Experimental Setup Datasets. We evaluate on four widely-used multivariate anomaly detection benchmarks spanning spacecraft teleme-try, industrial control, and cloud services. Mars Science Lab-oratory (MSL) and Soil Moisture Active Passive (SMAP) are NASA spacecraft telemetry datasets (Hundman et al., 2018). Secure Water Treatment (SWaT) is an industrial control system (ICS) water-treatment testbed with attack scenarios (Goh et al., 2017). Pooled Server Metrics (PSM) is a public server monitoring dataset collected from eBay production machines (Su et al., 2019). Detailed dataset statistics and preprocessing protocols are provided in Ap-pendix B.1. 
+
+Training & Evaluation Protocol. We convert each multi-variate stream into non-overlapping context–target pairs with stride 100, yielding windows with context length 
+
+Tc = 100 and target length Tt = 100 . Each window is tokenized into P = 5 non-overlapping patches of length 
+
+L = 20 . We use a two-phase pipeline. In self-supervised pre-training, we train on the official training set without la-bels and use a 9:1 train–validation split for model selection and early stopping. For downstream training on the official test set, we adopt a 6:2:2 chronological split: we train the classifier on the training split, select the detection threshold on the validation split, and then fix it for final evaluation on the held-out test split. We report window-level Precision, Recall, F1, and AUC. Full implementation details, hyper-parameters, and the downstream protocol are provided in Appendix B.2 and Appendix B.4. 
+
+4.2. Results Baselines. To evaluate MTS-JEPA, we benchmark against nine diverse baselines. K-Means (MacQueen, 1967) and DeepSVDD (Ruff et al., 2018) represent classical cluster-ing and deep one-class classification. LSTM-VAE (Park et al., 2018) serves as a standard RNN-based reconstruc-tion baseline. TS2Vec (Yue et al., 2022) is included as a state-of-the-art contrastive learner. We also compare against advanced backbones, including TimesNet (Wu et al., 2023) for 2D temporal variations, PatchTST (Nie et al., 2023) as a patch-based Transformer, and iTransformer (Liu et al., 2024) for variate-wise attention. We additionally include PAD (Jhin et al., 2023), a recent anomaly prediction model for direct comparison. Finally, we include TS-JEPA (En-nadir et al., 2025) to directly assess the improvements of our multi-resolution design over a standard single-scale JEPA baseline. When applicable, baselines are pre-trained on the same data and aligned to the anomaly prediction setting. Specifically, detection methods evaluate normality directly on the observation window Xt, while forecasting models utilize prediction errors on the target data, and representa-tion learners (e.g., TS2Vec) use the same classifier head on the embeddings. 6MTS-JEPA: Multi-Resolution JEPA for Time-Series Anomaly Prediction 
+
+Main results. Table 1 reports the mean anomaly predic-tion results on four benchmarks using the same data splits and five random seeds. Full results are available in Ap-pendix C. Under this setting, MTS-JEPA achieves the top AUC on all datasets, suggesting consistently strong rank-ing quality for upcoming abnormal windows under our precursor-based definition. Moreover, MTS-JEPA attains best F1 performance across benchmarks, indicating that its ranking quality can translate into effective decisions under the shared threshold-selection procedure. The trends of competing baselines are broadly consistent with their modeling assumptions. Classical methods such as K-Means and DeepSVDD rely on static similarity or compactness in a feature space, which can be less sensitive when precursor windows deviate only mildly from normal patterns. Reconstruction-based models such as LSTM-VAE may also be less aligned with a precursor setting, since reconstruction error often becomes more distinctive after abnormal behavior has developed. In addition, a set of ad-vanced time-series backbones, including TimesNet, TS2Vec, PatchTST, and iTransformer, provide strong sequence rep-resentations and capture long-range dependencies. In our anomaly prediction setting, however, these general-purpose backbones are not directly optimized for highlighting weak early-stage transitions toward future abnormalities, so their scores can be less separable when the precursor signal is subtle and noisy. Likewise, the inferior performance of TS-JEPA highlights the limitations of a pure continuous predictive model; lacking both a discrete codebook and multi-resolution modeling, it suffers from optimization in-stability and fails to capture diverse precursor dynamics. Finally, while PAD is explicitly designed for anomaly pre-diction, it relies on a single-scale objective that restricts its ability to decouple complex latent evolution from stochastic noise. 
+
+4.3. Generality 
+
+A practical time-series model should remain effective under distribution shifts, where the pre-training data may differ substantially from the deployment environment. To assess such transferability, Table 2 reports generality results under two pre-training settings. In-domain pre-training uses the official training set of the target dataset, while cross-domain pre-training uses the union of the other three datasets, with the target dataset fully excluded during pre-training. In both cases, we keep the downstream evaluation protocol identical on the target dataset, so the only difference comes from the source of pre-training data. We select TS2Vec and PatchTST for this generality study since they perform strongly in our main table under our setting, and thus provide meaningful SOTA references for evaluating transferability. With this setup, Table 2 shows that cross-domain transfer is 
+
+Table 2. In-domain and cross-domain generalization comparison. We report mean F1-score and AUC (%) averaged over 5 runs with different random seeds. ID: in-domain; CD: cross-domain; Abs. Diff. = CD −ID; Rel. Diff. = (CD −ID)/ID (%).                                                                                                        
+
+> Models Settings MSL SMAP SWaT PSM
+> F1 AUC F1 AUC F1 AUC F1 AUC
+> PatchTST
+> ID 26.98 60.43 30.06 61.62 70.64 81.93 58.17 75.76 CD 27.08 60.80 26.21 58.77 54.34 68.76 50.07 53.72 Abs. Diff. +0.10 +0.37 -3.85 -2.85 -16.30 -13.17 -8.10 -22.04 Rel. Diff. +0.37% +0.61% -12.81% -4.63% -23.07% -16.07% -13.92% -29.09%
+> TS2Vec
+> ID 23.48 64.86 32.81 61.48 67.00 83.76 48.43 72.13 CD 22.87 62.00 26.99 57.54 65.08 82.91 48.15 56.22 Abs. Diff. -0.61 -2.86 -5.82 -3.94 -1.92 -0.85 -0.28 -15.91 Rel. Diff. -2.60% -4.41% -17.74% -6.41% -2.87% -1.01% -0.58% -22.06%
+> MTS-JEPA
+> ID 33.58 66.08 33.64 65.41 72.89 84.95 61.61 77.85 CD 33.48 67.13 33.81 68.88 71.10 82.96 56.87 66.80 Abs. Diff. -0.10 +1.05 +0.17 +3.47 -1.79 -1.99 -4.74 -11.05 Rel. Diff. -0.30% +1.59% +0.51% +5.30% -2.46% -2.34% -7.69% -14.19%
+
+Table 3. Ablation results demonstrating the contribution of each model component on four benchmark datasets. All metrics are reported in percentages.                   
+
+> Model Variant MSL SMAP SWaT PSM Metric F1 AUC F1 AUC F1 AUC F1 AUC w/o KL 29.01 53.90 28.71 60.19 67.33 79.95 54.93 70.83 w/o Reconstruction 25.96 52.68 25.15 52.80 14.77 53.30 53.03 69.84 w/o Predictive Objective 28.88 53.17 27.05 59.81 59.47 78.60 58.89 70.17 w/o Codebook Loss 31.62 58.93 31.53 62.06 72.64 82.63 60.83 75.85 w/o Codebook Module 21.82 43.02 21.69 51.00 11.51 50.00 53.03 46.61 w/o Downsample 28.77 63.16 30.39 61.34 71.62 83.60 60.79 71.72
+> Full Model 33.58 66.08 33.64 65.41 72.89 84.95 61.61 77.85
+
+generally more challenging, and performance can decrease when the pre-training data comes from different datasets, which is consistent with the presence of domain shift. No-tably, MTS-JEPA continues to perform competitively across benchmarks. We observe that its AUC remains comparable to the in-domain setting on several datasets and can im-prove modestly in some cases, suggesting that the learned scores preserve useful ranking information even when the target dataset is excluded during pre-training. On more chal-lenging data such as PSM, all methods experience a clear drop, yet MTS-JEPA retains relatively strong performance compared to the evaluated backbones. Overall, these re-sults provide additional evidence that the model transfers reasonably well across datasets, particularly when assessed through threshold-free ranking metrics. 
+
+4.4. Model Analysis 
+
+4.4.1. A BLATION STUDY 
+
+Since MTS-JEPA integrates multiple mechanisms, it is im-portant to attribute the observed gains to the intended de-sign choices rather than a single component. We therefore conduct a systematic ablation study by selectively remov-ing modules, as summarized in Table 3. We observe that the predictive objective is the primary engine for capturing temporal dependencies; removing it causes a significant drop, and the KL term proves superior to MSE alone by 7MTS-JEPA: Multi-Resolution JEPA for Time-Series Anomaly Prediction −4      
+
+> −2
+> 0
+> 2
+> 43 Anomaly Window
+> 020 40 60 80 100
+> Time Step
+> −0.46
+> −0.45
+> −0.44
+> −0.43
+> 40 Normal Window
+
+Anomalous 43; Normal 40 −4       
+
+> −2
+> 0
+> 3Anomaly Window
+> 020 40 60 80 100
+> Time Step
+> 0.04
+> 0.05
+> 0.06
+> 19 Normal Window
+
+Anomalous 3; Normal 19 −6       
+
+> −4
+> −2
+> 0
+> 38 Anomaly Window
+> 020 40 60 80 100
+> Time Step
+> −1.04
+> −1.03
+> 101 Normal Window
+
+Anomalous 38; Normal 101 −7.5       
+
+> −5.0
+> −2.5
+> 0.0
+> 2.5
+> 63 Anomaly Window
+> 020 40 60 80 100
+> Time Step
+> −0.37
+> −0.36
+> −0.35
+> 88 Normal Window
+
+Anomalous 63; Normal 88 
+
+Figure 3. Window-level comparisons of dominant latent codes between anomalous and normal windows on the PSM dataset. Shaded regions indicate patch-level segments where the dominant code is selected. 
+
+enforcing precise distributional alignment. Furthermore, the results validate that multi-resolution modeling is essen-tial for outperforming baselines, as it enables the capture of coarse-grained precursors that single-scale models miss. Conversely, reconstruction serves as a non-negotiable an-chor; its removal triggers model collapse, confirming its role in preventing latent degeneration. Among all variants, the most consequential one is removing the soft codebook bottleneck (w/o Codebook Module): per-formance collapses to near-random, while removing only the auxiliary regularizers yields a much smaller drop. It sug-gests that beyond providing discrete, prototype-anchored regime codes, the bottleneck may also play a critical role in optimization stability. This naturally raises a question: what stabilizing effect does the bottleneck introduce that the auxiliary losses alone do not? The ablations offer an empirical explanation consistent with our formulation. With the codebook in place, self-distillation operates as KL matching between probability codes on the simplex (Eq. 3), so the predictor tracks a bounded distributional trajectory instead of performing un-constrained regression in RD . In conjunction with slowly varying EMA targets, this bounded code space appears to provide a more stable reference for self-distillation (Zhou et al., 2022). Once we remove the bottleneck, this con-strained code space disappears, so KL alignment loses its natural domain, and training degenerates into an ill-conditioned matching problem, consistent with the observed near-collapse. By contrast, removing only the auxiliary codebook losses causes only a mild drop for w/o Codebook Loss. These auxiliary losses mainly serve as an outper-formance mechanism that further boosts an already strong model. 4.4.2. V ISUALIZATION OF LEARNED REGIMES 
+
+In the Introduction, we hypothesized that a discrete bottle-neck would sharpen the distinction between normal dynam-ics and structural anomalies. Furthermore, in Section 3.3, we designed the codebook Q specifically to capture regime-like patterns via finite prototypes {ck}. Here, we empiri-cally verify whether the learned representations align with these methodological motivations. 43 3 38 63 122 57 19 48 123 36 77 30 81 67 102 80 103 41 106 23 
+
+> Codebook ID
+> 0.000
+> 0.005
+> 0.010
+> 0.015
+> 0.020
+> 0.025
+> Probability
+> Top 20 Discriminative Codes
+> Anomaly Freq
+> Normal Freq
+
+Figure 4. Histogram comparing the occurrence probability of latent codes in anomalous versus normal windows on the PSM test set. The codes are sorted by their anomaly–normal probability difference (from largest to smallest). PSM is used because it provides a large test set with reliable window-level anomaly labels. 
+
+First, we examine the activation statistics of the codebook. Figure 4 reports a quantitative study on the PSM dataset, ranking codes by the absolute frequency gap between nor-mal and anomalous windows. We observe that a small subset of codes exhibits pronounced activation gaps, sug-gesting that the model naturally learns to partition the latent space into condition-dependent regions without explicit su-pervision. To further validate this structure qualitatively, Figure 3 maps the most discriminative codes back to their original time-series patches. We observe that, within the same temporal context, distinct codes consistently correspond to distinct physical behaviors. This alignment confirms that the dis-crete formulation effectively disentangles diverse local dy-namics into a finite set of identifiable regimes. Consequently, the codebook successfully distinguishes precursor-like pat-terns from normal dynamics, providing a discriminative structural basis for anomaly prediction even under distribu-tion shift. 
+
+5. Conclusion 
+
+This work introduces MTS-JEPA, advancing anomaly pre-diction from reactive detection to proactive world model-ing. By synergizing multi-resolution views with a soft-quantized bottleneck, our architecture effectively captures scale-variant precursors while mitigating the representation collapse often observed in continuous self-supervision. Our empirical and theoretical analysis reveals that the discrete 8MTS-JEPA: Multi-Resolution JEPA for Time-Series Anomaly Prediction 
+
+bottleneck serves as a critical regularizer, enabling stable optimization without explicit negative sampling. Extensive experiments confirm that MTS-JEPA achieves state-of-the-art performance in early-warning scenarios, suggesting that discrete latent dynamics offer a robust foundation for future research in reliable autonomous systems. 
+
+Impact Statement 
+
+This work advances the reliability and safety of critical in-frastructure by enabling proactive anomaly prediction in complex multivariate systems, such as industrial control and server operations. By shifting from reactive detection to early warning, MTS-JEPA has the potential to mitigate catastrophic failures, reduce operational downtime, and im-prove resource efficiency in automated environments. While the proposed method is general-purpose, its primary societal impact lies in enhancing the resilience of essential services and high-stakes machinery. 
+
+References 
+
+Assran, M., Duval, Q., Misra, I., Bojanowski, P., Vincent, P., Rabbat, M., LeCun, Y., and Ballas, N. Self-supervised learning from images with a Joint-Embedding predictive architecture. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pp. 15619– 15629, 2023. Bardes, A., Garrido, Q., Ponce, J., Chen, X., Rabbat, M., LeCun, Y., Assran, M., and Ballas, N. Revisiting feature prediction for learning visual representations from video. 
+
+Transactions on Machine Learning Research , 2024. ISSN 2835-8856. Chen, X. and He, K. Exploring simple siamese represen-tation learning. In Proceedings of the IEEE/CVF Con-ference on Computer Vision and Pattern Recognition , pp. 15750–15758, 2021. Cover, T. M. and Thomas, J. A. Elements of Information Theory . Wiley-Interscience, Hoboken, N.J., 2nd edition, 2006. Ennadir, S., Golkar, S., and Sarra, L. Joint embeddings go temporal. arXiv preprint arXiv:2509.25449 , 2025. Goh, J., Adepu, S., Junejo, K. N., and Mathur, A. A dataset to support research in the design of secure water treatment systems. In Havarneanu, G., Setola, R., Nassopoulos, H., and Wolthusen, S. (eds.), Critical Information In-frastructures Security , pp. 88–99, Cham, 2017. Springer International Publishing. Gong, D., Liu, L., Le, V., Saha, B., Mansour, M. R., Venkatesh, S., and Hengel, A. v. d. Memorizing normality to detect anomaly: Memory-augmented deep autoencoder for unsupervised anomaly detection. In Proceedings of the IEEE/CVF International Conference on Computer Vision , pp. 1705–1714, 2019. Hundman, K., Constantinou, V., Laporte, C., Colwell, I., and Soderstrom, T. Detecting spacecraft anomalies using LSTMs and nonparametric dynamic thresholding. In 
+
+Proceedings of the 24th ACM SIGKDD International Conference on Knowledge Discovery and Data Mining ,pp. 387–395, 2018. Jhin, S. Y., Lee, J., and Park, N. Precursor-of-anomaly detec-tion for irregular time series. In Proceedings of the 29th ACM SIGKDD International Conference on Knowledge Discovery and Data Mining , pp. 917–929, 2023. Kim, T., Kim, J., Tae, Y., Park, C., Choi, J.-H., and Choo, J. Reversible instance normalization for accurate time-series forecasting against distribution shift. In International Conference on Learning Representations , 2022. Lee, D., Malacarne, S., and Aune, E. Vector quantized time series generation with a bidirectional prior model. In Proceedings of the 26th International Conference on Artificial Intelligence and Statistics , 2023. Lee, D., Malacarne, S., and Aune, E. Explainable time series anomaly detection using masked latent generative modeling. Pattern Recognition , 156:110826, 2024. Lin, T.-Y., Doll ´ar, P., Girshick, R., He, K., Hariharan, B., and Belongie, S. Feature pyramid networks for object detection. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pp. 2117– 2125, 2017. Liu, M., Zeng, A., Chen, M., Xu, Z., Lai, Q., Ma, L., and Xu, Q. SCINet: Time series modeling and forecasting with sample convolution and interaction. Advances in Neural Information Processing Systems , 35:5816–5828, 2022a. Liu, S., Yu, H., Liao, C., Li, J., Lin, W., Liu, A. X., and Dust-dar, S. Pyraformer: Low-complexity pyramidal attention for long-range time series modeling and forecasting. In 
+
+International Conference on Learning Representations ,2022b. Liu, Y., Hu, T., Zhang, H., Wu, H., Wang, S., Ma, L., and Long, M. iTransformer: Inverted transformers are effective for time series forecasting. In International Conference on Learning Representations , 2024. MacQueen, J. Some methods for classification and analy-sis of multivariate observations. In Proceedings of the 5th Berkeley Symposium on Mathematical Statistics and Probability, Volume 1 , pp. 281–297. University of Cali-fornia Press, 1967. 9MTS-JEPA: Multi-Resolution JEPA for Time-Series Anomaly Prediction 
+
+Nie, Y., Nguyen, N. H., Sinthong, P., and Kalagnanam, J. A time series is worth 64 words: Long-term forecasting with transformers. In International Conference on Learning Representations , 2023. Park, D., Hoshi, Y., and Kemp, C. C. A multimodal anomaly detector for robot-assisted feeding using an LSTM-based variational autoencoder. IEEE Robotics and Automation Letters , 3(3):1544–1551, 2018. Park, M.-Y., Lee, W.-J., Kim, S. T., and Park, G.-M. When will it fail?: Anomaly to prompt for forecast-ing future anomalies in time series. arXiv preprint arXiv:2506.23596 , 2025. Ruff, L., Vandermeulen, R., Goernitz, N., Deecke, L., Sid-diqui, S. A., Binder, A., M ¨uller, E., and Kloft, M. Deep one-class classification. In International Conference on Machine Learning , pp. 4393–4402, 2018. Su, Y., Zhao, Y., Niu, C., Liu, R., Sun, W., and Pei, D. Robust anomaly detection for multivariate time series through stochastic recurrent neural networks. In Proceed-ings of the 25th ACM SIGKDD International Conference on Knowledge Discovery and Data Mining , 2019. Tian, Y., Chen, X., and Ganguli, S. Understanding self-supervised learning dynamics without contrastive pairs. In International Conference on Machine Learning , pp. 10268–10278. PMLR, 2021. Van Den Oord, A., Vinyals, O., et al. Neural discrete rep-resentation learning. Advances in Neural Information Processing Systems , 30, 2017. Wang, S., Wu, H., Shi, X., Hu, T., Luo, H., Ma, L., Zhang, J. Y., and Zhou, J. TimeMixer: Decomposable multi-scale mixing for time series forecasting. In International Conference on Learning Representations , 2024. Wen, Y., Ma, T., Weng, L., Nguyen, L., and Julius, A. A. Abstracted shapes as tokens-a generalizable and inter-pretable model for time-series classification. Advances in Neural Information Processing Systems , 37:92246– 92272, 2025. Wu, H., Hu, T., Liu, Y., Zhou, H., Wang, J., and Long, M. TimesNet: Temporal 2d-variation modeling for gen-eral time series analysis. In International Conference on Learning Representations , 2023. Xu, J., Wu, H., Wang, J., and Long, M. Anomaly trans-former: Time series anomaly detection with association discrepancy. In International Conference on Learning Representations , 2022. Yue, Z., Wang, Y., Duan, J., Yang, T., Huang, C., Tong, Y., and Xu, B. TS2Vec: Towards universal representation of time series. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 36, pp. 8980–8987, 2022. Zhao, S., Wang, W., Xu, H., Yu, Z., Wen, Q., Wang, G., and Pang, G. Abnormality forecasting: Time series anomaly prediction via future context modeling. arXiv preprint arXiv:2410.12206 , 2024. Zhou, H., Zhang, S., Peng, J., Zhang, S., Li, J., Xiong, H., and Zhang, W. Informer: Beyond efficient transformer for long sequence time-series forecasting. In Proceed-ings of the AAAI Conference on Artificial Intelligence ,volume 35, pp. 11106–11115, 2021. Zhou, J., Wei, C., Wang, H., Shen, W., Xie, C., Yuille, A., and Kong, T. Image BERT pre-training with online tokenizer. In International Conference on Learning Rep-resentations , 2022. 10 MTS-JEPA: Multi-Resolution JEPA for Time-Series Anomaly Prediction 
+
+A. Methodological Details 
+
+A.1. Notations  
+
+> Table 4. Categorized notations.
+
+Category Symbol Description Category Symbol Description 
+
+Dimensions 
+
+T, V Time series size ( T ×V )Data Inputs 
+
+x Input time series 
+
+Tw Window length ˆWt Normalized window 
+
+N Number of windows Xfine  
+
+> t
+
+Fine view (patches) 
+
+P Num. patches ( Tw = P ·L) Xcoarse  
+
+> t
+
+Coarse view (downsampled) 
+
+L Patch length Representations 
+
+ht Encoder latent rep. 
+
+K Codebook size ck Learnable prototype 
+
+D Embedding dimension pt,i Code-assignment prob. Hyperparams 
+
+τ Soft-max temperature Πt Code sequence 
+
+λ... Loss balancing weights zt,i Soft-quantized embedding 
+
+γ MSE local weight q Coarse query token Architecture 
+
+Eθ Online encoder 
+
+Eξ EMA encoder Outputs 
+
+ˆΠfine 
+
+Predicted fine code dist. 
+
+Q Codebook bottleneck ˆΠcoarse 
+
+Predicted coarse code dist. 
+
+D Reconstruction decoder ˆzt,i Predicted embedding 
+
+sg Stop-gradient operator ˆXt,i Reconstructed patch Objectives Lpred /code Predictive / Code losses 
+
+Lrec /total Recon. / Total losses 
+
+A.2. Time-Axis Downsampling DownAvg operator. Given a normalized window ˆWt ∈ RTw ×V with Tw = P · L, we define DownAvg P (·) as a time-axis downsampling operator that averages every P consecutive time points (stride P ) for each variable: 
+
+Xcoarse  
+
+> t
+
+= DownAvg P ( ˆWt) ∈ R1×L×V . (15) Equivalently, for within-patch index ℓ ∈ [L] and variable v ∈ [V ]:
+
+Xcoarse 
+
+> t
+
+ 
+
+> 1,ℓ,v
+
+= 1
+
+P
+
+> P
+
+X
+
+> j=1
+
+ˆWt[( ℓ − 1) P + j, v ]. (16) 
+
+A.3. Theoretical Analysis of Latent Stability 
+
+In this subsection, we provide the formal proofs for the stability properties of the MTS-JEPA latent space. We demonstrate how the soft codebook acts as a geometric constraint that explicitly bounds representation drift. We provide two complemen-tary guarantees: (i) an upper bound on representation drift (stability), and (ii) a lower bound that rules out the trivial constant solution (non-collapse). A.3.1. S TABILITY UPPER BOUND 
+
+This part proves an explicit upper bound on representation drift in embedding space. The argument follows a short chain: we first fix a bounded latent geometry via the soft codebook, then establish a probability-to-geometry bridge ( ℓ1 → ℓ2), and finally combine this bridge with EMA smoothness and predictive alignment to obtain Theorem A.3. 
+
+Preliminaries. Continuous forecasting models can exhibit collapse or explosion, making the latent geometry unstable. The soft codebook eliminates this degree of freedom by restricting every soft-quantized embedding to the convex hull of a 11 MTS-JEPA: Multi-Resolution JEPA for Time-Series Anomaly Prediction 
+
+finite prototype set. In particular, the radius constant M defined below will be the only scale factor that propagates into the final drift bound. 
+
+Definition A.1 (Soft Code Map) . Let K ≥ 2 be the number of discrete prototypes and D ≥ 1 be the embedding dimension. Let C ∈ RK×D be the codebook matrix where the k-th row corresponds to the prototype ck. We define the probability simplex ∆K−1 := {p ∈ RK : p ⪰ 0, 1⊤p = 1 }.The soft-quantization map z : ∆ K−1 → RD is defined as the expected embedding: 
+
+z(p) := C⊤p =
+
+> K
+
+X
+
+> k=1
+
+pkck. (17) We further define the geometric radius M as the maximum Euclidean norm of any prototype... 
+
+Lipschitz Bound. Training is performed in probability space (via KL divergence), whereas drift and anomaly scores are measured in embedding space. We therefore need a simple link that converts discrepancies between assignment distributions into Euclidean changes after soft quantization. Lemma A.2 provides exactly this bridge, with the codebook radius M as the controlling constant. 
+
+Lemma A.2 (ℓ1 → ℓ2 Lipschitzness) . For any two assignment distributions p, q ∈ ∆K−1, the Euclidean distance between their soft-quantized embeddings is bounded by their ℓ1 distance, scaled by the codebook radius M :
+
+∥z(p) − z(q)∥2 ≤ M ∥p − q∥1. (18) 
+
+Proof. We expand the Euclidean distance and apply the triangle inequality. 
+
+∥z(p) − z(q)∥2 =
+
+> K
+
+X
+
+> k=1
+
+pkck −
+
+> K
+
+X
+
+> k=1
+
+qkck
+
+> 2
+
+=
+
+> K
+
+X
+
+> k=1
+
+(pk − qk)ck
+
+> 2
+
+≤
+
+> K
+
+X
+
+> k=1
+
+|pk − qk| · ∥ ck∥2.
+
+Since ∥ck∥2 ≤ M for all k, we have: 
+
+> K
+
+X
+
+> k=1
+
+|pk − qk| · ∥ ck∥2 ≤ M
+
+> K
+
+X
+
+> k=1
+
+|pk − qk| = M ∥p − q∥1.
+
+With this bridge in place, the remaining step is to control the probability-space differences themselves. Predictive alignment bounds the deviation between targets and predictions at each time step, while EMA smoothness bounds how fast the target moves. Combining these two controls yields the following stability bound. 
+
+Theorem A.3 (Stability Bound) . Let {ˆpt} and {pt} be the sequences of predicted and target (EMA) distributions, respectively, and let ˆzt = z(ˆ pt). Assume the following conditions hold for time steps t and t + 1 :1. Predictive Alignment: DKL (pt∥ˆpt) ≤ εt and DKL (pt+1 ∥ˆpt+1 ) ≤ εt+1 .2. Target Smoothness: ∥pt+1 − pt∥1 ≤ δt.Then, the representation drift ∥ˆzt+1 − ˆzt∥2 is bounded by: 
+
+∥ˆzt+1 − ˆzt∥2 ≤ M
+
+p2εt+1 + δt + √2εt
+
+
+
+. (19) 12 MTS-JEPA: Multi-Resolution JEPA for Time-Series Anomaly Prediction 
+
+Proof. First, we recall Pinsker’s Inequality (Cover & Thomas, 2006), which provides a bound on the ℓ1 distance between two distributions in terms of their KL divergence: 
+
+∥p − q∥1 ≤ p2DKL (p∥q).
+
+We now decompose the drift term ∥ˆzt+1 − ˆzt∥2 using the triangle inequality by introducing the intermediate target embeddings zt+1 and zt:
+
+∥ˆzt+1 − ˆzt∥2 = ∥ˆzt+1 − zt+1 + zt+1 − zt + zt − ˆzt∥2
+
+≤ ∥ ˆzt+1 − zt+1 ∥2
+
+| {z }
+
+> (A)
+
++ ∥zt+1 − zt∥2
+
+| {z }
+
+> (B)
+
++ ∥zt − ˆzt∥2
+
+| {z }
+
+> (C)
+
+.
+
+Bounding (A) and (C): Using Lemma A.2 and Pinsker’s Inequality: 
+
+∥ˆzt+1 − zt+1 ∥2 ≤ M ∥ˆpt+1 − pt+1 ∥1 ≤ M p2εt+1 .
+
+By symmetry, ∥zt − ˆzt∥2 ≤ M √2εt.
+
+Bounding (B): Using Lemma A.2 and the smoothness assumption: 
+
+∥zt+1 − zt∥2 ≤ M ∥pt+1 − pt∥1 ≤ M δ t.
+
+Summing these terms yields the final bound. 
+
+Interpretation. This theorem implies that the sensitivity of our anomaly score is strictly controlled by the codebook radius 
+
+M . Unlike unconstrained continuous models where gradients can cause unbounded output shifts (effectively M → ∞ ), MTS-JEPA guarantees that any significant representation drift arises from either a true shift in the target signal ( δt) or a high prediction error ( ε). This effectively filters out false positives caused by trivial numerical perturbations. A.3.2. N ON -C OLLAPSE LOWER BOUND 
+
+Goal. We provide a simple non-collapse certificate for the soft codebook. Namely, if a mini-batch exhibits (i) non-trivial multi-code usage, (ii) sufficiently sharp assignments, and (iii) non-negligible separation between two frequently used prototypes, then the soft-quantized embeddings zi = C⊤pi have strictly positive batch variance, i.e., Tr(Cov( {zi})) > 0.
+
+Setup. Consider a batch of assignment probabilities {pi}Bi=1 ⊂ ∆K−1 and their average ¯p := 1
+
+> B
+
+PBi=1 pi. Let zi := 
+
+C⊤pi ∈ RD , where C ∈ RK×D stacks prototypes as rows. To preclude the constant-code corner case, we assume three mild properties. Crucially, these are not arbitrary assumptions but are explicitly enforced by the optimization objectives defined in Section 3.4: • Batch Entropy: Lbatch ent maximizes H(¯ p), enforcing Assumption A.4. • Sharpness: Lsample ent minimizes individual entropy, driving pi toward one-hot vectors (Assumption A.5). • Separation: Lcom and EMA updates prevent prototype collapse (Assumption A.7). 
+
+Assumption A.4 (Multi-code usage / non-trivial batch marginal) . The batch marginal ¯p is not concentrated on a single index. Concretely, 
+
+H(¯ p) ≥ η for some η > 0. (20) 
+
+Assumption A.5 (Assignment sharpness) . For each sample, let k(i) = arg max k pi,k . There exists ε ∈ [0 , 1) such that 
+
+∥pi − ek(i)∥1 ≤ ε for all i. (21) 
+
+Remark A.6 . The deviation ε is strictly controlled by the softmax temperature τ . As τ → 0, pi approaches a hard assignment, ensuring ε → 0.13 MTS-JEPA: Multi-Resolution JEPA for Time-Series Anomaly Prediction 
+
+Assumption A.7 (Separation for the two dominant codes) . Define 
+
+β := 1 − ρ∗
+
+K − 1 , (22) where ρ∗ ∈ (1 /K, 1) is the unique root of the equation Hb(ρ) + (1 − ρ) log( K − 1) = η. Let m = arg max k ¯pk and let 
+
+r̸ = m be any index satisfying ¯pr ≥ β (guaranteed by Lemma A.8). Assume their prototypes satisfy 
+
+∥cm − cr ∥2 ≥ ∆c for some ∆c > 0. (23) To drive a variance lower bound, we first (Lemma A.8) extract two non-negligible codes from entropy, then (Lemma A.9) convert their marginal mass into two dominant-code groups under sharp assignments. 
+
+Lemma A.8 (Entropy lower bound implies at least two active codes) . Let m = arg max k ¯pk and ¯pmax = ¯ pm. If H(¯ p) ≥ η,then ¯pmax ≤ ρ∗, where ρ∗ is defined in Assumption A.7. Moreover, there exists an index r̸ = m such that 
+
+¯pr ≥ β := 1 − ρ∗
+
+K − 1 . (24) 
+
+Proof. Consider the function ϕ(x) := Hb(x) + (1 − x) log( K − 1) , which represents the maximum entropy achievable by a distribution with maximum probability mass x. It is well-known (from Fano’s inequality analysis) that ϕ(x) is strictly decreasing for x ∈ [1 /K, 1] . Since H(¯ p) ≥ η and H(¯ p) ≤ ϕ(¯ pmax ), we have ϕ(¯ pmax ) ≥ η = ϕ(ρ∗). By the monotonicity of ϕ, this implies ¯pmax ≤ ρ∗. Consequently, the remaining mass is at least 1 − ρ∗. By the pigeonhole principle, at least one non-dominant index r must satisfy ¯pr ≥ (1 − ρ∗)/(K − 1) = β.
+
+Lemma A.9 (Marginal mass transfers to dominant-code frequency) . Define ˆπk := 1
+
+> B
+
+PBi=1 I[k(i) = k]. Under Assump-tion A.5, we have ∥¯p − ˆπ∥1 ≤ ε, hence for all k,
+
+ˆπk ≥ ¯pk − ε. (25) 
+
+Proof. 
+
+∥¯p − ˆπ∥1 = 1
+
+B
+
+> B
+
+X
+
+> i=1
+
+(pi − ek(i))
+
+> 1
+
+≤ 1
+
+B
+
+> B
+
+X
+
+> i=1
+
+∥pi − ek(i)∥1 ≤ ε. 
+
+The coordinate-wise bound follows from |¯pk − ˆπk| ≤ ∥ ¯p − ˆπ∥1.We will use the following prototype-proximity bound implied by sharp assignments: for any i,
+
+∥zi − ck(i)∥2 ≤
+
+
+
+max  
+
+> k
+
+∥ck∥2
+
+
+
+∥pi − ek(i)∥1 ≤ M ε, (26) where M := max k ∥ck∥2.
+
+Theorem A.10 (Explicit variance lower bound / non-collapse) . Under Assumptions A.4–A.7, let β be defined as in Assumption A.7 (i.e., β = 1−ρ∗ 
+
+> K−1
+
+), and define 
+
+α := max {β − ε, 0}.
+
+Let (m, r ) be the indices specified in Assumption A.7. If α > 0 and 2M ε < ∆c, then the batch covariance of {zi}Bi=1 obeys 
+
+Tr   Cov( {zi}) ≥ α2 (∆ c − 2M ε )2 > 0. (27) 
+
+Proof. Step 1 (two codes have non-trivial dominant frequency). Let A = {i : k(i) = m} and R = {i : k(i) = r}. By Lemma A.8, ¯pr ≥ β. Since m = arg max k ¯pk, we also have ¯pm ≥ ¯pr ≥ β. Applying Lemma A.9 yields: 
+
+Pr( i ∈ A) = ˆ πm ≥ ¯pm − ε ≥ β − ε = α, 
+
+Pr( i ∈ R) = ˆ πr ≥ ¯pr − ε ≥ β − ε = α. 
+
+14 MTS-JEPA: Multi-Resolution JEPA for Time-Series Anomaly Prediction 
+
+Step 2 (dominant-code membership implies proximity to the corresponding prototype). By (26) and Assumption A.5, we have tight concentration around prototypes: 
+
+i ∈ A =⇒ ∥ zi − cm∥2 ≤ M ε, j ∈ R =⇒ ∥ zj − cr ∥2 ≤ M ε. 
+
+Step 3 (two separated prototype-centered clusters imply positive covariance trace). For any i ∈ A and j ∈ R, the triangle inequality gives: 
+
+∥zi − zj ∥2 ≥ ∥ cm − cr ∥2 − ∥ zi − cm∥2 − ∥ zj − cr ∥2
+
+≥ ∆c − 2M ε. 
+
+Now view Z as a random variable obtained by uniformly sampling an index from the batch, and let Z′ be an independent copy. The pairwise-variance identity yields Tr(Cov( Z)) = 12 E∥Z − Z′∥22
+
+. Restricting the expectation to the event 
+
+{i ∈ A, j ∈ R} yields the bound: 
+
+Tr(Cov( Z)) ≥ 12 · 2 Pr( i ∈ A) Pr( j ∈ R) (∆ c − 2M ε )2
+
+≥ α2(∆ c − 2M ε )2.
+
+If α > 0 and 2M ε < ∆c, the right-hand side is strictly positive, ruling out collapse. 
+
+Remark. Theorem A.10 provides a certificate against collapse. The bound becomes vacuous only if (i) α = 0 (low batch entropy), or (ii) ∆c ≤ 2M ε (low sharpness or prototype separation). However, as shown empirically in Appendix D.2, the model maintains high code diversity and sharpness throughout training, ensuring these conditions are met in practice. 
+
+B. Reproducibility Details 
+
+B.1. Dataset Statistics and Preprocessing 
+
+Table 5 summarizes the dataset statistics. We remove constant channels (zero variance) identified on the training split and apply the same channel mask to the test split, ensuring identical effective dimensions across splits. All remaining variables are instance-normalized independently for each window. We construct training pairs (Xt, Xt+1 ) from two consecutive non-overlapping windows sampled from the time series. Each window has a fixed length T and is partitioned into P =T /L patches with patch length L=20 .
+
+Table 5. Dataset Statistics. Raw Dim. is the original dimension; Eff. Dim. is the dimension after removing constant features. 
+
+Dataset Raw Eff. Constant Indices (Zero Variance) Train Test Anom (%) 
+
+MSL 55 33 [1, 4, 8, 10, 18, 21, 22, 24, 25, 26, 30, 32, 34, 36, 37, 38, 40, 42, 44, 50, 51, 52] 58,317 73,729 10.5 SMAP 25 24 [16] 135,183 427,617 12.8 SWaT 51 40 [4, 10, 11, 13, 15, 29, 31, 32, 43, 48, 50] 495,000 449,919 12.1 PSM 25 25 – 132,481 87,841 27.8 
+
+B.2. Implementation Details 
+
+All methods are implemented in PyTorch and trained on a single NVIDIA GeForce RTX 4090 GPU. We use Adam for all optimizations, and unless otherwise specified, we keep the hyperparameters reported below fixed across datasets to ensure a controlled comparison. We set the latent dimension to D=256 and the codebook size to K=128 , and maintain EMA target networks for both the encoder and the codebook to stabilize training. After each optimization step on the online parameters θ, the corresponding target parameters ξ are updated by ξ ←
+
+ρξ + (1 − ρ)θ with decay ρ=0 .996 ; gradients are not back-propagated through the EMA targets (stop-gradient). 
+
+Model Architectures. 
+
+15 MTS-JEPA: Multi-Resolution JEPA for Time-Series Anomaly Prediction 
+
+• Encoder: Patch size L=20 . The projection head is a 2-layer MLP (hidden 64 →32 ) mapping to latent dimension 
+
+D=256 . The backbone is a 6-layer Transformer (8 heads, dropout 0.1). • Codebook: Codebook size K=128 , dimension D=256 . Soft quantization temperature τ =0 .1.• Predictors: Both fine and coarse predictors are 2-layer Transformers (4 heads, hidden dimension 128 ). 
+
+Optimization & Hyperparameters. 
+
+• Training: Adam optimizer (lr 5×10 −4, weight decay 10 −5), batch size 128 . Target networks are updated via EMA (decay 0.996 ). Gradient clipping norm is 0.5. We train for a maximum of 100 epochs, initiating model selection after 50 epochs with an early stopping patience of 10. • Loss Weights: Predicted objective weights λf =1 .0, λc=0 .5, and γ=0 .1. Codebook alignment weights λemb =1 .0 and 
+
+λcom =0 .25 . Entropy regularization weights λsample ent =0 .005 and λbatch ent =0 .01 . Reconstruction weight λr is annealed linearly from 0.5 to 0.1 during training. 
+
+B.3. MTS-JEPA Pre-training Algorithm 
+
+We provide the detailed formulation of the total training objective for reproducibility. Aligning with the notation in Section 3.4, the total loss L is composed of three parts: 
+
+L = λf
+
+ Lfine KL + γLfine MSE 
+
+ + λcLcoarse KL 
+
+| {z }
+
+> Predictive Objective
+
++ λemb Lemb + λcom Lcom + λsample ent Lsample ent − λbatch ent Lbatch ent 
+
+| {z }
+
+> Codebook Objective
+
++ λr Lrec 
+
+| {z } 
+
+> Reconstruction
+
+Algorithm 1 summarizes the full pre-training pseudocode. 
+
+Algorithm 1 MTS-JEPA Pre-training Procedure 
+
+Require: Dataset D, Online parameters θ, EMA parameters ξ, EMA rate τ
+
+1: Sample batch (Xt, Xt+1 ) ∼ D ▷ fine-scale future 
+
+2: Xcoarse  
+
+> t+1
+
+← Downsample (Xt+1 ) ▷ coarse-scale future 
+
+3: while not converged do 
+
+4: ht ← Encoder θ (Xt) ▷ online encoding 
+
+5: pt, zt ← Codebook θ (ht) ▷ online soft codes 
+
+6: Lcode ← codebook loss ▷ on (ht, zt, pt)
+
+7: ˆXt ← Decoder θ (zt) ▷ reconstruction branch 
+
+8: Lrec ← reconstruction loss ▷ compare ˆXt vs. Xt
+
+9: ˆpfine 
+
+> t+1
+
+, ˆzt+1 ← Predictor fine  
+
+> θ
+
+(pt) ▷ fine prediction 
+
+10: ˆpcoarse  
+
+> t+1
+
+← Predictor coarse  
+
+> θ
+
+(pt) ▷ coarse prediction 
+
+11: pfine 
+
+> t+1
+
+, zt+1 ← EMACodebook ξ (Xt+1 ) ▷ stop-grad targets 
+
+12: pcoarse  
+
+> t+1
+
+← EMACodebook ξ (Xcoarse  
+
+> t+1
+
+) ▷ stop-grad targets 
+
+13: Lfine pred ← prediction loss ▷ (ˆ pfine 
+
+> t+1
+
+, ˆzt+1 ) vs. (pfine 
+
+> t+1
+
+, zt+1 )
+
+14: Lcoarse pred ← prediction loss ▷ ˆpcoarse  
+
+> t+1
+
+vs. pcoarse 
+
+> t+1
+
+15: Lpred ← L fine pred + Lcoarse pred 
+
+16: Ltotal ← L pred + Lquant + λr Lrec 
+
+17: Update θ; update ξ with EMA ▷ optimizer step + EMA update 
+
+18: end while 
+
+16 MTS-JEPA: Multi-Resolution JEPA for Time-Series Anomaly Prediction 
+
+B.4. Downstream Anomaly Prediction Protocol Problem Formulation. We formulate the downstream task as Anomaly Prediction, distinguishing it from standard point-wise anomaly detection. The objective is to utilize a historical context window Xt to predict the anomaly status of the subsequent non-overlapping future window Xt+1 . This setup evaluates the model’s ability to identify early warning signs (precursors) rather than merely reacting to ongoing failures. Each dataset provides anomaly annotations as a binary indicator array aligned with the time axis, denoted by a ∈ { 0, 1}Tfull . Let It+1 be the set of time indices covered by the future window Xt+1 . We define the window-level label as 
+
+yt+1 = I
+
+ X 
+
+> τ∈I t+1
+
+aτ > 0
+
+ ∈ { 0, 1}. (28) Let ˆst+1 ∈ [0 , 1] denote the predicted anomaly probability and let 
+
+ˆyt+1 = I(ˆ st+1 > δ ∗) (29) be the binary prediction using threshold δ∗ selected on the validation set to maximize the window-level F1 score. 
+
+Notation. We denote by Xt the context window and by Xt+1 the subsequent non-overlapping future window. The supervision signal is the future-window label yt+1 ∈ { 0, 1}, which indicates whether Xt+1 is anomalous under the window-level definition above. Thus, each downstream training example is a pair (Xt, y t+1 ), and the goal is anomaly prediction. We report window-level Precision, Recall, and F1-score: 
+
+Precision = TP TP + FP , Recall = TP TP + FN , F1 = 2 · Precision · Recall Precision + Recall . (30) We additionally report the Area Under the Receiver Operating Characteristic curve (AUC) computed from the raw probabili-ties ˆst+1 .
+
+Adaptation Strategy. We utilize the pre-trained MTS-JEPA as a frozen feature extractor. Specifically, we discard the projection heads and freeze the parameters of the encoder and codebook. For a given input Xt, the encoder yields soft code probabilities pt ∈ RV ×P ×K , where V denotes variables, P patches, and K the codebook size. To capture the most salient anomalies across the multivariate dimensions while preserving temporal structure, we apply Variable-wise Max-Pooling :
+
+ht = max   
+
+> v∈{ 1...V }
+
+p(v) 
+
+> t
+
+∈ RP ×K . (31) The aggregated representation ht is flattened and passed to an MLP classifier Cψ , trained to estimate ˆst+1 = P (yt+1 = 1 |
+
+ht).
+
+Algorithm 2 Downstream Anomaly Prediction Protocol 
+
+Require: Frozen Encoder θ, frozen Codebook, train split Str , val split Sval , test split Ste  
+
+> 1:
+
+Initialize MLP classifier Cψ 
+
+> 2:
+
+Train:  
+
+> 3:
+
+for each batch (Xt, y t+1 ) ∈ S tr do  
+
+> 4:
+
+pt ← Codebook (Encoder θ (Xt)) ▷ pt ∈ RV ×P ×K 
+
+> 5:
+
+ht ← max v∈{ 1,...,V } p(v) 
+
+> t
+
+▷ variable-wise max-pooling, ht ∈ RP ×K 
+
+> 6:
+
+ˆst+1 ← Cψ (ht) ▷ anomaly probability  
+
+> 7:
+
+Update ψ using binary cross-entropy loss Lcls (ˆ st+1 , y t+1 ) 
+
+> 8:
+
+end for  
+
+> 9:
+
+Validate: choose δ∗ on Sval to maximize window-level F1 using ˆyt+1 = I(ˆ st+1 > δ ) 
+
+> 10:
+
+Test: report Precision/Recall/F1 on Ste using δ∗, and AUC using raw ˆst+1 
+
+17 MTS-JEPA: Multi-Resolution JEPA for Time-Series Anomaly Prediction 
+
+C. Experimental Results 
+
+C.1. Main Benchmark 
+
+Table 6 presents the comprehensive performance evaluation of our proposed method against seven baseline models across four standard anomaly detection benchmarks: MSL, SMAP, SWaT, and PSM. In addition to the F1-score and AUC reported in the main text, we provide detailed comparisons on Precision and Recall to offer a holistic view of the detection capabilities. All metrics are reported as the mean ± standard deviation over five independent runs. The results demonstrate that our method consistently achieves superior accuracy and robustness compared to both classical unsupervised baselines (e.g., K-Means, DeepSVDD) and recent state-of-the-art multivariate time-series models (e.g., PatchTST, TS2Vec). 
+
+Table 6. Full results on four benchmark datasets. All metrics are reported in percentage (%) as mean ± standard deviation over 5 runs with different random seeds. Best baselines are underlined.                                                                                                                                                                                                                                                                                                                                                                                                                             
+
+> Models MSL SMAP SWaT PSM
+> F1 AUC Prec Rec F1 AUC Prec Rec F1 AUC Prec Rec F1 AUC Prec Rec K-Means 20.63 ±2.30 52.17 ±5.65 19.27 ±7.16 31.34 ±15.40 8.74 ±3.39 39.82 ±2.57 10.52 ±8.17 10.16 ±4.92 14.45 ±0.38 62.20 ±0.16 7.99 ±0.32 77.05 ±8.16 42.75 ±1.73 51.37 ±3.80 30.40 ±2.34 78.89 ±21.18 DeepSVDD 23.46 ±0.98 53.67 ±4.80 14.78 ±2.14 73.87 ±26.12 22.05 ±2.97 44.07 ±2.61 12.90 ±1.19 81.99 ±24.23 15.28 ±1.75 58.22 ±2.34 12.65 ±1.90 20.00 ±3.34 44.45 ±1.56 49.95 ±3.10 30.31 ±3.33 89.38 ±16.00 LSTM-VAE 22.42 ±7.02 55.22 ±10.27 20.84 ±10.10 32.43 ±15.96 22.77 ±1.73 52.97 ±2.60 14.35 ±1.21 55.39 ±4.47 54.60 ±1.17 79.91 ±1.00 64.92 ±14.30 50.07 ±8.30 56.73 ±1.14 71.95 ±0.50 49.32 ±1.59 66.86 ±2.10 iTransformer 27.25 ±2.03 64.61 ±1.19 16.71 ±1.25 75.40 ±11.80 33.00 ±2.05 60.91 ±1.58 22.67 ±2.83 64.32 ±10.77 70.49 ±1.00 82.10 ±0.36 98.17 ±1.82 55.00 ±1.18 54.12 ±0.92 63.09 ±0.75 37.37 ±1.17 98.29 ±2.10 TimesNet 28.44 ±5.79 59.70 ±5.15 30.31 ±7.40 36.59 ±27.00 27.78 ±1.48 57.01 ±1.81 17.98 ±0.60 62.81 ±10.10 67.20 ±3.94 83.24 ±1.64 90.87 ±15.87 54.42 ±6.09 52.64 ±0.02 56.12 ±2.66 35.76 ±0.09 99.71 ±0.57 PAD 21.67 ±0.03 55.97 ±6.96 12.19 ±0.06 97.78 ±4.44 26.92 ±1.78 59.79 ±0.30 18.15 ±1.21 55.00 ±11.80 69.75 ±4.83 83.71 ±0.61 81.54 ±15.17 62.79 ±4.32 57.82 ±5.96 73.84 ±1.85 57.54 ±3.18 58.57 ±9.17 TS-JEPA 25.49 ±4.22 60.33 ±4.65 17.10 ±3.91 56.84 ±18.65 26.57 ±1.67 57.38 ±0.72 18.23 ±0.74 49.73 ±8.05 71.95 ±0.56 80.33 ±0.69 84.32 ±1.67 62.76 ±0.33 53.32 ±2.25 66.10 ±3.11 36.95 ±2.50 96.29 ±2.65 PatchTST 26.98 ±0.51 60.43 ±1.13 75.00 ±0.00 16.45 ±0.38 30.06 ±1.20 61.62 ±0.66 21.76 ±0.93 49.06 ±2.10 70.64 ±3.57 81.93 ±1.27 94.03 ±4.25 57.58 ±3.94 58.17 ±0.73 75.76 ±0.11 64.68 ±0.59 52.86 ±0.90 TS2Vec 23.48 ±2.14 64.86 ±0.54 31.45 ±2.46 18.82 ±2.35 32.81 ±0.32 61.48 ±0.46 23.81 ±0.30 52.81 ±1.95 67.00 ±0.83 83.76 ±0.23 80.95 ±2.10 57.17 ±0.41 48.43 ±1.01 72.13 ±0.43 32.39 ±0.58 95.96 ±2.90
+> MTS-JEPA 33.58 ±4.34 66.08 ±3.25 35.87 ±10.90 40.80 ±15.68 33.64 ±1.45 65.41 ±2.06 24.24 ±1.28 56.02 ±8.18 72.89 ±0.70 84.95 ±0.82 98.00 ±1.00 58.05 ±1.20 61.61 ±4.32 77.85 ±1.28 55.01 ±2.47 72.00 ±12.96
+
+C.2. Generality 
+
+We evaluate generality by comparing in-domain and cross-domain pre-training while keeping the downstream evaluation exactly the same. For a target dataset, in-domain pre-training uses its official training set. Cross-domain pre-training uses the union of the other three datasets, with the target dataset completely excluded during pre-training. Since the source datasets may have different channel dimensions in this cross-domain setting, we treat each channel as an independent univariate series during pre-training, which avoids any explicit channel matching across datasets. After pre-training, we follow the same downstream protocol and evaluate on the same target test split in both settings, so the only difference is the source of pre-training data. 
+
+Table 7. Comparison of in-domain versus cross-domain generalization. 
+
+Models Settings MSL SMAP SWaT PSM 
+
+F1 AUC F1 AUC F1 AUC F1 AUC 
+
+PatchTST 
+
+In-Domain 26.98 ±0.51 60.43 ±1.13 30.06 ±1.20 61.62 ±0.66 70.64 ±3.57 81.93 ±1.27 58.17 ±0.73 75.76 ±0.11 Cross-Domain 27.08 ±0.44 60.80 ±1.17 26.21 ±0.24 58.77 ±1.63 54.34 ±5.96 68.76 ±0.87 50.07 ±0.19 53.72 ±0.93 Abs. Diff. +0.10 +0.37 -3.85 -2.85 -16.30 -13.17 -8.10 -22.04 Rel. Diff. +0.37% +0.61% -12.81% -4.63% -23.07% -16.07% -13.92% -29.09% 
+
+TS2Vec 
+
+In-Domain 23.48 ±2.14 64.86 ±0.54 32.81 ±0.32 61.48 ±0.46 67.00 ±0.83 83.76 ±0.23 48.43 ±1.01 72.13 ±0.43 Cross-Domain 22.87 ±2.67 62.00 ±0.74 26.99 ±0.75 57.54 ±0.35 65.08 ±0.53 82.91 ±0.02 48.15 ±7.73 56.22 ±3.49 Abs. Diff. -0.61 -2.86 -5.82 -3.94 -1.92 -0.85 -0.28 -15.91 Rel. Diff. -2.60% -4.41% -17.74% -6.41% -2.87% -1.01% -0.58% -22.06% 
+
+MTS-JEPA 
+
+In-Domain 33.58 ±4.34 66.08 ±3.25 33.64 ±1.45 65.41 ±2.06 72.89 ±0.70 84.95 ±0.82 61.61 ±4.32 77.85 ±1.28 Cross-Domain 33.48 ±7.26 67.13 ±6.15 33.81 ±5.13 68.88 ±1.45 71.10 ±0.76 82.96 ±0.40 56.87 ±4.31 66.80 ±6.02 Abs. Diff. -0.10 +1.05 +0.17 +3.47 -1.79 -1.99 -4.74 -11.05 Rel. Diff. -0.30% +1.59% +0.51% +5.30% -2.46% -2.34% -7.69% -14.19% 
+
+C.3. Ablation Studies 
+
+Table 8 reports the complete ablation results. All variants follow the same training and evaluation protocol as the full model, and we modify only the targeted component while keeping the rest of the architecture and training pipeline unchanged. For the codebook operation studies, the full model uses a discrete codebook bottleneck that represents each latent via soft assignment to a finite set of prototypes, with a slowly updated EMA target branch providing a stable reference for prototype states and assignment targets. To separate the effect of the bottleneck structure from the effect of auxiliary constraints, we 18 MTS-JEPA: Multi-Resolution JEPA for Time-Series Anomaly Prediction 
+
+evaluate two complementary interventions. In the loss-only removal setting, we keep the soft codebook bottleneck in both the online and EMA target branches, and we set the auxiliary codebook regularizer weights to zero. In the module removal setting, we remove the codebook bottleneck from both branches. The model then operates purely in continuous latent space, and the predictive objective reduces to an MSE loss because the code-assignment KL term is no longer defined without discrete code distributions. 
+
+Note. When the standard deviation across random seeds is (near) zero while the mean score is low, this typically indicates model collapse, i.e., the model makes nearly identical (often single-class) predictions across runs and loses discriminative signal. 
+
+Table 8. Ablation results on four benchmark datasets. 
+
+Datasets MSL SMAP SWaT PSM Metrics F1 AUC F1 AUC F1 AUC F1 AUC w/o KL Regularization 29.01 ± 6.64 53.90 ± 5.25 28.71 ± 1.71 60.19 ± 0.95 67.33 ± 3.97 79.95 ± 0.97 54.93 ± 2.54 70.83 ± 1.25 w/o Reconstruction Decoder 25.96 ± 1.82 52.68 ± 1.68 25.15 ± 0.31 52.80 ± 1.88 14.77 ± 1.42 53.30 ± 2.45 53.03 ± 0.00 69.84 ± 7.74 w/o Predictive Objective 28.88 ± 6.41 53.17 ± 1.03 27.05 ± 2.31 59.81 ± 1.76 59.47 ± 1.55 78.60 ± 0.59 58.89 ± 5.50 70.17 ± 4.73 w/o Codebook Loss 31.62 ± 1.71 58.93 ± 1.81 31.53 ± 7.88 62.06 ± 0.60 72.64 ± 1.24 82.63 ± 0.63 60.83 ± 4.09 75.85 ± 0.65 w/o Codebook Module 21.82 ± 0.00 43.02 ± 9.30 21.69 ± 0.00 51.00 ± 1.23 11.51 ± 0.00 50.00 ± 0.00 53.03 ± 0.00 46.61 ± 6.79 w/o Downsampling 28.77 ± 6.95 63.16 ± 3.83 30.39 ± 2.47 61.34 ± 0.15 71.62 ± 0.28 83.60 ± 0.40 60.79 ± 3.31 71.72 ± 4.68 
+
+Full Model 33.58 ± 4.34 66.08 ± 3.25 33.64 ± 1.45 65.41 ± 2.06 72.89 ± 0.70 84.95 ± 0.82 61.61 ± 4.32 77.85 ± 1.28 
+
+D. Visualizations and Qualitative Analysis 
+
+D.1. Framework 
+
+Figure 5 illustrates the end-to-end data flow and objectives of our framework, which consists of five coordinated components: EMA  Encoder   
+
+> EMA Codebook
+> Context Patches
+> Target Patches
+> Reconstruction Loss
+> Fine Target
+> Coarse Target Coarse Prediction Loss
+> (a) Data Processing & Splitting
+> (c) Target Branch
+> Online Encoder
+> Online Codebook
+> Decoder
+> Coarse Prediction
+> Fine Prediction
+> (b) Context Branch
+> Coarse Predictor
+> Fine Predictor
+> Online Codebook
+> Continuous Latent Codebook-Aligned Latent
+> Codebook Loss
+> (e) Codebook Branch (d) Reconstruction Branch
+> Time Series Input
+> Downsample
+> Fine Prediction Loss
+
+Figure 5. Overview of the Proposed Framework. 
+
+(a) Data Processing & Splitting: We construct consecutive context–target pairs from non-overlapping windows. The context window is tokenized into fine-grained patches Xfine 
+
+t ∈ RP ×L×V . Simultaneously, the future window is processed into two views: fine-grained patches Xfine 
+
+t+1 and a downsampled coarse view Xcoarse 
+
+t+1 , obtained by averaging every P consecutive time points to capture low-frequency trends. (b) Context Branch: The online encoder processes the context patches Xfine 
+
+t to produce continuous latents ht. These are passed through the Online Codebook to generate the discrete code distributions Πt ∈ RP ×K . This sequence Πt is 19 MTS-JEPA: Multi-Resolution JEPA for Time-Series Anomaly Prediction 
+
+then shared by two predictors: the Fine Predictor outputs patch-level predictions ˆΠfine 
+
+t+1 , while the Coarse Predictor 
+
+aggregates the history to produce a global prediction ˆΠcoarse 
+
+t+1 .(c) Target Branch: To provide stable supervision, the momentum-updated EMA encoder processes both future views (Xfine 
+
+t+1 and Xcoarse 
+
+t+1 ). The resulting features are mapped by the EMA Codebook into target distributions Πfine 
+
+t+1 and 
+
+Πcoarse 
+
+t+1 . The model minimizes the prediction losses Lfine pred and Lcoarse pred by matching the online predictions to these targets. (d) Reconstruction Branch: To prevent representation collapse and anchor the semantics, a decoder reconstructs the original signal from the codebook-aligned embeddings Zt, optimizing the reconstruction loss Lrec .(e) Codebook Branch: This module aligns the continuous latents ht with the discrete code assignments Πt and embed-dings Zt. It computes the codebook loss Lcode , which regularizes the assignment probabilities to ensure the codebook remains utilized and structured. 
+
+D.2. Latent Code Analysis 43 3 38 63 122 57 19 48 123 36 77 30 81 67 102 80 103 41 106 23 
+
+> Codebook ID
+> 0.000
+> 0.005
+> 0.010
+> 0.015
+> 0.020
+> 0.025
+> Probability
+
+Top 20 Discriminative Codes 
+
+> Anomaly Freq
+> Normal Freq
+
+Figure 6. Histogram comparing the occurrence probability of latent codes in anomalous versus normal windows on the PSM test set. 
+
+To interpret the semantic structure of the learned latent space, Figure 6 visualizes the activation probability of codebook entries on the PSM dataset, which was selected for its challenging high-dimensional real-world server telemetry. The codebook entries are arranged from left to right based on the magnitude of the frequency discrepancy between anomalous and normal windows, meaning that the codes on the far left exhibit the greatest distinction between the two states. This sorting highlights that specific latent codes act as highly discriminative structural prototypes which are disproportionately active during anomalies, confirming that the model extracts robust and interpretable signals indicative of system health rather than utilizing the codebook uniformly. −4      
+
+> −2
+> 0
+> 2
+> 43 Anomaly Window
+> 020 40 60 80 100
+> Time Step
+> −0.46
+> −0.45
+> −0.44
+> −0.43
+> 40 Normal Window
+
+Anomalous 43; Normal 40 −4       
+
+> −2
+> 0
+> 3Anomaly Window
+> 020 40 60 80 100
+> Time Step
+> 0.04
+> 0.05
+> 0.06
+> 19 Normal Window
+
+Anomalous 3; Normal 19 −6       
+
+> −4
+> −2
+> 0
+> 38 Anomaly Window
+> 020 40 60 80 100
+> Time Step
+> −1.04
+> −1.03
+> 101 Normal Window
+
+Anomalous 38; Normal 101 −7.5       
+
+> −5.0
+> −2.5
+> 0.0
+> 2.5
+> 63 Anomaly Window
+> 020 40 60 80 100
+> Time Step
+> −0.37
+> −0.36
+> −0.35
+> 88 Normal Window
+
+Anomalous 63; Normal 88 
+
+Figure 7. Window-level comparisons of dominant latent codes between anomalous and normal windows on the PSM dataset. Shaded regions indicate patch-level segments where the dominant code is selected. 
+
+Figure 7 maps the most discriminative latent codes back to their corresponding time-series patches to validate the benefits of the discrete bottleneck. The distinct morphological differences observed between anomalous prototypes (e.g., Code 43) 20 MTS-JEPA: Multi-Resolution JEPA for Time-Series Anomaly Prediction 
+
+and their normal counterparts illustrate how the codebook acts as a regularizer: by suppressing minor nuisance variations, it forces the model to capture stable structural motifs. This confirms that our approach effectively disentangles precursor-like patterns from routine dynamics, establishing a robust and interpretable basis for anomaly prediction. 
+
+D.3. Inference Efficiency       
+
+> (a) Latency vs. Batch (b) Latency vs. Window (c) Latency Ratio
+> Figure 8. Inference-time scaling comparisons across batch size, window length, and latency ratios.
+
+Figure 8 evaluates the inference efficiency of MTS-JEPA compared with PatchTST from three complementary perspectives. First, Figure 8a reports the per-sample latency vs. batch size: MTS-JEPA is slower, but the gap shrinks at larger batches. Figure 8b then reports latency vs. window length (batch fixed): both scale similarly, with MTS-JEPA slightly slower. Figure 8c confirms this trend: the latency ratio decreases as batch size increases. Overall, these results highlight a limitation of our approach: inference efficiency is not a primary contribution of MTS-JEPA, as its richer architecture incurs higher computational cost than a single-backbone baseline. Our design instead prioritizes early-warning performance and representation stability, with the runtime overhead becoming more manageable in deployment scenarios that support moderate to large batch sizes. 21

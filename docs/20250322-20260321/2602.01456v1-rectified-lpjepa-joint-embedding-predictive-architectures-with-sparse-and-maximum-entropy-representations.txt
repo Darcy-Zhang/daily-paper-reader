@@ -1,0 +1,5399 @@
+Title: Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations
+
+URL Source: https://arxiv.org/pdf/2602.01456v1
+
+Published Time: Tue, 03 Feb 2026 03:04:23 GMT
+
+Number of Pages: 49
+
+Markdown Content:
+# Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+Yilun Kuang 1 Yash Dagade 2 Tim G. J. Rudner 3 Randall Balestriero 4 Yann LeCun 1
+
+§ GitHub  Blog 
+
+## Abstract 
+
+Joint-Embedding Predictive Architectures (JEPA) learn view-invariant representations and admit projection-based distribution matching for collapse prevention. Existing approaches regularize representations towards isotropic Gaussian distributions, but inherently favor dense representations and fail to capture the key property of sparsity observed in efficient representations. We introduce Rectified Distribution Matching Regularization (RDMReg), a sliced two-sample distribution-matching loss that aligns representations to a Rectified Generalized Gaussian (RGG) distribution. RGG enables explicit control over expected ℓ0 norm through rectification, while preserving maximum-entropy up to rescaling under expected ℓp norm constraints. Equipping JEPAs with RDMReg yields Rectified LpJEPA, which strictly generalizes prior Gaussian-based JEPAs. Empirically, Rectified LpJEPA learns sparse, non-negative representations with favorable sparsity–performance trade-offs and competitive downstream performance on image classification benchmarks, demonstrating that RDMReg effectively enforces sparsity while preserving task-relevant information. x x′         
+
+> Encoder Encoder
+> zz′ReLU( z)ReLU( z′)
+> ℓ2
+> RDMReg 202
+> Value
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0 Cumulative Distribution Function
+> ( , 2)
+> ReLU( ( , 2))
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+
+(a) Rectified LpJEPA Diagram. = 0 
+
+ReLU( (0, I)) 
+
+(0, I)
+
+> c
+
+= 45 
+
+> c
+
+= 90 
+
+> c
+
+= 135   
+
+> c
+> Projection Vector c
+
+(b) Non-Closure under Projections. 
+
+Figure 1. Rectified LpJEPA. (a) Two views (x, x ′) of the same underlying data are embedded and rectified to obtain ReLU( z) and 
+
+ReLU( z′) ∈ Rd. Rectified LpJEPA minimizes the ℓ2 distance between rectified features while regularizing the d-dimensional rectified feature distribution towards a product of i.i.d. Rectified Gaussian distributions ReLU( N (μ, σ 2)) using RDMReg. As a result, each coordinate of the learned representation aligns towards a Rectified Gaussian distribution (CDF shown above), a special case of the Rectified Generalized Gaussian family RGN p(μ, σ ) when p = 2 . In the absence of rectification on both the features and the target distribution, Rectified LpJEPA reduces to isotropic Gaussian regularization as in LeJEPA (Balestriero & LeCun, 2025). (b) Samples from 2-dimensional Gaussian N (0, I) and Rectified Gaussian ReLU( N (0, I)) are drawn and projected along a certain direction c. As opposed to Gaussian which is closed under linear combinations, the projected marginals of the Rectified Gaussian distribution no longer fall in the same family, motivating the necessity of using two-sample distribution-matching losses. 
+
+> 1
+
+New York University. 2Duke University. 3University of Toronto. 4Brown University. Correspondence to: Yilun Kuang <yilun. kuang@nyu.edu >, Yann LeCun <yann.lecun@nyu.edu >.
+
+1
+
+> arXiv:2602.01456v1 [cs.LG] 1 Feb 2026 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations
+
+## 1. Introduction 
+
+Self-supervised representation learning has emerged as a promising paradigm for advancing machine intelligence without explicit supervision (Radford et al., 2018; Chen et al., 2020). A prominent class of methods—Joint-Embedding Predictive Architectures (JEPAs)—learn rep-resentations by enforcing consistency across multiple views of the same data in the latent space, while avoiding explicit reconstructions or density estimations in the observation space (LeCun, 2022; Assran et al., 2023). By decoupling learning from observation-level constraints, JEPAs operate at a higher level of abstraction, enabling flexibility in encoding task-relevant information. However, invariance alone admits degenerate solutions, including com-plete or dimensional collapse, where representations con-centrate in trivial or low-rank subspaces (Jing et al., 2022). Recent efforts culminate towards a distribution-matching approach for collapse prevention. In particular, LeJEPA (Balestriero & LeCun, 2025) introduces the SIGReg loss, which aligns one-dimensional projected feature marginals towards a univariate Gaussian across random projections, thereby regularizing the full representation towards isotropic Gaussian with convergence guaranteed by the Cram ´er–Wold theorem. By decomposing high-dimensional distribution matching into parallel one-dimensional projection-based op-timizations, SIGReg mitigates the curse of dimensionality and enables scalable representation learning. The result-ing features are maximum-entropy under fixed ℓ2 norm constraints and strictly generalize prior second-order regu-larization methods such as VICReg (Bardes et al., 2022) by suppressing all higher-order statistical dependencies. However, restricting feature distributions to isotropic Gaus-sian severely limits the range of representational structures that can be expressed. In particular, isotropic Gaussian features alone do not capture a key property of effective representations: sparsity . Across neuroscience, signal pro-cessing, and deep learning, sparse and non-negative codes repeatedly emerge as efficient, interpretable, and robust rep-resentations (Olshausen & Field, 1996; Donoho, 2006; Lee & Seung, 1999; Glorot et al., 2011). To this end, we propose Rectified Distribution Matching Regularization (RDMReg), a two-sample sliced distribution-matching regularizer that aligns JEPA representations to the Rectified Generalized Gaussian (RGG) distribution, a novel family of probability distributions with controllable expected ℓp norms and induced ℓ0 regularizations from ex-plicit rectifications. Notably, RGG also preserves maximum-entropy up to rescaling under sparsity constraints, thereby preventing collapses even in highly sparse regimes. The resulting method, Rectified LpJEPA, strictly general-izes LeJEPA, which arises as a special case corresponding to the dense regime of the Generalized Gaussian family. By introducing a principled inductive bias toward sparsity and non-negativity, Rectified LpJEPA jointly enforces in-variance, preserves task-relevant information, and enables controllable sparsity. We summarize our contributions as follows: 1. Rectified Generalized Gaussian Distributions . We introduce the Rectified Generalized Gaussian (RGG) distribution and show that it enjoys maximum entropy properties under expected ℓp norms constraints with induced ℓ0 norm regularizations. 2. Rectified LpJEPA with RDMReg . We propose Recti-fied LpJEPA, a novel JEPA architecture equipped with Rectified Distribution Matching Regularization (RDM-Reg), enabling controllable sparsity and non-negativity in learned representations. 3. Empirical Validation . We empirically demonstrate that Rectified LpJEPA achieves controllable sparsity, favor-able sparsity–performance trade-offs, improved statisti-cal independence, and competitive downstream accuracy across image classification benchmarks. 
+
+## 2. Background 
+
+In this section, we review key notions of sparsity. Additional background can be found in Appendix A. 
+
+Sparsity . Beyond its role in robust recovery and compressed sensing (Mallat, 1999; Donoho, 2006), sparsity has long been argued to be a fundamental organizing principle of efficient information processing in human and animal in-telligence (Barlow et al., 1961). In sensory neuroscience, extensive empirical evidences suggest that neural systems encode dense and high-dimensional sensory inputs into non-negative, sparse activations under strict metabolic and sig-naling constraints (Olshausen & Field, 1996; Attwell & Laughlin, 2001). In signal processing, sparse coding seeks to reconstruct sig-nals using a minimal number of active components, typically enforced through ℓ1 regularization (Chen et al., 2001). Com-plementarily, non-negative matrix factorization enforces non-negativity by restricting representations to the positive orthant, inducing a conic geometry that yields parts-based and interpretable decompositions (Lee & Seung, 1999). In deep learning, rectifying nonlinearities such as ReLU enforce non-negativity by zeroing negative responses, induc-ing support sparsity akin to ℓ0 constraints and underpinning the success of modern deep networks (Nair & Hinton, 2010; Glorot et al., 2011). 
+
+Metrics of Sparsity. To quantify sparsity, we consider a vector x ∈ Rd. The ℓ0 (pseudo-)norm ∥x∥0 := 
+
+2Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+u = x 
+
+> ∥x∥1
+
+∼ Unif (Sd−1
+
+> ℓ+1
+
+) u = x 
+
+> ∥x∥2
+
+∼ Unif (Sd−1
+
+> ℓ+2
+
+)
+
+Truncated Laplace 
+
+x ∼ Qdi=1 T GN 1(0 , 1) 
+
+Truncated Gaussian 
+
+x ∼ Qdi=1 T GN 2(0 , 1) 
+
+Rectified Laplace 
+
+Qdi=1 RGN 1(0 , 1) 
+
+Rectified Gaussian Qdi=1 RGN 2(0 , 1) 
+
+r = ∥x∥11
+
+∼ Γ( d/ 1, 1) 
+
+r2 = ∥x∥22
+
+∼ Γ( d/ 2, 2) 
+
+Maximum Entropy 
+
+Dirac Measure Qdi=1 δ0
+
+E[∥x∥0]= d · ΦL(0) 
+
+E[∥x∥0]= d · ΦN (0) 
+
+> Sd−1
+> ℓ+1
+> Sd−1
+> ℓ+2
+
+Uniform Distributions 
+
+over ℓ+ 
+
+> p
+
+-spheres ( p ∈ { 1, 2})
+
+ΦL(0) (i.i.d.) ΦN (0) (i.i.d.) 
+
+r ⊥⊥ u
+
+r ⊥⊥ u
+
+E[∥x∥11]= d
+
+E[∥x∥22]= d
+
+1−
+
+ΦL(0) 
+
+(i.i.d.) 
+
+1−
+
+ΦN (0) 
+
+(i.i.d.) 
+
+Rectified Generalized Gaussian Qdi=1 RGN p = Qdi=1 ReLU( GN p)
+
+## p = 1 Expected ℓp Norms Expected ℓ0 Norms p = 2
+
+Figure 2. Rectified Laplace ( p = 1 ) and Rectified Gaussian ( p = 2 ) as special cases of Rectified Generalized Gaussian distributions. 
+
+Assume μ = 0 and σ = 1 . For any p > 0, the Truncated Generalized Gaussian Qdi=1 T GN p over the support (0 , ∞)d is the maximum differential entropy distribution under a fixed expected ℓp-norm constraint. For p ∈ { 1, 2}, Qdi=1 T GN p further admits a radial–angular decomposition x = r · u with r ⊥⊥ u, where u is uniformly distributed with respect to the surface measure on the unit ℓp-sphere confined to the positive orthant and rp follows a Gamma distribution. Rectified Laplace and Rectified Gaussian arise via coordinate-wise mixing of the corresponding truncated distributions with a Dirac measure at zero, yielding a distribution with expected ℓ0-norm guarantees, where 
+
+ΦL and ΦN denote the cumulative distribution functions of the standard Laplace and standard Gaussian distributions respectively. 
+
+Pdi=1 1R\{ 0}(xi) counts the number of nonzero elements in x, where 1S (x) is the indicator function that evaluates to 
+
+1 if x ∈ S and 0 otherwise. Direct minimization of ℓ0 norm is however an NP-hard problem (Natarajan, 1995). A stan-dard relaxation is the ℓ1 norm, ∥x∥1 := Pdi=1 |xi|, which is the tightest convex envelope of ℓ0 on bounded domains and enables tractable optimization (Tibshirani, 1996). More generally, ℓp quasi-norms ∥x∥pp := Pdi=1 |xi|p with 
+
+0 < p < 1 provide a closer, nonconvex approximation to 
+
+ℓ0: their singular behavior near zero strongly favors exact sparsity while exerting weaker penalties on large-magnitude components. Although nonconvexity complicates optimiza-tion, such penalties have been shown to yield sparser and less biased solutions than ℓ1 under suitable conditions (Char-trand, 2007; Chartrand & Yin, 2008). 
+
+## 3. Sparse and Maximum-Entropy Distributions 
+
+In the following section, we show that the proposed Recti-fied Generalized Gaussian distribution is the direct mathe-matical consequence of maximizing entropy under ℓp con-straints with an induced ℓ0 regularization, yielding represen-tations that are simultaneously informative and sparse. We first introduce the Generalized Gaussian distribution (Sec-tion 3.1) and its truncated variant (Section 3.2), and show that they are the maximum-entropy distributions under an expected ℓp norm constraint (Section 3.3). We then show that incorporating rectification yields the Rectified Gener-alized Gaussian distribution (Section 3.4), which preserves maximal-entropy guarantees—rescaled by the R ´enyi infor-mation dimension—while explicitly inducing ℓ0 sparsity (Section 3.5). 
+
+3.1. Generalized Gaussian Distributions 
+
+In Definition 3.1, we present the standard form of the Gen-eralized Gaussian Distribution (Subbotin, 1923; Goodman & Kotz, 1973; Nadarajah, 2005). 
+
+Definition 3.1 (Generalized Gaussian Distribution ) . The Generalized Gaussian distribution GN p(μ, σ ) over the sup-port (−∞ , ∞) has the probability density function 
+
+fGN p(μ,σ )(x) = p1−1/p 
+
+2σΓ(1 /p ) exp 
+
+
+
+− |x − μ|p
+
+pσ p
+
+
+
+(1) where Γ( s) := R ∞ 
+
+> 0
+
+ts−1e−tdt is the gamma function. We observe that GN p(μ, σ ) reduces to the Laplace distribu-tion when p = 1 and the Gaussian distribution for p = 2 .
+
+3.2. Truncated Generalized Gaussian Distributions 
+
+If we restrict the support, we obtain the Truncated General-ized Gaussian Distributions in Definition 3.2. 
+
+Definition 3.2 (Truncated Generalized Gaussian Distribu-tion) . Let S ⊆ R be a subset of R with positive Lebesgue measure. The Truncated Generalized Gaussian distribu-tion T GN p(μ, σ, S ) is the restriction of the Generalized 3Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+Gaussian distribution GN p(μ, σ ) to the support S. The probability density function of T GN p(μ, σ, S ) is given by 
+
+fT GN p(μ,σ,S )(x) = 1S (x)
+
+ZS (μ, σ, p ) exp 
+
+
+
+− |x − μ|p
+
+pσ p
+
+
+
+(2) where 1S (x) is the indicator function that evaluates to 1 if 
+
+x ∈ S and 0 otherwise. The partition function is 
+
+ZS (μ, σ, p ) = 
+
+Z
+
+> S
+
+exp 
+
+
+
+− |x − μ|p
+
+pσ p
+
+
+
+dx (3) When S = R, T GN p(μ, σ ) is equivalent to GN p(μ, σ ).
+
+3.3. Maximum Entropy under ℓp Constraints 
+
+We consider the multivariate generalization (Goodman & Kotz, 1973) as the joint distribution resulting from the product measure of independent and identically distributed (i.i.d.) Truncated Generalized Gaussian random variables, i.e. x ∼ Qdi=1 T GN p(μ, σ, S ) where x = ( x1, . . . , x d) for each xi ∼ T GN p(μ, σ, S ). For our purposes, we only need 
+
+S = (0 , ∞) and thus the joint support is (0 , ∞)d.In Proposition 3.3, we show that the zero-mean Multivari-ate Truncated Generalized Gaussian Distribution is in fact the maximum differential entropy distribution under the expected ℓp norm constraints. 
+
+Proposition 3.3 (Maximum Entropy Characterizations of Multivariate Truncated Generalized Gaussian Distributions) .
+
+The maximum entropy distribution over S ⊆ Rd, where S
+
+is a subset of Rd with positive Lebesgue measure, under the constraints 
+
+Z
+
+> S
+
+p(x)dx = 1 , E[∥x∥pp] = ddλ 1
+
+log ZS (λ1) (4) 
+
+is the Multivariate Truncated Generalized Gaussian distri-bution Qdi=1 T GN p(0 , σ, S ) with probability density func-tion 
+
+p(x) = 1
+
+ZS (λ1) exp 
+
+
+
+− ∥x∥pp
+
+pσ p
+
+
+
+· 1S (x) (5) 
+
+where λ1 = −1/pσ p and ZS (λ1) is the partition function. Proof. See Appendix E.2. In fact, if S = Rd, we show in Corollary E.2 that E[∥x∥pp] = 
+
+dσ p. An immediate consequence of Proposition 3.3 is the well-known fact that Truncated Laplace and Truncated Gaus-sian over the same support set S are maximal entropy under the expected ℓ1 and ℓ2 norm constraints respectively. For any 0 < p < 1, this proposition still holds true and thus we obtain a continuous spectrum of sparse distributions. 
+
+3.4. Rectified Generalized Gaussian Distributions 
+
+In Definition 3.4, we introduce the Rectified Generalized Gaussian (RGG) distribution. 
+
+Definition 3.4 (Rectified Generalized Gaussian) . The Rec-tified Generalized Gaussian distribution RGN p(μ, σ ) is a mixture between a discrete Dirac measure δ0(x) (Defini-tion B.4) and a Truncated Generalized Gaussian distribution 
+
+T GN p(μ, σ, (0 , ∞)) with probability density function 
+
+fRGN p(μ,σ )(x) = Φ GN p(0 ,1) 
+
+
+
+− μσ
+
+
+
+· 1{0}(x) (6) 
+
++ p1−1/p 
+
+2σΓ(1 /p ) exp 
+
+
+
+− |x − μ|p
+
+pσ p
+
+
+
+· 1(0 ,∞)(x) (7) where ΦGN p(0 ,1) is the cumulative distribution function for the standard Generalized Gaussian distribution GN p(0 , 1) .In Appendices B and C, we present additional technical details of the Rectified Generalized Gaussian distribution. We also visualizes the connections between Truncated Gen-eralized Gaussian and Rectified Generalized Gaussian dis-tributions in Figure 2. For p = 2 , we recover the Rectified Gaussian distribution (Socci et al., 1997; Anderson et al., 1997). To the best of our knowledge, our extension and application of the Generalized Gaussian distribution to its rectified variant is novel for p̸ = 2 .Nardon & Pianca (2009) proposed the simulation tech-nique for Generalized Gaussian random variables. In Al-gorithm 1, we show how to sample from the Rectified Generalized Gaussian distribution RGN p(μ, σ ). Essen-tially, we only need to first sample from the Generalized Gaussian distribution, and then rectify. In other words, 
+
+x ∼ ReLU( GN p(μ, σ )) is equivalent to x ∼ RGN p(μ, σ ).In Proposition 3.5, we show the expected ℓ0 norm of the Multivariate Rectified Generalized Gaussian distribution is determined by the parameters {μ, σ, p }.
+
+3.5. Sparsity and Entropy Proposition 3.5 (Sparsity) . Let x ∼ Qdi=1 RGN p(μ, σ ) in 
+
+d dimension. Then 
+
+E[∥x∥0] = d · ΦGN p(0 ,1) 
+
+ μσ
+
+
+
+(8) 
+
+= d
+
+2
+
+
+
+1 + sgn 
+
+ μσ
+
+
+
+P
+
+ 1
+
+p , |μ/σ |p
+
+p
+
+ 
+
+(9) 
+
+where sgn( ·) is the sign function and P (·, ·) is the lower regularized gamma function. Proof. See Appendix C.4. Due to explicit rectifications, the RGG family is absolutely continuous with respect to the mixture between the Dirac 4Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 0.0 0.5 1.0  
+
+> 0
+
+Sparsity ( )  
+
+> p z+ p z p z p z+
+> Rectified
+> LpJEPA
+> LpJEPA
+> LeJEPA
+> 25 50 75
+
+Accuracy ( )
+
+> p
+> p=2
+> p=1
+> p=0.5
+> p=0.25
+
+(a) Necessity of Rectification. 3 2 1 0 1
+
+Mean Shift Value  
+
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Normalized L0 Norm  1
+> D [ z 0] Upper Bound
+> Lower Bound
+> Theoretical
+> Rectified Gaussian
+> Rectified Laplace
+> Empirical
+> Rectified Gaussian
+> Rectified Laplace
+> Architecture
+> ViT
+> ResNet
+> ConvNeXt
+> Architecture
+> ViT
+> ResNet
+> ConvNeXt
+
+(b) Controllable Sparsity. 0.0 0.2 0.4 0.6 0.8 1.0  
+
+> 0
+
+Sparsity 1 1 
+
+> D
+
+[ z 0] 
+
+> 0.25
+> 0.30
+> 0.35
+> 0.40
+> 0.45
+> 0.50
+> 0.55
+> 0.60
+> Validation Accuracy
+> -3
+> -2
+> -1
+> 0
+> 1
+> p
+> 2.0
+> 1.0
+> 0.75
+> 0.5
+> 0.25
+
+(c) Sparsity and Performance Tradeoff. 
+
+Figure 3. Rectified LpJEPA achieves controllable sparsity and favorable sparsity-performance tradeoffs under proper parame-terizations. (a) We report CIFAR-100 validation accuracy and the ℓ0 sparsity metric 1 − (1 /d ) · E[∥x∥0] for four settings where we match non-rectified features z or rectified features z+ := ReLU( z) to either Rectified Generalized Gaussian RGN p or conventional Generalized Gaussian GN p. Rectified LpJEPA (RGN p | z+) achieves the best sparsity-performance tradeoffs compared to other settings. (b) We compare the normalized ℓ0 norm of pretrained Rectified LpJEPA features against the theoretical predictions of Proposition 3.5 as 
+
+μ varies. Empirical sparsity closely follows the predicted behavior across different values of μ and p. (c) We plot the Pareto frontier of sparsity versus accuracy across varying values of μ and p. Performance drops sharply only when more than ∼ 95% of entries are zero. 
+
+and Lebesgue measure (Lemma B.6), rendering differen-tial entropy ill-defined. Thus we resort to the concept of 
+
+d(ξ)-dimensional entropy by (R ´enyi, 1959), which mea-sures the Shannon entropy of quantized random vector un-der successive grid refinement. In Theorem 3.6, we provide a d(ξ)-dimensional entropy characterization of Rectified Generalized Gaussian, where d(ξ) is the R ´enyi informa-tion dimension. We defer additional details on the R ´enyi information dimension to Appendix F. 
+
+Theorem 3.6 (R ´enyi Information Dimension Characteriza-tions of Multivariate Rectified Generalized Gaussian Distri-butions) . Let ξ ∼ QDi=1 RGN p(μ, σ ) be a Rectified Gen-eralized Gaussian random vector. The R ´enyi information dimension of ξ is d(ξ) = D · ΦGN p(0 ,1) (μ/σ ), and the 
+
+d(ξ)-dimensional entropy of ξ is given by 
+
+Hd(ξi)(ξi) = Φ GN p(0 ,1) 
+
+ μσ
+
+
+
+· H1(T GN p(μ, σ )) (10) 
+
++ H0(1(0 ,∞)(ξi)) (11) 
+
+Hd(ξ)(ξ) = 
+
+> D
+
+X
+
+> i=1
+
+Hd(ξi)(ξi) = D · Hd(ξi)(ξi) (12) 
+
+where H0(·) is the discrete Shannon entropy, H1(·) denotes the differential entropy, and 1(0 ,∞)(ξi) is a Bernoulli ran-dom variable that equals 1 with probability ΦGN p(0 ,1) (μ/σ )
+
+and 0 with probability 1 − ΦGN p(0 ,1) (μ/σ ).Proof. See Appendix F.2. Thus we have shown that rectifications still preserve the maximal entropy property of the original distribution up to rescaling by the R ´enyi information dimension and con-stant offsets. In Lemma F.6, we further shows that the 
+
+d(ξ)-dimensional entropy coincides with differential en-tropy under change of measure, enabling the interpretation of entropy under a Dirac and Lebesgue mixed measure. 
+
+## 4. Rectified LpJEPA 
+
+In the following section, we present a distributional regu-larization method based on the Cramer-Wold device (Sec-tion 4.1) for matching feature distributions towards Rectified Generalized Gaussian, resulting in the Rectified LpJEPA with Rectified Distribution Matching Regularization (RDM-Reg) (Section 4.2). Contrary to isotropic Gaussian, the Rectified Generalized Gaussian is not closed under linear combinations, leading to the necessity of two-sample sliced distribution matching (Section 4.3). We further demonstrate that RDMReg recovers a form of Non-Negative VCReg, which we defined in Section 4.4. Finally, we discuss various design choices of the target distribution with the parameter sets (μ, σ, p ) which balance between sparsity and maximum-entropy (Section 4.5). 
+
+4.1. Cramer-Wold Based Distribution Matching 
+
+The Cram ´er–Wold device states that two random vectors 
+
+x, y ∈ Rd are equal in distribution, i.e. x d
+
+= y, if and only if all their one-dimensional linear projections are equal in distribution (Cram´ er, 1936; Wold, 1938) 
+
+x d
+
+= y ⇐⇒ c⊤x d
+
+= c⊤y for all c ∈ Rd (13) 5Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+This result enables us to decompose a high-dimensional dis-tribution matching problem into parallelized one-dimension optimizations, which significantly reduces the sample com-plexity in each of the one-dimensional problems. 
+
+4.2. Rectified LpJPEA with RDMReg 
+
+Let (x, x′) ∼ Px,x′ denote a pair of random vectors jointly distributed according to a view-generating distribution Px,x′ ,where x and x represent two stochastic views (e.g., random augmentations) of the same underlying input data. Let fθ
+
+be a neural network. We write z = ReLU( fθ (x)) and z′ =ReLU( fθ (x′)) , where z, z′ ∈ RD are the output feature random vectors. We further sample y ∼ Qdi=1 RGN p(μ, σ )
+
+and the random projection vectors c from the uniform distri-bution on the ℓ2 sphere, i.e. c ∼ Unif( Sd−1 
+
+> ℓ2
+
+). We denote the induced distribution under projections as Pc⊤z and Pc⊤y.Our self-supervised learning objective consists of (i) an invariance term enforcing consistency across views, and (ii) a two-sample sliced distribution-matching loss which we called the Rectified Distribution Matching Regularization (RDMReg). The resulting loss takes the form 
+
+min  
+
+> θ
+
+Ez,z′ [∥z − z′∥22] (14) 
+
++ Ec[L(Pc⊤z∥Pc⊤y)] + Ec[L(Pc⊤z′ ∥Pc⊤y)] (15) where L(P ∥Q) is any loss function that minimizes the dis-tance between two univariate distributions P and Q.
+
+4.3. The Necessity of Two-Sample Hypothesis Testing 
+
+Contrary to the isotropic Gaussian, which is closed under linear combinations, the Rectified Generalized Gaussian (RGG) family is not preserved under linear projections: the one-dimensional projected marginals generally fall outside the RGG family. In fact, closure under linear combinations characterizes the class of multivariate stable distributions (Nolan, 1993), which is disjoint from our RGG family. As illustrated in Figure 1b, while any linear projection of a Gaussian remains Gaussian, projecting a Rectified Gaus-sian along different directions yields distinctly different marginals that no longer belong to the Rectified Gaussian family. Consequently, the distribution matching loss L(·∥· ) must rely on sample-based, nonparametric two-sample hypothe-sis tests on projected marginals (Lehmann & Romano, 1951; Gretton et al., 2012). Among many possible choices, we instantiate this objective using the sliced 2-Wasserstein dis-tance (Bonneel et al., 2015; Kolouri et al., 2018) as it works well empirically. Let Z, Y ∈ RB×D be empirical neural network feature matrix and the samples from RGG where 
+
+B is batch size and D is dimension. We denote a single ran-dom projection vector as ci ∈ RD out of N total projections. The RDMReg loss function is given by 
+
+L(Pc⊤ 
+
+> iz
+
+∥Pc⊤ 
+
+> iy
+
+) := 1
+
+B ∥(Zc i)↑ − (Yc i)↑∥22 (16) where (·)↑ denotes sorting in ascending order. We addition-ally show in Figure 13c that a small, dimension-independent 
+
+N suffices to achieve optimal performances. 
+
+4.4. Non-Negative VCReg Recovery 
+
+In Appendix I, we further show that minimizing the RDM-Reg loss recovers a form of Non-Negative VCReg (Ap-pendix H) which minimizes second-order dependencies us-ing only linear number of projections in dimensions. We further show in Figure 14 that using eigenvectors of the em-pirical feature covariance matrices as projection vectors ci
+
+accelerates second-order dependencies removal and hence leads to faster convergence towards optimal performances. 
+
+4.5. Hyperparameters of the Target Distributions 
+
+Proposition 3.5 shows that the hyperparameter set {μ, σ, p }
+
+collectively determines the ℓ0 sparsity. σ is a special pa-rameter since we always want σ > ϵ , where ϵ is some pre-specified threshold value, to prevent collapse. We denote σGN = Γ(1 /p )1/2/(p1/p · Γ(3 /p )1/2) as the choice to ensure that the variance of the random variable before rectification is 1 since the closed form variance is readily available for the Generalized Gaussian distribution. It’s also possible to find σRGN such that the variance after rec-tification is 1. In Proposition B.9, we derive the closed form expectation and variance of the Rectified Generalized Gaus-sian distribution. The choice of σRGN can be determined by running a bisection search algorithm (see Algorithm 2) over the closed form variance formula. We defer additional comparisons between σRGN and σGN to Appendix D. Unless otherwise specified, we use σGN as the default option. 
+
+## 5. Empirical Results 
+
+In the following sections, we introduce the basic settings and evaluations (Section 5.1). We establish our Rectified LpJEPA designs as the correct parameterizations to learn in-formative and sparse features compared to other possible al-ternatives (Sections 5.2 and 5.3). Rectified LpJEPA achieves controllable sparsity (Section 5.4) and favorable sparsity and performance tradeoffs (Section 5.5) with added benefits of learning more statistically independent (Section 5.6), high-entropy (Section 5.7) features, and performs competitively in pretraining and transfer evaluations (Section 5.8). 6Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations                                                                         
+
+> Table 1. Linear Probe Results on ImageNet-100. Acc1 (%) is higher-is-better ( ↑); sparsity is lower-is-better ( ↓). Bold denotes best and underline denotes second-best in each column (ties allowed). Encoder Acc1 ↑Projector Acc1 ↑L1 Sparsity ↓L0 Sparsity ↓
+> Rectified LpJEPA RGN 1.0(0 , σ GN )84.72 80.40 0.2726 0.6940
+> RGN 2.0(0 , σ GN )85.08 80.00 0.3412 0.7298
+> RGN 1.0(0 .25 , σ GN )84.98 80.76 0.3745 0.7437
+> RGN 2.0(1 .0, σ GN )85.08 80.54 0.6278 0.8668
+> RGN 2.0(−2.5, σ GN )82.02 67.82 0.0137 0.0224
+> RGN 1.0(−3.0, σ GN )82.72 71.88 0.0058 0.0098
+> Sparse Baselines NVICReg-ReLU 84.48 77.74 0.5207 0.7117 NCL-ReLU 82.58 76.88 0.0037 0.0085 NVICReg-RepReLU 84.20 78.18 0.4965 0.7549 NCL-RepReLU 82.76 76.70 0.0024 0.0048 Dense Baselines VICReg 84.18 78.88 0.7954 1.0000 SimCLR 83.44 77.90 0.6338 1.0000 LeJEPA 84.80 79.52 0.6365 1.0000
+
+5.1. Experimental Settings Baselines . We compare Rectified LpJEPA with dense base-lines including SimCLR (denoted CL) (Chen et al., 2020) and VICReg (Bardes et al., 2022), as well as their sparse counterparts NCL (Wang et al., 2024) and Non-Negative VICReg (denoted NVICReg). We additionally compare against LpJEPA, which matches non-rectified features to Generalized Gaussian targets. Additional details for all baselines are provided in Appendix H. 
+
+Sparsity Metrics . We define the ℓ1 sparsity metric for a D-dimensional random vector mℓ1 (x) = (1 /D ) ·
+
+E[∥x∥21/∥x∥22], which attains its minimum value 1/D for extremely sparse vectors and its maximum value 1 for dense, uniformly distributed features. We additionally report the ℓ0
+
+sparsity metric mℓ0 (x) = (1 /D ) · E[∥x∥0], which measures the fraction of nonzero entries, with mℓ0 = 0 indicating all-zero vectors and mℓ0 = 1 indicating fully dense repre-sentations. In Figure 13b, we empirically observe strong correlations between mℓ1 and mℓ0 metrics. Sometimes we report 1 − mℓ1 (x) or 1 − mℓ0 (x) for visualization purposes. 
+
+Backbones . Following conventional practices in self-supervised learning (Balestriero et al., 2023), we adopt the encoder-projector design z = ReLU( fθ2 (fθ1 (x)) where 
+
+fθ1 is a encoder like ResNet (He et al., 2016) or ViT (Doso-vitskiy, 2020) and fθ2 is an additional multilayer perceptron. The Rectified LpJEPA loss is applied over z and linear probe evaluations are carried out on both z and fθ1 (x). We note that we add ReLU( ·) at the end based on our design. The overall architecture is visualized in Figure 1a. 
+
+5.2. Necessity of Rectifications 
+
+In Figure 3a, we report CIFAR-100 validation accuracy against the ℓ0 sparsity metric 1 − (1 /D ) · E[∥x∥0] under ab-lations that independently control rectification of the target distribution and the learned features. Corresponding results using ℓ1 sparsity are provided in Figure 11c. Without recti-fication, models achieve competitive accuracy but produce dense representations with no zero entries. When features are rectified, Rectified LpJEPA attains the best accuracy and sparsity tradeoff, whereas imposing an isotropic Gaus-sian distribution for rectified features leads to substantial performance drops. 
+
+5.3. Anti-Collapse via Continuous Mapping Theorems 
+
+By the continuous mapping theorem, convergence of x ∈
+
+Rd to a Generalized Gaussian implies that ReLU( x) follows a Rectified Generalized Gaussian. In Figure 11b, we com-pare linear probe evaluations of Rectified LpJEPA versus LpJEPA features, where the linear probe is trained on pre-trained LpJEPA after an additional rectification. We observe that performance drops sharply for the latter case, indicat-ing that it’s necessary to directly match to the Rectified Generalized Gaussian distribution. 
+
+5.4. Controllable Sparsity 
+
+Under the correct parameterizations of both the target distri-butions and the neural network features, we proceed to vali-date if we observe controllable sparsity in practice. Propo-sition 3.5 shows that the expected ℓ0 norm is collectively determined by the set of parameters {μ, σ, p }. In Figure 3b, we show both the empirical ℓ0 norms measured over dif-ferent pretrained backbones (ResNet (He et al., 2016), ViT (Dosovitskiy, 2020), ConvNext (Liu et al., 2022)) and the theoretical ℓ0 norm computed using Equation (9) as a func-tion of varying μ and p and the choice of σGN mentioned in Section 4.5. We observe that across different mean shift values μ on the x-axis, the empirical ℓ0 closely tracks the 7Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 0.4 0.6 0.8 1.0 
+
+Sparsity 1 1 
+
+> D
+
+[ z 21/ z 22]                      
+
+> 10 1
+> 10 0
+> Entropy  d (Log Scale)
+> Target Distributions
+> Di= 1 2.0 ( , )
+> Di= 1 1.0 ( , )
+> Di= 1 0.75 ( , )
+> Di= 1 0.5 ( , )
+> Di= 1 0.25 ( , )
+> Target Distributions
+> Di= 1 2.0 ( , )
+> Di= 1 1.0 ( , )
+> Di= 1 0.75 ( , )
+> Di= 1 0.5 ( , )
+> Di= 1 0.25 ( , )0.30
+> 0.35
+> 0.40
+> 0.45
+> 0.50
+> 0.55
+> 0.60
+> Validation Accuracy
+
+(a) d(ξ)-dimensional Entropy NCL CL NVICReg VICReg       
+
+> 10 2
+> 10 1
+> Average Off-Diagonal nHSIC  ( )
+> p= 1 p= 2
+> Method family
+> Rectified LpJEPA
+> LpJEPA
+
+(b) Hilbert-Schmidt independence Criterion (HSIC). CL VICReg NCL NVICReg              
+
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> Relative MAD
+> Rectified LpJEPA
+> 1/2Sparsity Across Datasets
+> CL VICReg NCL NVICReg
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> Relative MAD
+> Rectified LpJEPA
+> 0Sparsity Across Datasets
+> Target Distributions
+> 1(= 0)
+> 1(=1)
+> 1(=2)
+> 1(=3)
+
+(c) Dataset-Adaptive Sparsity 
+
+Figure 4. Rectified LpJEPA empirically achieves higher-entropy, more independent features with dataset-adaptive sparsity. 
+
+(a) The averaged univariate d(ξ)-dimensional entropy of the Rectified LpJEPA features are computed against the ℓ1 sparsity metric 
+
+1 − (1 /D ) · E[∥z∥21/∥z∥22] across varying μ and p. Overall, we observe the expected behavior of sparsity-entropy tradeoff (b) We evaluate the normalized Hilbert-Schmidt independence Criterion (nHSIC) for LpJEPA, Rectified LpJEPA, and other baselines. Rectified LpJEPA achieves smaller nHSIC values compared to VICReg or NVICReg that only penalizes second-order statistics. (c) The relative mean absolute deviations (MAD) away from the median of the ℓ1 and ℓ0 sparsity metrics are computed over different methods. Rectified LpJEPA exhibits the highest variations of sparsity for different downstream dataset. Additional visualizations can be found in Figure 12. 
+
+theoretical predictions, and the theoretical ordering between 
+
+p in the expected ℓ0 norms is also preserved in the empirical results. We defer additional comparisons between σGN and 
+
+σRGN and more choices of p to Figure 9. 
+
+5.5. Sparsity and Performance Tradeoff 
+
+With controllable sparsity at hand, we are interested in to what extent we can sparsify our features without per-formance drops. In Figure 3c, we plot the Pareto fron-tier of validation accuracy against the ℓ0 sparsity metrics 
+
+1 − (1 /D ) · E[∥x∥0] across varying μ and p with the choice of σGN . We observe smooth and slow decay of performance as number of zeros in the feature representations increase, and the cliff-like drop in performance only occurs when roughly 95% of the entries are zero, indicating significant exploitable sparsity in our learned image representations. Additional visualizations are deferred to the Figure 13a. 
+
+5.6. Pair-wise Independence via HSIC 
+
+Beyond sparsity, we evaluate whether the learned representa-tions form approximately independent, factorial encodings of the input data. A principled measure of dependence is the total correlation , defined as the KL divergence be-tween the joint distribution and the product of its marginals. However, estimating total correlation is intractable in high-dimensional space (McAllester & Stratos, 2020). We there-fore resort to the Hilbert–Schmidt Independence Criterion (HSIC) (Gretton et al., 2005) as a practical surrogate for detecting statistical dependence beyond second-order corre-lations captured by the covariance matrix. In Figure 4b, we report the normalized HSIC values (see Appendix G for details) of Rectified LpJEPA and several dense and sparse baselines. Compared to methods such as VICReg and NVICReg, which explicitly regularize second-order statistics but do not constrain higher-order dependen-cies, Rectified LpJEPA consistently achieves lower nHSIC values, indicating representations that are closer to being sta-tistically independent. Contrastive methods such as CL and NCL also attain low nHSIC scores; however, contrastive ob-jectives are known to suffer from high sample complexity in high-dimensional representation spaces (Chen et al., 2020). Overall, these results suggest that RDMReg objectives en-courage not only sparsity but also reduced higher-order dependence. 
+
+5.7. R´ enyi Information Dimension and Entropy 
+
+We would like to quantify whether the learned representa-tions exhibit high entropy. However, due to rectification, the resulting feature distributions are not absolutely continuous with respect to the Lebesgue measure, rendering standard differential entropy ill-defined and obscuring whether the usual decomposition of total correlation into marginal and joint entropies remains valid. In Appendix F.5, we show that this decomposition continues to hold when entropy is defined in terms of the d(ξ)-dimensional entropy. In Figure 4a, we report the sum of marginal d(ξ)-dimensional entropies as an upper bound on the joint entropy across a range of dense and sparse representations. The re-sults reveal a clear Pareto frontier between entropy and spar-sity. Moreover, since Rectified LpJEPA consistently attains 8Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+lower nHSIC values than VICReg-style baselines, indicat-ing reduced statistical dependence, the marginal entropy estimates for Rectified LpJEPA are expected to provide a tighter and more faithful approximation of the joint entropy. 
+
+5.8. Pretraining and Transfer Evaluations 
+
+In Table 1, we report linear probe results for Rectified Lp-JEPA pretrained on ImageNet100, compared against a range of dense and sparse baselines. Rectified LpJEPA consis-tently achieves a favorable trade-off between downstream accuracy and representation sparsity. We further evaluate transfer performance under both few-shot and full-shot settings (see Tables 3 to 8). Across all configurations, Rectified LpJEPA achieves competitive ac-curacy, demonstrating strong transferability. In Figure 4c, we additionally observe that pretrained Rectified LpJEPA representations exhibit distinct sparsity patterns across mul-tiple out-of-distribution datasets, suggesting that sparsity statistics can serve as a useful proxy for distinguishing in-distribution training data from OOD inputs. Additional re-sults can be seen in Appendix J. We also present additional nearest-neighbors retrieval and visual attribution maps in Appendix K. 
+
+## 6. Conclusion 
+
+We introduced Rectified LpJEPA, a JEPA model equipped with Rectified Distribution Matching Regularization (RDM-Reg) that induces sparse representations through distribution matching to the Rectified Generalized Gaussian distribu-tions. By showing that sparsity can be achieved via target distribution design while preserving task-relevant informa-tion, our work opens new avenues for fundamental research on JEPA regularizers. 
+
+## Acknowledgements 
+
+We thank Deep Chakraborty and Nadav Timor for helpful discussions. This work was supported in part by AFOSR un-der grant FA95502310139, NSF Award 1922658, and Kevin Buehler’s gift. This work was also supported through the NYU IT High Performance Computing resources, services, and staff expertise. 
+
+## References 
+
+Alonso-Gutierrez, D., Prochno, J., and Thaele, C. Gaussian fluctuations for high-dimensional random projections of 
+
+ℓnp -balls, 2018. URL https://arxiv.org/abs/ 1710.10130 .Anderson, J., Barlow, H. B., Gregory, R. L., Hinton, G. E., and Ghahramani, Z. Generative models for discovering sparse distributed representations. Philosophical Trans-actions of the Royal Society B: Biological Sciences , 352 (1358):1177–1190, 08 1997. ISSN 0962-8436. doi: 10.1098/rstb.1997.0101. URL https://doi.org/ 10.1098/rstb.1997.0101 .Assran, M., Duval, Q., Misra, I., Bojanowski, P., Vincent, P., Rabbat, M., LeCun, Y., and Ballas, N. Self-supervised learning from images with a joint-embedding predic-tive architecture, 2023. URL https://arxiv.org/ abs/2301.08243 .Attwell, D. and Laughlin, S. B. An energy budget for signaling in the grey matter of the brain. Journal of Cerebral Blood Flow & Metabolism , 21(10):1133–1145, 2001. Balestriero, R. and LeCun, Y. Lejepa: Provable and scal-able self-supervised learning without the heuristics, 2025. URL https://arxiv.org/abs/2511.08544 .Balestriero, R., Ibrahim, M., Sobal, V., Morcos, A., Shekhar, S., Goldstein, T., Bordes, F., Bardes, A., Mialon, G., Tian, Y., Schwarzschild, A., Wilson, A. G., Geiping, J., Garrido, Q., Fernandez, P., Bar, A., Pirsiavash, H., LeCun, Y., and Goldblum, M. A cookbook of self-supervised learning, 2023. URL https://arxiv.org/abs/ 2304.12210 .Bardes, A., Ponce, J., and LeCun, Y. Vicreg: Variance-invariance-covariance regularization for self-supervised learning, 2022. URL https://arxiv.org/abs/ 2105.04906 .Barlow, H. B. et al. Possible principles underlying the trans-formation of sensory messages. Sensory communication ,1(01):217–233, 1961. Barthe, F., Gu ´edon, O., Mendelson, S., and Naor, A. A prob-abilistic approach to the geometry of the ℓpn-ball. The An-nals of Probability , 33(2), March 2005. ISSN 0091-1798. doi: 10.1214/009117904000000874. URL http://dx. doi.org/10.1214/009117904000000874 .Bonneel, N., Rabin, J., Peyr ´e, G., and Pfister, H. Sliced and radon wasserstein barycenters of measures. Journal of Mathematical Imaging and Vision , 51(1):22–45, 2015. Caron, M., Touvron, H., Misra, I., J ´egou, H., Mairal, J., Bojanowski, P., and Joulin, A. Emerging properties in self-supervised vision transformers, 2021. URL https: //arxiv.org/abs/2104.14294 .Chakraborty, D., LeCun, Y., Rudner, T. G. J., and Learned-Miller, E. Improving pre-trained self-supervised embed-dings through effective entropy maximization, 2025. URL 
+
+https://arxiv.org/abs/2411.15931 .9Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+Chartrand, R. Exact reconstruction of sparse signals via nonconvex minimization. IEEE Signal Processing Letters ,14(10):707–710, 2007. Chartrand, R. and Yin, W. Iteratively reweighted algorithms for compressive sensing. In 2008 IEEE international conference on acoustics, speech and signal processing ,pp. 3869–3872. IEEE, 2008. Chen, S. S., Donoho, D. L., and Saunders, M. A. Atomic decomposition by basis pursuit. SIAM review , 43(1): 129–159, 2001. Chen, T., Kornblith, S., Norouzi, M., and Hinton, G. Asimple framework for contrastive learning of visual repre-sentations, 2020. URL https://arxiv.org/abs/ 2002.05709 .Chen, X. and He, K. Exploring simple siamese represen-tation learning, 2020. URL https://arxiv.org/ abs/2011.10566 .Cover, T. M. and Thomas, J. A. Elements of Information Theory (Wiley Series in Telecommunications and Signal Processing) . Wiley-Interscience, USA, 2006. ISBN 0471241954. Cram ´er, H. Sur un nouveau th ´eor `eme-limite de la th ´eorie des probabilit´ es . Hermann, Paris, 1936. da Costa, V. G. T., Fini, E., Nabi, M., Sebe, N., and Ricci, E. solo-learn: A library of self-supervised meth-ods for visual representation learning. Journal of Ma-chine Learning Research , 23(56):1–6, 2022. URL http: //jmlr.org/papers/v23/21-1155.html .Devroye, L. Nonuniform random variate generation. Hand-books in operations research and management science ,13:83–121, 2006. Donoho, D. L. Compressed sensing. IEEE Transactions on information theory , 52(4):1289–1306, 2006. Dosovitskiy, A. An image is worth 16x16 words: Trans-formers for image recognition at scale. arXiv preprint arXiv:2010.11929 , 2020. Dytso, A., Bustin, R., Poor, H. V., and Shamai, S. Ana-lytical properties of generalized gaussian distributions. 
+
+Journal of Statistical Distributions and Applications ,5(1):6, dec 2018. ISSN 2195-5832. doi: 10.1186/ s40488-018-0088-5. URL https://doi.org/10. 1186/s40488-018-0088-5 .Ermolov, A., Siarohin, A., Sangineto, E., and Sebe, N. Whitening for self-supervised representation learn-ing, 2021. URL https://arxiv.org/abs/2007. 06346 .Fang, K.-T., Kotz, S., and Ng, K. W. Symmetric Multivariate and Related Distributions . Chapman and Hall/CRC, 1st edition, 1990. doi: 10.1201/9781351077040. Folland, G. B. Real analysis: modern techniques and their applications . John Wiley & Sons, 1999. Gao, L., la Tour, T. D., Tillman, H., Goh, G., Troll, R., Radford, A., Sutskever, I., Leike, J., and Wu, J. Scaling and evaluating sparse autoencoders, 2024. URL https: //arxiv.org/abs/2406.04093 .Garrido, Q., Chen, Y., Bardes, A., Najman, L., and Le-cun, Y. On the duality between contrastive and non-contrastive self-supervised learning. 2022. doi: 10. 48550/ARXIV.2206.02574. URL https://arxiv. org/abs/2206.02574 .Glorot, X., Bordes, A., and Bengio, Y. Deep sparse recti-fier neural networks. In Proceedings of the fourteenth international conference on artificial intelligence and statistics , pp. 315–323. JMLR Workshop and Conference Proceedings, 2011. Golub, G. H. and Van Loan, C. F. Matrix Computations .Johns Hopkins University Press, 4th edition, 2013. Goodman, I. R. and Kotz, S. Multivariate θ-generalized normal distributions. Journal of Multivariate Analysis , 3 (2):204–219, 1973. Gretton, A., Bousquet, O., Smola, A., and Sch ¨olkopf, B. Measuring statistical dependence with hilbert-schmidt norms. In International conference on algorithmic learn-ing theory , pp. 63–77. Springer, 2005. Gretton, A., Borgwardt, K. M., Rasch, M. J., Sch ¨olkopf, B., and Smola, A. J. A kernel two-sample test. Journal of Machine Learning Research , 2012. Grill, J.-B., Strub, F., Altch ´e, F., Tallec, C., Richemond, P. H., Buchatskaya, E., Doersch, C., Pires, B. A., Guo, Z. D., Azar, M. G., Piot, B., Kavukcuoglu, K., Munos, R., and Valko, M. Bootstrap your own latent: A new approach to self-supervised learning, 2020. URL https: //arxiv.org/abs/2006.07733 .Gupta, A. and Song, D. Lp-norm spherical distri-bution. Journal of Statistical Planning and Infer-ence , 60(2):241–260, 1997. ISSN 0378-3758. doi: https://doi.org/10.1016/S0378-3758(96)00129-2. URL https://www.sciencedirect.com/ science/article/pii/S0378375896001292 .Halko, N., Martinsson, P.-G., and Tropp, J. A. Finding structure with randomness: Probabilistic algorithms for constructing approximate matrix decompositions. SIAM Review , 53(2):217–288, 2011. 10 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+He, K., Zhang, X., Ren, S., and Sun, J. Deep residual learn-ing for image recognition. In Proceedings of the IEEE conference on computer vision and pattern recognition ,pp. 770–778, 2016. He, K., Fan, H., Wu, Y., Xie, S., and Girshick, R. Mo-mentum contrast for unsupervised visual representation learning, 2020. URL https://arxiv.org/abs/ 1911.05722 .Jing, L., Vincent, P., LeCun, Y., and Tian, Y. Understanding dimensional collapse in contrastive self-supervised learn-ing, 2022. URL https://arxiv.org/abs/2110. 09348 .Kim, I., Balakrishnan, S., and Wasserman, L. Robust multi-variate nonparametric tests via projection averaging. The Annals of Statistics , 47(6):3417–3441, 2019. Kolouri, S., Rohde, G. K., and Hoffmann, H. Sliced-wasserstein autoencoder. In International Conference on Learning Representations (Workshop) , 2018. URL 
+
+https://arxiv.org/abs/1804.01947 .Kotz, S., Kozubowski, T., and Podgorski, K. The Laplace distribution and generalizations: a revisit with applica-tions to communications, economics, engineering, and finance . Springer Science & Business Media, 2012. Kuang, Y., Dagade, Y., Chakraborty, D., Learned-Miller, E., Balestriero, R., Rudner, T. G. J., and LeCun, Y. Radial-VCReg: More informative representation learning through radial gaussianization. In UniReps: 3rd Edition of the Workshop on Unifying Representations in Neural Models , 2025. URL https://openreview.net/ forum?id=pQ2LZnZDDp .Learned-Miller, E. G. et al. Ica using spacings estimates of entropy. Journal of machine learning research , 4(Dec): 1271–1295, 2003. LeCun, Y. A path towards autonomous machine intelligence version 0.9. 2, 2022-06-27. Open Review , 62(1):1–62, 2022. Lee, D. and Seung, H. S. Algorithms for non-negative matrix factorization. In Leen, T., Dietterich, T., and Tresp, V. (eds.), Advances in Neural Informa-tion Processing Systems , volume 13. MIT Press, 2000. URL https://proceedings.neurips. cc/paper_files/paper/2000/file/ f9d1152547c0bde01830b7e8bd60024c-Paper. pdf .Lee, D. D. and Seung, H. S. Learning the parts of objects by non-negative matrix factorization. nature , 401(6755): 788–791, 1999. Lehmann, E. L. and Romano, J. P. Testing Statistical Hy-potheses . Wiley, 1951. Liu, Z., Mao, H., Wu, C.-Y., Feichtenhofer, C., Darrell, T., and Xie, S. A convnet for the 2020s. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , pp. 11976–11986, 2022. Mallat, S. A wavelet tour of signal processing . Elsevier, 1999. McAllester, D. and Stratos, K. Formal limitations on the measurement of mutual information, 2020. URL https: //arxiv.org/abs/1811.04251 .Mialon, G., Balestriero, R., and LeCun, Y. Variance covariance regularization enforces pairwise indepen-dence in self-supervised representations. arXiv preprint arXiv:2209.14905 , 2022. Nadarajah, S. A generalized normal distribution. Journal of Applied Statistics , 32(7):685–694, 2005. doi: 10.1080/ 02664760500079464. URL https://doi.org/10. 1080/02664760500079464 .Nadjahi, K., De Bortoli, V., Delon, J., and Genevay, A. Sta-tistical and topological properties of sliced probability divergences. In Advances in Neural Information Process-ing Systems , volume 33, 2020. Nair, V. and Hinton, G. E. Rectified linear units improve restricted boltzmann machines. In Proceedings of the 27th international conference on machine learning (ICML-10) ,pp. 807–814, 2010. Nardon, M. and Pianca, P. Simulation techniques for gen-eralized gaussian densities. Journal of Statistical Com-putation and Simulation , 79(11):1317–1329, 2009. doi: 10.1080/00949650802290912. URL https://doi. org/10.1080/00949650802290912 .Natarajan, B. K. Sparse approximate solutions to linear systems. SIAM journal on computing , 24(2):227–234, 1995. Nolan, J. P. Multivariate stable distributions. COMPUTING SCIENCE AND STATISTICS , pp. 18–18, 1993. Olshausen, B. A. and Field, D. J. Emergence of simple-cell receptive field properties by learning a sparse code for natural images. Nature , 381(6583):607–609, 1996. Parlett, B. N. The Symmetric Eigenvalue Problem . Society for Industrial and Applied Mathematics, 1998. Radford, A., Narasimhan, K., Salimans, T., Sutskever, I., et al. Improving language understanding by generative pre-training. 2018. 11 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+R ´enyi, A. On the dimension and entropy of probability distributions. Acta Mathematica Academiae Scientiarum Hungarica , 10(1):193–215, 1959. Selvaraju, R. R., Cogswell, M., Das, A., Vedantam, R., Parikh, D., and Batra, D. Grad-cam: Visual explana-tions from deep networks via gradient-based localiza-tion. International Journal of Computer Vision , 128 (2):336–359, October 2019. ISSN 1573-1405. doi: 10.1007/s11263-019-01228-7. URL http://dx.doi. org/10.1007/s11263-019-01228-7 .Socci, N., Lee, D., and Seung, H. S. The rectified gaussian distribution. In Jordan, M., Kearns, M., and Solla, S. (eds.), Advances in Neural Informa-tion Processing Systems , volume 10. MIT Press, 1997. URL https://proceedings.neurips. cc/paper_files/paper/1997/file/ 28fc2782ea7ef51c1104ccf7b9bea13d-Paper. pdf .Subbotin, M. T. On the law of frequency of error. Mat. Sb. ,31(2):296–301, 1923. MathNet, zbMATH. Tibshirani, R. Regression shrinkage and selection via the lasso. Journal of the Royal Statistical Society Series B: Statistical Methodology , 58(1):267–288, 1996. Vasicek, O. A test for normality based on sample entropy. 
+
+Journal of the Royal Statistical Society Series B: Statisti-cal Methodology , 38(1):54–59, 1976. Wang, Y., Zhang, Q., Guo, Y., and Wang, Y. Non-negative contrastive learning, 2024. URL https://arxiv. org/abs/2403.12459 .Wen, T., Wang, Y., Zeng, Z., Peng, Z., Su, Y., Liu, X., Chen, B., Liu, H., Jegelka, S., and You, C. Beyond matryoshka: Revisiting sparse coding for adaptive repre-sentation, 2025. URL https://arxiv.org/abs/ 2503.01776 .Wold, H. A Study in the Analysis of Stationary Time Series .Almqvist & Wiksell, Uppsala, Sweden, 1938. Yerxa, T., Kuang, Y., Simoncelli, E., and Chung, S. Learn-ing efficient coding of natural images with maximum manifold capacity representations, 2023. URL https: //arxiv.org/abs/2303.03307 .You, Y., Gitman, I., and Ginsburg, B. Large batch training of convolutional networks, 2017. URL https://arxiv. org/abs/1708.03888 .Yu, Y., Chan, K. H. R., You, C., Song, C., and Ma, Y. Learning diverse and discriminative representations via the principle of maximal coding rate reduction, 2020. URL https://arxiv.org/abs/2006.08558 .Zbontar, J., Jing, L., Misra, I., LeCun, Y., and Deny, S. Barlow twins: Self-supervised learning via redundancy reduction, 2021. URL https://arxiv.org/abs/ 2103.03230 .12 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+# Appendix 
+
+## A. Additional Backgrounds 
+
+Self-Supervised Learning . Common self-supervised learning can be categorized into 1) contrastive methods (Chen et al., 2020; He et al., 2020), 2) non-contrastive methods (Zbontar et al., 2021; Bardes et al., 2022; Ermolov et al., 2021), 3) self-distillation methods (Grill et al., 2020; Caron et al., 2021; Chen & He, 2020) based on Balestriero et al. (2023). Along the line of statistical redundancy reductions, MCR 2
+
+(Yu et al., 2020) regularizes the log determinant of the scaled empirical covariance matrix shifted by the identity matrix while MMCR (Yerxa et al., 2023) penalizes the nuclear norm of the centroid feature matrix. E2MC (Chakraborty et al., 2025) minimizes the sum of marginal entropies of the feature distribution on top of minimizing the VCReg loss (Bardes et al., 2022). Radial-VCReg (Kuang et al., 2025) and LeJEPA (Balestriero & LeCun, 2025) go beyond second-order dependencies by learning isotropic Gaussian features. Our Rectified LpJEPA also reduce higher-order dependencies by design, while enforcing sparsity over learned representations. Prior work like Non-Negative Contrastive learning (NCL) (Wang et al., 2024) also aims to learn sparse features by optimizing contrastive losses over rectified features. Contrastive Sparse Representation (CSR) (Wen et al., 2025) develops a post-training sparsity adaptation method by learning a sparse auto-encoder (SAE) (Gao et al., 2024) over pretrained dense features using NCL loss, reconstruction loss, and a couple of SAE-specific auxiliary losses. 
+
+Cramer-Wold Based Distribution Matching Losses . Exemplars include sliced Wasserstein distances and their generative extensions (Bonneel et al., 2015; Kolouri et al., 2018), sliced kernel discrepancies (Nadjahi et al., 2020), projection-averaged multivariate tests (Kim et al., 2019), and more recently LeJEPA with SIGReg loss (Balestriero & LeCun, 2025), which also show that it suffices to sample 
+
+c ∈ Sd−1 
+
+> ℓ2
+
+:= {c ∈ Rd | ∥ c∥2 = 1 }.
+
+## B. Properties of Univariate Generalized Gaussian, Truncated Generalized Gaussian, and Rectified Generalized Gaussian Distributions 
+
+In the following section, we present additional details on the Generalized Gaussian (Appendix B.1), Truncated Generalized Gaussian (Appendix B.2), and the Rectified Generalized Gaussian distributions (Appendix B.3). We also present the expectation and variance (Appendix B.4) and the sampling method (Appendix B.5) for the Rectified Generalized Gaussian distribution. 
+
+B.1. Univariate Case - Generalized Gaussian 
+
+The Generalized Gaussian distribution GN p(μ, σ ) (Subbotin, 1923; Goodman & Kotz, 1973; Nadarajah, 2005) has the probability density function given in Definition 3.1 with expectation and variance as 
+
+E[x] = μ (B.1) 
+
+Var[ x] = σ2p2/p Γ(3 /p )Γ(1 /p ) (B.2) The cumulative distribution function of GN p(μ, σ ) is given by 
+
+ΦGN p(μ,σ )(x) = 12 + sgn( x − μ) 12Γ(1 /p ) γ
+
+ 1
+
+p , |x − μ|p
+
+pσ p
+
+
+
+(B.3) where γ(·, ·) is the lower incomplete gamma function. We note that the probability density function of GN p(μ, σ ) has other parameteri-zations (Remark B.1) and there are well-known special cases when p = 1 or p = 2 (Remark B.2). 
+
+Remark B.1 . The probability density function of the Generalized Gaussian distribution can also be written as 
+
+fGN p(μ,σ )(x) = p
+
+2αΓ(1 /p ) exp 
+
+
+
+− |x − μ|p
+
+αp
+
+
+
+(B.4) where α := p1/p σ. We choose the particular presentation in Definition 3.1 for its connection to the family of Lp-norm spherical distributions (Gupta & Song, 1997). 
+
+Remark B.2 . When p = 1 , the Generalized Gaussian distribution reduces to the Laplace distribution L(μ, σ ) with probability density function 
+
+fGN 1(μ,σ )(x) = fL(μ,σ )(x) = 12σ exp 
+
+
+
+− |x − μ|
+
+σ
+
+
+
+(B.5) If p = 2 , we recover the Gaussian distribution N (μ, σ 2)
+
+fGN 2(μ,σ )(x) = fN (μ,σ 2)(x) = 1
+
+σ√2π exp 
+
+
+
+− |x − μ|2
+
+2σ2
+
+
+
+(B.6) For measure-theoretical characterizations of the Rectified Generalized Gaussian distribution in Appendix B.3, we denote the probability measure for X ∼ GN p(μ, σ ) as PGN p(μ,σ ).
+
+13 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 2 0 2 4      
+
+> Value
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Density  p(0, 1) (/ ) 0.70
+> =0.5 ,= 1.0 ,p= 0.5
+> p
+> p
+> p
+
+(a) p = 0 .52 0 2 4       
+
+> Value
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Density  p(0, 1) (/ ) 0.70
+> =0.5 ,= 1.0 ,p= 1.0
+> p
+> p
+> p
+
+(b) p = 1 .02 0 2 4       
+
+> Value
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Density
+> p(0, 1) (/ ) 0.69
+> =0.5 ,= 1.0 ,p= 2.0
+> p
+> p
+> p
+
+(c) p = 2 .0
+
+Figure 5. The Probability Density Function of Generalized Gaussian GN p, Truncated Generalized Gaussian T GN p, and Rectified Generalized Gaussian RGN p across varying p with fixed μ = −0.5 and σ = 1 . ΦGN p(0 ,1) is the CDF of the Generalized Gaussian 
+
+GN p(0 , 1) . (a) The case when p = 0 .5. (b) When p = 1 , we obtain Laplace, Truncated Laplace, and Rectified Laplace. (c) For p = 2 ,we have Gaussian, Truncated Gaussian, and Rectified Gaussian. 
+
+B.2. Univariate Case - Truncated Generalized Gaussian 
+
+The Truncated Generalized Gaussian distribution is defined in Definition 3.2 in terms of the probability density function. In Definition B.3, we present the definition of the Truncated Generalized Gaussian probability measure. 
+
+Definition B.3 (Truncated Generalized Gaussian Probability Measure) . Let X ∼ PGN p(μ,σ ) be a Generalized Gaussian random variable with ℓp parameter p > 0, location μ ∈ R, and scale σ > 0. The Truncated Generalized Gaussian probability measure PT GN p(μ,σ ) on the measurable space (R, B(R)) is defined as the conditional distribution of X given X > 0, i.e., 
+
+PT GN p(μ,σ )(A) := P(X ∈ A | X > 0) = PGN p(μ,σ )(A ∩ (0 , ∞)) 
+
+PGN p(μ,σ )((0 , ∞)) = PGN p(μ,σ )(A ∩ (0 , ∞)) 1 − ΦGN p(0 ,1) (−μ/σ )
+
+for any A ∈ B (R), where ΦGN p(0 ,1) denotes the cumulative distribution function of the standardized Generalized Gaussian distribution. 
+
+B.3. Univariate Case - Rectified Generalized Gaussian 
+
+In Definition 3.4, we provide a probability density function (PDF) characterization of the Rectified Generalized Gaussian distribution. However, we note that the PDF presented in Definition 3.4 is not the Radon–Nikodym derivative of the Rectified Generalized Gaussian probability measure with respect to the standard Lebesgue measure over R, which we denote as λ. In Definition B.5, we provide a measure-theoretical treatment of the Rectified Generalized Gaussian distribution. We start by introducing the Dirac measure in Definition B.4. 
+
+Definition B.4 (Dirac Measure) . The Dirac measure δx over a measurable space (X, Σ) for a given x ∈ X is defined as 
+
+δx(A) = 1A(x) = 
+
+(
+
+0, x / ∈ A
+
+1, x ∈ A (B.7) for any measurable set A ⊆ X.In Definition B.5, we formally introduce the Rectified Generalized Gaussian probability measure and its probability density function. 
+
+Definition B.5 (Measure-Theoretical Definition of the Rectified Generalized Gaussian) . Fix parameters p > 0, μ ∈ R, and σ > 0. We denote (R, B(R)) as the real line equipped with Borel σ-algebra. Let λ be the Lebesgue measure on B(R) and let δ0 be the Dirac measure at 0 presented in Definition B.4. The probability measure PX of the Rectified Generalized Gaussian random variable X is given by the mixture 
+
+PX = Φ GN p(0 ,1) 
+
+
+
+− μσ
+
+
+
+· δ0 +
+
+
+
+1 − ΦGN p(0 ,1) 
+
+
+
+− μσ
+
+ 
+
+· PT GN p(μ,σ ) (B.8) where PT GN p(μ,σ ) is the Truncated Generalized Gaussian probability measure in Definition B.3 and ΦGN p(0 ,1) is the CDF of the standard Generalized Gaussian GN p(0 , 1) . Define the mixed measure ν := λ + δ0. By Lemma B.7, the Radon-Nikodym derivative of PX with respect to ν exists and is given by 
+
+dPX
+
+dν (x) = fRGN p(μ,σ )(x) = Φ GN p(0 ,1) 
+
+
+
+− μσ
+
+
+
+· 1{0}(x) + p1−1/p 
+
+2σΓ(1 /p ) exp 
+
+
+
+− |x − μ|p
+
+pσ p
+
+
+
+· 1(0 ,∞)(x) (B.9) 
+
+14 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations Lemma B.6 (Absolute Continuity) . The Rectified Generalized Gaussian probability measure PX in Definition B.5 is absolutely continuous with respect to the mixed measure ν := δ0 + λ, i.e. PX ≪ ν.Proof. According to Folland (1999), if PX is a signed measure and ν is a positive measure on the same measurable space (R, B(R)) ,then PX ≪ ν if ν(A) = 0 for every A ∈ B (R) implies PX (A) = 0 .Let’s consider the case of ν(A) = 0 . By definition, ν(A) = δ0(A) + λ(A) = 0 . Since both δ0 and λ are non-negative measures, 
+
+δ0(A) = λ(A) = 0 . We observe that δ0(A) = 0 implies 0 /∈ A by the definition of the Dirac measure. Thus 
+
+PX (A) = Φ GN p(0 ,1) 
+
+
+
+− μσ
+
+
+
+· δ0(A) + 
+
+
+
+1 − ΦGN p(0 ,1) 
+
+
+
+− μσ
+
+ 
+
+· PT GN p(μ,σ )(A) (B.10) 
+
+=
+
+
+
+1 − ΦGN p(0 ,1) 
+
+
+
+− μσ
+
+ 
+
+· PT GN p(μ,σ )(A) (B.11) where the first term vanishes because 0 /∈ A. It’s trivial that PT GN p(μ,σ ) is absolutely continuous with respect to the Lebesgue measure. Since ν(A) = 0 = ⇒ λ(A) = 0 , we have λ(A) = 0 = ⇒ PT GN p(μ,σ )(A) = 0 . Thus 
+
+PX (A) = 
+
+
+
+1 − ΦGN p(0 ,1) 
+
+
+
+− μσ
+
+ 
+
+· PT GN p(μ,σ )(A) = 0 (B.12) and we have proven the absolutely continuity result PX ≪ ν.
+
+Lemma B.7 (Radon–Nikodym Derivative) . The Radon–Nikodym derivative of the Rectified Generalized Gaussian probability measure 
+
+PX with respect to the mixed measure ν := δ0 + λ exists and is given by 
+
+dPX
+
+dν (x) = fRGN p(μ,σ )(x) = Φ GN p(0 ,1) 
+
+
+
+− μσ
+
+
+
+· 1{0}(x) + p1−1/p 
+
+2σΓ(1 /p ) exp 
+
+
+
+− |x − μ|p
+
+pσ p
+
+
+
+· 1(0 ,∞)(x) (B.13) 
+
+Proof. By Lemma B.6, PX ≪ ν so the Radon–Nikodym derivative dPX /dν exists and it suffices to show that for any A ⊆ B (R) we have 
+
+PX (A) = 
+
+Z
+
+> A
+
+dPX
+
+dν dν (B.14) We start by expanding the integral with respect to a sum of measures 
+
+Z
+
+> A
+
+dPX
+
+dν dν =
+
+Z
+
+> A
+
+dPX
+
+dν dδ 0 +
+
+Z
+
+> A
+
+dPX
+
+dν dλ (B.15) By the property of the Dirac measure, we have 
+
+Z
+
+> A
+
+dPX
+
+dν dδ 0 = dPX
+
+dν (0) δ0(A) = fRGN p(μ,σ )(0) δ0(A) (B.16) We observe that 1{0}(x) = 1 and 1(0 ,∞)(0) = 0 . So we have 
+
+fRGN p(μ,σ )(0) δ0(A) = Φ GN p(0 ,1) 
+
+
+
+− μσ
+
+
+
+· δ0(A) (B.17) Now the second term can be expanded as 
+
+Z
+
+> A
+
+dPX
+
+dν dλ =
+
+Z
+
+> A
+
+ΦGN p(0 ,1) 
+
+
+
+− μσ
+
+
+
+· 1{0}(x)dλ (x) + 
+
+Z
+
+> A
+
+p1−1/p 
+
+2σΓ(1 /p ) exp 
+
+
+
+− |x − μ|p
+
+pσ p
+
+
+
+· 1(0 ,∞)(x)dλ (x) (B.18) 
+
+= Φ GN p(0 ,1) 
+
+
+
+− μσ
+
+
+
+·
+
+Z
+
+> A
+
+1{0}(x)dλ (x) + 
+
+Z
+
+> A
+
+p1−1/p 
+
+2σΓ(1 /p ) exp 
+
+
+
+− |x − μ|p
+
+pσ p
+
+
+
+· 1(0 ,∞)(x)dλ (x) (B.19) where the term 
+
+Z
+
+> A
+
+1{0}(x)dλ (x) = λ(A ∩ { 0}) = 0 (B.20) 
+
+15 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+simply vanishes. Thus we are left with 
+
+Z
+
+> A
+
+dPX
+
+dν dλ =
+
+Z
+
+> A
+
+p1−1/p 
+
+2σΓ(1 /p ) exp 
+
+
+
+− |x − μ|p
+
+pσ p
+
+
+
+· 1(0 ,∞)(x)dλ (x) (B.21) 
+
+=
+
+Z
+
+> A∩(0 ,∞)
+
+p1−1/p 
+
+2σΓ(1 /p ) exp 
+
+
+
+− |x − μ|p
+
+pσ p
+
+
+
+dλ (x) (B.22) 
+
+=
+
+Z
+
+> A∩(0 ,∞)
+
+dPGN p(μ,σ )
+
+dλ (x)dλ (x) (B.23) 
+
+= PGN p(μ,σ )(A ∩ (0 , ∞)) (B.24) By Definition B.3, the Truncated Generalized Gaussian probability measure is given by 
+
+PT GN p(μ,σ )(A) = PGN p(μ,σ )(A ∩ (0 , ∞)) 
+
+PGN p(μ,σ )((0 , ∞)) (B.25) 
+
+= PGN p(μ,σ )(A ∩ (0 , ∞)) 1 − ΦGN p(0 ,1) 
+
+
+
+− μσ
+
+ (B.26) (B.27) Thus we have the identity 
+
+PGN p(μ,σ )(A ∩ (0 , ∞)) = 1 − ΦGN p(0 ,1) 
+
+
+
+− μσ
+
+
+
+· PT GN p(μ,σ )(A) (B.28) Putting everything together, we arrive at 
+
+Z
+
+> A
+
+dPX
+
+dν dν = Φ GN p(0 ,1) 
+
+
+
+− μσ
+
+
+
+· δ0(A) + 
+
+
+
+1 − ΦGN p(0 ,1) 
+
+
+
+− μσ
+
+ 
+
+· PT GN p(μ,σ )(A) (B.29) 
+
+= PX (A) (B.30) Thus we have proven the form of the Radon–Nikodym Derivative. It’s trivial to observe that the Rectified Generalized Gaussian probability measure is a valid probability measure since 
+
+PRGN p(μ,σ )(R) = Φ GN p(0 ,1) 
+
+
+
+− μσ
+
+
+
+· δ0(R) + 
+
+
+
+1 − ΦGN p(0 ,1) 
+
+
+
+− μσ
+
+ 
+
+· PT GN p(μ,σ )(R) (B.31) 
+
+= Φ GN p(0 ,1) 
+
+
+
+− μσ
+
+
+
++
+
+
+
+1 − ΦGN p(0 ,1) 
+
+
+
+− μσ
+
+ 
+
+= 1 (B.32) In Definition 3.4, we show that the Rectified Generalized Gaussian distribution can be presented as 
+
+fRGN p(μ,σ )(x) = Φ GN p(0 ,1) 
+
+
+
+− μσ
+
+
+
+· 1{0}(x) + p1−1/p 
+
+2σΓ(1 /p ) exp 
+
+
+
+− |x − μ|p
+
+pσ p
+
+
+
+· 1(0 ,∞)(x) (B.33) At first glance, the second term is the probability density function of the Generalized Gaussian distribution instead of its truncated version. In Corollary B.8, we provide an alternative presentation of the Rectified Generalized Gaussian distribution with explicit components of the probability density function of the Truncated Generalized Gaussian distribution. 
+
+Corollary B.8 (Equivalent Definition of Rectified Generalized Gaussian) . The probability density function of the Rectified Generalized Gaussian distribution RGN p(μ, σ ) can also be written as 
+
+fRGN p(μ,σ )(x) = Φ GN p(0 ,1) 
+
+
+
+− μσ
+
+
+
+· 1{0}(x) (B.34) 
+
++
+
+
+
+1 − ΦGN p(0 ,1) 
+
+
+
+− μσ
+
+ 1
+
+Z(0 ,∞)(μ, σ, p ) exp 
+
+
+
+− |x − μ|p
+
+pσ p
+
+
+
+· 1(0 ,∞)(x) (B.35) 
+
+where ΦGN p(0 ,1) is the cumulative distribution function for the standard Generalized Gaussian distribution GN p(0 , 1) .
+
+16 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+Proof. We can simplify the expression as 
+
+1 − ΦGN p(0 ,1) 
+
+
+
+− μσ
+
+
+
+= 1 − ΦGN p(μ,σ )(0) = Φ GN p(μ,σ )(0) = 
+
+Z 0
+
+> −∞
+
+p1−1/p 
+
+2σΓ(1 /p ) exp 
+
+
+
+− |x − μ|p
+
+pσ p
+
+
+
+dx (B.36) So we have 
+
+
+
+1 − ΦGN p(0 ,1) 
+
+
+
+− μσ
+
+ 1
+
+Z(0 ,∞)(μ, σ, p ) =
+
+R 0 
+
+> −∞
+> p1−1/p
+> 2σΓ(1 /p )
+
+exp 
+
+
+
+− |x−μ|p
+
+> pσ p
+
+
+
+dx 
+
+R ∞ 
+
+> 0
+
+exp 
+
+
+
+− |x−μ|p
+
+> pσ p
+
+
+
+dx 
+
+= p1−1/p 
+
+2σΓ(1 /p ) (B.37) where the extra terms cancel out due to symmetry around 0. Thus we have recovered the forms in Definition 3.4. In Figure 5, we visualize the probability density of the Generalized Gaussian, Truncated Generalized Gaussian, and the Rectified Generalized Gaussian distributions across varying p.
+
+B.4. Expectation and Variance of the Rectified Generalized Gaussian Distribution 
+
+Proposition B.9. Let X ∼ RGN p(μ, σ ) and sgn( μ) ∈ {− 1, 0, +1 } be the sign function. Let γ(s, t ) be the lower incomplete gamma function, Γ( s, t ) be the upper incomplete gamma function, Γ( s) be the gamma function, and P (s, t ) = γ(s, t )/Γ( s) be the lower regularized gamma function. Then 
+
+E[X] = 12
+
+
+
+μ
+
+
+
+1 + sgn( μ)P
+
+ 1
+
+p , |μ|p
+
+pσ p
+
+ 
+
++ p1/p σ Γ(2 /p, |μ|p/(pσ p)) Γ(1 /p )
+
+
+
+(B.38) 
+
+E[X2] = 12
+
+
+
+μ2
+
+
+
+1 + sgn( μ) P
+
+ 1
+
+p , |μ|p
+
+pσ p
+
+ 
+
++ 2 μp 1/p σ Γ(2 /p, |μ|p/(pσ p)) Γ(1 /p ) (B.39) 
+
++ p2/p σ2
+
+
+
+1 + sgn( μ) P
+
+ 3
+
+p , |μ|p
+
+pσ p
+
+ 
+
+, (B.40) 
+
+Var( X) = E[X2] −  E[X]2. (B.41) 
+
+Proof. Let Z ∼ GN p(μ, σ ) with density 
+
+fZ (z) = p1− 1
+
+> p
+
+2σΓ(1 /p ) exp 
+
+
+
+− |z − μ|p
+
+pσ p
+
+
+
+. (B.42) If X = ReLU( Z), then we know X ∼ RGN p(μ, σ ). Thus for any k ∈ { 1, 2}, we have 
+
+E[Xk ] = E[Zk 1(0 ,∞)(Z)] = 
+
+Z ∞
+
+> 0
+
+zk fZ (z) dz. (B.43) To simplify notations, let’s denote C := p1−(1 /p )/(2 σΓ(1 /p )) , a := 1 /(pσ p), and t0 := a|μ|p = |μ|p/(pσ p). Then 
+
+E[Xk ] = C
+
+Z ∞
+
+> 0
+
+zk exp   − a|z − μ|p dz. (B.44) Define the change of variables t = z − μ. Thus we have z = t + μ and z ≥ 0 ⇐⇒ t ≥ − μ. Rewrite the integral as 
+
+E[Xk ] = C
+
+Z ∞−μ
+
+(t + μ)k exp   − a|t|p dt. (B.45) Let’s define the three auxiliary integrals 
+
+I0 := 
+
+Z ∞−μ
+
+e−a|t|p
+
+dt (B.46) 
+
+I1 := 
+
+Z ∞−μ
+
+t e −a|t|p
+
+dt (B.47) 
+
+I2 := 
+
+Z ∞−μ
+
+t2 e−a|t|p
+
+dt. (B.48) 
+
+17 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+Then we can rewrite (B.45) for k = 1 , 2 as 
+
+E[X] = C(μI 0 + I1), (B.49) 
+
+E[X2] = C(μ2I0 + 2 μI 1 + I2). (B.50) Now we just need to compute I0, I1, and I2. By Lemma B.11, Lemma B.12, and Lemma B.13, we have 
+
+I0 = 1
+
+p a−1/p Γ
+
+ 1
+
+p
+
+ 
+
+1 + sgn( μ) P
+
+ 1
+
+p , t 0
+
+ 
+
+(B.51) 
+
+I1 = 1
+
+p a−2/p Γ
+
+ 2
+
+p , t 0
+
+
+
+(B.52) 
+
+I2 = 1
+
+p a−3/p Γ
+
+ 3
+
+p
+
+ 
+
+1 + sgn( μ) P
+
+ 3
+
+p , t 0
+
+ 
+
+. (B.53) So we can substitute and get the expression for E[X] as 
+
+E[X] = C(μI 0 + I1) (B.54) 
+
+= Cμ · 1
+
+p a−1/p Γ
+
+ 1
+
+p
+
+ 
+
+1 + sgn( μ)P (1 /p, t 0)
+
+
+
++ C · 1
+
+p a−2/p Γ
+
+ 2
+
+p , t 0
+
+
+
+(B.55) 
+
+= 12 μ
+
+
+
+1 + sgn( μ)P
+
+ 1
+
+p , t 0
+
+ 
+
++ 12 p1/p σ Γ(2 /p, t 0)Γ(1 /p ) (B.56) 
+
+= 12
+
+
+
+μ
+
+
+
+1 + sgn( μ)P
+
+ 1
+
+p , |μ|p
+
+pσ p
+
+ 
+
++ p1/p σ Γ(2 /p, |μ|p/(pσ p)) Γ(1 /p )
+
+
+
+(B.57) Similarly, the second moment is given by 
+
+E[X2] = C(μ2I0 + 2 μI 1 + I2) (B.58) 
+
+= Cμ 2I0 + 2 CμI 1 + CI 2 (B.59) 
+
+= Cμ 2 · 1
+
+p a−1/p Γ
+
+ 1
+
+p
+
+ 
+
+1 + sgn( μ)P (1 /p, t 0)
+
+
+
++ 2 Cμ · 1
+
+p a−2/p Γ
+
+ 2
+
+p , t 0
+
+
+
+(B.60) 
+
++ C · 1
+
+p a−3/p Γ
+
+ 3
+
+p
+
+ 
+
+1 + sgn( μ)P (3 /p, t 0)
+
+
+
+(B.61) 
+
+= 12 μ2
+
+1 + sgn( μ)P
+
+ 1
+
+p , t 0
+
+ 
+
++ 12
+
+
+
+2μ p 1/p σ Γ(2 /p, t 0)Γ(1 /p )
+
+
+
+(B.62) 
+
++ 12 p2/p σ2
+
+1 + sgn( μ)P
+
+ 3
+
+p , t 0
+
+ 
+
+(B.63) 
+
+= 12
+
+
+
+μ2
+
+
+
+1 + sgn( μ) P
+
+ 1
+
+p , |μ|p
+
+pσ p
+
+ 
+
++ 2 μp 1/p σ Γ(2 /p, |μ|p/(pσ p)) Γ(1 /p ) (B.64) 
+
++ p2/p σ2
+
+
+
+1 + sgn( μ) P
+
+ 3
+
+p , |μ|p
+
+pσ p
+
+ 
+
+, (B.65) (B.66) Thus we have proven the expression. 
+
+Definition B.10 (Gamma Functions) . If u ≥ 0 and b > −1, then 
+
+Z u
+
+> 0
+
+tbe−at p
+
+dt = 1
+
+p a−(b+1) /p γ
+
+ b + 1 
+
+p , au p
+
+, (B.67) 
+
+Z ∞
+
+> u
+
+tbe−at p
+
+dt = 1
+
+p a−(b+1) /p Γ
+
+ b + 1 
+
+p , au p
+
+, (B.68) where γ(·, ·) and Γ( ·, ·) are the lower and upper incomplete gamma functions. By definition, we also have 
+
+P (s, t ) := γ(s, t )Γ( s) , Γ( s, t ) = Γ( s) − γ(s, t ) = Γ( s) 1 − P (s, t ). (B.69) 
+
+Lemma B.11 (I0 Integral) . The I0 integral in Proposition B.9 is given by 
+
+I0 = 1
+
+p a−1/p Γ
+
+ 1
+
+p
+
+ 
+
+1 + sgn( μ) P
+
+ 1
+
+p , t 0
+
+ 
+
+. (B.70) 
+
+18 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+Proof. If μ ≥ 0, then −μ ≤ 0. So we can split the integral at 0 and get: 
+
+I0 =
+
+Z 0
+
+> −μ
+
+e−a|t|p
+
+dt +
+
+Z ∞
+
+> 0
+
+e−at p
+
+dt =
+
+Z μ
+
+> 0
+
+e−as p
+
+ds +
+
+Z ∞
+
+> 0
+
+e−at p
+
+dt. (B.71) Applying (B.67) with b = 0 to the first term and (B.68) with u = 0 to the second term gives us 
+
+I0 = 1
+
+p a−1/p γ
+
+ 1
+
+p , t 0
+
+
+
++ 1
+
+p a−1/p Γ
+
+ 1
+
+p
+
+
+
+= 1
+
+p a−1/p Γ
+
+ 1
+
+p
+
+ 
+
+1 + P
+
+ 1
+
+p , t 0
+
+ 
+
+. (B.72) Now if μ < 0, then −μ = |μ| > 0 and we have 
+
+I0 =
+
+Z ∞|μ|
+
+e−at p
+
+dt = 1
+
+p a−1/p Γ
+
+ 1
+
+p , t 0
+
+
+
+= 1
+
+p a−1/p Γ
+
+ 1
+
+p
+
+ 
+
+1 − P
+
+ 1
+
+p , t 0
+
+ 
+
+. (B.73) Combining both cases, we arrive at 
+
+I0 = 1
+
+p a−1/p Γ
+
+ 1
+
+p
+
+ 
+
+1 + sgn( μ) P
+
+ 1
+
+p , t 0
+
+ 
+
+. (B.74) 
+
+Lemma B.12 (I1 Integral) . The I1 integral in Proposition B.9 is given by 
+
+I1 = 1
+
+p a−2/p Γ
+
+ 2
+
+p , t 0
+
+
+
+. (B.75) 
+
+Proof. If μ ≥ 0, then −μ ≤ 0. So we can split the integral at 0 and get: 
+
+I1 =
+
+Z 0
+
+> −μ
+
+te −a|t|p
+
+dt +
+
+Z ∞
+
+> 0
+
+te −at p
+
+dt. (B.76) On [−μ, 0] , we can substitute s = −t to get 
+
+Z 0
+
+> −μ
+
+te −a|t|p
+
+dt = −
+
+Z μ
+
+> 0
+
+se −as p
+
+ds. (B.77) So we have 
+
+I1 = −
+
+Z μ
+
+> 0
+
+se −as p
+
+ds +
+
+Z ∞
+
+> 0
+
+te −at p
+
+dt =
+
+Z ∞
+
+> μ
+
+te −at p
+
+dt. (B.78) Applying (B.68) with b = 1 , we have 
+
+I1 = 1
+
+p a−2/p Γ
+
+ 2
+
+p , t 0
+
+
+
+. (B.79) Now if μ < 0, then −μ = |μ| > 0 and we have 
+
+I1 =
+
+Z ∞|μ|
+
+te −at p
+
+dt = 1
+
+p a−2/p Γ
+
+ 2
+
+p , t 0
+
+
+
+. (B.80) Combining both cases, we arrive at 
+
+I1 = 1
+
+p a−2/p Γ
+
+ 2
+
+p , t 0
+
+
+
+. (B.81) 
+
+Lemma B.13 (I2 Integral) . The I2 integral in Proposition B.9 is given by 
+
+I2 = 1
+
+p a−3/p Γ
+
+ 3
+
+p
+
+ 
+
+1 + sgn( μ) P
+
+ 3
+
+p , t 0
+
+ 
+
+. (B.82) 
+
+19 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+Algorithm 1 Simulation of the Rectified Generalized Gaussian Random Variables RGN p(μ, σ )
+
+Input: ℓp parameter p > 0, location μ ∈ R, scale σ > 0
+
+Output: sample Y ∼ RGN p(μ, σ )
+
+Sample S ∼ Unif {− 1, +1 }
+
+Sample G ∼ Gamma 
+
+
+
+shape = 1 
+
+> p
+
+, rate = 1 
+
+
+
+Set X ← μ + σ S · (pG )1/p 
+
+Set Y ← max(0 , X )
+
+return Y
+
+Algorithm 2 Bisection Search for the Scale Parameter σ for Rectified Generalized Gaussian with Unit Variance 
+
+Input: ℓp parameter p > 0, location μ ∈ R, tolerance ε > 0
+
+Output: scale σ⋆ > 0 such that Var( RGN p(μ, σ ⋆)) ≈ 1 {Var( RGN p(μ, σ ⋆)) is defined in Proposition B.9. }
+
+Define V (σ) := Var( RGN p(μ, σ )) 
+
+Define f (σ) := V (σ) − 1
+
+Choose initial bounds σL > 0 and σU > σ L such that f (σL) < 0, f (σU ) > 0
+
+repeat 
+
+σM ← (σL + σU )/2
+
+if f (σM ) > 0 then 
+
+σU ← σM
+
+else 
+
+σL ← σM
+
+end if until |σU − σL| ≤ εσ⋆ ← (σL + σU )/2
+
+return σ⋆
+
+Proof. If μ ≥ 0, then −μ ≤ 0. So we can split the integral at 0 and get: 
+
+I2 =
+
+Z 0
+
+> −μ
+
+t2e−a|t|p
+
+dt +
+
+Z ∞
+
+> 0
+
+t2e−at p
+
+dt =
+
+Z μ
+
+> 0
+
+s2e−as p
+
+ds +
+
+Z ∞
+
+> 0
+
+t2e−at p
+
+dt. (B.83) Apply (B.67) with b = 2 to the first term and the full gamma integral to the second term, we have: 
+
+I2 = 1
+
+p a−3/p γ
+
+ 3
+
+p , t 0
+
+
+
++ 1
+
+p a−3/p Γ
+
+ 3
+
+p
+
+
+
+= 1
+
+p a−3/p Γ
+
+ 3
+
+p
+
+ 
+
+1 + P
+
+ 3
+
+p , t 0
+
+ 
+
+. (B.84) Now if μ < 0, then −μ = |μ| > 0 and we have 
+
+I2 =
+
+Z ∞|μ|
+
+t2e−at p
+
+dt = 1
+
+p a−3/p Γ
+
+ 3
+
+p , t 0
+
+
+
+= 1
+
+p a−3/p Γ
+
+ 3
+
+p
+
+ 
+
+1 − P
+
+ 3
+
+p , t 0
+
+ 
+
+. (B.85) Combining both cases, we arrive at 
+
+I2 = 1
+
+p a−3/p Γ
+
+ 3
+
+p
+
+ 
+
+1 + sgn( μ) P
+
+ 3
+
+p , t 0
+
+ 
+
+. (B.86) 
+
+B.5. Simulation Techniques for Rectified Generalized Gaussian 
+
+In Algorithm 1, we show how to sample from the Rectified Generalized Gaussian distribution. 
+
+## C. Properties of Multivariate Generalized Gaussian, Truncated Generalized Gaussian, and Rectified Generalized Gaussian Distributions 
+
+In the following section, we present additional definitions and properties of the Multivariate Generalized Gaussian (Appendix C.1), Truncated Generalized Gaussian (Appendix C.2), and Rectified Generalized Gaussian distributions (Appendix C.3). We further derive the expected ℓ0 norm for a Multivariate Rectified Generalized Gaussian distribution in Appendix C.4. 
+
+20 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+C.1. Multivariate Case - Multivariate Generalized Gaussian 
+
+We consider the multivariate generalization (Goodman & Kotz, 1973) as the joint distribution resulting from the product measure of independent and identically distributed (i.i.d.) Generalized Gaussian random variables, i.e. x ∼ Qdi=1 GN p(μ, σ ) where x =(x1, . . . , x d) for each xi ∼ GN p(μ, σ ). The probability density function is given by 
+
+fQdi=1 GN p(μ,σ )(x) = pd−d/p 
+
+(2 σ)dΓ(1 /p )d exp 
+
+
+
+− ∥x − μ∥pp
+
+pσ p
+
+
+
+(C.87) Assume that μ = 0 . Barthe et al. (2005) show that rp := ∥x∥pp ∼ Γ( d/p, pσ p) up to different notations. Also, u := x/∥x∥p follows the cone measure on the ℓp sphere Sd−1 
+
+> ℓp
+
+:= {x ∈ Rd|∥ x∥p = 1 }. It’s shown that x = r · u and r ⊥ u (Barthe et al., 2005). In fact, the cone measure is identical to the (d − 1) -dimensional Hausdorff measure Hd−1 (also called surface measure) when p ∈ { 1, 2, ∞} 
+
+(Alonso-Gutierrez et al., 2018). So if A ⊆ Sd−1 
+
+> ℓp
+
+, then p(u ∈ A) = Hd−1(A)/Hd−1(Sd−1 
+
+> ℓp
+
+).Thus for zero-mean Laplace ( p = 1 ) and zero-mean Gaussian ( p = 2 ), the distributions of u are the uniform distributions on the simplex 
+
+∆d−1 (or Sd−1 
+
+> ℓ1
+
+) and the standard Euclidean unit sphere Sd−1 
+
+> ℓ2
+
+respectively. More generally, the Multivariate Generalized Gaussian distribution (Goodman & Kotz, 1973) is a special case of the family of p-symmetric distributions (Fang et al., 1990) or Lp-norm spherical distributions (Gupta & Song, 1997). The Lp-norm spherical distributions has density functions of the form g(∥x∥pp) for g : [0 , ∞) → [0 , ∞). If x follows the Lp-norm spherical distribution, then ∥x∥p and x/∥x∥p
+
+are also independent with each other. There exist many other Lp-norm spherical distributions induced by the choice of the density generator function g(·) like p-generalized Weibull distribution, Lp-norm Pearson Type II distribution, Lp-norm Pearson Type VII distribution, Lp-norm multivariate t-distribution, 
+
+Lp-norm multivariate Cauchy distributions etc (Gupta & Song, 1997). We particularly choose the Generalized Gaussian distribution with the density generator function g(·) = exp( ·) for the inevitable consequences of the exponential function as the maximum entropy solutions. We show this in Lemma E.1. 
+
+C.2. Multivariate Case - Multivariate Truncated Generalized Gaussian 
+
+Let x = ( x1, . . . , x d) ∼ Qdi=1 T GN p(μ, σ, S ) be a Multivariate Truncated Generalized Gaussian random vector where each xi ∼T GN p(μ, σ, S ). For our purposes, we only need S = [0 , ∞) and thus the joint support is [0 , ∞)d.We observe that the angular distribution x/∥x∥p is still uniform over the support after truncation to the positive orthant [0 , ∞)d for 
+
+p ∈ { 1, 2}. This is because truncation only rescales the density, which is already constant over the support. Due to the independence between ∥x∥p and x/∥x∥p, the radial distribution is unchanged. Thus if x ∼ Qdi=1 T GN 2.0(0 , σ, [0 , ∞)) , then ∥x∥22 ∼ Γ( d/ 2, 2σ2)
+
+and x/∥x∥2 ∼ Unif( Sd−1
+
+> ℓ+2
+
+) where Sd−1
+
+> ℓ+
+> p
+
+:= {x ∈ Rd ∩ [0 , ∞)d|∥ x∥p = 1 } is the ℓp sphere confined to the positive orthant and Unif( ·)
+
+is uniform distribution over the ℓp sphere confined to the positive orthant. When p = 1 .0, the multivariate truncated Laplace distribution Qdi=1 T GN 1.0(0 , σ, [0 , ∞)) reduces to the product of i.i.d exponential distribution. Thus ∥x∥1 ∼ Γ( d/ 1, σ ) and x/∥x∥1 is the Dirichlet distribution with all concentration parameters being 1 on the simplex 
+
+∆d−1, which we also denote as Sd−1
+
+> ℓ+1
+
+(Devroye, 2006). 
+
+C.3. Multivariate Case - Multivariate Rectified Generalized Gaussian 
+
+We denote x = ( x1, . . . , x d) ∼ Qdi=1 RGN p(μ, σ ) as a Multivariate Rectified Generalized Gaussian random vector where each 
+
+xi ∼ RGN p(μ, σ ). Contrary to the family of Truncated Generalized Gaussian distribution with smooth isotropic ℓp geometry, rectification collapses most of the samples in the interior of the positive orthant into an exponentially large family of lower-dimensional faces, inducing polyhedral conic geometry. In fact, the probability of the random vector being in the interior of the positive orthant 
+
+[0 , ∞)d is (1 − ΦGN p(0 ,1) (−μ/σ )) d, which decays to 0 exponentially fast as d → ∞ . Thus in high dimensions, most of the rectified samples concentrates on the boundary of the positive orthant cone. 
+
+C.4. Proof of Proposition 3.5 (Theoretical Expected ℓ0 Sparsity) 
+
+Proof. Let z ∼ Qdi=1 GN p(μ, σ ) be a Generalized Gaussian random vector in d dimensions and x = ReLU (z), or equivalently, 
+
+x ∼ Qdi=1 RGN p(μ, σ ). By construction, we have independence between dimensions. Thus 
+
+∥x∥0 =
+
+> d
+
+X
+
+> i=1
+
+1xi>0 =
+
+> d
+
+X
+
+> i=1
+
+1zi>0 (C.88) 
+
+21 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+So we have the expectation given by 
+
+E[∥x∥0] = 
+
+> d
+
+X
+
+> i=1
+
+E[1zi>0] = 
+
+> d
+
+X
+
+> i=1
+
+P(zi > 0) = 
+
+> d
+
+X
+
+> i=1
+
+ΦGN p(0 ,1) 
+
+ μσ
+
+
+
+= d · ΦGN p(0 ,1) 
+
+ μσ
+
+
+
+(C.89) where the CDF defined in Definition 3.1 evaluates to 
+
+ΦGN p(0 ,1) 
+
+ μσ
+
+
+
+= 12
+
+
+
+1 + sgn 
+
+ μσ
+
+
+
+P
+
+ 1
+
+p , |μ/σ |p
+
+p
+
+ 
+
+(C.90) Thus 
+
+E[∥x∥0] = d
+
+2
+
+
+
+1 + sgn 
+
+ μσ
+
+
+
+P
+
+ 1
+
+p , |μ/σ |p
+
+p
+
+ 
+
+(C.91) 
+
+## D. Choice of σ for Rectified Generalized Gaussian 
+
+In the following section, we investigate how we should pick the scale parameter σ for the Rectified Generalized Gaussian distribution 
+
+RGN p(μ, σ ). We show that different choices of σ leads to different per-dimension variance (Appendix D.1), sparsity as measured by ℓ0
+
+metrics (Appendix D.2), and also the sparsity-performance tradeoffs (Appendix D.3). We also provide our final recommendation of σ at the end of this section. 
+
+D.1. How does σ affect the variance? 
+
+Equation (B.2) and Equation (B.41) are the closed form expression for the variance of the Generalized Gaussian GN p(μ, σ ) and Rectified Genealized Gaussian distributions RGN p(μ, σ ) respectively. To prevent feature collapses along each feature dimension, we always want non-zero variance and hence the target distribution should have non-zero variance as well. We consider two strategies of picking σ.First, we can set σ = σGN = Γ(1 /p )1/2/(p1/p · Γ(3 /p )1/2). In this case, the variance of the Generalized Gaussian distribution is fixed to be 1, i.e. Var( GN p(μ, σ GN )) = 1 for any μ and p. However, the variance of the Rectified Generalized Gaussian distribution under the choice of σGN is no longer fixed. In Figure 6, we plotted the variance of the Generalized Gaussian and the Rectified Generalized Gaussian distributions under the choice of σGN with varying μ and p. We observe that the variance for the Generalized Gaussian distribution is indeed 1, but the variance for the Rectified Generalized Gaussian distribution decreases as we increase p and decrease μ. In the worst case, the variance of the Rectified Gaussian distribution RGN 2(−3, σ GN ) is around 0.0002 .Second, we can also pick σ = σRGN such that the variance of the Rectified Generalized Gaussian distribution is 1, i.e. 
+
+Var( RGN p(μ, σ GN )) = 1 for any μ and p. Since the closed form expression in Equation (B.41) is complicated, we resort to us-ing a bisection search algorithm (see Algorithm 2) to estimate σRGN . In Figure 11a, we observe that it only takes around 30 iterations, invariant to choices of μ and p, to estimate σRGN with bisection error below 10 −10 . We also only need to estimate σRGN once for any μ
+
+and p.In Figure 7, we reported the variance of the Generalized Gaussian and the Rectified Generalized Gaussian distributions if we choose 
+
+σ = σRGN . Both theoretically and empirically, the variance of the Rectified Generalized Gaussian distribution is 1. Under the choice of 
+
+σRGN , we observe that the variance of the Generalized Gaussian distribution increases as we increase p and decreases μ. In the extreme case, the variance of the Gaussian distribution GN 2(−3, σ RGN ) is around 11 .56 .In Figure 8, we also visualize values of σGN and σRGN under varying μ and p. We observe that none of the values of σ’s are extreme, and thus our sampling method (Algorithm 1) for Rectified Generalized Gaussian also won’t be subjected to extreme value multiplications. 
+
+D.2. How does σ affect the sparsity? 
+
+Intuitively, it seems desirable to pick σRGN over σGN because the choice of σRGN encourages the per-dimensional variance of the features to be 1, which is desirable as we know from the results in VICReg (Bardes et al., 2022). However, we observe that there is no simple free lunch here. Rectifications in general reduce variance by squashing negative values to be zeros, and enforcing the variance after rectifications being 1 will reduce sparsity. In Figure 9, we report the theoretical ℓ0 norms evaluated based on Proposition 3.5 and the empirical ℓ0 norms computed over pretrained Rectified LpJEPA features. The choice of σRGN leads to reduced sparsity measured by increased normalized ℓ0 norms (1 /D ) · E[∥x∥0]
+
+both theoretically and empirically. Interestingly, we note that for the choice of σRGN , the primary way to increase sparsity is to reduce p. If we choose σ = σGN , then sparsity is more easily induced by decreasing μ, whereas varying p only induces small gaps in the amount of sparsity both theoretically and empirically. 
+
+22 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations -3.0 -2.0 -1.0 0.0 1.0 2.0 3.0 
+
+Mean Shift Value ( ) 
+
+0.25 
+
+0.5 
+
+0.75 
+
+1.0 
+
+1.25 
+
+1.5 
+
+1.75 
+
+2.0                                                 
+
+> p Parameter ( p)
+> 1.00 1.00 1.00 1.02 0.98 1.00 1.00
+> 1.00 1.00 1.00 0.99 1.00 1.00 1.00
+> 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+> 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+> 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+> 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+> 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+> 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> Empirical Variance (Before ReLU)
+
+(a) Empirical Variance of Generalized Gaussian. -3.0 -2.0 -1.0 0.0 1.0 2.0 3.0 
+
+Mean Shift Value ( ) 
+
+0.25 
+
+0.5 
+
+0.75 
+
+1.0 
+
+1.25 
+
+1.5 
+
+1.75 
+
+2.0                                                 
+
+> p Parameter ( p)
+> 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+> 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+> 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+> 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+> 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+> 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+> 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+> 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0  
+
+> Theoretical Variance (Before ReLU)
+
+(b) Theoretical Variance of Generalized Gaussian. -3.0 -2.0 -1.0 0.0 1.0 2.0 3.0 
+
+Mean Shift Value ( ) 
+
+0.25 
+
+0.5 
+
+0.75 
+
+1.0 
+
+1.25 
+
+1.5 
+
+1.75 
+
+2.0                                                 
+
+> p Parameter ( p)
+> 0.18 0.23 0.31 0.49 0.56 0.63 0.69
+> 0.05 0.10 0.20 0.42 0.63 0.76 0.85
+> 0.02 0.05 0.14 0.39 0.67 0.84 0.93
+> 7.2e-03 0.03 0.11 0.38 0.70 0.89 0.96
+> 2.9e-03 0.02 0.10 0.36 0.72 0.92 0.98
+> 1.2e-03 0.01 0.08 0.35 0.73 0.94 0.99
+> 5.0e-04 8.1e-03 0.07 0.35 0.74 0.95 1.00
+> 2.1e-04 5.6e-03 0.07 0.34 0.75 0.96 1.00
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> Empirical Variance (After ReLU)
+
+(c) Empirical Variance of Rectified Generalized Gaussian. -3.0 -2.0 -1.0 0.0 1.0 2.0 3.0 
+
+Mean Shift Value ( ) 
+
+0.25 
+
+0.5 
+
+0.75 
+
+1.0 
+
+1.25 
+
+1.5 
+
+1.75 
+
+2.0                                                 
+
+> p Parameter ( p)
+> 0.18 0.23 0.32 0.47 0.56 0.63 0.69
+> 0.05 0.10 0.20 0.42 0.63 0.77 0.85
+> 0.02 0.05 0.14 0.39 0.67 0.84 0.93
+> 7.2e-03 0.03 0.11 0.37 0.70 0.89 0.96
+> 2.9e-03 0.02 0.10 0.36 0.72 0.92 0.98
+> 1.2e-03 0.01 0.08 0.35 0.73 0.94 0.99
+> 5.0e-04 8.1e-03 0.07 0.35 0.74 0.95 0.99
+> 2.0e-04 5.7e-03 0.07 0.34 0.75 0.96 1.00
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0  
+
+> Theoretical Variance (After ReLU)
+
+(d) Theoretical Variance of Rectified Generalized Gaussian. 
+
+Figure 6. Variance of Generalized Gaussian Distribution and Rectified Generalized Gaussian distributions under the choice of σ = σGN . Top row: Variance of x ∼ GN p(μ, σ GN ). (a) The empirical variance of GN p(μ, σ GN ). (b) The theoretical variance of GN p(μ, σ GN ) by evaluating Equation (B.2). Bottom row: Variance of x ∼ RGN p(μ, σ GN ). (c) The empirical variance of 
+
+RGN p(μ, σ GN ). (d) The theoretical variance of RGN p(μ, σ GN ) by evaluating Equation (B.41). The empirical variance in (a) and (c) are computed by i.i.d sampling 100000 samples from 32 dimensions from either GN p(μ, σ GN ) or RGN p(μ, σ GN ). The per-dimension variance is estimated and we report the average variance across dimensions as a function of the mean shift value μ and the parameter p.
+
+D.3. How does σ affect performance? 
+
+We have already observed in Figure 9 that for the same value of μ (more specifically, μ < 0 as we’re interested in sparse representations) and p, choosing σGN always lead to sparser representations. However, we’re rather more interested in whether the pareto frontier of sparsity-performance tradeoff induced by the choices of {μ, σ GN , p } can be significantly different from that of {μ, σ GN , p }. In other words, we would like to know if the choices of σGN or σRGN can lead to systematically better sparsity-performance tradeoffs as we vary 
+
+μ and p.In Figure 10, we show that in fact there is again no free lunch here. We report CIFAR-100 validation accuracy of pretrained Rectified LpJEPA projector representations against different mean shift values μ (Figure 10a), ℓ1 sparsity metrics (1 /D )·E[∥z∥21/∥z∥22] (Figure 10b), and ℓ0 metrics (1 /D ) · E[∥z∥0] (Figure 10c) across varying p. In general, {μ, σ GN , p } has different sparsity patterns compared to 
+
+{μ, σ RGN , p }, but the overall sparsity-performance tradeoffs are largely overlapped. Under ℓ0 metric, we actually observe that Rectified Laplace RGN 1(μ, σ GN ) stands out as the setting that attains the best sparsity and accuracy tradeoff. Thus even if the choice of σGN can lead to small variance as we show in Figure 6, we still choose σGN as the default scale parameter for our target Rectified Generalized Gaussian distribution. 
+
+23 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations -3.0 -2.0 -1.0 0.0 1.0 2.0 3.0 
+
+Mean Shift Value ( ) 
+
+0.25 
+
+0.5 
+
+0.75 
+
+1.0 
+
+1.25 
+
+1.5 
+
+1.75 
+
+2.0                                                 
+
+> p Parameter ( p)
+> 3.78 3.26 2.75 2.12 1.83 1.65 1.52
+> 6.01 4.76 3.52 2.35 1.69 1.36 1.19
+> 7.64 5.82 4.09 2.53 1.61 1.22 1.09
+> 8.85 6.59 4.47 2.66 1.55 1.15 1.04
+> 9.78 7.14 4.77 2.76 1.51 1.11 1.02
+> 10.51 7.58 4.97 2.83 1.49 1.08 1.01
+> 11.07 7.93 5.14 2.89 1.47 1.06 1.01
+> 11.56 8.20 5.29 2.93 1.45 1.05 1.00
+
+2
+
+4
+
+6
+
+8
+
+10 
+
+> Empirical Variance (Before ReLU)
+
+(a) Empirical Variance of Generalized Gaussian. -3.0 -2.0 -1.0 0.0 1.0 2.0 3.0 
+
+Mean Shift Value ( ) 
+
+0.25 
+
+0.5 
+
+0.75 
+
+1.0 
+
+1.25 
+
+1.5 
+
+1.75 
+
+2.0                                                 
+
+> p Parameter ( p)
+> 3.77 3.28 2.74 2.11 1.84 1.65 1.51
+> 6.00 4.77 3.55 2.35 1.69 1.36 1.20
+> 7.64 5.82 4.09 2.54 1.61 1.22 1.09
+> 8.85 6.57 4.48 2.67 1.55 1.15 1.04
+> 9.78 7.14 4.76 2.76 1.52 1.11 1.02
+> 10.51 7.58 4.98 2.83 1.49 1.08 1.01
+> 11.09 7.92 5.15 2.89 1.47 1.06 1.01
+> 11.56 8.20 5.29 2.93 1.45 1.05 1.00
+
+2
+
+4
+
+6
+
+8
+
+10  
+
+> Theoretical Variance (Before ReLU)
+
+(b) Theoretical Variance of Generalized Gaussian. -3.0 -2.0 -1.0 0.0 1.0 2.0 3.0 
+
+Mean Shift Value ( ) 
+
+0.25 
+
+0.5 
+
+0.75 
+
+1.0 
+
+1.25 
+
+1.5 
+
+1.75 
+
+2.0                                                 
+
+> p Parameter ( p)
+> 1.01 0.97 1.01 1.01 1.00 0.99 1.02
+> 1.01 0.99 0.99 1.00 0.99 1.00 1.00
+> 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+> 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+> 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+> 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+> 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+> 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> Empirical Variance (After ReLU)
+
+(c) Empirical Variance of Rectified Generalized Gaussian. -3.0 -2.0 -1.0 0.0 1.0 2.0 3.0 
+
+Mean Shift Value ( ) 
+
+0.25 
+
+0.5 
+
+0.75 
+
+1.0 
+
+1.25 
+
+1.5 
+
+1.75 
+
+2.0                                                 
+
+> p Parameter ( p)
+> 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+> 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+> 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+> 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+> 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+> 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+> 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+> 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0  
+
+> Theoretical Variance (After ReLU)
+
+(d) Theoretical Variance of Rectified Generalized Gaussian. 
+
+Figure 7. Variance of Generalized Gaussian Distribution and Rectified Generalized Gaussian distributions under the choice of 
+
+σ = σRGN . Top row: Variance of x ∼ GN p(μ, σ RGN ). (a) The empirical variance of GN p(μ, σ RGN ). (b) The theoretical variance of GN p(μ, σ RGN ) by evaluating Equation (B.2). Bottom row: Variance of x ∼ RGN p(μ, σ RGN ). (c) The empirical variance of 
+
+RGN p(μ, σ RGN ). (d) The theoretical variance of RGN p(μ, σ RGN ) by evaluating Equation (B.41). The empirical variance in (a) and (c) are computed by i.i.d sampling 100000 samples from 32 dimensions from either GN p(μ, σ RGN ) or RGN p(μ, σ RGN ). The per-dimension variance is estimated and we report the average variance across dimensions as a function of the mean shift value μ and the parameter p.
+
+## E. Maximum Differential Entropy Distributions 
+
+In the following section, we present a well-known statement for the form of the maximum-entropy probability distributions (Appendix E.1) and use the result to prove that the Multivariate Truncated Generalized Gaussian distribution is the maximum-entropy distribution under the expected ℓp norm constraints given a fixed support (Appendix E.2). We further show that the constraint is E[∥z∥pp] = dσ p without truncation (Appendix E.3). In Appendix E.4 and Appendix E.5, we present the well-known corollary of product Laplace and isotropic Gaussian being the maximum-entropy distributions under expected ℓ1 and ℓ2 norm constraints respectively. 
+
+E.1. Derivation of Maximum Entropy Continuous Multivariate Probability Distributions under Support Constraints 
+
+Cover & Thomas (2006) provided a characterization of maximum entropy continuous univariate probability distributions. In Lemma E.1, we provide a multivariate extension of the maximum entropy probability distribution under the support set with positive Lebesgue measure. 
+
+Lemma E.1 (Maximum Entropy Continuous Multivaraite Probability Distributions) . Let S ⊆ Rd be a measurable set with positive 
+
+24 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations -3.0 -2.0 -1.0 0.0 1.0 2.0 3.0 
+
+Mean Shift Value ( ) 
+
+0.25 
+
+0.5 
+
+0.75 
+
+1.0 
+
+1.25 
+
+1.5 
+
+1.75 
+
+2.0                                                 
+
+> p Parameter ( p)
+> 0.10 0.10 0.10 0.10 0.10 0.10 0.10
+> 0.37 0.37 0.37 0.37 0.37 0.37 0.37
+> 0.57 0.57 0.57 0.57 0.57 0.57 0.57
+> 0.71 0.71 0.71 0.71 0.71 0.71 0.71
+> 0.81 0.81 0.81 0.81 0.81 0.81 0.81
+> 0.89 0.89 0.89 0.89 0.89 0.89 0.89
+> 0.95 0.95 0.95 0.95 0.95 0.95 0.95
+> 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> Sigma
+
+(a) Values of σGN across varying μ and p.-3.0 -2.0 -1.0 0.0 1.0 2.0 3.0 
+
+Mean Shift Value ( ) 
+
+0.25 
+
+0.5 
+
+0.75 
+
+1.0 
+
+1.25 
+
+1.5 
+
+1.75 
+
+2.0                                                 
+
+> p Parameter ( p)
+> 0.19 0.18 0.16 0.14 0.13 0.13 0.12
+> 0.89 0.80 0.69 0.56 0.48 0.43 0.40
+> 1.56 1.37 1.15 0.90 0.72 0.63 0.59
+> 2.10 1.81 1.50 1.15 0.88 0.76 0.72
+> 2.53 2.16 1.77 1.35 1.00 0.85 0.82
+> 2.88 2.44 1.98 1.50 1.08 0.92 0.89
+> 3.16 2.67 2.16 1.61 1.15 0.98 0.95
+> 3.40 2.86 2.30 1.71 1.20 1.02 1.00
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0  
+
+> Sigma
+
+(b) Values of σRGN across varying μ and p.
+
+Figure 8. Values of σGN and σRGN under Different Choices of μ and p. (a) The values of σGN are invariant to the mean shift value μ.(b) σRGN changes as a function of both μ and p.2 0 2
+
+Mean Shift Value ( ) 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> Normalized  0 Norm  (1/ D) [ X 0]
+
+Theoretical 0 Norms                 
+
+> Var( 0.25 ( , *)) = 1
+> Var( 0.5 ( , *)) = 1
+> Var( 1.0 ( , *)) = 1
+> Var( 2.0 ( , *)) = 1
+> Var( 0.25 ( , *)) = 1
+> Var( 0.5 ( , *)) = 1
+> Var( 1.0 ( , *)) = 1
+> Var( 2.0 ( , *)) = 1
+
+(a) Theoretical ℓ0 Norms Under Different Choices of σ∗3 2 1 0 1
+
+Mean Shift Value ( ) 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> Normalized  0 Norm  (1/ D) [ X 0]
+
+Var( p( , *)) = 1 
+
+pTheo = 0.25 
+
+pTheo = 0.5 
+
+pTheo = 1.0 
+
+pTheo = 2.0 
+
+pEmp = 0.25 
+
+pEmp = 0.5 
+
+pEmp = 1.0 
+
+pEmp = 2.0 
+
+(b) Theoretical and Empirical of ℓ0
+
+Norms under the Choice of σGN 3 2 1 0 1
+
+Mean Shift Value ( ) 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+> Normalized  0 Norm  (1/ D) [ X 0]
+
+Var( p( , *)) = 1 
+
+pTheo = 0.25 
+
+pTheo = 0.5 
+
+pTheo = 1.0 
+
+pTheo = 2.0 
+
+pEmp = 0.25 
+
+pEmp = 0.5 
+
+pEmp = 1.0 
+
+pEmp = 2.0 
+
+(c) Theoretical and Empirical of ℓ0
+
+Norms under the Choice of σRGN 
+
+Figure 9. The theoretical and empirical normalized ℓ0 norms under Different Choices of σ∗. (a) We report the theoretical ℓ0 norms based on Proposition 3.5 for σ∗ ∈ { σGN , σ RGN } for varying μ and p. (b) The empirical ℓ0 norms of pretrained Rectified LpJEPA features are measured against the theoretical ℓ0 norms of the target Rectified Generalized Gaussian distribution RGN p(μ, σ GN ) for varying μ
+
+and p. (c) We plot the empirical ℓ0 norms of pretrained Rectified LpJEPA features against the theoretical ℓ0 norms of the target Rectified Generalized Gaussian distribution RGN p(μ, σ RGN ) for varying μ and p.
+
+Lebesgue measure. We define r1, · · · , r m : S → R as measurable functions and let α1, · · · , α m ∈ R. Consider the optimization problem 
+
+max 
+
+p −
+
+Z
+
+S
+
+p(x) ln p(x)dx (E.92) 
+
+s.t. 
+
+Z
+
+S
+
+p(x)dx = 1 , (E.93) 
+
+Z
+
+S
+
+ri(x)p(x)dx = αi, i = 1 , · · · , m, (E.94) 
+
+p(x) ≥ 0 a.e. on S. (E.95) 
+
+We denote the set of functions that satisfies the given constraints as 
+
+P := 
+
+
+
+p :→ [0 , ∞)
+
+Z
+
+S
+
+p(x) dx = 1 ,
+
+Z
+
+S
+
+ri(x)p(x) dx = αi ∀i
+
+
+
+(E.96) 
+
+25 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 3 2 1 0 1
+
+Mean shift                 
+
+> 25
+> 30
+> 35
+> 40
+> 45
+> 50
+> 55
+> 60
+> Projector Accuracy
+> p= 0.25, RGN
+> p= 0.5, RGN
+> p= 1.0, RGN
+> p= 2.0, RGN
+> p= 0.25, GN
+> p= 0.5, GN
+> p= 1.0, GN
+> p= 2.0, GN
+
+(a) Accuracy versus Mean Shift Value μ0.0 0.2 0.4 0.6  
+
+> 1
+
+metric                  
+
+> 25
+> 30
+> 35
+> 40
+> 45
+> 50
+> 55
+> 60
+> Projector Accuracy
+> p= 0.25, RGN
+> p= 0.5, RGN
+> p= 1.0, RGN
+> p= 2.0, RGN
+> p= 0.25, GN
+> p= 0.5, GN
+> p= 1.0, GN
+> p= 2.0, GN
+
+(b) Accuracy versus ℓ1 Sparsity Metric 0.0 0.2 0.4 0.6 0.8 1.0  
+
+> 0
+
+metric                  
+
+> 25
+> 30
+> 35
+> 40
+> 45
+> 50
+> 55
+> 60
+> Projector Accuracy
+> p= 0.25, RGN
+> p= 0.5, RGN
+> p= 1.0, RGN
+> p= 2.0, RGN
+> p= 0.25, GN
+> p= 0.5, GN
+> p= 1.0, GN
+> p= 2.0, GN
+
+(c) Accuracy versus ℓ0 Sparsity Metric 
+
+Figure 10. The Sparsity-Performance Tradeoffs under Different Chocies of σ∗ ∈ { σGN , σ RGN }. (a) We report CIFAR-100 validation accuracy for pretrained Rectified LpJEPA projector representations under varying {μ, σ, p }. Under the same mean shift value μ, choosing 
+
+σRGN leads to better performance compared to σGN if μ is more negative. (b) Projector accuracy is plotted against the ℓ1 sparsity metrics measured over the pretrained Rectified LpJEPA projector representations. The gaps between σGN and σRGN are negligible. (c) Switching from ℓ1 to ℓ0 sparsity metrics, we observe the same behavior. In fact, σGN attains minor advantages in the sparsity-performance tradeoffs, especially when p = 1 or p = 0 .5.0 10 20 30 
+
+Bisection Iteration             
+
+> 10 10
+> 10 8
+> 10 6
+> 10 4
+> 10 2
+> 10 0
+> 1 Distance to Target Variance  p
+> p= 0.5
+> p= 1.0
+> p= 2.0
+> =2.0
+> =1.0
+> = 0.0
+> =2.0
+> =1.0
+> = 0.0
+
+(a) Bisection Convergence of σ∗ for 
+
+| Var( RGN p(μ, σ ∗)) − 1| < ϵ .3 2 1 0
+
+Mean Shift Value ( ) 
+
+0.25 
+
+0.30 
+
+0.35 
+
+0.40 
+
+0.45 
+
+0.50 
+
+0.55 
+
+0.60         
+
+> Validation Accuracy
+> Rectified LpJEPA (p= 2)
+> Rectified LpJEPA (p= 1)
+> LeJEPA + ReLU (p= 2)
+> LpJEPA + ReLU (p= 1)
+
+(b) Continuous Mapping Theorem 0.0 0.5 1.0  
+
+> 1
+
+Sparsity ( )
+
+> p z+ p z p z p z+
+> Rectified
+> LpJEPA
+> LpJEPA
+> LeJEPA
+
+25 50 75 
+
+Accuracy ( ) 
+
+> p
+> p=2
+> p=1
+> p=0.5
+> p=0.25
+
+(c) Necessity of Rectifications. 
+
+Figure 11. Additional Results on the Choices of σ, the Location of ReLU( ·), and the Ablations of ReLU( ·) for Rectified LpJEPA .(a) We report the bisection convergence error as a function of optimization iterations for finding the optimal σRGN (see Appendix D). (b) We compared Rectified LpJEPA versus a version of distribution matching towards the Rectified Generalizd Gaussian distribution via the continuous mapping theorem (see Section 5.3). Rectified LpJEPA is the better design. (c) We show that Rectified LpJEPA attains the best sparsity-performance tradeoffs across various ablations of ReLU( ·) under the ℓ1 sparsity metrics (1 /D ) · E[∥z∥21/∥z∥22]. See Section 5.2 for details. 
+
+Assume the set P is nonempty and that there exists λ = ( λ1, . . . , λ m) ∈ Rm such that 
+
+ZS (λ) = 
+
+Z
+
+> S
+
+exp 
+
+ mX
+
+> i=1
+
+λiri(x)
+
+
+
+dx < ∞. (E.97) 
+
+Then any maximizer p⋆ of the optimization problem has the form 
+
+p⋆(x) = 1
+
+ZS (λ) exp 
+
+ mX
+
+> i=1
+
+λiri(x)
+
+
+
+· 1S (x), (E.98) 
+
+where {λi}mi=1 are chosen to satisfy the constraints {αi}mi=1 .
+
+26 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations CL VICReg NCL NVICReg 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> 0 Sparsity
+> Rectified LpJEPA
+
+Dataset 
+
+> dtd
+> flowers
+> pets
+> cifar10
+> cifar100
+> food
+> imagenet100
+
+(a) ℓ0 Sparsity Across Transfer Tasks CL VICReg NCL NVICReg 
+
+0.0 
+
+0.1 
+
+0.2 
+
+0.3 
+
+0.4 
+
+0.5 
+
+0.6 
+
+0.7 
+
+0.8 
+
+> 1/ 2 Sparsity
+> Rectified LpJEPA
+
+Dataset  
+
+> dtd
+> flowers
+> pets
+> cifar10
+> cifar100
+> food
+> imagenet100
+
+(b) ℓ1 Sparsity Across Transfer Tasks 
+
+Figure 12. Pretrained dense and sparse representations exhibits varying level of sparsity across different downstream tasks . We compare the ℓ0 and ℓ1 sparsity metrics for Rectified LpJEPA versus other baselines (see Appendix H) pretrained over ImageNet-100 across a variety of downstream tasks. (a) Rectified LpJEPA has varying ℓ0 sparsity (1 /D ) · E[∥z∥0] over different datasets as we vary the mean shift value μ ∈ { 0, −1, −2, −3}. CL and VICReg always have all entries being non-zero due to the lack of explicit rectifications. (b) Under ℓ1 sparsity metric (1 /D ) · E[∥z∥21/∥z∥22], we observe varying sparsity for Rectified LpJEPA over different datasets for mean shift values ℓ0 sparsity (1 /D ) · E[∥z∥0]. We observe that NCL in fact achieves the lowest ℓ1 metric, but as we show in Figure 4c the most amount of variations is attained by Rectified LpJEPA. 
+
+Proof. We can form the Lagrangian functional of the constrained optimization problem as 
+
+J [p] = −
+
+Z
+
+> S
+
+p(x) ln p(x)dx + λ0
+
+ Z 
+
+> S
+
+p(x)dx − 1
+
+
+
++
+
+> m
+
+X
+
+> i=1
+
+λi
+
+ Z 
+
+> S
+
+ri(x)p(x)dx − αi
+
+
+
+(E.99) where λ0, λ 1, . . . , λ m ∈ R are Lagrange multipliers. Let p be a maximizer that is strictly positive almost everywhere (a.e.) over S. We denote δp as an arbitrary integrable perturbation supported on S such that p + ϵδp ≥ 0 for sufficiently small |ϵ|. Thus the Gateaux derivative of J in the direction of δp is given by 
+
+ddϵ J [p + ϵδp ]
+
+> ϵ=0
+
+= −
+
+Z
+
+> S
+
+ddϵ 
+
+
+
+(p(x) + ϵδp (x)) ln( p(x) + ϵδp (x)) 
+
+
+
+dx
+
+> ϵ=0
+
++ λ0
+
+ Z 
+
+> S
+
+ddϵ 
+
+
+
+p(x) + ϵδp (x)
+
+
+
+dx
+
+> ϵ=0
+
+
+
+(E.100) 
+
++
+
+> m
+
+X
+
+> i=1
+
+λi
+
+ Z 
+
+> S
+
+ddϵ 
+
+
+
+ri(x)( p(x) + ϵδp (x))) dx
+
+
+
+> ϵ=0
+
+
+
+(E.101) 
+
+= −
+
+Z
+
+> S
+
+
+
+δp (x) ln( p(x) + ϵδp (x)) + δp (x)
+
+
+
+dx
+
+> ϵ=0
+
++ λ0
+
+ Z 
+
+> S
+
+1 · δp (x)dx
+
+
+
+(E.102) 
+
++
+
+> m
+
+X
+
+> i=1
+
+λi
+
+ Z 
+
+> S
+
+ri(x)δp (x)dx
+
+
+
+(E.103) 
+
+= −
+
+Z
+
+> S
+
+
+
+ln p(x) + 1 
+
+
+
+δp (x)dx +
+
+ Z 
+
+> S
+
+λ0 · δp (x)dx
+
+
+
++
+
+ Z 
+
+> Sm
+
+X
+
+> i=1
+
+λiri(x)δp (x)dx
+
+
+
+(E.104) (E.105) Thus the functional derivative is 
+
+δJ
+
+δp = − ln p(x) − 1 + λ0 +
+
+> m
+
+X
+
+> i=1
+
+λiri(x) (E.106) 
+
+27 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+Since this expression must vanish for all admissible perturbations δp , we get δJ 
+
+> δp
+
+= 0 almost everywhere on S. Solving for p yields 
+
+p(x) = exp 
+
+
+
+λ0 − 1 + 
+
+> m
+
+X
+
+> i=1
+
+λiri(x)
+
+
+
+(E.107) Absorbing the constant terms into ZS (λ), we end up with 
+
+p(x) = 1
+
+ZS (λ) exp 
+
+ mX
+
+> i=1
+
+λiri(x)
+
+
+
+· 1S (x) (E.108) 
+
+E.2. Proof of Proposition 3.3 (Maximum Entropy Distribution Under the ℓp Norm and Support Constraint) 
+
+Proof. By Lemma E.1, the target distribution has the form of 
+
+p(x) = 1
+
+ZS (λ1) exp( λ1∥x∥pp) · 1S (x) (E.109) 
+
+= 1
+
+ZS (λ1) exp 
+
+
+
+− ∥x∥pp
+
+pσ p
+
+
+
+· 1S (x) (E.110) where we choose λ1 = − 1 
+
+> pσ p
+
+which satisfies the constraint λ1 < 0 for integration. Thus we have recovered the zero-mean Generalized Gaussian distribution with scale parameter σ. Now notice that 
+
+ddλ 1
+
+log ZS (λ1) = 1
+
+ZS (λ1)
+
+ddλ 1
+
+ZS (λ1) (E.111) 
+
+= 1
+
+ZS (λ1)
+
+Z
+
+> S
+
+ddλ 1
+
+exp( λ1∥x∥pp)dx (E.112) 
+
+= 1
+
+ZS (λ1)
+
+Z
+
+> S
+
+∥x∥pp exp( λ1∥x∥pp)dx (E.113) 
+
+=
+
+Z
+
+> S
+
+∥x∥pp
+
+1
+
+ZS (λ1) exp 
+
+
+
+− ∥x∥pp
+
+pσ p
+
+
+
+· 1S (x)dx (E.114) 
+
+= E[∥x∥pp] (E.115) Thus we also obtain the constraint as E[∥x∥pp] = ddλ 1 log ZS (λ1).
+
+E.3. Maximum Entropy Distribution Under the ℓp Norm with Full Support 
+
+Corollary E.2. If S = Rd in Proposition 3.3, then the constraint 
+
+E[∥x∥pp] = ddλ 1
+
+log ZS (λ1) = dσ p (E.116) 
+
+and we recover the Generalized Gaussian distribution with zero mean and scale parameter σ.
+
+p(x) = pd−d/p 
+
+(2 σ)dΓ(1 /p )d exp 
+
+
+
+− ∥x∥pp
+
+pσ p
+
+
+
+(E.117) 
+
+Proof. By Proposition 3.3, the target distribution has the form of 
+
+p(x) = 1
+
+ZS (λ1) exp 
+
+
+
+− ∥x∥pp
+
+pσ p
+
+
+
+· 1S (x) (E.118) If S = Rd, then the normalization constant becomes 
+
+1
+
+ZS (λ1) = 1
+
+ZRd (λ1) = pd−d/p 
+
+(2 σ)dΓ(1 /p )d (E.119) According to Dytso et al. (2018), we know that E[|xi|p] = σp. Thus 
+
+E[∥x∥pp] = ddλ 1
+
+log ZS (λ1) = dσ p (E.120) 
+
+28 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+E.4. Maximum Entropy Distribution Under the ℓ1 Norm Constraint 
+
+In Corollary E.3, we show the well-known result that the maximum-entropy continuous multivariate distribution under the ℓ1 norm constraint is the product Laplace distribution. 
+
+Corollary E.3. The maximum entropy distribution over Rd under the constraints 
+
+Z
+
+> Rd
+
+p(x)dx = 1 , E[∥x∥1] = db (E.121) 
+
+is the product of independent univariate symmetric Laplace distributions with zero mean and scale parameter bp(x) = 
+
+ 12b
+
+d
+
+exp 
+
+
+
+− ∥x∥1
+
+b
+
+
+
+(E.122) 
+
+Proof. By Lemma E.1, the target distribution has the form of 
+
+p(x) ∝ exp( λ1∥x∥1) (E.123) with the constraint λ1 < 0 for integration. After normalization, we obtain 
+
+p(x) = 
+
+
+
+− λ1
+
+2
+
+d
+
+exp( λ1∥x∥1) (E.124) By a change of variable b = −1/λ 1, we arrive at 
+
+p(x) = 
+
+ 12b
+
+d
+
+exp 
+
+
+
+− ∥x∥1
+
+b
+
+
+
+(E.125) Thus we have recovered the zero-mean product Laplace distribution with scale parameter b.We note that the product Laplace distribution is different from the multivariate elliptical Laplace distribution presented in Kotz et al. (2012). For our purposes of identifying the maximum-entropy distribution under the expected ℓ1 norm constraints, we should use the product Laplace distribution as the multivariate generalization of the univariate symmetric Laplace distribution. 
+
+E.5. Maximum Entropy Distribution under the ℓ2 Norm Constraint 
+
+In Corollary E.4, we present the well-known result that the maximum-entropy continuous multivariate distribution under the ℓ2 norm constraint is the isotropic Gaussian distribution. 
+
+Corollary E.4. The maximum entropy distribution over Rd under the constraints 
+
+Z
+
+> Rd
+
+p(x)dx = 1 , E[x] = μ, E[( x − μ)( x − μ)⊤] = Σ (E.126) 
+
+is the multivariate Gaussian distribution with mean μ and covariance Σ
+
+p(x) ∝ exp 
+
+
+
+− 12 (x − μ)⊤Σ−1(x − μ)
+
+
+
+(E.127) 
+
+When μ = 0 and Σ = I, the density function takes the form of 
+
+p(x) ∝ exp 
+
+
+
+− 12 ∥x∥22
+
+
+
+(E.128) 
+
+Proof. Notice that the vector-valued mean constraint and matrix-valued covariance constraint can be factorized as a collection of scalar-valued constraints 
+
+E[xi] = μi, E[xixj ] = Σij + μiμj , ∀i, j ∈ { 1, · · · , d } (E.129) By Lemma E.1, the maximum entropy distribution has the form 
+
+p(x) ∝ exp 
+
+ dX
+
+> i=1
+
+λixi +
+
+> d
+
+X
+
+> i=1
+> d
+
+X
+
+> j=1
+
+Λij xixj
+
+
+
+(E.130) 
+
+= exp 
+
+
+
+λ⊤x + x⊤Λx 
+
+
+
+(E.131) 
+
+∝ exp 
+
+
+
+− 12 (x − μ)⊤Σ−1(x − μ)
+
+
+
+(E.132) 
+
+29 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+for λ = Σ−1μ and Λ = − 12 Σ−1, which is the multivariate Gaussian distribution up to normalizations. When μ = 0 and Σ = I, the density function trivially evaluates to 
+
+p(x) ∝ exp 
+
+
+
+− 12 ∥x∥22
+
+
+
+(E.133) which is the maximum-entropy distribution under the expected ℓ2 norm constraints based on Lemma E.1. 
+
+## F. R´ enyi Information Dimension and Entropy 
+
+In the following section, we provide a self-contained review of the R ´enyi information dimension and the d(ξ)-dimensional entropy. The contents are based on the original paper by R ´enyi (1959). After introducing the basic concepts in Appendix F.1, we go on to derive and prove the corresponding quantities for our Rectified Generalized Distribution in Appendix F.2. In Appendix F.3, we provide an empirical estimator for the d(ξ)-dimensional entropy. We further show, perhaps somewhat trivially, that the d(ξ)-dimensional entropy is in fact equivalent to another notion of entropy where we replace the Lebesgue measure λ in standard differential entropy with the mixed measure 
+
+ν := λ + δ0 (Appendix F.4) for δ0 being the Dirac measure in Definition B.4. In Appendix F.5, we discuss how the total correlation can be decomposed using different notions of entropy. 
+
+F.1. Definition of the d(ξ)-dimensional Entropy 
+
+Conventionally, the differential entropy for a random variable X with distribution function PX is defined as 
+
+H(X) = −
+
+Z dPX
+
+dλ log 
+
+ dPX
+
+dλ 
+
+
+
+dλ (F.134) where λ is the Lebesgue measure. For a Rectified Generalized Gaussian random variable X ∼ RGN p(μ, σ ), the Radon-Nikodym derivative of PX with respect to λ does not exist as shown in Lemma B.6. As a result, differential entropy is ill-defined for the Rectified Generalized Gaussian distribution. In the following section, we consider an alternative formulation known as the d(ξ)-dimensional entropy, where d(ξ) is the R ´enyi information dimension of the random variable ξ (R ´enyi, 1959). In Definition F.1, we review the basic definition of information dimension. 
+
+Definition F.1 (Information Dimension (R ´enyi, 1959)) . Consider a real-valued random variable ξ ∈ R and the discretization ξn =(1 /n ) · [nξ ], where [x] preserves only the integral part of x. For example, [3 .42] = 3 . Under suitable conditions, the information dimension d(ξ) exists and is given by 
+
+d(ξ) = lim 
+
+> n→∞
+
+H0(ξn)log n (F.135) where 
+
+H0(η) := 
+
+> ∞
+
+X
+
+> k=1
+
+qk log 1
+
+qk
+
+(F.136) is the Shannon entropy for a discrete random variable η with probabilities qk for k = 1 , 2, . . . .Intuitively, ξn represents the quantization of the real-valued random variable ξ at the grid resolution of 1/n . Thus the information dimension d(ξ) measures how fast the Shannon entropy grows as a result of finer and finer grind discretizations. In Definition F.2, we present the definition of the d(ξ)-dimensional entropy first introduced in R´ enyi (1959). 
+
+Definition F.2 (d(ξ)-dimensional Entropy (R ´enyi, 1959)) . If the information dimension d(ξ) exists, the d(ξ)-dimensional entropy is defined as 
+
+Hd(ξ) = lim 
+
+> n→∞
+
+(H0(ξn) − d(ξ) log n) (F.137) Effectively, the d(ξ)-dimensional entropy measures the amount of uncertainty distributed along the d(ξ) continuous degrees of freedom. For discrete random variable x, the information dimension d(x) = 0 since it’s invariant to finer discretization (R ´enyi, 1959). Thus the discrete Shannon entropy is the 0-dimensional entropy H0. The continuous random variable x′ has information dimension d(x′) = 1 and so the differential entropy is simply the 1-dimensional entropy H1 (R´ enyi, 1959). In Definition F.3, we review the special case of Hd(ξ) when the random variable ξ follows has a mixture probability measure. 
+
+Definition F.3 (d(ξ)-dimensional Entropy for Mixed Measures (R´ enyi, 1959)) . Let ξ be a random variable with probability measure 
+
+Pξ = (1 − d) · P0 + d · P1 (F.138) 
+
+30 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+where P0 is discrete and P1 is absolutely continuous with respect to the Lebesgue measure. Then the information dimension d(ξ) = d,and the d(ξ)-dimensional entropy is given by 
+
+Hd(ξ)(ξ) = (1 − d) ·
+
+> ∞
+
+X
+
+> k=1
+
+pk log 1
+
+pk
+
+− d ·
+
+Z
+
+> R
+
+dP1
+
+dλ (x) log 
+
+ dP1
+
+dλ (x)
+
+
+
+dλ (x) + d log 1
+
+d + (1 − d) log 11 − d (F.139) where λ is the Lebesgue measure. 
+
+F.2. Proof of Theorem 3.6 (The d(ξ)-dimensional Entropy of the Rectified Generalized Gaussian Distribution) 
+
+In the following section, we prove the d(ξ)-dimensional entropy characterization of the Multivariate Rectified Generalized Gaussian distribution presented in Theorem 3.6. 
+
+Proof. Since ξ ∼ QDi=1 RGN p(μ, σ ) where each ξi ∼ RGN p(μ, σ ) are i.i.d, it’s trivial that 
+
+d(ξ) = D · d(ξi) (F.140) 
+
+Hd(ξ)(ξ) = 
+
+> D
+
+X
+
+> i=1
+
+Hd(ξi)(ξi) = D · Hd(ξi)(ξi) (F.141) for all i by independence. In Appendix F.5, we also present an alternative interpretation of the d(ξ)-dimensional entropy that enables the decomposition of the joint entropy Hd(ξ)(ξ) into the sums of the marginals Hd(ξi)(ξi) under the independence assumption. Thus it suffices to prove in the univariate case. By Definition B.5 and Definition F.3, we know that the information dimension is given by 
+
+d(ξi) = 1 − ΦGN p(0 ,1) 
+
+
+
+− μσ
+
+
+
+= Φ GN p(0 ,1) 
+
+ μσ
+
+
+
+(F.142) We observe that P0 in Definition F.3 correspond to the Dirac measure δ0 in Definition B.5. Thus 
+
+(1 − d(ξi)) ·
+
+> ∞
+
+X
+
+> k=1
+
+pk log 1
+
+pk
+
+= (1 − d(ξi)) · (1 log 1) = 0 (F.143) Now we can define a Bernoulli gating random variable 
+
+1(0 ,∞)(ξi) = 
+
+(
+
+1, if ξi ∈ (0 , ∞) = ⇒ with probability d(ξi)0, if ξi /∈ (0 , ∞) = ⇒ with probability 1 − d(ξi) (F.144) It’s well known that the Shannon entropy for a Bernoulli random variable is 
+
+H0(1(0 ,∞)(ξi)) = d(ξi) log 1
+
+d(ξi) + (1 − d(ξi)) log 11 − d(ξi) (F.145) Thus by Definition F.3, the d(ξi)-dimensional entropy is 
+
+Hd(ξi)(ξi) = 0 − d(ξi) ·
+
+Z
+
+> R
+
+dPT GN p(μ,σ )
+
+dλ (x) log 
+
+ dPT GN p(μ,σ )
+
+dλ (x)
+
+
+
+dλ (x) + H0(1(0 ,∞)(ξi)) (F.146) 
+
+= Φ GN p(0 ,1) 
+
+ μσ
+
+
+
+· H1(T GN p(μ, σ )) + H0(1(0 ,∞)(ξi)) (F.147) So we have proven the expression in Theorem 3.6. 
+
+F.3. Empirical Estimators of the d(ξ)-dimensional entropy 
+
+Lemma F.4 (Probability Measure Under Rectification) . Let X ∼ PX be a real-valued random variable where PX is absolutely continuous with respect to the Lebesgue measure λ, i.e. PX ≪ λ. Then the probability measure of Z := max(0 , X ) over ([0 , ∞), B([0 , ∞))) is 
+
+PZ = (1 − d) · δ0 + d · PX|(0 ,∞) (F.148) 
+
+where δ0 is the Dirac measure and 1 − d := P(Z = 0) = P(X ≤ 0) and 
+
+PX|(0 ,∞)(A) := PX (A ∩ (0 , ∞)) 
+
+PX ((0 , ∞)) = PX (A)
+
+d (F.149) 
+
+for any Borel A ⊂ (0 , ∞).
+
+31 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+Proof. Let φ : R → [0 , ∞) be the rectification map φ(x) := max(0 , x ). Then PZ is the pushforward of PX by φ, i.e. for any Borel set 
+
+B ∈ B ([0 , ∞)) ,
+
+PZ (B) = PX (φ−1(B)) . (F.150) We can write φ−1(B) as 
+
+φ−1(B) =  φ−1(B) ∩ (−∞ , 0]  ∪  φ−1(B) ∩ (0 , ∞), (F.151) For x ∈ (−∞ , 0] , φ(x) = 0 . So we have 
+
+φ−1(B) ∩ (−∞ , 0] = 
+
+(
+
+(−∞ , 0] , 0 ∈ B, 
+
+∅, 0 /∈ B. (F.152) Now for (0 , ∞), φ(x) = x. So we have 
+
+φ−1(B) ∩ (0 , ∞) = B ∩ (0 , ∞). (F.153) Combining these together, we arrive at 
+
+PZ (B) = PX (φ−1(B)) = PX (B ∩ (0 , ∞)) + PX (( −∞ , 0]) · δ0(B) (F.154) where δ0(B) is the Dirac measure in Definition B.4 that evaluates to 1 if 0 ∈ B and 0 otherwise. Let d := P(X > 0) = PX ((0 , ∞)) . So trivially, 1 − d = P(X ≤ 0) = PX (( −∞ , 0]) . By the definition of the conditional measure, we have that for any A ∈ B (R),
+
+PX|(0 ,∞)(A) := PX (A ∩ (0 , ∞)) 
+
+PX ((0 , ∞)) = PX (A ∩ (0 , ∞)) 
+
+d , A ∈ B (R). (F.155) Then for every B ∈ B ([0 , ∞)) ,
+
+PZ (B) = d PX|(0 ,∞)(B) + (1 − d) δ0(B) (F.156) Thus we have proven the expression of the probability measure. Now if A ⊂ (0 , ∞) is Borel, then A ∩ (0 , ∞) = A and we have 
+
+PX|(0 ,∞)(A) = PX (A)/d .
+
+Lemma F.5 (Radon–Nikodym Derivative Under Rectifications) . Let X ∼ PX be a real-valued random variable where PX is absolutely continuous with respect to the Lebesgue measure λ, i.e. PX ≪ λ. Consider Z := max(0 , X ) ∼ PZ and let δ0 be the Dirac measure in Definition B.4. Then the Radon–Nikodym derivative of PZ with respect to ν = δ0 + λ is given by 
+
+dPZ
+
+dν (x) = (1 − d) · 1{0}(x) + d · dPX|(0 ,∞)
+
+dλ (x) · 1(0 ,∞)(x) (F.157) 
+
+Proof. Following the same arguments in Lemma B.6, we know that PZ is absolutely continuous with respect to ν, i.e. PZ ≪ ν. Again, following the same arguments in Lemma B.7, we observe that for any Borel A ⊂ [0 , ∞)
+
+Z
+
+> A
+
+dPZ
+
+dν dν =
+
+Z
+
+> A
+
+dPZ
+
+dν dδ 0 +
+
+Z
+
+> A
+
+dPZ
+
+dν dλ (F.158) Notice that 
+
+Z
+
+> A
+
+dPZ
+
+dν dδ 0 = dPZ
+
+dν (0) δ0(A) = (1 − d) · δ0(A) (F.159) and 
+
+Z
+
+> A
+
+dPZ
+
+dν dλ =
+
+Z
+
+> A
+
+(1 − d) · 1{0}(x)dλ (x) + 
+
+Z
+
+> A
+
+d · dPX|(0 ,∞)
+
+dλ (x) · 1(0 ,∞)(x)dλ (x) (F.160) 
+
+= (1 − d) ·
+
+Z
+
+> A
+
+1{0}(x)dλ (x) + 
+
+Z
+
+> A∩(0 ,∞)
+
+d · dPX|(0 ,∞)
+
+dλ (x) · dλ (x) (F.161) 
+
+= 0 + d ·
+
+Z
+
+> A∩(0 ,∞)
+
+dPX|(0 ,∞)(x) (F.162) 
+
+= d · PX|(0 ,∞)(A) (F.163) 
+
+32 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+Putting everything together, we have 
+
+Z
+
+> A
+
+dPZ
+
+dν dν = (1 − d) · δ0(A) + d · PX|(0 ,∞)(A) = PZ (A) (F.164) Thus we have shown that the Radon–Nikodym derivative is correct. Consider a real-valued random variable X from some unknown distribution PX that’s absolutely continuous with respect to the Lebesgue measure. Let Z = max( X, 0) be the rectified random variable. Then by Lemma F.4, the probability measure of Z can be written as 
+
+PZ = (1 − d) · δ0 + d · PX|(0 ,∞) (F.165) where δ0 is the Dirac measure and 1 − d := P(Z = 0) = P(X ≤ 0) and 
+
+PX|(0 ,∞)(A) = PX (A)
+
+PX ((0 , ∞)) (F.166) for any Borel A ⊂ (0 , ∞). This is a probabilistic model that is suitable for characterizing the neural network output feature marginal distributions after rectifications. Notice that Equation (F.165) is in the form presented in Definition F.3. Thus it’s valid to compute the 
+
+d(Z)-dimensional entropy for any distribution that follows the decomposition in Equation (F.165). We also observe that the Rectified Generalized Gaussian probability measure is just a special case of Equation (F.165). By Definition F.3, the d(Z)-dimensional entropy is given by 
+
+Hd(Z)(Z) = d(Z) · H1(PX|(0 ,∞)) + H0(1(0 ,∞)(Z)) (F.167) In practice, we will have samples {zi}Bi=1 from the random variable Z. We can estimate the information dimension by 
+
+ˆd(Z) = 1
+
+B
+
+> B
+
+X
+
+> i=1
+
+1(0 ,∞)(zi) (F.168) Now we consider a subset {zi}B′ 
+
+> i=1
+
+where each zi > 0. The differential entropy over {zi}B′ 
+
+> i=1
+
+can be computed using the m-spacing estimator (Vasicek, 1976; Learned-Miller et al., 2003) 
+
+ˆH1(PX|(0 ,∞)) = 1
+
+B′ − m
+
+> B′−m
+
+X
+
+> i=1
+
+log 
+
+ B′ + 1 
+
+m
+
+
+
+z(i+m) − z(i)
+
+ 
+
+(F.169) where m is a spacing hyperparameter, and {z(i) | z(1) ≤ z(2) ≤ · · · ≤ z(B′)}B′ 
+
+> i=1
+
+are sorted samples of the original set {zi}B′
+
+> i=1
+
+. Putting these estimators together, the empirical d(Z)-dimensional entropy can be computed as 
+
+ˆHd(Z)(Z) = ˆd(Z) · ˆH1(PX|(0 ,∞)) + ˆd(Z) log 1ˆd(Z) + (1 − ˆd(Z)) log 11 − ˆd(Z) (F.170) If we consider the multivariate case for the random vector z = ReLU( x), where x ∈ RD follows some unknown distribution Px and 
+
+ReLU( ·) applies coordinate-wise, then in general we cannot compute the d(z)-dimensional entropy of the joint distribution Pz both due to lack of estimators and intractable complexity. However, we can compute the upper bound of the joint entropy by computing the sums of the marginal entropies 
+
+Hd(z)(z) ≤
+
+> D
+
+X
+
+> i=1
+
+Hd(zi)(zi) (F.171) where ” ≤” reduces to the equality sign ” =” if we have independence between all dimensions. 
+
+F.4. Alternative Interpretation of the d(ξ)-dimensional Entropy 
+
+Let’s denote the standard differential entropy as Hλ(X)
+
+Hλ(X) = −
+
+Z dPX
+
+dλ log 
+
+ dPX
+
+dλ 
+
+
+
+dλ (F.172) 
+
+33 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+where λ is the Lebesgue measure, X ∼ PX is a real-valued random variable, and PX ≪ λ. We know from Appendix F.3 that the probability measure of Z := ReLU( X) is defined as 
+
+PZ = (1 − d) · δ0 + d · PX|(0 ,∞) (F.173) Let’s consider another definition of entropy with respect to the mixued measure ν := δ0 + λ
+
+Hν (Z) = −
+
+Z dPZ
+
+dν log 
+
+ dPZ
+
+dν 
+
+
+
+dν (F.174) In Lemma F.6, we show that this coincides with the d(Z)-dimensional entropy in Definition F.3. 
+
+Lemma F.6. The entropy Hν (Z) is equivalent to the d(Z)-dimensional entropy 
+
+Hν (Z) = Hd(Z)(Z) (F.175) 
+
+Proof. We start by expanding the integral 
+
+Hν (Z) = −
+
+Z dPZ
+
+dν log 
+
+ dPZ
+
+dν 
+
+
+
+dν (F.176) 
+
+= −
+
+Z dPZ
+
+dν log 
+
+ dPZ
+
+dν 
+
+
+
+dδ 0 −
+
+Z dPZ
+
+dν log 
+
+ dPZ
+
+dν 
+
+
+
+dλ (F.177) By the property of the Dirac measure, we have 
+
+−
+
+Z dPZ
+
+dν (x) log 
+
+ dPZ
+
+dν (x)
+
+
+
+dδ 0(x) = − dPZ
+
+dν (0) log 
+
+ dPZ
+
+dν (0) 
+
+
+
+= −(1 − d) log(1 − d) (F.178) Lemma F.5 tells us that 
+
+dPZ
+
+dν (x) = (1 − d) · 1{0}(x) + d · dPX|(0 ,∞)
+
+dλ (x) · 1(0 ,∞)(x) (F.179) Due to the term 1{0}(x), any Lebesgue measure evaluates to 0 since {0} is a Lebesgue measure zero set. So effectively, we can write 
+
+−
+
+Z dPZ
+
+dν log 
+
+ dPZ
+
+dν 
+
+
+
+dλ = −
+
+Z
+
+d · dPX|(0 ,∞)
+
+dλ (x) · 1(0 ,∞)(x) log( d · dPX|(0 ,∞)
+
+dλ (x) · 1(0 ,∞)(x)) dλ (x) (F.180) 
+
+= −
+
+Z
+
+d · dPX|(0 ,∞)
+
+dλ (x) · 1(0 ,∞)(x) log( dPX|(0 ,∞)
+
+dλ (x) · 1(0 ,∞)(x)) dλ (x) (F.181) 
+
+−
+
+Z
+
+d · dPX|(0 ,∞)
+
+dλ (x) · 1(0 ,∞)(x) log( d)dλ (x) (F.182) 
+
+= d · H1(PX|(0 ,∞)) − d log( d) (F.183) Combing the terms together, we have 
+
+Hν (Z) = d · H1(PX|(0 ,∞)) − d log( d) − (1 − d) log(1 − d) (F.184) 
+
+= d · H1(PX|(0 ,∞)) + d log 
+
+ 1
+
+d
+
+
+
++ (1 − d) log 
+
+ 1
+
+d − 1
+
+
+
+(F.185) By Definition F.3, the information dimension d(Z) = d. Notice how H0(δ0) = 0 . So we have 
+
+Hν (Z) = d(Z) · H1(PX|(0 ,∞)) + d(Z) log 
+
+ 1
+
+d(Z)
+
+
+
++ (1 − d(Z)) log 
+
+ 1
+
+d(Z) − 1
+
+
+
+= Hd(Z)(Z). (F.186) 
+
+34 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+F.5. Generalization of the Entropy Decomposition of Total Correlation 
+
+The standard definition of total correlation for the the random vector x = ( x1, . . . , xD ) ∼ Px in D dimensions is 
+
+TC( x) = DKL 
+
+
+
+Px
+
+> D
+
+Y
+
+> i=1
+
+Pxi
+
+
+
+=
+
+Z
+
+log 
+
+ dPx
+
+QDi=1 Pxi
+
+
+
+dPx (F.187) which only involves the joint probability measure and the product of marginal probability measures. However, when it comes to the entropy decomposition of the total correlation, we know that 
+
+TC( x) = 
+
+> D
+
+X
+
+> i=1
+
+Hλ(xi) − Hλ⊗D (x) (F.188) where λ is the Lebesgue measure over R and λ⊗D is the Lebesgue measure over Rd. For our purposes, we adopt the decomposition 
+
+TC( x) = 
+
+> D
+
+X
+
+> i=1
+
+Hν (xi) − Hν⊗D (x) (F.189) where ν := δ0 + λ and Hν is defined in Lemma F.6 and is equivalent to the d-dimensional entropy. So we have 
+
+TC( x) = 
+
+> D
+
+X
+
+> i=1
+
+Hd(xi)(xi) − Hd(x)(x) (F.190) 
+
+## G. Hilbert-Schmidt Independence Criterion 
+
+For two random variables X, Y with empirical samples x, y ∈ RB×1, the empirical Hilbert-Schmidt Independence Criterion (HSIC) is given by 
+
+HSIC( X, Y ) = 1(B − 1) 2 Tr( KHLH ) (G.191) where Kij = k(xi, xj ), Lij = l(xi, xj ) for some kernels k, l , H := I − (1 /B ) · 11 ⊤ is the centering matrix, and Tr( ·) is the trace operator (Gretton et al., 2005). We denote the normalized HSIC as 
+
+nHSIC( X, Y ) = HSIC( X, Y )
+
+pHSIC( X, X ) · HSIC( Y, Y ) (G.192) Both HSIC and nHSIC capture nonlinear dependencies beyond second-order statistics and thus serve as a proxy for measuring statistical independence beyond inspecting the covariance matrix. For a feature random vector z ∈ Rd, we can obtain the nHSIC matrix by computing all pair-wise nHSIC( zi, zj ). In our experiments, we report the average of the off-diagonals of the nHSIC matrix in Figure 4b. Following Mialon et al. (2022), we pick the Gaussian kernel where the bandwidth parameter σ is the median of pairwise ℓ2 distances between samples. Due to the presence of rectifications, we set σ
+
+to be the standard deviation of the positive activations. 
+
+## H. Baseline Designs 
+
+CL and NCL . We denote SimCLR (Chen et al., 2020) as CL. Non-Negative Contrastive Learning (NCL) (Wang et al., 2024) essentially applies the SimCLR loss over rectified features and thus is a sparse variant of contrastive learning. 
+
+VICReg and NVICReg . VICReg (Bardes et al., 2022) minimizes the ℓ2 distance between the features of semantically related views while regularizing the empirical feature covariance matrix towards scalar times identity γ · I. We design a sparse version of VICReg, which we call Non-Negative VICReg (NVICReg), that applies the same VICReg loss over rectified features. 
+
+ReLU and RepReLU . Let z ∈ R. NCL (Wang et al., 2024) adopts a reparameterization of the standard rectified non-linearity as 
+
+RepReLU( z) := ReLU( z). detach() + GeLU( z) − GeLU( z). detach() (H.193) where detach() blocks gradient flow. The RepReLU( ·) is equivalent to ReLU( ·) in the forward pass but allows gradient for negative entries. For NCL and NVICReg, we use NCL-ReLU and NVICReg-ReLU to denote usage of ReLU( ·) and NCL-RepReLU and NVICReg-RepReLU when using RepReLU( ·).
+
+35 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+For our Rectified LpJEPA, we note that we just use ReLU( ·) to avoid extra hyperparameter tuning. We defer detailed investigations on the activation functions to future work. 
+
+LpJEPA and LeJEPA . Rectified LpJEPA regularizes rectified features towards Rectified Generalized Gaussian distributions. We also design LpJEPA, which regularize non-rectified features towards the Generalized Gaussian distributions using the same projections-based distribution matching loss. When p = 2 , LpJEPA reduces to LeJEPA (Balestriero & LeCun, 2025), since GN 2(μ, σ ) = N (μ, σ 2). For 
+
+0 < p ≤ 1, LpJEPA is still penalizing the ∥ · ∥ pp norms of the features and thus serves as another set of sparse baselines even though all entries are non-zero. 
+
+## I. Non-Negative VCReg Recovery 
+
+The Cramer-Wold device provides asymptotic guarantees for feature distribution to match the Rectified Generalized Gaussian distribution 
+
+Qdi=1 RGN p(μ, σ ) with i.i.d coordinates and thus no higher-order dependencies across dimensions. Prior work such as VCReg (Bardes et al., 2022) demonstrates that explicitly removing second-order dependencies via covariance regularization is already sufficient to prevent representational collapse in practice. This motivates us to investigate whether RDMReg likewise controls second-order dependencies more explicitly. In Proposition I.1, we show that matching feature distributions to the Rectified Generalized Gaussian distribution recovers a form of Non-Negative VCReg with only a linear number of random projections in the feature dimension. 
+
+Proposition I.1 (Implicit Regularization of Second-Order Statistics) . Let z ∈ Rd be a neural network feature random vector with covariance matrix Cov[ z] = Σ. We denote the eigendecomposition as Σ = UΛU ⊤ with the set of eigenvectors being {ui}di=1 . Let 
+
+y ∼ Qdi=1 RGN p(μ, σ ) be the Rectified Generalized Gaussian random vector and define γ := Var[ RGN p(μ, σ )] ∈ (0 , ∞). If 
+
+u⊤ 
+
+> i
+
+z d
+
+= u⊤ 
+
+> i
+
+y for all i ∈ { 1, . . . , d }, then Σ = γ · Id.Proof. Let Σ = Cov[ z] and let Σ = UΛU ⊤ be its eigendecomposition, where U = [ u1, . . . , ud] is orthonormal and Λ =diag( λ1, . . . , λ d). Since y ∼ Qdi=1 RGN p(μ, σ ) has i.i.d. coordinates with variance γ := Var[ RGN p(μ, σ )] , its covariance satisfies 
+
+Cov[ y] = γId. Hence, for any vector ui such that ∥ui∥2 = 1 ,
+
+Var( u⊤ 
+
+> i
+
+y) = u⊤ 
+
+> i
+
+(γId)ui = γ · ∥ ui∥22 = γ. (I.194) By the assumption u⊤ 
+
+> i
+
+z d
+
+= u⊤ 
+
+> i
+
+y for all i, the variances of the one-dimensional projected marginals are equal, i.e. 
+
+Var( u⊤ 
+
+> i
+
+z) = Var( u⊤ 
+
+> i
+
+y) = γ ∀i. (I.195) On the other hand, for each eigenvector ui,
+
+Var( u⊤ 
+
+> i
+
+z) = u⊤ 
+
+> i
+
+Σu i = λi · ∥ ui∥22 = λi, (I.196) where λi is the i-th eigenvalue of Σ. Therefore λi = γ for all i, so Λ = γId.Substituting back into the eigendecomposition yields 
+
+Σ = UΛU ⊤ = U(γId)U⊤ = γId, (I.197) which is a scalar multiple of the identity. Hence all off-diagonal entries of Σ vanish and the covariance matrix is isotropic. Thus we have shown that by sampling eigenvectors {ui}di=1 , we can explicitly control the covariance matrix of neural network features. In practice, we always have B ≪ D. Thus truncated SVD has O(B2D) complexity using dense methods (Golub & Van Loan, 2013), or 
+
+O(BDk ) when computing only the top-k eigenvectors via Lanczos or randomized methods (Parlett, 1998; Halko et al., 2011). Since our feature matrix Z ∈ RB×D is obtained after rectifications, RDMReg thus recovers a form of Non-Negative VCReg, where we regularize non-negative neural network features to have isotropic covariance matrix. In fact, we can also view this as a non-negative matrix factorization (NMF) (Lee & Seung, 2000): 
+
+∥γ · Id − ˜Z⊤ ˜Z∥2 
+
+> F
+
+(I.198) where ˜Z := (1 /√B − 1) · Z is always non-negative. Non-Negative Contrastive Learning (NCL) (Wang et al., 2024) shows that applying SimCLR loss over rectified features recovers a form of NMF over the rescaled variant of the Gram matrix. Based on the Gram-Covariance matrix duality between contrastive and non-contrastive learning (Garrido et al., 2022), we observe a similar duality in NMF and defer the detailed investigations to future work. 
+
+## J. Additional Experimental Results 
+
+In the following section, we include additional experimental results for evaluating our Rectified LpJEPA methods. 
+
+36 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+Table 2. Linear Probe Results on CIFAR-100. Acc1 (%) is higher-is-better ( ↑); sparsity is lower-is-better ( ↓). Bold denotes best and underline denotes second-best in each column (ties allowed). Encoder Acc1 ↑ Projector Acc1 ↑ L1 Sparsity ↓ L0 Sparsity ↓
+
+Rectified LpJEPA RGN 2.0(0 , σ GN ) 66 .29 62 .15 0.3773 0.7357 
+
+RGN 1.0(0 , σ GN ) 65 .97 62 .22 0.3019 0.6474 
+
+RGN 0.75 (0 , σ GN ) 65 .78 62 .80 0.2583 0.6099 
+
+RGN 0.50 (0 , σ GN ) 66 .10 62 .74 0.1996 0.5727 
+
+RGN 1.0(−2, σ GN ) 64 .75 59 .08 0.0236 0.0489 
+
+Sparse Baselines NCL-ReLU 66 .23 61 .88 0.0228 0.0503 
+
+NVICReg-ReLU 63 .76 58 .82 0.7415 0.8935 
+
+NCL-RepReLU 66.32 61 .40 0.0202 0.0426 
+
+NVICReg-RepReLU 63 .83 58 .53 0.1551 0.2657 
+
+Dense Baselines SimCLR 66 .00 61 .95 0.6364 1.0000 
+
+VICReg 63 .78 58 .82 0.8660 1.0000 
+
+LeJEPA 65 .65 62 .69 0.6379 1.0000 
+
+J.1. Linear Probe over CIFAR-100 
+
+In Table 2, we report linear probe performances of Rectified LpJEPA and other dense and sparse baselines over CIFAR-100. Rectified LpJEPA achieves competitive sparsity-performance tradeoffs. 
+
+J.2. Ablations on Projector Dimensions 
+
+In Table 9, we compare VICReg, LeJEPA, and Rectified LpJEPA with varying projector dimensions. We observe that Rectified LpJEPA consistently attains competitive or better performances. 
+
+J.3. Rectified LpJEPA with ViT Backbones 
+
+We evaluate whether the strong performance of Rectified LpJEPA with a ResNet backbone shown in Table 1 generalizes across encoder architectures. As shown in Table 10, Rectified LpJEPA remains competitive when instantiated with a ViT encoder. 
+
+J.4. Additional Results on Eigenvectors 
+
+We would like to know whether incoporating the eigenvectors of the empirical feature covariance matrices into the projection directions for RDMReg can lead to faster convergence and directly removes second-order dependencies. To this end, we pretrain Rectified LpJEPA with RDMReg and log the variance and covariance loss defined in VICReg (Bardes et al., 2022). The variance loss computes the ℓ2 distance between the diagonal of the empirical feature covariance matrix and the theoretical variance of the Rectified Generalized Gaussian distribution as we derived in Proposition B.9. The covariance loss is simply the sum of the off-diagonal entries of the empirical feature covariance matrix scaled by 1/D , where D is the feature dimension. We emphasize that we don’t incorporate the variance and covariance losses into optimizations but only use them as evaluation metrics. In Figure 14, we show that incorporating eigenvectors indeed leads to faster convergence and better performance and also signficant reduc-tions in the variance and covariance loss. This further validates our observations on the Non-Negative VCReg recovery (Proposition I.1) of the RDMReg loss as we observe significant reductions in second-order dependencies. 
+
+J.5. Additional Results on Transfer Sparsity 
+
+In Figure 12, we plot the ℓ0 and ℓ1 sparsity metrics for baselines and Rectified LpJEPA across different downstream transfer tasks. We observe that Rectified LpJEPA exhibits larger variations in the sparsity values across datasets, indicating that sparsity can be used as a crude proxy for whether the task at hand is within the training distribution. In Figure 19, we further probe whether the sparsity metric can be used as a signal for whether groups of inputs are correctly or incorrectly classified by the model. We observe that this is partially true when the inputs are from the pretraining dataset. The distribution of the 
+
+ℓ1 sparsity metrics is distinct between correctly and incorrectly classified examples. The divergence is less prominent for downstream transfer tasks, and we defer further investigations to future work. 
+
+37 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 0.4 0.6 0.8 1.0  
+
+> 1
+
+Sparsity 1 1 
+
+> D
+
+[ z 21/ z 22]
+
+> 0.25
+> 0.30
+> 0.35
+> 0.40
+> 0.45
+> 0.50
+> 0.55
+> 0.60
+> Validation Accuracy
+> -3
+> -2
+> -1
+> 0
+> 1
+> p
+> 2.0
+> 1.0
+> 0.75
+> 0.5
+> 0.25
+
+(a) The Pareto frontier of performance against ℓ1 sparsity 10 1 10 0     
+
+> (1/ D)[z0](Log Scale)
+> 10 1
+> (1/ D) [ z 21 z 22] (Log Scale)
+> x=0.04
+
+y=0.025 
+
+> Backbones
+> ResNet
+> ViT
+> ConvNeXt
+> 0.52
+> 0.54
+> 0.56
+> 0.58
+> 0.60
+> 0.62
+> Linear Probe Accuracy
+
+(b) Correlation between ℓ1 and ℓ0 Sparsity Metrics 10 1 10 2 10 3 10 4                
+
+> Number of Projections
+> 30
+> 40
+> 50
+> 60
+> Validation Accuracy
+> D= 512 |B= 128
+> D= 1024 |B= 128
+> D= 2048 |B= 128
+> D= 4096 |B= 128
+
+(c) The Effect of Number of Random Projections 
+
+Figure 13. Additional results on the sparsity-performance tradeoffs, the correlation between different sparsity metrics, and the effect of numbers of random projections on performance . (a) We present another version of Figure 3c where the sparsity metric is switched from ℓ0 to ℓ1. Again, we observe the same Pareto frontier with a sharp drop in performance under extreme sparsity. (b) Across different backbones, Rectified LpJEPAs with the target distribution being the Rectified Laplace distributions learn sparser representations as we decrease the mean shift value μ. Specifically, we observe that the ℓ0 and ℓ1 metrics are quite correlated. Thus both metrics are effective in measuring sparsity. (c) We test Rectified LpJEPA models with batch size B = 128 and varying feature dimension D as long as numbers of projections. As we increase the dimensions D, we observe that the number of random projections required for good performance do not grow and are small relative to D. Hence our Rectified LpJEPA is quite robust to the growth in feature dimensions in terms of sampling efficiency. 
+
+## K. Qualitative Analysis of Rectified LpJEPA 
+
+In the following section, we present qualitative analyses of Rectified LpJEPA models and baseline models pretrained over ImageNet-100. We use the target distribution RGN p(μ, σ GN ) to denote Rectified LpJEPA with hyperparameters {μ, σ GN , p }. In Appendix K.1, we visualize nearest-neighbor retrieval of selected exemplar images in representation space. We present additional visual attribution maps in Appendix K.2. 
+
+K.1. k-Nearest Neighbors Visualizations 
+
+For a selected exemplar image, we retrieve its top-k nearest neighbors from the ImageNet-100 validation set using cosine similarity over frozen projector features. Retrieved neighbors are outlined in green if their labels match the exemplar’s class and in red otherwise. In Figure 15, we visualize the top-7 nearest neighbors of a pirate ship exemplar for Rectified LpJEPA with p = 1 under varying mean-shift values μ, alongside dense and sparse baseline models. Despite substantial variation in feature sparsity induced by μ, Rectified LpJEPA consistently retrieves semantically coherent neighbors: across all settings, the retrieved images belong exclusively to the pirate ship class. Combined with the competitive linear-probe performance reported in Table 1, these qualitative results suggest that Rectified LpJEPA preserves semantic structure even in highly sparse regimes. We next consider a more challenging exemplar depicting a tabby cat in the foreground against a laptop background. As shown in Figure 16, dense baselines such as SimCLR (denoted CL for brevity) retrieve a mixture of cat and laptop images, indicating label-agnostic encodings that capture multiple objects present in the scene. In contrast, both sparse baselines and Rectified LpJEPA predominantly retrieve images of cats, except in the extreme sparsity setting of Rectified LpJEPA with μ = −3. In this regime, the retrieved neighbors consist almost exclusively of laptop images. This behavior suggests that under extreme sparsity, either information about the cat is lost or the background laptop features dominate over the cat features. To distinguish between these possibilities, we further probe Rectified LpJEPA with μ = −3 by cropping the exemplar image to retain only the cat foreground. As shown in Figure 17, once the background is removed, Rectified LpJEPA with μ = −3 consistently retrieves images of cats. This shows that even under extreme sparsity, Rectified LpJEPA still preserves information instead of being a lossy compression of the input, and we hypothesize that retrieval of solely laptop images in Figure 16 is due to competitions between features in the scene rather than information loss. 
+
+K.2. Visual Attribution Maps 
+
+To further support the above observations, we visualize attribution maps for the tabby cat exemplar and its cropped variant using Grad-CAM-style heatmaps (Selvaraju et al., 2019). Specifically, we backpropagate a scalar score derived from the representation—the squared ℓ2 norm of the projector feature—to a late backbone layer, and compute a weighted combination of activations that is overlaid on 
+
+38 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+Table 3. 1-shot linear probe accuracy (%) using encoder features. All results are in the 1-shot setting. Avg. denotes the mean across datasets. model DTD cifar10 cifar100 flowers food pets avg. Non-negative VICReg 11.86 65.62 24.95 5.09 24.82 29.74 27.01 Non-negative SimCLR 11.17 67.67 24.23 5.59 24.44 19.71 25.47 
+
+Our methods 
+
+RGN 1.0(0 , σ GN ) 9.89 68.31 26.27 4.21 25.98 17.66 25.39 
+
+RGN 1.0(−1, σ GN ) 9.47 67.19 23.58 4.85 24.93 16.60 24.44 
+
+RGN 1.0(−2, σ GN ) 12.66 66.36 23.91 10.18 24.88 25.18 27.20 
+
+RGN 1.0(−3, σ GN ) 9.31 50.39 8.35 6.13 10.63 21.72 17.76 
+
+RGN 2.0(0 , σ GN ) 14.04 69.47 24.09 4.86 25.68 24.34 27.08 
+
+RGN 2.0(−1, σ GN ) 12.82 65.97 24.12 4.91 24.44 20.20 25.41 
+
+RGN 2.0(−2, σ GN ) 13.88 59.62 15.88 7.84 16.21 24.97 23.07 
+
+RGN 2.0(−3, σ GN ) 11.06 55.71 11.42 8.18 12.92 12.13 18.57 
+
+Dense baselines 
+
+VICReg 10.85 63.98 21.52 6.23 25.29 23.33 25.20 SimCLR 12.82 66.90 23.93 10.60 24.99 24.12 27.23 
+
+LeJEPA 15.85 68.07 24.57 5.79 23.72 24.34 27.06 the input image. As shown in Figure 18, when the background laptop is removed, all models concentrate their attributions on the cat, consistent with the cat-only retrieval behavior observed in Figure 17. For the full image containing both the cat and the laptop, attributions are more spatially spread-out. Notably, Rectified LpJEPA with μ = −3 places a large fraction of its attribution mass on the background, aligning with its tendency to retrieve laptop images in Figure 16. Taken together, these results demonstrate that even under extreme sparsity, Rectified LpJEPA performs task-agnostic encoding without discarding information. This behavior aligns with our objective of learning sparse yet maximum-entropy representations, since maximizing entropy encourages preserving as much information about the input as possible while remaining agnostic to downstream tasks. 
+
+## L. Implementation Details 
+
+L.1. Pretraining data and setup 
+
+We conduct self-supervised pretraining on ImageNet-100 using a ResNet-50 encoder. Unless otherwise specified, all methods are trained with identical data, architecture, optimizer, and augmentation pipelines to ensure fair comparison. 
+
+L.2. Architecture 
+
+The encoder is followed by a 3-layer MLP projector with hidden and output dimension 2048. For Rectified LpJEPA variants, denoted 
+
+RGN p(μ, σ GN ), we append a final ReLU( ·) to the projector output to enforce explicit rectifications in the representation space. When 
+
+p = 1 , our target distribution is Rectified Laplace. For p = 2 , the RDMReg loss is matching to the Rectified Gaussian distribution. 
+
+L.3. Data augmentation 
+
+Following the standard protocol in da Costa et al. (2022), we generate two stochastic views per image using: random resized crop (scale in [0 .2, 1.0] , output resolution 224 × 224 ), random horizontal flip ( p = 0 .5), color jitter ( p = 0 .8; brightness 0.4, contrast 0.4, saturation 
+
+0.2, hue 0.1), random grayscale ( p = 0 .2), Gaussian blur ( p = 0 .5), and solarization ( p = 0 .1). 
+
+L.4. Optimization 
+
+We pretrain for 1000 epochs using LARS optimizer (You et al., 2017) with a warmup+cosine learning rate schedule (10 warmup epochs). Unless otherwise specified, we use batch size 128, learning rate 0.0825 for the encoder, learning rate 0.0275 for the linear classifier, momentum 0.9, and weight decay 10 −4. All ImageNet-100 experiments are run on a single node with a single NVIDIA L40S GPU. 
+
+39 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+Table 4. 1-shot linear probe accuracy (%) using projector features. All results are in the 1-shot setting. Avg. denotes the mean across datasets. model DTD cifar10 cifar100 flowers food pets avg. Non-negative VICReg 8.62 33.47 7.51 3.25 8.78 17.28 13.15 Non-negative SimCLR 6.70 41.71 9.24 2.91 9.17 15.37 14.18 
+
+Our methods 
+
+RGN 1.0(0 , σ GN ) 6.81 48.96 11.46 2.03 12.09 16.38 16.29 
+
+RGN 1.0(−1, σ GN ) 7.82 47.14 11.20 2.75 11.43 14.94 15.88 
+
+RGN 1.0(−2, σ GN ) 10.37 38.36 9.13 5.56 9.53 20.93 15.65 
+
+RGN 1.0(−3, σ GN ) 5.69 32.25 5.16 2.70 5.76 19.02 11.76 
+
+RGN 2.0(0 , σ GN ) 10.59 47.74 10.61 2.70 11.46 20.50 17.27 
+
+RGN 2.0(−1, σ GN ) 9.84 46.97 12.33 3.07 11.70 19.38 17.21 
+
+RGN 2.0(−2, σ GN ) 9.57 35.08 6.59 4.49 7.41 20.69 13.97 
+
+RGN 2.0(−3, σ GN ) 9.20 18.36 2.64 2.33 3.64 7.14 7.22 
+
+Dense baselines 
+
+VICReg 8.09 39.35 6.74 3.04 9.34 19.49 14.34 SimCLR 12.39 48.05 11.52 7.24 14.16 21.34 19.12 
+
+LeJEPA 8.30 48.17 11.27 4.47 11.84 18.32 17.06 
+
+L.5. Distribution matching objective 
+
+For Rectified LpJEPA, we set the invariance weight to λsim = 25 .0 and the RDMReg loss weight to λdist = 125 .0. We perform distribution-matching using the sliced 2-Wasserstein distance (SWD) with 8192 random projections per iteration. 
+
+L.6. Compute and runtime 
+
+A full 1000-epoch ImageNet-100 pretraining run takes approximately 2d 7h wall-clock time on a single NVIDIA L40S GPU. To speed-up training, we pre-load the entire ImageNet-100 dataset to CPU memory to avoid additional I/O costs. We find that this significantly improves GPU utilization and also minimizes the communication time. However, we’re not able to do this for larger-scale datasets. 
+
+L.7. Transfer evaluation protocol 
+
+We evaluate transfer performance with frozen-feature linear probing on six downstream datasets: DTD, CIFAR-10, CIFAR-100, Flowers-102, Food-101, and Oxford-IIIT Pets. For each pretrained checkpoint, we freeze the encoder (and projector when applicable) and train a single linear classifier on top of both encoder features and projector features. We report three label regimes: 1% (1-shot), 10% (10-shot), and 100% (All-shot) of the labeled training data. The linear probe is trained for 100 epochs using Adam with learning rate 10 −2, batch size 512, and no weight decay. Evaluation inputs are resized to 256 on the shorter side, then center-cropped to 224 × 224 and normalized with ImageNet statistics; we apply no data augmentation during probing. 
+
+L.8. Reproducibility. 
+
+All ImageNet-100 pretraining results are reported from a single run (seed 5), trained with mixed-precision ( 16 -mixed) on a single NVIDIA L40S GPU (one node, one GPU; no distributed training). 
+
+L.9. Continuous mapping theorem evaluation (post-hoc ReLU probes). 
+
+For the continuous mapping theorem ablation (Figure 11b), we evaluate pretrained checkpoints by extracting frozen encoder/projector features and optionally applying a post-hoc rectification ReLU( ·) at evaluation time. We report (i) sparsity statistics computed on the validation features before and after rectification, and (ii) linear probe accuracy when training on dense (pre-ReLU) features versus rectified (post-ReLU) features. Linear probes are trained for 100 epochs using SGD (momentum 0.9) with a cosine learning-rate schedule, learning rate 10 −2, batch size 512, and weight decay 10 −6. We use the same deterministic evaluation preprocessing described in Appendix L.7. 
+
+40 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+Table 5. 10-shot linear probe accuracy (%) using encoder features. All results are in the 10-shot setting. Avg. denotes the mean across datasets. model DTD cifar10 cifar100 flowers food pets avg. Non-negative VICReg 37.23 77.88 47.32 31.16 48.33 55.49 49.57 Non-negative SimCLR 40.11 79.11 50.35 23.96 50.60 50.37 49.08 
+
+Our methods 
+
+RGN 1.0(0 , σ GN ) 41.91 79.58 49.67 24.93 49.97 55.63 50.28 
+
+RGN 1.0(−1, σ GN ) 38.19 78.98 48.76 32.87 48.51 55.41 50.45 
+
+RGN 1.0(−2, σ GN ) 40.32 79.25 45.86 22.72 46.51 56.91 48.60 
+
+RGN 1.0(−3, σ GN ) 19.63 66.93 24.45 8.25 26.12 32.76 29.69 
+
+RGN 2.0(0 , σ GN ) 40.90 80.15 50.69 29.76 50.34 53.07 50.82 
+
+RGN 2.0(−1, σ GN ) 39.63 79.00 47.51 26.85 47.39 55.60 49.33 
+
+RGN 2.0(−2, σ GN ) 30.80 73.88 34.61 12.03 35.56 44.92 38.63 
+
+RGN 2.0(−3, σ GN ) 15.27 68.30 24.84 7.64 29.79 26.63 28.74 
+
+Dense baselines 
+
+VICReg 38.35 76.25 45.63 26.52 48.30 52.19 47.88 SimCLR 41.70 77.88 46.87 31.66 49.27 49.74 49.52 LeJEPA 38.67 79.06 49.02 30.18 49.34 53.88 50.03 
+
+L.10. Vision Transformer (ViT) experiments 
+
+For the ViT results in Table 10, we use a ViT-Small backbone ( vit small ). The encoder is followed by a 3-layer MLP projector with hidden and output dimension 2048 (i.e., a 2048 –2048 –2048 MLP), and we apply a final ReLU( ·) to the projector output. We pretrain on ImageNet-100 for 1000 epochs using AdamW (batch size 128, learning rate 5 × 10 −4, weight decay 10 −4) under the same augmentation pipeline described above. Other hypers are the same as used for ResNet-50 Experiments. A full 1000-epoch ImageNet-100 pretraining run for ViT takes approximately 2d 6h wall-clock time. Unless otherwise specified, we use mixed-precision (16-mixed) training on a single NVIDIA L40S GPU. 
+
+41 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+Table 6. 10-shot linear probe accuracy (%) using projector features. All results are in the 10-shot setting. Avg. denotes the mean across datasets. model DTD cifar10 cifar100 flowers food pets avg. Non-negative VICReg 22.50 43.24 10.56 12.86 12.65 32.92 22.46 Non-negative SimCLR 23.09 48.38 17.73 8.72 14.97 32.87 24.29 
+
+Our methods 
+
+RGN 1.0(0 , σ GN ) 24.47 58.06 22.40 9.97 19.73 40.17 29.13 
+
+RGN 1.0(−1, σ GN ) 25.90 57.61 22.39 11.40 21.24 38.18 29.45 
+
+RGN 1.0(−2, σ GN ) 23.83 44.69 15.32 9.19 14.65 33.31 23.50 
+
+RGN 1.0(−3, σ GN ) 18.19 36.39 9.03 7.46 8.67 26.17 17.65 
+
+RGN 2.0(0 , σ GN ) 22.82 57.93 21.26 12.07 19.03 36.90 28.33 
+
+RGN 2.0(−1, σ GN ) 27.39 57.32 24.07 13.06 21.54 40.01 30.57 
+
+RGN 2.0(−2, σ GN ) 22.23 40.83 12.58 8.93 12.01 29.38 20.99 
+
+RGN 2.0(−3, σ GN ) 9.89 23.81 5.03 6.02 6.15 10.08 10.16 
+
+Dense baselines 
+
+VICReg 23.09 41.20 10.24 10.60 13.55 32.49 21.86 SimCLR 33.09 59.56 25.91 15.68 28.61 42.00 34.14 
+
+LeJEPA 24.95 55.76 19.55 10.72 17.17 38.98 27.85 
+
+Table 7. All-shot linear probe accuracy (%) using encoder features. All-shot uses the full training set. Avg. denotes the mean across datasets. model DTD cifar10 cifar100 flowers food pets avg. Non-negative VICReg 63.56 82.68 60.40 82.55 60.39 78.63 71.37 Non-negative SimCLR 64.68 84.41 62.95 84.97 63.32 76.56 72.82 
+
+Our methods 
+
+RGN 1.0(0 , σ GN ) 65.05 84.50 62.73 83.75 62.65 78.00 72.78 
+
+RGN 1.0(−1, σ GN ) 64.68 83.97 60.75 81.77 60.25 77.68 71.52 
+
+RGN 1.0(−2, σ GN ) 63.67 85.31 58.11 81.62 58.39 77.38 70.75 
+
+RGN 1.0(−3, σ GN ) 49.04 79.11 43.94 44.72 46.22 61.30 54.06 
+
+RGN 2.0(0 , σ GN ) 64.52 85.06 64.51 84.09 62.35 78.25 73.13 
+
+RGN 2.0(−1, σ GN ) 64.26 84.21 59.90 81.59 59.47 77.65 71.18 
+
+RGN 2.0(−2, σ GN ) 57.87 82.19 49.81 69.38 51.90 68.93 63.35 
+
+RGN 2.0(−3, σ GN ) 53.35 78.95 45.32 57.47 46.32 52.22 55.61 
+
+Dense baselines 
+
+VICReg 62.77 81.47 59.23 80.96 60.44 77.11 70.33 SimCLR 64.73 82.49 60.10 80.47 61.18 71.44 70.07 LeJEPA 63.19 83.54 62.38 83.07 61.14 78.30 71.94 
+
+42 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 0 250 500 750 1000 
+
+Epoch 
+
+0.01 
+
+0.02 
+
+0.03 
+
+0.04 
+
+0.05 
+
+0.06 
+
+> Variance Loss
+
+Mean Shift Value: -1.0 
+
+> Rand + Bottom Eig
+> Rand + Full Eig
+> Rand
+
+(a) Variance Loss when μ = −10 250 500 750 1000 
+
+Epoch 
+
+0.10 
+
+0.15 
+
+0.20 
+
+0.25 
+
+0.30 
+
+> Covariance Loss
+
+Mean Shift Value: -1.0  
+
+> Rand + Bottom Eig
+> Rand + Full Eig
+> Rand
+
+(b) Covariance Loss when μ = −10 250 500 750 1000 
+
+Epoch 
+
+10 
+
+20 
+
+30 
+
+40 
+
+50 
+
+60 
+
+> Projector Accuracy
+
+Mean Shift Value: -1.0  
+
+> Rand + Bottom Eig
+> Rand + Full Eig
+> Rand
+
+(c) Accuracy when μ = −10 250 500 750 1000 
+
+Epoch 
+
+0.05 
+
+0.10 
+
+0.15 
+
+0.20 
+
+> Variance Loss
+
+Mean Shift Value: 0.0 
+
+> Rand + Bottom Eig
+> Rand + Full Eig
+> Rand
+
+(d) Variance Loss when μ = 0 0 250 500 750 1000 
+
+Epoch 
+
+1
+
+2
+
+3
+
+4
+
+5
+
+6
+
+7
+
+> Covariance Loss
+
+Mean Shift Value: 0.0  
+
+> Rand + Bottom Eig
+> Rand + Full Eig
+> Rand
+
+(e) Covariance Loss when μ = 0 0 250 500 750 1000 
+
+Epoch 
+
+10 
+
+20 
+
+30 
+
+40 
+
+50 
+
+60 
+
+> Projector Accuracy
+
+Mean Shift Value: 0.0  
+
+> Rand + Bottom Eig
+> Rand + Full Eig
+> Rand
+
+(f) Accuracy when μ = 0 0 250 500 750 1000 
+
+Epoch 
+
+0.1 
+
+0.2 
+
+0.3 
+
+0.4 
+
+> Variance Loss
+
+Mean Shift Value: 1.0 
+
+> Rand + Bottom Eig
+> Rand + Full Eig
+> Rand
+
+(g) Variance Loss when μ = 1 0 250 500 750 1000 
+
+Epoch 
+
+5
+
+10 
+
+15 
+
+20 
+
+25 
+
+> Covariance Loss
+
+Mean Shift Value: 1.0  
+
+> Rand + Bottom Eig
+> Rand + Full Eig
+> Rand
+
+(h) Covariance Loss when μ = 1 0 250 500 750 1000 
+
+Epoch 
+
+10 
+
+20 
+
+30 
+
+40 
+
+50 
+
+60 
+
+> Projector Accuracy
+
+Mean Shift Value: 1.0  
+
+> Rand + Bottom Eig
+> Rand + Full Eig
+> Rand
+
+(i) Accuracy when μ = 1 
+
+Figure 14. Incorporating eigenvectors into random projections accelerates implicit VCReg loss minimization and speed-up convergence . We pretrain Rectified LpJEPA over CIFAR-100 with target distributions RGN 1(μ, σ GN ) where the mean shift value 
+
+μ ∈ {− 1, 0, 1}. We consider three settings of selecting the projection vectors {ci}Ni=1 where we set N = 8192 . We denote the setting as ”Rand” if all ci are uniformly sampled from the unit ℓ2 sphere. Since in our setting the batch size is always smaller than the feature dimension, i.e. B < D , we call the setting ”Rand + Full Eig” if we select the top-B eigenvectors and mix them with N − B random projection vectors. We also consider ”Rand + Bottom Eig” by sampling the bottom half B/ 2 eigenvectors and mixing with N − B/ 2
+
+random projections. (a) (d) (g) We evaluate the variance loss between the three settings across varying μ. Incorporating all eigenvectors puts overly strong constraints, whereas penalizing the bottom half eigenvectors gives us good performances. (b) (e) (h) the covariance losses are evaluated during training and plotted for different projection vector settings across μ. Regularizing all top-B eigenvector projections leads to significant implicit covariance loss minimization, where the covariance loss is the average of the off-diagonal of the empirical covariance matrix. (c) (f) (i) We report the projector accuracy against epoch for different projection settings. Using eigenvectors leads to both faster convergence and ultimately better performance. 
+
+43 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+Table 8. All-shot linear probe accuracy (%) using projector features. All-shot uses the full training set. Avg. denotes the mean across datasets. model DTD cifar10 cifar100 flowers food pets avg. Non-negative VICReg 35.80 47.70 14.90 32.04 15.74 44.84 31.83 Non-negative SimCLR 36.86 50.24 21.92 25.57 17.70 47.02 33.22 
+
+Our methods 
+
+RGN 1.0(0 , σ GN ) 41.49 63.14 29.46 39.96 26.70 52.55 42.22 
+
+RGN 1.0(−1, σ GN ) 42.82 63.05 32.96 39.68 28.98 55.08 43.76 
+
+RGN 1.0(−2, σ GN ) 39.84 48.69 19.47 29.65 18.21 44.51 33.39 
+
+RGN 1.0(−3, σ GN ) 28.72 37.47 11.13 12.65 9.61 36.09 22.61 
+
+RGN 2.0(0 , σ GN ) 41.81 62.82 29.31 37.32 24.80 53.18 41.54 
+
+RGN 2.0(−1, σ GN ) 45.00 63.85 34.13 42.72 30.30 56.09 45.35 
+
+RGN 2.0(−2, σ GN ) 34.52 43.39 15.19 23.34 14.44 40.39 28.55 
+
+RGN 2.0(−3, σ GN ) 21.38 24.92 6.58 7.94 7.20 16.63 14.11 
+
+Dense baselines 
+
+VICReg 37.55 44.84 13.37 34.23 17.03 43.45 31.75 SimCLR 51.65 63.71 35.10 45.73 36.06 57.78 48.34 
+
+LeJEPA 40.05 56.81 23.42 43.31 20.70 51.19 39.25 
+
+Table 9. Projector Dimension Ablation on ImageNet-100. For each method and projector dimension, we report the best linear probe accuracy (%) over learning rates {0.3, 0.03 }. Encoder and projector accuracies are measured using frozen features. Bold indicates the best value within each projector-dimension block. Method Encoder Acc1 ↑ Projector Acc1 ↑
+
+Projector Dim. = 512 
+
+VICReg 63.72 57.80 LeJEPA 65.53 59.18 
+
+RGN 1.0(0 , σ GN ) 67.56 61.34 
+
+RGN 2.0(0 , σ GN ) 68.31 61.74 Projector Dim. = 2048 
+
+VICReg 68.73 61.81 LeJEPA 67.18 60.12 
+
+RGN 1.0(0 , σ GN ) 69.33 64.90 
+
+RGN 2.0(0 , σ GN ) 69.54 64.85 
+
+44 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+Table 10. RGN 1.0(μ, σ GN ) Mean-Shift Sweep (ViT) with Baselines. We report encoder Acc1 (val acc1), projector Acc1 (val proj acc1), and sparsity metrics. Bold indicates best in a column; underline indicates second best. For sparsity columns, lower is better (more sparse). Method Enc Acc1 ↑ Proj Acc1 ↑ ℓ1 Sparsity ↓ ℓ0 Sparsity ↓
+
+Ours: RGN 1.0(μ, σ GN ) (Mean Shift Value, MSV) 
+
+RGN 1.0(1 .0, σ GN ) 74.34 65.60 0.6459 0.9359 
+
+RGN 1.0(0 .5, σ GN ) 74.58 66.42 0.4768 0.8825 
+
+RGN 1.0(0 .0, σ GN ) 75.44 67.16 0.2730 0.7721 
+
+RGN 1.0(−0.5, σ GN ) 74.80 66.86 0.1407 0.5526 
+
+RGN 1.0(−1.0, σ GN ) 74.18 65.14 0.0737 0.3067 
+
+RGN 1.0(−1.5, σ GN ) 74.88 63.70 0.0390 0.1227 
+
+RGN 1.0(−2.0, σ GN ) 73.54 60.70 0.0238 0.0523 
+
+RGN 1.0(−2.5, σ GN ) 72.06 57.96 0.0188 0.0357 
+
+RGN 1.0(−3.0, σ GN ) 71.64 57.46 0.0132 0.0220 
+
+Baselines (Dense) 
+
+LeJEPA 65.36 59.12 0.6369 1.0000 VICReg 72.06 63.56 0.7877 1.0000 SimCLR 74.18 66.86 0.6663 1.0000 
+
+Baselines (Sparse / NonNeg) 
+
+NonNeg-VICReg 71.64 65.42 0.5075 0.7066 NonNeg-SimCLR 74.48 63.76 0.0016 0.0023 
+
+45 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+Figure 15. Nearest neighbors in feature space (ImageNet synset; unambiguous class). Top-k cosine nearest neighbors in the projector 
+
+space for a query labeled as pirate ship. Both dense and sparse methods retrieve pirate ships consistently, illustrating that even at high sparsity our models can preserve semantic consistency when the query is unambiguous. 
+
+46 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+Figure 16. Nearest neighbors in feature space (ImageNet synset; full scene). Top-k cosine nearest neighbors in the projector space for a query labeled as tabby cat (n02123045) that contains both the cat and a salient laptop/desk context. Dense methods (e.g., SimCLR) can return a mixture of cat and laptop/desk neighbors. In contrast, highly sparse RGN 1.0(μ, σ GN ) variants tend to commit to a single factor: at MSV = −2 neighbors are predominantly tabby cats, while at MSV = −3 neighbors flip to predominantly laptop/desk images. 
+
+47 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+Figure 17. Nearest neighbors in feature space (probe crop). Top-k cosine nearest neighbors in the projector space for a zoomed-in query that isolates the cat from Figure 16 by removing the competing laptop/desk cues. In this less ambiguous setting, neighbors remain tabby cats across both dense and highly sparse methods, including the most sparse RGN 1.0(μ, σ GN ) variants. 
+
+48 Rectified LpJEPA: Joint-Embedding Predictive Architectures with Sparse and Maximum-Entropy Representations 
+
+Figure 18. Representation-focused attribution across methods. Grad-CAM-style attribution maps computed on the projector 
+
+representation for two views of the same scene (a tabby cat lying on a laptop). Rows compare dense baselines (SimCLR, VICReg, LeJEPA), sparse baselines (RepReLU variants), and our RGN p(μ, σ GN ) family (where p = 1 .0 corresponds to Laplace and μ is the mean-shift value, MSV) at increasing mean-shift values, which induce increasing sparsity. 
+
+Figure 19. Distribution of representation sparsity in the transfer setting. Violin plots showing the distribution of output-feature 
+
+ℓ1 sparsity for correctly (green) and incorrectly (red) classified samples across datasets and methods. All models are pretrained on ImageNet-100 and evaluated using a full-shot linear-probe transfer setup, where a linear classifier is trained on frozen representations using 100% of each downstream dataset. Sparsity is computed per sample from the frozen output features. 
+
+49

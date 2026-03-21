@@ -1,0 +1,413 @@
+Title: MedProbCLIP: Probabilistic Adaptation of Vision-Language Foundation Model for Reliable Radiograph-Report Retrieval
+
+URL Source: https://arxiv.org/pdf/2602.16019v1
+
+Published Time: Thu, 19 Feb 2026 01:18:22 GMT
+
+Number of Pages: 10
+
+Markdown Content:
+# MedProbCLIP: Probabilistic Adaptation of Vision-Language Foundation Model for Reliable Radiograph-Report Retrieval 
+
+Ahmad Elallaf 1 Yu Zhang 2 Yuktha Priya Masupalli 1 Jeong Yang 1 Young Lee 1 Zechun Cao 1 Gongbo Liang 1∗ 
+
+> 1
+
+Texas A&M University-San Antonio 2 Boise State University aelallaf@tamusa.edu yzhang@boisestate.edu ymasupalli@tamusa.edu {jyang, ylee, zcao, gliang }@tamusa.edu 
+
+https://github.com/FOURM-LAB/MedProbCLIP 
+
+# Abstract 
+
+Vision-language foundation models have emerged as pow-erful general-purpose representation learners with strong potential for multimodal understanding, but their deter-ministic embeddings often fail to provide the reliability re-quired for high-stakes biomedical applications. This work introduces MedProbCLIP, a probabilistic vision-language learning framework for chest X-ray and radiology report representation learning and bidirectional retrieval. Med-ProbCLIP models image and text representations as Gaus-sian embeddings through a probabilistic contrastive objec-tive that explicitly captures uncertainty and many-to-many correspondences between radiographs and clinical narra-tives. A variational information bottleneck mitigates over-confident predictions, while MedProbCLIP employs multi-view radiograph encoding and multi-section report encod-ing during training to provide fine-grained supervision for clinically aligned correspondence, yet requires only a single radiograph and a single report at inference. Evaluated on the MIMIC-CXR dataset, MedProbCLIP outperforms deter-ministic and probabilistic baselines, including CLIP, CXR-CLIP, and PCME++, in both retrieval and zero-shot clas-sification. Beyond accuracy, MedProbCLIP demonstrates superior calibration, risk-coverage behavior, selective re-trieval reliability, and robustness to clinically relevant cor-ruptions, underscoring the value of probabilistic vision-language modeling for improving the trustworthiness and safety of radiology image-text retrieval systems. 
+
+# 1. Introduction 
+
+Modern neural network models have shown promising re-sults in various application domains, particularly in health-care [1–3] and safety-critical systems [4–7]. However, the success of these models is often constrained by their depen-dence on large amounts of fully labeled training data. To mitigate this data scarcity, vision-language represen-tation learning has emerged as a powerful paradigm. By modeling the semantic relationships between visual obser-vations and their associated textual descriptions [8], these frameworks learn robust, transferable embeddings that sup-port diverse downstream applications [9–11] without re-quiring dense manual annotations. In the biomedical do-main, aligning chest X-rays with radiology reports cre-ates a unified multimodal representation of clinical infor-mation [12]. Cross-modal retrieval is particularly impactful in this context. Despite this potential, medical image-text retrieval poses unique challenges compared to natural image domains. Ra-diographs frequently exhibit subtle findings, multi-view in-consistencies, and overlapping disease patterns, while free-text reports describe these observations with varying lev-els of specificity. Consequently, the correspondence be-tween images and reports is inherently many-to-many : asingle report may summarize findings spanning multiple studies, and the same pathology can manifest across dis-tinct radiographs. Conventional contrastive frameworks, such as CLIP [8], TIMNet [13], and CXR-CLIP [11], treat alignment as deterministic, point-to-point matching, limit-ing their ability to capture this structured ambiguity. Beyond structural ambiguity, reliability is crucial for clinical adoption [14]. Deterministic embeddings produce overconfident similarity scores and cannot express when an image-report alignment is uncertain [15, 16]. Yet trustwor-thy medical AI systems must offer calibrated confidence estimates, support selective prediction (i.e., abstaining on uncertain cases), and remain robust to variations in image quality, patient positioning, and acquisition conditions. Ex-isting models rarely incorporate explicit uncertainty mod-eling and therefore risk generating brittle or misleading re-trieval results [17]. To address these limitations, we introduce MedProb-CLIP , a probabilistic vision-language framework for chest X-ray and radiology report representation learning. Rather than mapping inputs to single embedding points, MedProb- 
+
+> arXiv:2602.16019v1 [cs.CV] 17 Feb 2026 Figure 1. Illustration of inherent many-to-many relationships in cross-modal datasets. Although MS-COCO annotates only a sin-gle caption as the positive match to one image (blue arrows), hu-man raters often identify multiple additional plausible matches (pink dashed arrows). Such unannotated positives create false neg-atives that violate the one-to-one assumption commonly enforced in contrastive learning, motivating models capable of handling am-biguity and uncertainty in image-text alignment.
+
+CLIP learns distributional representations, estimating both a mean and variance for each image and text input. This probabilistic formulation naturally captures predictive un-certainty and more faithfully reflects the complex, many-to-many relationships present in clinical data. To the best of our knowledge, this work presents one of the first systematic studies in medical vision-language retrieval demonstrating that probabilistic modeling simul-taneously improves retrieval accuracy and reliability. Our contributions are summarized as follows: • We introduce MedProbCLIP, a probabilistic contrastive learning framework for medical image-text retrieval that models similarities using distribution-based embeddings rather than deterministic points. • We perform a comprehensive evaluation against strong and widely adopted baselines, including CLIP, CXR-CLIP, and PCME++ [18], under identical training and evaluation conditions on the MIMIC-CXR dataset [19]. • We demonstrate that probabilistic modeling consis-tently improves retrieval performance while enhancing uncertainty-aware reliability, including better calibration and selective prediction capabilities compared to deter-ministic counterparts. 
+
+# 2. Background 
+
+2.1. Problem Definition 
+
+Let a cross-modal retrieval dataset be defined as X =
+
+{(x(i) 
+
+> v
+
+, x (i) 
+
+> t
+
+)}Ni=1 , where x(i) 
+
+> v
+
+∈ V and x(i) 
+
+> t
+
+∈ T denote paired samples from the visual and textual domains, respec-tively. Under the standard dataset construction, each pair 
+
+(x(i) 
+
+> v
+
+, x (i) 
+
+> t
+
+) is treated as the only positive match, i.e., y(i,j ) 
+
+> vt
+
+=1 ⇐⇒ i = j, where y(i,j ) 
+
+> vt
+
+indicates whether the i-th image and the j-th text naturally correspond. Contrastive retrieval models are therefore trained to learn a matching function 
+
+> Figure 2. Example of a contrastive learning model.
+
+h(·) such that h(x(i) 
+
+> v
+
+, x (i) 
+
+> t
+
+) > x (i) 
+
+> v
+
+, x (j) 
+
+> t
+
+, ∀i̸ = j, implicitly enforcing a one-to-one alignment between modalities. However, real data rarely obey this assumption. Figure 1 illustrates that many datasets, such as MS-COCO, contain numerous plausible yet unannotated positive matches. Hu-mans often judge multiple x(j) 
+
+> t
+
+as relevant to the same x(i) 
+
+> v
+
+,and vice versa, resulting in inherently many-to-many rela-tionships. In medical imaging, this issue becomes more pronounced: a radiology report may summarize findings across several studies, and a single pathology can appear across multiple images from the same or different encoun-ters. Thus, datasets built with strict one-to-one assumptions inevitably contain large numbers of false negatives, which can misguide deterministic contrastive learning approaches. 
+
+2.2. Contrastive Learning 
+
+Contrastive learning provides a principled framework for learning joint representations across modalities. Given an image-text pair (x(i) 
+
+> v
+
+, x (i) 
+
+> t
+
+), dual-encoder models learn em-beddings z(i) 
+
+> v
+
+= hv (x(i) 
+
+> v
+
+) and z(i) 
+
+> t
+
+= ht(x(i) 
+
+> t
+
+), where hv (·)
+
+and ht(cot) are modality-specific encoders. A similarity function s(·, ·) (e.g., cosine similarity) is used to encourage matched pairs to be close and mismatched pairs to be far apart: s(x(i) 
+
+> v
+
+, x (i) 
+
+> t
+
+) ≫ s(( x(i) 
+
+> v
+
+, x (j) 
+
+> t
+
+), i ̸ = j. This objective is typically implemented with a bidirectional InfoNCE loss or its variants, forming the basis of widely used models such as CLIP [8], ConVIRT [20], and TIMNet [13]. Figure 2 illus-trates the general architecture: two encoders independently embed images and texts, and a contrastive loss aligns the paired representations. While contrastive learning is highly effective, deter-ministic embeddings z(i) 
+
+> v
+
+and z(i) 
+
+> t
+
+assume a single correct alignment for each pair. This assumption breaks down under many-to-many relationships or ambiguous matches, where multiple texts may be relevant to the same image and vice versa (as shown in Figure 1). Under such cir-cumstances, deterministic contrastive losses can be misled by false negatives, forcing embeddings of genuinely re-lated pairs apart. This limitation motivates distributional or uncertainty-aware representations that can better capture the intrinsic ambiguity in real-world cross-modal data. Figure 3. Deterministic Embedding vs Probabilistic Embedding 
+
+2.3. Image-Text Retrieval in Medical Imaging 
+
+Large-scale paired datasets such as MIMIC-CXR [19] have enabled significant progress in cross-modal retrieval be-tween chest X-rays and their associated radiology reports. A broad spectrum of medical vision-language models has been proposed, which can be roughly categorized by the supervision they require. Models with enhanced supervi-sion, such as BioViL [21], achieve strong performance by leveraging explicit phrase grounding: radiology reports are manually annotated with localized regions (e.g., bounding boxes) corresponding to specific clinical findings. While these methods often set the absolute state-of-the-art, their reliance on costly, fine-grained annotations places them in a fundamentally different supervision regime, as such anno-tations are rarely available in real-world clinical datasets. In contrast, paired-only models learn directly from read-ily available image-report pairs without requiring additional structured labels. Approaches such as ConVIRT [20], TIM-Net [13], and CXR-CLIP [11] follow this paradigm, with CXR-CLIP emerging as the strongest, most widely adopted representatives that follows the CLIP architecture, yielding robust retrieval performance while remaining fully compat-ible with the supervision level provided by MIMIC-CXR. Because our work aims to improve models that learn solely from paired image-report data, without relying on phrase-grounding annotations or other enhanced supervi-sion, CXR-CLIP represents the appropriate state-of-the-art baseline for our setting. It is strong, widely recognized, and directly comparable under identical training conditions. 
+
+# 3. Method 
+
+3.1. Motivation 
+
+Cross-domain retrieval models such as CLIP and CXR-CLIP learn a shared embedding space using deterministic point embeddings and contrastive losses. Although effec-tive, these models map each input to a single location in latent space, which limits their ability to represent the am-biguity, annotation noise, and intra-class variability inherent in medical imaging. Figure 3 (left) illustrates this limitation. Three visually similar chest X-rays ( Z(1)  
+
+> v
+
+, Z(2)  
+
+> v
+
+, Z(3)  
+
+> v
+
+) lie close to the same text embedding ( Z(2)  
+
+> t
+
+). A deterministic formulation forces the model to assign a single positive label y(2 ,2)  
+
+> vt
+
+= 1 while treating other clinically plausible alternatives as negatives, 
+
+> Figure 4. Overview of the MedProbCLIP architecture.
+
+despite their overlapping semantics. This produces noisy supervision, distorted gradients, and overconfident retrieval scores that accumulate severely in domains with subtle find-ings and many-to-many relationships. In contrast, probabilistic embedding represents each in-put as a distribution rather than a point. As shown in Figure 3 (right), ambiguous or semantically overlapping samples naturally exhibit larger variances, indicating un-certainty in their alignment. Conversely, confidently un-matched samples (e.g., Z(4)  
+
+> v
+
+) form compact, low-variance distributions. 
+
+3.2. Probabilistic Contrastive Learning 
+
+To capture uncertainty in cross-modal alignment, MedProb-CLIP models image and text embeddings as diagonal Gaus-sian distributions. For an image xv and a report xt, their latent representations are: Zv ∼ N (μv , σ 2 
+
+> v
+
+) and Zt ∼N (μt, σ 2 
+
+> t
+
+), where μv , μ t ∈ RD are mean embeddings and 
+
+σ2 
+
+> v
+
+, σ 2 
+
+> t
+
+∈ RD 
+
+> +
+
+are diagonal variances. Low-variance distri-butions indicate confident matches, whereas high-variance embeddings represent ambiguity or weak evidence. Following PCME++ [18], the discrepancy between two distributions is computed using the contrastive stochastic distance (CSD): 
+
+d(Zv , Z t) = 12
+
+> D
+
+X
+
+> d=1
+
+
+
+μ(d) 
+
+> v
+
+− μ(d)
+
+> t
+
+2
+
+σ2( d) 
+
+> v
+
++ σ2( d)
+
+> t
+
++ log 
+
+
+
+σ2( d) 
+
+> v
+
++ σ2( d)
+
+> t
+
+ ,
+
+(1) which jointly accounts for both mean separation and uncer-tainty through the summed variances. Given a binary match label yvt ∈ { 0, 1}, the probabilis-tic negative log-likelihood (NLL) is: 
+
+L = − yvt log( σ(−a · d(Zv , Z t) + b)) 
+
+− (1 − yvt ) log( σ(−a · d(Zv , Z t) − b)) , (2) where σ(·) denotes the sigmoid function, and a, b are learn-able scalars controlling the scale and offset of the logits. This objective encourages matched distributions to be close (and confident) while pushing unmatched ones apart. To regularize variances and prevent trivial solutions, each distribution is constrained via KL divergence to a unit Gaussian: 
+
+LKL = 12
+
+> D
+
+X
+
+> d=1
+
+
+
+σ2( d) +
+
+
+
+μ(d)2
+
+− 1 − log σ2( d)
+
+
+
+, (3) computed separately for images and texts. 
+
+3.3. Architecture 
+
+Figure 4 presents the overall architecture of our probabilis-tic contrastive learning framework for medical image-report retrieval. Unlike CLIP or PCME++, which operate on sin-gle image-text pairs, our model jointly processes two image inputs ( xv1 , x v2 ) and two text inputs ( xt1 , x t2 ). This de-sign exploits two common properties of clinical data: 1) medical reports contain multiple semantically complemen-tary sections (e.g., Findings, Impression), and 2) chest X-ray studies often include multiple imaging views (e.g., PA and lateral). When a second view or second text section is not available, we generate an auxiliary input through data augmentation to maintain consistent training behavior. The model consists of two encoder branches: a visual encoder for chest X-ray images and a textual encoder for ra-diology reports. Each encoder produces a deterministic em-bedding, which is then transformed by a distribution learn-ing module into a Gaussian distribution parameterized by mean μ and diagonal variance σ2. This yields four proba-bilistic embeddings, Zv1 , Zv2 , Zt1 , and Zt2 , capturing both semantic content and uncertainty arising from ambiguity across views, report sections, or image-text relationships. 
+
+3.4. Model Training 
+
+During training, the model computes probabilistic distances between all relevant pairs of distributions, including image-text pairs, image-image pairs, and text-text pairs, using Equation 2 to compare Gaussian embeddings. To prevent the model from predicting unbounded vari-ances and to regularize the distributional space, we addi-tionally apply a variational information bottleneck (VIB) penalty (Equation 3), computing KL divergence between each embedding distribution and a unit Gaussian prior. The final training objective is a weighted combination of inter-modal NLL, intra-modal NLL terms, and KL regular-ization: 
+
+Ltotal =Linter + λI Lintra-I + λT Lintra-T +
+
+βI KL img + βT KL text , (4) where Linter inter-modal probabilistic NLL, averaged over the four image-text pairs, Lintra-I and Lintra-T are intra-modal symmetry losses between the image views and text inputs, 
+
+KL img and KL text are variational information bottleneck (VIB) KL divergences for image and text embeddings, λI ,
+
+λT , βI , and βT are weight scalars. This multi-view, multi-loss formulation provides richer supervision and produces probabilistic embeddings that are both semantically aligned and uncertainty-calibrated, ulti-mately improving cross-modal retrieval performance. 
+
+3.5. Implementation Details 
+
+We implement MedProbCLIP in PyTorch [22] following the model architecture introduced previously. For image en-coding, we use a ViT 1 [23] backbonefrom TIMM [24], pre-trained on ImageNet-21K [25]. For text encoding, we adopt BioMedBERT 2 [26] from HuggingFace [27]. Both en-coders output deterministic embeddings that are fed into the distribution learning modules, each contains a shal-low MLP, which produces the mean and log-variance vec-tors of a diagonal Gaussian distribution. Log-variances are clamped to [−6, 6] for stability. The model was trained using a Linux cluster with Nvidia A100 GPUs, with all random seeds fixed to 42 for repro-ducibility. We use the AdamW [28] optimizer with a base learning rate of 5e−5, weight decay 1e−4 , and gradient clipping (max-norm = 1 .0). Mixed-precision training is en-abled through torch.amp.GradScaler . A cosine an-nealing learning-rate scheduler [29] is optionally used. All models are trained for 50 epochs with batch size 128. 
+
+# 4. Experimental Result 
+
+4.1. Setup 
+
+4.1.1. Datasets 
+
+We conduct our experiments on the MIMIC-CXR dataset [19], a large-scale publicly available corpus of chest radiographs and paired free-text radiology reports. The dataset contains 227,835 imaging studies from 64,588 pa-tients, comprising 368,948 chest X-ray images along with their corresponding diagnostic reports. MIMIC-CXR also includes 14 clinical labels, 13 pathology categories plus a “no finding” class, automatically derived from the reports using the NegBio and CheXpert NLP pipelines [30, 31]. A substantial portion of studies in MIMIC-CXR con-tain multiple imaging views, most commonly a PA view paired with a lateral view. Radiology reports likewise con-tain multiple semantically complementary sections, such as Findings and Impression. These intrinsic multi-view and multi-section structures closely align with our model de-sign, which explicitly leverages multiple image and text in-puts during training. When a study or report contains only a single view or section, we generate the missing counterpart through controlled data augmentation. 
+
+> 1ViT-Base/16
+> 2microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext
+
+For preprocessing, all images are resized to 224 × 224 
+
+resolution and normalized using standard ImageNet statis-tics. Text reports are tokenized using the BioMedBERT to-kenizer with a maximum sequence length of 256 tokens, where truncation is applied to long reports and padding is used for shorter ones. We follow the official dataset split: the training set is used for training, the validation set is used for checkpoint selection, and the held-out test set is used exclusively for final evaluation. 
+
+4.1.2. Baseline Models 
+
+We compare MedProbCLIP against three representative cross-modal retrieval baselines: CLIP, PCME++, and CXR-CLIP. To ensure a fair and controlled evaluation, we reim-plement all baselines using the same visual and textual backbones as our method. All models are initialized from the same pretrained weights and fine-tuned on the MIMIC-CXR dataset under identical training settings. 
+
+CLIP We implement a deterministic CLIP-style dual en-coder where image and text embeddings are projected into a shared latent space and trained using a bidirectional con-trastive loss. This baseline captures strong deterministic image-text alignment without uncertainty modeling. 
+
+PCME++ We reimplement the probabilistic cross-modal embedding model PCME++ using the same architecture as in our method but without multi-view modeling. PCME++ assigns a Gaussian distribution to each modality and opti-mizes the CSD. This baseline allows us to isolate the ben-efits of multi-view learning and architectural modifications introduced in MedProbCLIP. 
+
+CXR-CLIP CXR-CLIP extends CLIP to the clinical do-main and incorporates multi-view learning by jointly encod-ing multiple chest X-ray views and multiple report sections. To ensure a fair comparison focused purely on retrieval, we omit all label-supervised components and retain only the multi-view contrastive image-text alignment. This provides a strong deterministic multi-view baseline aligned with our data format. 
+
+Training All baseline models are trained using the same data splits, preprocessing steps, batch sizes, optimization settings, and evaluation procedures as MedProbCLIP, en-abling a direct and fair comparison of retrieval performance. 
+
+4.1.3. Evaluation Metrics 
+
+We assess the performance of all models across three com-plementary dimensions: retrieval quality, zero-shot gener-alization, and robustness. 
+
+Retrieval Performance We evaluate medical image-report retrieval using standard Recall@K metrics for K ∈{1, 5, 10 , 100 }, computed separately for image-to-text (i2t) and text-to-image (t2i) retrieval. Following prior work, we also report RSUM, defined as the sum of all R@K scores across both retrieval directions, providing a single aggre-gated measure of overall retrieval quality. 
+
+Zero-Shot Classification To assess generalization to clinically meaningful semantic categories, we evaluate each model in a zero-shot classification setting on the 14 pathol-ogy labels provided by MIMIC-CXR. For each class c, we construct a text prompt of the form “ a chest X-ray with c” and compute the similarity between an image and all class prompts using the model’s image-text embedding space. The predicted label corresponds to the prompt with the highest similarity score. We report per-class classifica-tion accuracy, allowing a detailed assessment of how well the model captures each clinically relevant concept without any task-specific fine-tuning. 
+
+Robustness Evaluation We evaluate robustness from two perspectives. First, we measure Selective Retrieval Perfor-mance, which assesses accuracy at varying coverage levels by allowing the model to abstain on low-confidence queries. This quantifies how reliably a model can identify high-certainty predictions. Second, we evaluate retrieval perfor-mance under image perturbations, including Gaussian blur, Gaussian noise, brightness/contrast jitter, and rotation. For each corruption type and severity, we report retrieval degra-dation relative to clean performance, enabling a systematic comparison of robustness across models. 
+
+4.2. Result 
+
+4.2.1. Retrieval 
+
+Table 1 reports medical image-report retrieval results on the MIMIC-CXR test set, measured using Recall@K for both i2t and t2i directions. MedProbCLIP achieves the best per-formance across all metrics, outperforming all deterministic and probabilistic baselines by a substantial margin. Among the baselines, CXR-CLIP exhibits the strongest results, reflecting the benefit of multi-view modeling in clin-ical imaging. CLIP performs competitively but falls behind CXR-CLIP, while PCME++ performs slightly worse than CLIP despite its probabilistic formulation, likely due to its single-view training and less structured supervision. MedProbCLIP delivers the highest retrieval accuracy in both directions. For i2t retrieval, it achieves R@1 = 21.02, improving over CXR-CLIP by 3.88 absolute points and over CLIP by 6.74 points. Similar gains are observed for t2i re-trieval, where MedProbCLIP attains R@1 = 19.96, outper-forming CXR-CLIP by 3.10 points. The advantages per-sist across all K values, demonstrating that MedProbCLIP consistently retrieves correct matches even at deeper ranker-forms competitively and obtais. Overall retrieval quality, summarized by RSUM, further highlights the improvement. MedProbCLIP achieves an RSUM of 438.62, surpassing CXR-CLIP by 31.87 points, CLIP by 92.30 points, and PCME++ by 111.08 points. Method i2t t2i RSUM R@1 R@5 R@10 R@100 R@1 R@5 R@10 R@100 Random 0.06 0.28 0.56 5.62 0.09 0.46 0.92 9.20 17 .19 
+
+CLIP 14 .28 33 .73 44 .29 80 .94 14 .22 34 .23 43 .73 80 .89 346 .32 
+
+PCME++ 12 .48 31 .53 40 .58 77 .68 11 .80 32 .32 42 .55 78 .58 327 .54 
+
+CXR-CLIP 17 .14 41 .65 55 .03 89 .94 16 .86 41 .26 54 .47 90 .39 406 .75 
+
+MedProbCLIP 21.02 46.88 58.91 92.41 19.96 47.44 59.42 92.58 438.62                                                        
+
+> Table 1. Cross-modal retrieval performance on the MIMIC-CXR test set.
+> Method EC CA LL AO ED CO PA AT PX PE PO FR SD Mean CLIP 0.6683 0 .7832 0 .4881 0 .7550 0.8453 0.4792 0 .7236 0 .3100 0 .6707 0 .6865 0 .6364 0.6364 0.7925 0.6519
+> PCME++ 0.6875 0.8061 0.1667 0 .4750 0 .7126 0.5972 0 .4651 0.7150 0.4603 0 .5061 0 .4545 0 .5273 0 .5189 0.5456
+> CXR-CLIP 0.7837 0.7908 0 .7262 0.8167 0.8164 0.4722 0 .7144 0 .5000 0 .7336 0 .5926 0 .4545 0 .4818 0 .7217 0.6619
+> MedProbCLIP 0.7163 0 .7947 0.7976 0.5767 0 .7986 0.7292 0.7308 0.5650 0.7802 0.8661 0.7273 0.4455 0 .7028 0.7101
+> EC: Enlarged Cardiomediastinum CA: Cardiomegaly LL: Lung Lesion AO: Airspace Opacity ED: Edema CO: Consolidation PA: Pneumonia AT: Atelectasis PX: Pneumothorax PE: Pleural Effusion PO: Pleural Other FR: Fracture SD: Support Devices
+> Table 2. Zero-shot classification accuracy across 13 pathology categories on MIMIC-CXR.
+
+4.2.2. Zero-Shot Classification 
+
+Table 2 summarizes zero-shot classification accuracy across pathology categories in MIMIC-CXR, using prompts of the form “a chest X-ray with {class }.” MedProb-CLIP achieves the highest mean zero-shot accuracy among all compared methods, demonstrating stronger semantic alignment between visual features and clinical concepts. CXR-CLIP performs competitively and obtains the best accuracy on two categories and the second best on mean accuracy, reflecting its strong multi-view modeling. CLIP also achieves strong performance on certain high-level find-ings such as Support Devices and Fracture, but its overall mean accuracy remains lower due to weaker performance on more subtle pathologies (e.g., Atelectasis, Consolida-tion). PCME++ exhibits highly class-dependent behavior: it performs well on Cardiomegaly and Atelectasis but un-derperforms on classes requiring fine-grained image-text alignment (e.g., Lung Lesion). MedProbCLIP delivers the best overall mean accuracy (0.7101), improving over CXR-CLIP by 4.82 points and CLIP by 5.82 points. It achieves the highest accuracy on 6 of the 13 classes, including Lung Lesion, Consolidation, Pneumonia, Pneumothorax, Pleural Effusion, and Pleural Other, where uncertainty modeling and multi-view supervi-sion provide a greater advantage. These gains highlight that probabilistic embeddings enable the model to better capture subtle radiographic patterns and their textual descriptions, even in a zero-shot setting without task-specific fine-tuning. 
+
+4.2.3. Selective Retrieval Performance 
+
+To evaluate reliability under uncertainty, we measure Se-lective Retrieval Performance using Risk-Coverage curves (Figure 5). In this setting, the model may abstain from an-swering when confidence is low, allowing us to study how retrieval accuracy behaves as coverage, the fraction of an-swered queries-increases. Risk is defined as 1 − R@K, and overall reliability is summarized using the Area Under the Risk-Coverage Curve (AURC), where lower values indicate better calibration. Across all recall levels (R@1, R@5, R@10, R@100), MedProbCLIP exhibits substantially better selective perfor-mance than the deterministic baselines (CLIP, CXR-CLIP) and the probabilistic PCME++ model. MedProbCLIP con-sistently yields the lowest or second-lowest AURC, demon-strating stronger uncertainty awareness and more trustwor-thy retrieval decisions. A key advantage of MedProbCLIP is the stability of its risk curves: risk increases only gradually as coverage grows, indicating that the model maintains reliable predic-tions even when required to answer a larger share of queries. This behavior contrasts sharply with PCME++, whose risk rises rapidly with increased coverage, reflecting overconfi-dent errors. CLIP and CXR-CLIP show better stability than PCME++, but their risk escalates more steeply than Med-ProbCLIP, particularly at low-coverage regions where cali-brated confidence matters most. 
+
+4.2.4. Robustness to Image Perturbations 
+
+We further examine robustness by evaluating retrieval performance under four clinically relevant perturbations: Gaussian blur, Gaussian noise, brightness/contrast shifts, and rotation, each applied at multiple severity levels. Fig-ure 6 shows the relative Recall@K performance compared to the clean baseline. 
+
+Gaussian Blur Gaussian blur removes high-frequency structure that is essential for radiologic interpretation. Al-Figure 5. Selective retrieval performance demonstrates MedProbCLIP’s superior calibration and potential for safer clinical deployment. 
+
+though some baselines (e.g., PCME++ or CLIP) exhibit spuriously higher relative performance at certain blur lev-els, this is not a sign of robustness. In fact, it reflects insta-bility in retrieval rankings rather than genuine invariance. Blur strongly disrupts all deterministic baselines, producing large fluctuations across severity levels. In contrast, Med-ProbCLIP exhibits the smoothest and most stable degrada-tion, avoiding the large swings seen in PCME++ and CLIP. This indicates that MedProbCLIP’s uncertainty-aware em-beddings are less sensitive to loss of local detail. 
+
+Gaussian Noise Gaussian noise severely corrupts edge information and pixel-level gradients, making it the most destructive perturbation. All models degraded substantially, even at mild noise levels. Despite this difficulty, Med-ProbCLIP consistently achieves the highest relative perfor-mance across recall thresholds. Its degradation curve is also the most stable and least erratic, whereas PCME++ and CLIP show unpredictable fluctuations and sharp drops. This demonstrates that probabilistic modeling provides greater resilience to noise-induced pixel distortions than determin-istic or purely distance-based embeddings. 
+
+Brightness Contrast Shifts These perturbations mimic variations in scanner calibration and acquisition conditions. All models show monotonic degradation as severity in-creases. Although performance drops sharply at extreme severities, MedProbCLIP generally ranks among the most stable methods across recall levels, demonstrating resilience to global photometric distortions and improved tolerance to intensity variations relative to PCME++ and CXR-CLIP. 
+
+Rotation Rotational perturbations disrupt anatomical ori-entation and spatial alignment. All models degrade as ro-tation increases. MedProbCLIP shows slower degradation than PCME++ and CXR-CLIP across most settings, reflect-ing improved spatial robustness. While CLIP benefits from large-scale natural-image pretraining and performs compet-itively at extreme rotations, MedProbCLIP achieves more consistent robustness across the entire severity spectrum, especially at moderate rotations typical in clinical variation. 
+
+# 5. Discussion and Conclusion 
+
+Medical image-text alignment inherently involves ambigu-ity, multi-view inconsistencies, and imperfect supervision, making deterministic embedding spaces prone to overcon-fident and brittle representations. MedProbCLIP addresses these challenges through probabilistic contrastive learning, which allows the model to represent not only what features it extracts but also how certain it is about them. A key advantage of MedProbCLIP is its ability to al-locate uncertainty where it is needed. When radiographs contain subtle findings, heterogeneous views, or partial ev-idence, the model naturally increases variance, preventing overconfident mistakes and improving calibration. This produces smoother decision boundaries, more reliable sim-ilarity comparisons, and more stable behavior as coverage increases in selective retrieval. Probabilistic modeling also acts as a form of structured regularization, reducing sen-sitivity to spurious correlations and mitigating abrupt per-formance drops under moderate perturbations such as blur, photometric shifts, or rotations. In multi-view settings, common in clinical imaging, the probabilistic formulation helps consolidate complementary cues while preventing one view from dominating the representation. MedProbCLIP is not without limitations. When the su-pervision signal is clean and unambiguous, deterministic models may achieve similar performance without the over-head of variance estimation. Under extreme corruptions such as heavy Gaussian noise, uncertainty modeling can-not compensate for the collapse of visual signal, although it may still degrade more smoothly. Moreover, probabilis-tic models rely on careful variance parameterization and KL regularization; poor tuning can lead to under- or over-dispersed embeddings. Despite these constraints, the advantages of probabilis-tic contrastive learning are substantial in clinical retrieval scenarios where uncertainty is intrinsic rather than inci-dental. By explicitly modeling ambiguity, MedProbCLIP yields more calibrated, more robust, and more semantically aligned cross-modal representations. Future work may ex-plore richer uncertainty structures, adaptive calibration, or integration with downstream clinical decision-support sys-(a) Relative performance degradation under Gaussian blur across severity levels. 
+
+> (b) Relative performance degradation under Gaussian noise across severity levels.
+> (c) Relative performance degradation under brightness/contrast shifts.
+> (d) Relative performance degradation under rotation perturbations.
+
+Figure 6. Robustness of retrieval performance under four categories of image perturbations. 
+
+tems, where principled uncertainty remains essential. 
+
+# Acknowledgments 
+
+This material is based upon work supported by the Na-tional Science Foundation under Award No. 2334243. Any opinions, findings and conclusions or recommendations ex-pressed in this material are those of the author(s) and do not necessarily reflect the views of the National Science Foun-dation. The computational portion of this research utilized the GPU cluster provided by the High Performance Computing Re-search Center at Texas A&M University-San Antonio. We gratefully acknowledge the center’s support in facilitating access to these resources. References 
+
+[1] L. Liu, Y. Wang, J. Chang, P. Zhang, G. Liang, and H. Zhang, “Llrhnet: multiple lesions segmentation using local-long range features,” Frontiers in Neuroinformatics , vol. 16, p. 859973, 2022. 1 [2] G. Liang, H. Ganesh, D. Steffe, L. Liu, N. Jacobs, and J. Zhang, “Development of cnn models for the enteral feed-ing tube positioning assessment on a small scale data set,” 
+
+BMC Medical Imaging , vol. 22, no. 1, p. 52, 2022. [3] L. Liu, J. Chang, G. Liang, and S. Xiong, “Simulated quan-tum mechanics-based joint learning network for stroke lesion segmentation and tici grading,” IEEE Journal of Biomedical and Health Informatics , vol. 27, no. 7, pp. 3372–3383, 2023. 1[4] G. Liang, J. Zulu, X. Xing, and N. Jacobs, “Unveil-ing roadway hazards: Enhancing fatal crash risk estima-tion through multiscale satellite imagery and self-supervised cross-matching,” IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing , vol. 17, pp. 535– 546, 2023. 1 [5] J. Zulu, B. Han, I. Alsmadi, and G. Liang, “Enhancing ma-chine learning based sql injection detection using contextu-alized word embedding,” in Proceedings of the 2024 ACM Southeast Conference , 2024, pp. 211–216. [6] A. Elallaf, N. Jacobs, X. Ye, M. Chen, and G. Liang, “Beta distribution learning for reliable roadway crash risk assess-ment,” in Proceedings of the AAAI Conference on Artificial Intelligence , 2026. [7] Y. Lee, S. J. Boshra, J. Yang, Z. Cao, and G. Liang, “Ma-chine learning-based vulnerability detection in rust code us-ing llvm ir and transformer model,” Machine Learning and Knowledge Extraction , vol. 7, no. 3, p. 79, 2025. 1 [8] A. Radford, J. W. Kim, C. Hallacy, A. Ramesh, G. Goh, S. Agarwal, G. Sastry, A. Askell, P. Mishkin, J. Clark et al. ,“Learning transferable visual models from natural language supervision,” in International conference on machine learn-ing . PmLR, 2021, pp. 8748–8763. 1, 2 [9] M. Endo, R. Krishnan, V. Krishna, A. Y. Ng, and P. Ra-jpurkar, “Retrieval-based chest x-ray report generation using a pre-trained contrastive language-image model,” in Machine Learning for Health . PMLR, 2021, pp. 209–219. 1 [10] Z. Wang, Z. Wu, D. Agarwal, and J. Sun, “Medclip: Con-trastive learning from unpaired medical images and text,” in 
+
+The 2022 Conference on Empirical Methods in Natural Lan-guage Processing . ACL, 2022. [11] K. You, J. Gu, J. Ham, B. Park, J. Kim, E. K. Hong, W. Baek, and B. Roh, “Cxr-clip: Toward large scale chest x-ray language-image pre-training,” in International Confer-ence on Medical Image Computing and Computer-Assisted Intervention . Springer, 2023, pp. 101–111. 1, 3 [12] X. Zhang, C. Wu, Y. Zhang, W. Xie, and Y. Wang, “Knowledge-enhanced visual-language pre-training on chest radiology images,” Nature Communications , vol. 14, no. 1, p. 4542, 2023. 1 [13] G. Liang, C. Greenwell, Y. Zhang, X. Xing, X. Wang, R. Kavuluru, and N. Jacobs, “Contrastive cross-modal pre-training: A general strategy for small sample medical imag-ing,” IEEE Journal of Biomedical and Health Informatics ,vol. 26, no. 4, pp. 1640–1649, 2021. 1, 2, 3 [14] X. Jiang, M. Osl, J. Kim, and L. Ohno-Machado, “Cali-brating predictive model estimates to support personalized medicine,” Journal of the American Medical Informatics As-sociation , vol. 19, no. 2, pp. 263–274, 2011. 1 [15] C. Guo, G. Pleiss, Y. Sun, and K. Q. Weinberger, “On cal-ibration of modern neural networks,” in Proc. ICML , 2017, pp. 1321–1330. 1 [16] G. Liang, Y. Zhang, X. Wang, and N. Jacobs, “Improved trainable calibration method for neural networks on medi-cal imaging classification,” in British Machine Vision Con-ference (BMVC) , 2020. 1 [17] X. Liang, D. Wang, Z. Jiao, R. Li, P. Yang, Q. Wang, and T.-S. Chua, “Uncertainty-driven expert control: Enhancing the reliability of medical vision-language models,” in Proceed-ings of the IEEE/CVF International Conference on Com-puter Vision , 2025, pp. 21 144–21 154. 1 [18] S. Chun, “Improved probabilistic image-text representa-tions,” in International Conference on Learning Represen-tations (ICLR) , 2024. 2, 3 [19] A. E. Johnson, T. J. Pollard, S. J. Berkowitz, N. R. Green-baum, M. P. Lungren, C.-y. Deng, R. G. Mark, and S. Horng, “Mimic-cxr, a de-identified publicly available database of chest radiographs with free-text reports,” Scientific data ,vol. 6, no. 1, p. 317, 2019. 2, 3, 4 [20] Y. Zhang, H. Jiang, Y. Miura, C. D. Manning, and C. P. Langlotz, “Contrastive learning of medical visual represen-tations from paired images and text,” in Machine learning for healthcare conference . PMLR, 2022, pp. 2–25. 2, 3 [21] S. Bannur, S. Hyland, Q. Liu, F. Perez-Garcia, M. Ilse, D. C. Castro, B. Boecking, H. Sharma, K. Bouzid, A. Thieme 
+
+et al. , “Learning to exploit temporal structure for biomed-ical vision-language processing,” in Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , 2023, pp. 15 016–15 027. 3 [22] A. Paszke, S. Gross, S. Chintala, G. Chanan, E. Yang, Z. De-Vito, Z. Lin, A. Desmaison, L. Antiga, A. Lerer et al. , “Py-torch: An imperative style, high-performance deep learning library,” Advances in Neural Information Processing Sys-tems , vol. 32, 2019. 4 [23] A. Dosovitskiy, L. Beyer, A. Kolesnikov, D. Weissenborn, X. Zhai, T. Unterthiner, M. Dehghani, M. Minderer, G. Heigold, S. Gelly, J. Uszkoreit, and N. Houlsby, “An im-age is worth 16x16 words: Transformers for image recogni-tion at scale,” ICLR , 2021. 4 [24] R. Wightman, “Pytorch image models,” https://github.com/ rwightman/pytorch-image-models, 2019. 4 [25] T. Ridnik, E. Ben-Baruch, A. Noy, and L. Zelnik-Manor, “Imagenet-21k pretraining for the masses,” 2021. 4 [26] Y. Gu, R. Tinn, H. Cheng, M. Lucas, N. Usuyama, X. Liu, T. Naumann, J. Gao, and H. Poon, “Domain-specific lan-guage model pretraining for biomedical natural language processing,” 2020. 4 [27] T. Wolf, L. Debut, V. Sanh, J. Chaumond, C. Delangue, A. Moi, P. Cistac, T. Rault, R. Louf, M. Funtowicz et al. ,“Huggingface’s transformers: State-of-the-art natural lan-guage processing,” arXiv preprint arXiv:1910.03771 , 2019. 4[28] I. Loshchilov and F. Hutter, “Decoupled weight decay regu-larization,” in International Conference on Learning Repre-sentations , 2017. 4 [29] ——, “Sgdr: Stochastic gradient descent with warm restarts,” arXiv preprint arXiv:1608.03983 , 2016. 4 [30] Y. Peng, X. Wang, L. Lu, M. Bagheri, R. Summers, and Z. Lu, “Negbio: a high-performance tool for negation and uncertainty detection in radiology reports,” in Proc. AMIA Summits on Trans. Sci. , 2018. 4 [31] J. Irvin et al. , “Chexpert: A large chest radiograph dataset with uncertainty labels and expert comparison,” in Proc. AAAI Conf. on Artif. Intel. , 2019. 4

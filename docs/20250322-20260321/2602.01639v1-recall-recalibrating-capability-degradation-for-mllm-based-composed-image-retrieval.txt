@@ -1,0 +1,452 @@
+Title: ReCALL: Recalibrating Capability Degradation for MLLM-based Composed Image Retrieval
+
+URL Source: https://arxiv.org/pdf/2602.01639v1
+
+Published Time: Tue, 03 Feb 2026 02:54:47 GMT
+
+Number of Pages: 11
+
+Markdown Content:
+# ReCALL: Recalibrating Capability Degradation for MLLM-based Composed Image Retrieval 
+
+## Tianyu Yang 1,2 , ChenWei He 3, Xiangzhao Hao 1,2 , Tianyue Wang 1,2 , Jiarui Guo 4,
+
+## Haiyun Guo 1,2 , Leigang Qu 5, Jinqiao Wang 1,2 , Tat-Seng Chua 51Institute of Automation, Chinese Academy of Sciences 2University of Chinese Academy of Sciences 
+
+> 3
+
+## Southeast University 4Beijing University of Posts and Telecommunications 
+
+> 5
+
+## National University of Singapore 
+
+yangtianyu2024@ia.ac.cn hechenwei@seu.edu.cn haoxiangzhao2023@ia.ac.cn wangtianyue25@mails.ucas.ac.cn guojiarui@bupt.edu.cn haiyun.guo@nlpr.ia.ac.cn leigangqu@gmail.com jqwang@nlpr.ia.ac.cn dcscts@nus.edu.sg 
+
+## Abstract 
+
+Composed Image Retrieval (CIR) aims to retrieve tar-get images based on a hybrid query comprising a ref-erence image and a modification text. Early dual-tower Vision–Language Models (VLMs) struggle with cross-modality compositional reasoning required for this task. Recently, adapting generative Multimodal Large Language Models (MLLMs) for retrieval offers a promising direction. However, we identify that this adaptation strategy over-looks a fundamental issue: adapting a generative MLLM into a single-embedding discriminative retriever triggers a paradigm conflict, which leads to Capability Degra-dation —the deterioration of native fine-grained reason-ing after retrieval adaptation. To address this challenge, we propose ReCALL (Recalibrating Capability Degrada-tion), a model-agnostic framework that follows a diag-nose–generate–refine pipeline: Firstly, we diagnose cogni-tive blind spots of the retriever via self-guided informative instance mining. Next, we generate corrective instructions and triplets by CoT prompting the foundation MLLM and conduct quality control with VQA-based consistency filter-ing. Finally, we refine the retriever through continual train-ing on these triplets with a grouped contrastive scheme, thereby internalizing fine-grained visual–semantic distinc-tions and realigning the discriminative embedding space of retriever with intrinsic compositional reasoning within the MLLM. Extensive experiments on CIRR and FashionIQ show that ReCALL consistently recalibrates degraded ca-pabilities and achieves state-of-the-art performance. Code will be released soon. 
+
+## 1. Introduction 
+
+Composed Image Retrieval (CIR) retrieves a target image given a composed query that combines a reference im-age and a textual modification. Due to the vast applica-tion potential in domains such as e-commerce and design, it has attracted a surge of research interests [6, 49, 53] recently, enabling users to articulate more complex and precise search intent compared with traditional image re-trieval [14, 34, 58, 59]. Early dual-tower vision–language models (VLMs) [1, 4, 6, 23, 29] struggle with fine-grained compositional reason-ing because of shallow cross-modal alignment and limited modality interaction. In contrast, Multimodal Large Lan-guage Models (MLLMs) [2, 3, 31, 50, 57, 62], benefit-ing from deep-fusion architectures and robust instruction-following abilities, are naturally suited for CIR. Recent works therefore adapt MLLMs to retrieval via contrastive learning [20, 26, 28]. Despite the remarkable progress, we identify a critical and overlooked challenge: adapt-ing the MLLM’s native generative paradigm (focusing on step-wise reasoning) into a single-embedding discrimina-tive paradigm (highlighting on vector similarity) introduces an intrinsic paradigm conflict. This conflict fundamentally degrades the model’s compositional reasoning capabilities, particularly in fine-grained grounding and relational under-standing. To substantiate the Capability Degradation phenomenon, we conduct both qualitative and quantitative analysis, com-paring the Foundation MLLM ( F) under its native genera-tive mode with its fine-tuned retrieval counterpart ( Rbase ). As illustrated in Fig. 1 (Left), for a challenging query, the base retriever Rbase fails to retrieve the target, while the foundation model F succeeds via zero-shot VQA. This   
+
+> arXiv:2602.01639v1 [cs.CV] 2 Feb 2026 “Two dogs of
+> the same breed
+> on the floor”
+
+F      
+
+> Reference Image
+> query
+> VQA-based retrieval
+> Similarity-based retrieval
+> Rank 1 ...... Rank 2
+> Zt
+> S(·)
+> Zt
+> Adaption
+> Rank 1 ...... Rank 2
+> Do they match ?
+> query
+> 62.33
+> 71.07
+> 55.80
+> 65.30
+> CIRR Val Fashion-IQ Val
+> 𝑅 ௕௔௦௘ 𝑅 ௥௘௙௜௡௘
+> R@1 (%)
+> +8.74
+> +9.50
+> 𝑅 ௕௔௦௘ 𝑅 ௥௘௙௜௡௘
+> a. Qualitative Illustration of Capability Degradation b. Quantitative Recalibration Achieved by ReCALL
+> Gallery
+> “on the floor”
+> fine-grained grounding error
+
+Figure 1. Empirical illustration of Capability Degradation and the effectiveness of ReCALL ( Rrefine ).(a) We compare the Foundation MLLM ( F) under its native VQA-based generative paradigm with its fine-tuned retrieval counterpart ( Rbase ) under a similarity-based discriminative paradigm using a challenging query that requires fine-grained reasoning. The base retriever Rbase fails due to fine-grained grounding errors, while F succeeds through step-wise reasoning.(b) Quantitative evidence of Capability Degradation and Recalibrate. We test Rbase on a subset of 1k instances where F successfully retrieves the target (i.e., F achieves 100% R@1). The low R@1 performance of Rbase (only 62.33% on CIRR and 55.80% on FashionIQ) on this F-solvable subset provides quantifiable proof of capability degradation. Our proposed ReCALL framework effectively recovers the lost abilities, boosting the performance of Rbase to Rrefine , with significant gains. 
+
+qualitative contrast highlights how F’s intrinsic composi-tional reasoning is suppressed, with the quantitative evi-dence in Fig. 1 (Right). Crucially, Rbase exhibits severely degraded performance, achieving only 62.33% and 55.80% R@1 on CIRR and FashionIQ, respectively, on this F-solvable subset, which unequivocally quantifies the extent of capability degradation. To address this issue, we propose ReCALL , a model-agnostic framework that recalibrates degraded capabilities from the foundation model and internalizes them into the retriever’s representations. Our core idea is to leverage the MLLM’s stepwise “native” reasoning signals to supervise the “foreign” single-embedding retrieval space, within a di-agnose–generate–refine pipeline. Toward this end, we first 
+
+diagnose the retrieval model’s cognitive blind spots through a self-guided informative instance mining procedure, which autonomously discovers samples that the retrieval model currently struggles to distinguish. Next, we aim to gener-ate corrective supervision that explicitly targets these de-ficiencies. Specifically, we prompt the foundation model with Chain-of-Thought (CoT) [10, 27, 41, 44, 60] to gener-ate high-quality, corrective textual instructions for the hard samples, forming new triplets. These triplets exhibit subtle but semantically meaningful variations across both visual and textual modalities, precisely capturing the nuances that the retrieval model previously failed to distinguish. Cru-cially, to ensure the reliability of these generated signals, we incorporate a VQA-based consistency check to filter out noise. Finally, we refine the retrieval model through a novel Grouped Contrastive Learning strategy. By con-structing training batches that explicitly contrast the origi-nal queries with their corrected counterparts, we encourage the model to internalize these fine-grained visual–semantic distinctions, thereby realigning its discriminative represen-tation space with the foundation model’s intrinsic composi-tional reasoning capabilities. In summary, our main contributions are as follows: • We identify a critical challenge in adapting MLLMs to CIR, termed Capability Degradation, where models’ na-tive compositional reasoning abilities deteriorate during retrieval-oriented fine-tuning. • We propose a model-agnostic framework, ReCALL , to recalibrate the embedding space of the retriever with the MLLM’s compositional reasoning through a diagnose-generate-refine pipeline. • Extensive experiments demonstrate that ReCALL ef-fectively recalibrates the degraded capabilities, ulti-mately achieving state-of-the-art performance on main-stream CIR benchmarks, including CIRR [29] and Fash-ionIQ [55]. 
+
+## 2. Related Work 
+
+2.1. Composed Image Retrieval 
+
+CIR aims to retrieve a target image based on a hybrid-modal query. Early approaches [6, 7, 12, 29] primarily follow the VLM framework ( e.g. ,CLIP [35]), lacking through fu-sion between query modalities. They resort to external fu-sion modules [5, 8, 22, 23, 29, 30, 53] or concatenation via pseudo-tokens [4, 11, 13, 36, 45], but constrained by a fundamental architectural flaw, i.e. , shallow alignment. [17, 54] To overcome it, recent research has shifted to-wards MLLMs, with CIR-LVLM [42]as a representative ex-ample that leverages an LVLM as a user-intent–aware en-coder for CIR. Benefiting from deep fusion and instruction-following, such adaptations have consistently demonstrated superior performance on mainstream benchmarks. Despite the remarkable progress, we argue that their adaptation for discriminative retrieval can introduce Capability Degrada-tion . This conflict leads to the degradation of the model’s native fine-grained reasoning, a critical gap our work aims to address. 
+
+2.2. Self-Improvement for MLLMs 
+
+Self-improvement has proved effective for large lan-guage models: STaR bootstraps from model-produced ra-tionales to reinforce correct reasoning [61], while Re-flexion and Self-Refine introduce explicit self-feedback loops to iteratively revise and correct outputs [32, 38]. In contrast, contemporary CIR adaptations of MLLMs predominantly adopt a single-stage, static fine-tuning 
+
+paradigm—fine-tuning unified encoders on curated bench-marks without online diagnosis-and-repair [20, 26, 28, 42]. Building on this gap, ReCALL instantiates a retrieval-oriented self-improvement loop aligned with our diag-nose–generate–refine pipeline. 
+
+## 3. Method 
+
+This section outlines the ReCALL framework. As shown in Fig. 2, we first formalize the task and introduce the model components (Sec. 3.1), then describe the baseline adaptation procedure (Sec. 3.2). We next present the di-agnose–generate–refine pipeline, including self-guided in-formative instance mining (Sec. 3.3), generative calibration (Sec. 3.4), and targeted refinement (Sec. 3.5). 
+
+3.1. Problem Formulation 
+
+CIR is defined as follows: given a reference image Ir and a modification text Tm, the goal is to retrieve the target image 
+
+It from a large gallery. We introduce the following model entities used throughout this work: • Foundation Model ( F): An MLLM with strong gener-ative and reasoning capabilities, providing the intrinsic compositional reasoning that our framework leverages. • Baseline Retrieval Model ( Rbase ): A retrieval model fine-tuned from F on CIR triplets using contrastive learn-ing. While it offers basic retrieval performance, it still suffers from capability degradation described in Sec. 1. This model serves as the starting point for our diag-nose–generate–refine pipeline. • Refined Model ( Rref ine ): The final model variant of our framework. It addresses the capability degradation in Rbase by absorbing the compositional reasoning of F,yielding a recalibrated and more robust retriever. 
+
+3.2. Stage 1: Baseline Retrieval Model Adaptation 
+
+The first stage adapts F into a retrieval model to attain basic discriminative ability, yielding the baseline retriever (Rbase ). It provides a stable starting point for the subse-quent diagnose–generate–refine pipeline. To maximize retention of pre-trained knowledge, Rbase 
+
+is initialized directly from F. We then fine-tune the model on CIR triplets (Ir , T m, I t) via InfoNCE [33], encouraging the query representation zq to align with its positive target 
+
+zt while pushing away in-batch negatives. While this learning process yields a functional retriever, it also suffers from capability degradation, i.e. , discrimina-tive fine-tuning may compromise the fine-grained compo-sitional reasoning within F. To deal with it, the following diagnose stage of ReCALL is explicitly designed to detect and remediate these consequent blind spots. 
+
+3.3. Stage 2: Self-Guided Informative Instance Mining 
+
+To effectively recalibrate Rbase , we introduce a self-guided informative instance mining strategy to probe the decision boundaries of Rbase that are most susceptible to the capa-bility degradation discussed in Sec. 1. First, we perform retrieval inference on the training set using Rbase . We exclude queries where the ground-truth It
+
+is successfully ranked first, assuming these instances reflect sufficient discriminative power. Instead, we focus specif-ically on the failure cases, as they likely harbor the most informative signals regarding where the fine-tuning process has compromised the model’s original reasoning capabili-ties. For each failure case, we define the hard-negative set 
+
+{Ih} by selecting the top-K images ranked above It. These high-confidence distractors share subtle visual or semantic nuances with the ground truth, deceiving the retriever due to the degradation of its fine-grained discriminative and com-positional reasoning. Consequently, these specific failure cases serve as critical anchors for the subsequent calibration stage, as they pinpoint exactly where the model’s decision boundary needs to be refined. 
+
+3.4. Stage 3: Generative Calibration 
+
+Given the hard negatives {Ih} identified in Sec. 3.3, we ex-ploit the intrinsic generative and reasoning capabilities of F
+
+to synthesize corrective supervision signals. The goal is to articulate how the original instruction Tm should be mini-mally adjusted so that it aligns with each hard negative Ih,effectively transforming a failure case into a high-quality training example. 
+
+CoT-Assisted Generation. In general, a hard negative sam-ple Ih differs from the ground-truth It only in subtle visual aspects, as shown in Fig. 2. Such subtle differences exactly reflect the discriminative weaknesses of Rbase , which could be repurposed into informative supervision for continual learning. To achieve this goal, we construct minimal edits to 
+
+Tm and obtain ˜Tm that precisely reflect the visual discrep-query 2
+
+enhanced query 2-2 
+
+enhanced query 2-1 
+
+query 2
+
+query 1
+
+Rbase 
+
+query 1
+
+> Has a black dining
+> carpet
+
+query 2
+
+> Add one more parrots and
+> make all of them sit on a
+> concrete wall.
+
+target 1
+
+target 2
+
+Stage1: Baseline Retrieval Model Adaptation 
+
+> Remove one of the dogs,
+> put him on a table.
+
+query n   
+
+> ...
+> text 1
+> text 2
+> text n
+> ...
+> ...
+> ...
+> Success Case
+> Add two more parrots and
+> make all of them sit on a
+> concrete wall.
+> Add another colorful parrot
+> and make all of them sit on
+> ametal pipe.
+> CoT-Assisted Generation
+
+enhanced query 2-1 
+
+enhanced query 2-2 
+
+> Continue
+> VQA-Assisted
+> Quality Control
+
+Stage3: Generative Calibration     
+
+> Add one more parrots and
+> make all of them sit on a
+> concrete wall .
+> Add two more parrots and
+> make all of them sit on a
+> concrete wall.
+> Add another colorful parrot
+> and make all of them sit on a
+> metal pipe .
+
+Stage4: Targeted Refinement 
+
+> ...
+
+target n
+
+> Intent
+> Analysis
+> &
+> Verification
+> Minimal
+> Edit
+> Synthesis
+> Random
+> Batch
+
+query n
+
+Rbase 
+
+> ...
+> Failure Case
+> query2
+> text 2
+> query2
+> text 2
+> Do they match ？
+> enhanced
+> query 2-1
+
+target 2
+
+hard 
+
+neg 2-1 
+
+> Discard
+
+hard 
+
+neg 2-2 
+
+Rrefine 
+
+> Failure Case
+> Informative
+> Instance s
+> ...
+> ...
+
+Stage2: Self-Guided Informative Instance Mining 
+
+> Grouped Contrastive Refin ement
+
+Foundation 
+
+Model 
+
+> ...
+> Not match.
+> Match.
+
+ReCALL  
+
+> (Initialized from F)
+> (Initialized from �����)
+
+(�)   
+
+> ����
+> Increase Distance (Discriminate) Decrease Distance (Align) LoRA Fine-tuning
+> ...
+> Frozen Model
+> Selected
+> Selected
+
+Figure 2. Overview of the ReCALL framework. (1) Stage 1: A baseline retriever Rbase is adapted from the foundation model F via standard fine-tuning. (2) Stage 2 (Diagnose): Rbase surfaces its own failure cases via self-guided informative instance mining. (3) 
+
+Stage 3 (Generate): Leveraging native reasoning (CoT), F synthesizes minimally edited corrective instructions for the mined informative instances. (4) Stage 4 (Refine): Based on the original and enhanced triplets, a Grouped Contrastive Refinement strategy is employed to produce the final Rref ine , effectively recalibrating the degraded capabilities. 
+
+ancy between It and Ih, so that the new triple (Ir , ˜Tm, I h)
+
+conveys the informative supervision to further unlock the fine-grained discriminative powers of the retriever. Con-cretely, we employ a multi-step reasoning procedure with 
+
+F to identify the semantic mismatch between the query 
+
+(Ir , T m) and Ih, and then applies the necessary minimal textual changes, consisting of the following two steps: 1. Intent Decomposition & Verification: F decomposes 
+
+Tm into atomic intents and verifies each against (Ir , I h),determining which intents are violated in Ih.2. Minimal Edit Synthesis: F retains the common intents 
+
+(Ir , I h) and regenerates only the violated components, producing the corrected instruction ˜Tm.This procedure induces the corrective triplet (Ir , ˜Tm, I h),which provides dense and fine-grained supervision: the minimal textual edits from Tm to ˜Tm directly mirror the subtle visual differences between It and Ih, encouraging the retriever to learn from these challenging and informa-tive distinctions explicitly. 
+
+VQA-Assisted Quality Control. To ensure reliability, we further apply a semantic consistency check strategy with the discriminative understanding ability of F. Specifically, we prompt F with targeted VQA questions about key attributes in ˜Tm. Only triplets that receive high-confidence and inter-nally consistent answers are retained for the final refinement stage. 
+
+3.5. Stage 4: Targeted Refinement 
+
+The final stage performs targeted refinement of Rbase 
+
+guided by the corrective supervision generated in Sec. 3.4. We initialize Rref ine from Rbase and train it to internal-ize the fine-grained distinctions revealed by the newly con-structed triplets, which is accomplished through two key components: grouped contrastive refinement and a dual op-timization objective. 
+
+3.5.1. Grouped Contrastive Refinement 
+
+To fully exploit the corrective supervision from Sec. 3.4 for continual learning, we adopt a structured batching strategy. For each query, we build a micro-group containing both the original positive triplet (Ir , T m, I t) and its corrective coun-terpart (Ir , ˜Tm, I h). This grouping exposes the model’s blind spots within a single gradient update. By placing It
+
+together with its corresponding hard negative Ih, as well as the minimally different instructions Tm and ˜Tm in the same batch, the model is encouraged to discriminate between vi-sually adjacent samples via fine-grained semantic cues. As a result, the mined hard negatives serve as effective anchors for refining decision boundaries. 
+
+3.5.2. Dual Optimization Objective 
+
+To balance global retrieval performance and fine-grained correction, we optimize Rref ine using a hybrid objective: 
+
+InfoNCE Loss ( Linf oN CE ). We apply the standard In-foNCE loss [33] over the entire batch, preserving the global structure learned in Sec. 3.2 while accommodating new dis-tinctions: 
+
+Linf oN CE = − log exp( s(zq , z t+ )/τ )
+
+P 
+
+> zt∈B
+
+exp( s(zq , z t)/τ ) , (1) where B denotes the batch of target representations, τ is the temperature parameter, and s(u, v ) = u⊤v 
+
+> ∥u∥∥ v∥
+
+denotes the cosine similarity. Additionally, zq is the query representa-tion derived from the input (Ir , T m), zt+ is the representa-tion of the positive ground-truth image It, and zt is a generic target representation from the batch B.
+
+In-Group Triplet Margin Loss ( Ltriplet ). To explicitly enforce the separation between the target and the specific hard negative within each micro-group, we add a margin-based loss [37]: 
+
+Ltriplet = max(0 , s (zq , z t− ) − s(zq , z t+ ) + m), (2) where m is a margin hyperparameter, and zt− corresponds to the hard negative Ih identified in the diagnose stage. Combining the above two losses, the final object is for-mulated as: 
+
+Ltotal = Linf oN CE + λLtriplet , (3) where λ balances global alignment and targeted refinement. This optimization strategy effectively counteracts capability degradation, re-incentivizing the model’s fine-grained com-positional reasoning. In summary, ReCALL implements a diag-nose–generate–refine pipeline that surfaces the failure cases of the baseline retriever, generates precise corrective supervision with F, and internalizes these distinctions through targeted refinement. This process counteracts capability degradation and restores the fine-grained compositional reasoning required for reliable CIR. 
+
+## 4. Experiments 
+
+4.1. Datasets and Evaluation Metrics 
+
+Datasets. Following prior work [24, 46, 56], we evalu-ate our method on two widely adopted composed image re-trieval (CIR) benchmarks, including Fashion IQ and CIRR. 
+
+FashionIQ [55] is a fine-grained benchmark dataset fo-cusing on the fashion domain. It consists of triplets sourced from e-commerce websites, where each triplet comprises a reference image, a target image, and a natural language in-struction describing the desired modifications. The dataset is divided into three categories: Dress, Shirt, and Toptee, making it particularly suitable for assessing the ability of models to understand subtle attribute changes such as color, pattern, and style. 
+
+CIRR [29] serves as a testbed for generalization in open-domain scenarios. It is derived from the real-world NLVR2 [40] dataset, with triplets involving complex ob-ject interactions and relational changes. In contrast to the domain-specific nature of FashionIQ, it offers a comple-mentary and challenging evaluation scenario. 
+
+Evaluation Metrics. Following standard protocol [9, 41, 42], we adopt Recall @K (R@K) as our primary met-ric, which measures the percentage of queries where the ground-truth target appears in the top-K results. For Fash-ionIQ, we report R@10 and R@50 averaged across its three categories. For CIRR, we report R@1 , R@5 , R@10 , and 
+
+R@50 . Additionally, for CIRR, we leverage its unique de-sign to report Recall subset @K (Rsubset @K) with K in 
+
+{1, 2, 3}. This subset metric measures the ability to retrieve the correct item from a challenging, curated subset of six candidates, offering a more targeted measure of discrimina-tive power. .
+
+4.2. Implementation Details 
+
+We use Qwen2.5-VL-7B [3] as the backbone of ReCALL and fine-tune it with LoRA [18] (rank r=16 ) on 8 NVIDIA H20 GPUs. Unless otherwise specified, we share the same training configuration across all stages. For FashionIQ, we use a learning rate of 4×10 −5, InfoNCE temperature 
+
+τ =0 .03 and a global batch size of 512, running 200 opti-mization steps for Stage 1 and 250 steps for Stage 4. For CIRR, we adopt a learning rate of 2×10 −5, τ =0 .02 and the same batch size, with 300 and 350 steps in Stage 1 and Stage 2 respectively. The triplet loss margin is set to 
+
+m=0 .05 , and the weight λ is 0.30 on FashionIQ and 0.25 
+
+on CIRR. 
+
+4.3. Comparison with State-of-the-Art Methods 
+
+We compare our proposed ReCALL framework against ex-isting state-of-the-art methods on both CIRR and Fash-Table 1. Performance comparison on the CIRR test set. We compare the proposed ReCALL (Rrefine ) against state-of-the-art methods.                                                                                                                                                        
+
+> Rbase denotes the baseline retriever obtained after Stage 1 , which serves as the starting point for our refinement pipeline. The ”Avg.” metric is computed as (R@5 + R subset @1) /2. Best results are in bold , and the second-best are underlined. The bottom row ( ∆) highlights the
+> relative improvement of ReCALL over Rbase , quantifying the efficacy of our recalibration strategy. Method Venue Recall@ kRecall subset @kAvg. k=1 k=5 k=10 k=50 k=1 k=2 k=3 TIRG [48] CVPR’19 14.61 48.37 64.08 90.03 ----ARTEMIS [12] ICLR’22 16.96 46.10 61.31 87.73 39.99 62.20 75.67 43.05 TG-CIR [53] MM’23 45.25 78.29 87.16 97.30 72.84 89.25 95.13 75.57 SPRC [4] ICLR’24 51.96 82.12 89.74 97.69 80.65 92.31 96.60 81.39 LIMN [52] TPAMI’24 43.64 75.37 85.42 97.04 69.01 86.22 94.19 72.19 CoVR-2 [47] TPAMI’24 50.43 81.08 88.89 98.05 76.75 90.34 95.78 79.28 CaLa [19] SIGIR’24 49.11 81.21 89.59 98.00 76.27 91.04 96.46 78.74 ENCODER [25] AAAI’25 46.10 77.98 87.16 97.64 76.92 90.41 95.95 77.45 CIR-LVLM [43] AAAI’25 53.64 83.76 90.60 97.93 79.12 92.33 96.67 81.44 QuRe [21] ICML’25 52.22 82.53 90.31 98.17 78.51 91.28 96.48 80.52 CCIN [46] CVPR’25 53.41 84.05 91.17 98.00 ----TME [24] CVPR’25 53.42 82.99 90.24 98.15 81.04 92.58 96.94 82.01 Baseline( Rbase )-51.23 82.15 90.20 98.20 77.57 91.83 96.34 79.86
+> ReCALL (Rrefine )-55.52 84.07 91.83 98.55 81.49 93.35 97.64 82.81
+> Improvement ( ∆)+8.38% +2.34% +1.81% +0.36% +5.06% +1.65% +1.35% +3.70%
+
+ionIQ benchmarks, covering both traditional dual-tower ap-proaches and recent MLLM-based retrievers. 
+
+Results on CIRR. Table 1 reports the quantitative results on the CIRR test set. The baseline ( Rbase ) alone delivers a competitive 51.23% on R@1, confirming the inherent po-tential of MLLM architectures for compositional reasoning. Building on this, ReCALL establishes a new state-of-the-art of 55.52% , outperforming the concurrent MLLM-based CIR-LVLM [42] (53.64%). Notably, this 8.38% on R@1 relative improvement over Rbase compellingly validates the effectiveness of our diagnose–generate–refine pipeline in rectifying capability degradation. Furthermore, on the 
+
+Recall subset metrics designed for hard-negative evaluation, ReCALL secures a leading Rsubset @1 of 81.49% . These gains confirm that our synthesized triplets successfully sharpen the model’s decision boundaries against highly con-founding visual distractors. 
+
+Results on FashionIQ. Table 2 details the quantitative re-sults on the FashionIQ validation set. Despite inherent chal-lenges such as high label noise and subtle attribute manip-ulations, ReCALL demonstrates consistent superiority by achieving the highest average R@10 of 57.04% and R@50 of 76.42% , successfully outperforming the concurrent CIR-LVLM [42]. When compared to our Rbase , ReCALL deliv-ers a robust 7.16% relative improvement in average R@10, with gains reaching as high as 10.71% in the Dresses cat-egory. These pervasive improvements across all categories compellingly validate that our Minimal Corrective Editing strategy effectively captures nuanced visual-semantic dis-tinctions, enabling precise retrieval even when target images differ from references by only fine-grained details. 
+
+4.4. Ablation Studies 
+
+We conduct a series of experiments to validate the efficacy, efficiency, and generalization capabilities of the ReCALL. 
+
+Diagnose Phase: Impact of Self-Guided Informative In-stance Mining. We further investigate the necessity of the Diagnose phase. A prevailing trend in recent MLLM adaptation involves indiscriminate large-scale data synthe-sis. To strictly simulate this scaling approach, we establish a Random Mining baseline. Specifically, for every train-ing query, we first retrieve the top-50 candidate images us-ing the frozen Rbase . From this candidate pool, we ran-domly sample negative instances to undergo the genera-tion pipeline, strictly maintaining the same data scale as our method. To guarantee experimental robustness, we re-port the mean and standard deviation across four indepen-dent runs (using different random seeds) in Table 3. The results reveal a critical inefficiency in the blind synthesis paradigm. Even when averaged over multiple runs, Random Mining yields only marginal gains (improving R@10 from 53.23% to 53.80%), whereas our Self-Guided strategy de-livers a substantial boost to 57.04%. This remarkable con-trast demonstrates that indiscriminate synthesis often results in effective redundancy: since the candidates are drawn ran-domly from the top-50, many have been likely already cor-rectly ranked by the model, thus providing negligible gradi-ent signals. In contrast, ReCALL follows a diagnose-then-generate philosophy, precisely concentrating the generative budget on the model’s active failure cases. By ensuring that every synthesized triplet targets a specific cognitive defi-Table 2. Performance comparison on the FashionIQ validation set. We compare the proposed ReCALL (Rrefine ) against state-of-the-art methods in terms of Recall@ k (%). Consistent with Table 1, Rbase denotes the baseline retriever obtained after Stage 1 , serving as the starting point for recalibration. Best results are in bold , and the second-best are underlined. The bottom row ( ∆) highlights the relative improvement of ReCALL over Rbase .Method Venue Dresses Shirts Tops&Tees Avg. 
+
+R@10 R@50 R@10 R@50 R@10 R@50 R@10 R@50 
+
+TIRG [48] CVPR’19 14.13 34.61 13.10 30.91 14.79 34.37 14.01 33.30 ARTEMIS [12] ICLR’22 25.68 51.05 21.57 44.13 28.59 55.06 25.28 50.08 FashionSAP [16] CVPR’23 33.71 60.43 41.91 70.93 33.17 61.33 36.26 64.23 FAME-ViL [15] CVPR’23 42.19 67.38 47.64 68.79 50.69 73.07 46.84 69.75 SyncMask [39] CVPR’24 33.76 61.23 35.82 62.12 44.82 72.06 38.13 65.14 SADN [51] MM’24 40.01 65.10 43.67 66.05 48.04 70.93 43.91 67.36 CaLa [19] SIGIR’24 42.38 66.08 46.76 68.16 50.93 73.42 46.69 69.22 CoVR-2 [47] TPAMI’24 46.53 69.60 51.23 70.64 52.14 73.27 49.96 71.17 SPRC [4] ICLR’24 49.18 72.43 55.64 73.89 59.35 78.58 54.72 74.97 CIR-LVLM [43] AAAI’25 50.42 73.60 58.59 75.86 59.61 78.99 56.21 76.14 CCIN [46] CVPR’25 49.38 72.58 55.93 74.14 57.93 77.56 54.41 74.76 TME [24] CVPR’25 49.73 71.69 56.43 74.44 59.31 78.94 55.15 75.02 QuRe [21] ICML’25 46.80 69.81 53.53 72.87 57.47 77.77 52.60 73.48 Baseline( Rbase ) - 46.80 70.60 55.00 74.39 57.88 78.12 53.23 74.37 
+
+ReCALL (Rrefine ) - 51.81 73.48 58.49 76.59 60.83 79.19 57.04 76.42 
+
+Improvement ( ∆) +10.71% +4.08% +6.35% +2.96% +5.10% +1.37% +7.16% +2.76% 
+
+Table 3. Ablation study on the mining strategy on the FashionIQ validation set. We compare our Self-Guided Mining against a 
+
+Random Mining baseline under the same data budget. To ensure statistical robustness, results for the Random strategy are averaged over four independent runs with different random seeds. 
+
+Mining Strategy R@10 R@50 Mean 
+
+Rbase 53.23 74.37 63.80 + Random Mining 53.80 ±0.20 74.32 ±0.06 64.06 ±0.10 
+
++ Self-Guided 57.04 76.42 66.73 
+
+Table 4. Ablation study of the core components on the FashionIQ validation set. CG : CoT-assisted Generation, VC : VQA-Assisted Quality Control, GR : Grouped Contrastive Refinement. • denotes the component is included, and ◦ denotes excluded. All metrics are the average over the three categories (in %). The stepwise performance improvements validate the effectiveness of each pro-posed module. 
+
+Baseline Components Metrics (Avg.) CG VC GR R@10 R@50 Mean 
+
+• ◦ ◦ ◦ 53.23 74.37 63.80 
+
+• • ◦ ◦ 55.41 75.17 65.29 
+
+• • • ◦ 56.13 76.04 66.09 
+
+• • • • 57.04 76.42 66.73 
+
+ciency, ReCALL achieves superior capability enhancement with maximal data efficiency. 
+
+Generate Phase: Effectiveness of Generative Calibra-tion (CG & VC). This set of experiments verifies the core 
+
+Generate phase using a progressive study detailed in Ta-ble 4 (Rows 1-3). We leverage the foundation model F
+
+to create corrective supervision. The introduction of CoT-assisted Generation (CG) yields a substantial gain, boost-ing R@10 from 53.23% to 55.41%. This absolute improve-ment of 2.18% confirms that capitalizing on native gener-ative reasoning of F to synthesize targeted supervision ef-fectively mitigates cognitive deficits. Furthermore, adding VQA-Assisted Quality Control (VC) further elevates R@10 to 56.13%. This step utilizes intrinsic discriminative under-standing of F to filter out noise, ensuring that only high-quality triplets guide the training. In all, these results em-pirically demonstrate that our framework successfully in-ternalizes the robust compositional reasoning abilities of the foundation model, alleviating capability degradation casued by the initial adaptation. 
+
+Refine Phase: Necessity of Grouped Refinement (GR). 
+
+We finally validate the Refine phase (Table 4, Rows 3-4), which focuses on how to effectively internalize the corrective supervision. As shown in Row 3, merely ex-panding the training set with synthetic triplets via stan-dard random batching offers limited gains. By contrast, enabling Grouped Contrastive Refinement (GR) achieves the peak performance of 57.04% in R@10. This compar-ison highlights the importance of optimal data utilization: our grouped strategy is specifically designed to leverage the subtle visual and textual contrasts created in the generation phase. By forcing a direct, in-batch comparison between the target and its synthesized near-neighbor, this mecha-nism compels the model to explicitly resolve ambiguities within the micro-group. This optimal signal transmission effectively translates the corrective supervision into sharper, fine-grained discriminative boundaries, successfully recali-brating the degraded compositional reasoning capability. 
+
+Generalizability across Backbones. To verify that Re-CALL is a model-agnostic framework rather than a spe-cific patch for weaker architectures, we applied our method to a more advanced foundation model, Qwen3-VL-8B .As illustrated in Fig. 4, the baseline adaptation ( Rbase )of Qwen3-VL-8B already exhibits a strong starting point, significantly outperforming the standard Qwen2.5-VL-7B baseline (e.g., 55.93% vs. 51.23% R@1 on CIRR). Despite this high baseline, applying ReCALL still yields consistent improvements, boosting CIRR R@1 to 57.09% and Fash-ionIQ R@10 to 57.60%. It is worth noting that even as the foundation model becomes stronger, the Capability Degra-dation phenomenon stemming from the paradigm conflict between generation and retrieval persists. Our results con-firm that ReCALL effectively addresses this fundamental issue, demonstrating scalability and robustness across dif-ferent model capacities. 
+
+4.5. Qualitative Analysis 
+
+To visually evidence Capability Degradation and the effec-tiveness of our subsequent recalibration, Fig. 3 presents two representative challenging cases from the FashionIQ and CIRR datasets that demand precise fine-grained reasoning. Crucially, we verify that the Foundation Model ( F) cor-rectly identifies both targets via VQA reasoning, confirming that the requisite compositional knowledge has already ex-isted in the pre-trained model. However, the adapted Rbase 
+
+fails in both instances, exposing a clear degradation pattern. The baseline retains coarse-grained understanding, such as identifying a “blue dress” or a “wolf on snow,” but col-lapses on specific constraints. For example, it retrieves a sleeveless dress instead of the requested “half sleeved” one, and a profile-view wolf ignoring the instruction “facing the camera.” In contrast, ReCALL successfully rectifies these errors. By explicitly diagnosing these blind spots and re-aligning the representation space with the native reasoning ability of the foundation model, our method restores the lost sensitivity to subtle attributes and spatial relations, accu-rately retrieving the correct targets in both scenarios. 
+
+## 5. Conclusion 
+
+In this work, we address Capability Degradation—a crit-ical deterioration of fine-grained compositional reasoning when adapting generative MLLMs for discriminative re-trieval—by proposing the ReCALL framework, which uti-lizes the intrinsic zero-shot reasoning of MLLM via a unique diagnose-generate-refine pipeline to actively create and internalize targeted corrective supervision. Specifically, our method employs self-guided informative instance min-ing and grouped refinement to successfully embed the foun-dation model’s reasoning into the retrieval space. Empiri-cal results substantiate ReCALL’s effectiveness, achieving state-of-the-art (SOTA) performance on mainstream CIR benchmarks like CIRR and FashionIQ, thereby paving the way for reliable and fine-grained MLLM-based retrieval. 
+
+## References                      
+
+> [1] Muhammad Umer Anwaar, Egor Labintcev, and Martin Kle-insteuber. Compositional learning of image-text query for image retrieval. In Proceedings of the IEEE/CVF Winter conference on Applications of Computer Vision , pages 1140– 1149, 2021. 1 [2] Jinze Bai, Shuai Bai, Shusheng Yang, Shijie Wang, Sinan Tan, Peng Wang, Junyang Lin, Chang Zhou, and Jingren Zhou. Qwen-vl: A frontier large vision-language model with versatile abilities. arXiv preprint arXiv:2308.12966 , 2023. 1 [3] Shuai Bai, Keqin Chen, Xuejing Liu, Jialin Wang, Wenbin Ge, Sibo Song, Kai Dang, Peng Wang, Shijie Wang, Jun Tang, et al. Qwen2. 5-vl technical report. arXiv preprint arXiv:2502.13923 , 2025. 1, 5 [4] Yang Bai, Xinxing Xu, Yong Liu, Salman Khan, Fahad Khan, Wangmeng Zuo, Rick Siow Mong Goh, and Chun-Mei Feng. Sentence-level prompts benefit composed image retrieval. arXiv preprint arXiv:2310.05473 , 2023. 1, 2, 6, 7 [5] Alberto Baldrati, Marco Bertini, Tiberio Uricchio, and Al-berto Del Bimbo. Conditioned and composed image retrieval combining and partially fine-tuning clip-based features. In
+> Proceedings of the IEEE/CVF Conference on Computer Vi-sion and Pattern Recognition , pages 4959–4968, 2022. 2 [6] Alberto Baldrati, Marco Bertini, Tiberio Uricchio, and Al-berto Del Bimbo. Effective conditioned and composed im-age retrieval combining clip-based features. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , pages 21466–21474, 2022. 1, 2 [7] Alberto Baldrati, Marco Bertini, Tiberio Uricchio, and Al-berto Del Bimbo. Composed image retrieval using con-trastive learning and task-oriented clip-based features. ACM Transactions on Multimedia Computing, Communications and Applications , 20(3):1–24, 2023. 2 [8] Yanbei Chen, Shaogang Gong, and Loris Bazzani. Image search with text feedback by visiolinguistic attention learn-ing. In Proceedings of the IEEE/CVF Conference on Com-puter Vision and Pattern Recognition , pages 3001–3011, 2020. 2 [9] Yiyang Chen, Zhedong Zheng, Wei Ji, Leigang Qu, and Tat-Seng Chua. Composed image retrieval with text feed-back via multi-grained uncertainty regularization. ArXiv ,abs/2211.07394, 2022. 5 [10] Zheng Chu, Jingchang Chen, Qianglong Chen, Weijiang Yu, Tao He, Haotian Wang, Weihua Peng, Ming Liu, Bing Qin, and Ting Liu. Navigate through enigmatic labyrinth a sur-vey of chain of thought reasoning: Advances, frontiers and future. In Annual Meeting of the Association for Computa-tional Linguistics , 2023. 2 FashionIQ  CIRR
+> Reference Image
+> Reference Image
+> half sleeved short
+> blue dress and is
+> in all blue
+> Modified Instruction
+> A wolf laying down
+> on the snow and
+> facing the camera
+> Modified Instruction
+> ReCALL Baseline  ReCALL Baseline
+
+Figure 3. Qualitative comparison between the baseline ( Rbase ) and our ReCALL ( Rrefine ) on FashionIQ (top) and CIRR (bottom). The green dashed boxes indicate the ground-truth targets. Rbase suffers from capability degradation, failing to capture specific details like “half sleeved” or “facing the camera,” while ReCALL successfully retrieves the correct targets by recalibrating these fine-grained reasoning. (a) CIRR (b) FashionIQ 
+
+Figure 4. Generalizability across backbones. We validate ReCALL on stronger foundation models ( Qwen2.5-VL-7B and 
+
+Qwen3-VL-8B ). Despite higher baselines, ReCALL consistently delivers performance gains on both (a) CIRR and (b) FashionIQ, confirming the strong generalization of our framework. [11] Niv Cohen, Rinon Gal, Eli A. Meirom, Gal Chechik, and Yuval Atzmon. ”this is my unicorn, fluffy”: Personalizing frozen vision-language representations. In Computer Vision – ECCV 2022 , pages 558–577. Springer, Cham, 2022. 2 [12] Ginger Delmas, Rafael Sampaio de Rezende, Gabriela Csurka, and Diane Larlus. Artemis: Attention-based re-trieval with text-explicit matching and implicit similarity. In International Conference on Learning Representations (ICLR) , 2022. 2, 6, 7 [13] Rinon Gal, Yuval Alaluf, Yuval Atzmon, Or Patash-nik, Amit H Bermano, Gal Chechik, and Daniel Cohen-Or. An image is worth one word: Personalizing text-to-image generation using textual inversion. arXiv preprint arXiv:2208.01618 , 2022. 2 [14] Albert Gordo, Jon Almaz´ an, Jerome Revaud, and Diane Lar-lus. Deep image retrieval: Learning global representations for image search. In European conference on computer vi-sion , pages 241–257. Springer, 2016. 1 [15] Xiaoping Han, Xiatian Zhu, Licheng Yu, Li Zhang, Yi-Zhe Song, and Tao Xiang. Fame-vil: Multi-tasking vision-language model for heterogeneous fashion tasks. 2023 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) , pages 2669–2680, 2023. 7 [16] Yunpeng Han, Lisai Zhang, Qingcai Chen, Zhijian Chen, Zhonghua Li, Jianxin Yang, and Zhao Cao. Fashion-sap: Symbols and attributes prompt for fine-grained fashion vision-language pre-training. 2023 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) , pages 15028–15038, 2023. 7 [17] Cheng-Yu Hsieh, Chun-Wei Chen, Ranjay Krishna, and Kai-Wei Chang. Sugarcrepe: Fixing hackable benchmarks for vision-language compositionality. In Advances in Neural Information Processing Systems (NeurIPS), Datasets and Benchmarks Track , 2023. 2 [18] Edward J. Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang, and Weizhu Chen. Lora: Low-rank adaptation of large language models. arXiv preprint arXiv:2106.09685 , 2021. 5 [19] Xintong Jiang, Yaxiong Wang, Mengjian Li, Yujiao Wu, Bingwen Hu, and Xueming Qian. Cala: Complementary association learning for augmenting comoposed image re-trieval. In Proceedings of the 47th International ACM SI-GIR Conference on Research and Development in Informa-tion Retrieval , pages 2177–2187, 2024. 6, 7 [20] Ziyan Jiang, Rui Meng, Xinyi Yang, Semih Yavuz, Yingbo Zhou, and Wenhu Chen. Vlm2vec: Training vision-language models for massive multimodal embedding tasks. In Inter-national Conference on Learning Representations (ICLR) ,2025. 1, 3 [21] Jaehyun Kwak, Ramahdani Muhammad Izaaz Inhar, Se-Young Yun, and Sung-Ju Lee. Qure: Query-relevant retrieval through hard negative sampling in composed image retrieval. 
+
+arXiv preprint arXiv:2507.12416 , 2025. 6, 7 [22] Matan Levy, Rami Ben-Ari, Nir Darshan, and Dani Lischin-ski. Data roaming and quality assessment for composed im-age retrieval. In AAAI Conference on Artificial Intelligence ,2023. 2 [23] Matan Levy, Rami Ben-Ari, Nir Darshan, and Dani Lischin-ski. Data roaming and quality assessment for composed im-age retrieval. In Proceedings of the AAAI conference on ar-tificial intelligence , pages 2991–2999, 2024. 1, 2 [24] Shuxian Li, Changhao He, Xiting Liu, Joey Tianyi Zhou, Xi Peng, and Peng Hu. Learning with noisy triplet correspon-dence for composed image retrieval. In Proceedings of the Computer Vision and Pattern Recognition Conference , pages 19628–19637, 2025. 5, 6, 7 [25] Zixu Li, Zhiwei Chen, Haokun Wen, Zhiheng Fu, Yupeng Hu, and Weili Guan. Encoder: Entity mining and modifica-tion relation binding for composed image retrieval. In Pro-ceedings of the AAAI Conference on Artificial Intelligence ,pages 5101–5109, 2025. 6 [26] Sheng-Chieh Lin, Chankyu Lee, Mohammad Shoeybi, Jimmy Lin, Bryan Catanzaro, and Wei Ping. Mm-embed: Universal multimodal retrieval with multimodal llms. In In-ternational Conference on Learning Representations (ICLR) ,2025. 1, 3 [27] Sheng Liu, Haotian Ye, Lei Xing, and James Y. Zou. In-context vectors: Making in context learning more effective and controllable through latent space steering. In Proceed-ings of the 41st International Conference on Machine Learn-ing (ICML) , pages 46952–46983, 2024. 2 [28] Yikun Liu, Yajie Zhang, Jiayin Cai, Xiaolong Jiang, Yao Hu, Jiangchao Yao, Yanfeng Wang, and Weidi Xie. Lamra: Large multimodal model as your advanced retrieval assistant. In 
+
+Proceedings of the Computer Vision and Pattern Recognition Conference , pages 4015–4025, 2025. 1, 3 [29] Zheyuan Liu, Cristian Rodriguez-Opazo, Damien Teney, and Stephen Gould. Image retrieval on real-life images with pre-trained vision-and-language models. In Proceedings of the IEEE/CVF international conference on computer vision ,pages 2125–2134, 2021. 1, 2, 5 [30] Zheyuan Liu, Weixuan Sun, Damien Teney, and Stephen Gould. Candidate set re-ranking for composed image re-trieval with dual multi-modal encoder. arXiv preprint arXiv:2305.16304 , 2023. 2 [31] Haoyu Lu, Wen Liu, Bo Zhang, Bingxuan Wang, Kai Dong, Bo Liu, Jingxiang Sun, Tongzheng Ren, Zhuoshu Li, Hao Yang, et al. Deepseek-vl: towards real-world vision-language understanding. arXiv preprint arXiv:2403.05525 ,2024. 1 [32] Aman Madaan, Niket Tandon, Prakhar Gupta, Skyler Hal-linan, Luyu Gao, Sarah Wiegreffe, Uri Alon, Nouha Dziri, Shrimai Prabhumoye, Yiming Yang, Shashank Gupta, Bodhisattwa Prasad Majumder, Katherine Hermann, Sean Welleck, Amir Yazdanbakhsh, and Peter Clark. Self-refine: Iterative refinement with self-feedback. In Advances in Neu-ral Information Processing Systems (NeurIPS) , 2023. 3 [33] Aaron van den Oord, Yazhe Li, and Oriol Vinyals. Repre-sentation learning with contrastive predictive coding. arXiv preprint arXiv:1807.03748 , 2018. 3, 5 [34] Khoi Pham, Chuong Huynh, Ser-Nam Lim, and Abhinav Shrivastava. Composing object relations and attributes for image-text matching. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) , pages 14354–14363, 2024. 1 [35] Alec Radford, Jong Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh, Sandhini Agarwal, Girish Sastry, Amanda Askell, Pamela Mishkin, Jack Clark, Gretchen Krueger, and Ilya Sutskever. Learning transferable visual models from natural language supervision. In Proceedings of the 38th International Conference on Machine Learning (ICML) , pages 8748–8763. PMLR, 2021. 2 [36] Kuniaki Saito, Kihyuk Sohn, Xiang Zhang, Chun-Liang Li, Chen-Yu Lee, Kate Saenko, and Tomas Pfister. Pic2word: Mapping pictures to words for zero-shot composed image retrieval. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pages 19305– 19314, 2023. 2 [37] Florian Schroff, Dmitry Kalenichenko, and James Philbin. Facenet: A unified embedding for face recognition and clus-tering. In Proceedings of the IEEE Conference on Com-puter Vision and Pattern Recognition (CVPR) , pages 815– 823, 2015. 5 [38] Noah Shinn, Federico Cassano, Edward Berman, Ashwin Gopinath, Karthik Narasimhan, and Shunyu Yao. Reflexion: Language agents with verbal reinforcement learning. In Ad-vances in Neural Information Processing Systems (NeurIPS) ,2023. 3 [39] Chull Hwan Song, Taebaek Hwang, Jooyoung Yoon, Shunghyun Choi, and Yeong Hyeon Gu. Syncmask: Syn-chronized attentional masking for fashion-centric vision-language pretraining. 2024 IEEE/CVF Conference on Com-puter Vision and Pattern Recognition (CVPR) , pages 13948– 13957, 2024. 7 [40] Alane Suhr, Stephanie Zhou, Iris Y. Zhang, Huajun Zhang, Liang Bai, and Yoav Artzi. A corpus for reasoning about natural language and vision. In Proceedings of the 57th An-nual Meeting of the Association for Computational Linguis-tics (ACL) , page 465–478, 2019. 5 [41] Zelong Sun, Dong Jing, and Zhiwu Lu. Cotmr: Chain-of-thought multi-scale reasoning for training-free zero-shot composed image retrieval. In Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV) , 2025. See also arXiv:2502.20826. 2, 5 [42] Zelong Sun, Dong Jing, Guoxing Yang, Nanyi Fei, and Zhiwu Lu. Leveraging large vision-language model as user intent-aware encoder for composed image retrieval. In Pro-ceedings of the AAAI Conference on Artificial Intelligence (AAAI) , pages 7149–7157, 2025. 2, 3, 5, 6 [43] Zelong Sun, Dong Jing, Guoxing Yang, Nanyi Fei, and Zhiwu Lu. Leveraging large vision-language model as user intent-aware encoder for composed image retrieval. In Pro-ceedings of the AAAI Conference on Artificial Intelligence ,pages 7149–7157, 2025. 6, 7 [44] Xinyu Tang, Xiaolei Wang, Zhihao Lv, Yingqian Min, Xin Zhao, Binbin Hu, Ziqi Liu, and Zhiqiang Zhang. Unlock-ing general long chain-of-thought reasoning capabilities of large language models via representation engineering. In 
+
+Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (ACL) , pages 6832–6849, Vi-enna, Austria, 2025. Association for Computational Linguis-tics. 2 [45] Yuanmin Tang, J. Yu, Keke Gai, Jiamin Zhuang, Gang Xiong, Yue Hu, and Qi Wu. Context-i2w: Mapping images to context-dependent words for accurate zero-shot composed image retrieval. In AAAI Conference on Artificial Intelli-gence , 2023. 2 [46] Likai Tian, Jian Zhao, Zechao Hu, Zhengwei Yang, Hao Li, Lei Jin, Zheng Wang, and Xuelong Li. Ccin: Compositional conflict identification and neutralization for composed image retrieval. In Proceedings of the Computer Vision and Pattern Recognition Conference , pages 3974–3983, 2025. 5, 6, 7 [47] Lucas Ventura, Antoine Yang, Cordelia Schmid, and G¨ ul Varol. Covr-2: Automatic data construction for composed video retrieval. IEEE Transactions on Pattern Analysis and Machine Intelligence , 2024. 6, 7 [48] Nam Vo, Lu Jiang, Chen Sun, Kevin Murphy, Li-Jia Li, Li Fei-Fei, and James Hays. Composing text and image for image retrieval - an empirical odyssey. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) , pages 6439–6448, 2019. 6, 7 [49] Nam Vo, Lu Jiang, Chen Sun, Kevin Murphy, Li-Jia Li, Li Fei-Fei, and James Hays. Composing text and image for image retrieval-an empirical odyssey. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , pages 6439–6448, 2019. 1 [50] Peng Wang, Shuai Bai, Sinan Tan, Shijie Wang, Zhihao Fan, Jinze Bai, Keqin Chen, Xuejing Liu, Jialin Wang, Wenbin Ge, et al. Qwen2-vl: Enhancing vision-language model’s perception of the world at any resolution. arXiv preprint arXiv:2409.12191 , 2024. 1 [51] Yifan Wang, Wuliang Huang, Lei Li, and Chun Yuan. Se-mantic distillation from neighborhood for composed image retrieval. In Proceedings of the 32nd ACM International Conference on Multimedia , pages 5575–5583, 2024. 7 [52] Haokun Wen, Xuemeng Song, Jianhua Yin, Jianlong Wu, Weili Guan, and Liqiang Nie. Self-training boosted multi-factor matching network for composed image retrieval. IEEE Transactions on Pattern Analysis and Machine Intelligence ,46(5):3665–3678, 2023. 6 [53] Haokun Wen, Xian Zhang, Xuemeng Song, Yinwei Wei, and Liqiang Nie. Target-guided composed image retrieval. In 
+
+Proceedings of the 31st ACM international conference on multimedia , pages 915–923, 2023. 1, 2, 6 [54] Chunyang Wu, Yutong Bai, Trevor Darrell, Anna Rohrbach, and Xin Wang. The role of linguistic priors in measuring compositional generalization for vision-language models. In 
+
+Proceedings of the 40th International Conference on Ma-chine Learning (ICML) , 2023. 2 [55] Hui Wu, Yupeng Gao, Xiaoxiao Guo, Ziad Al-Halah, Steven Rennie, Kristen Grauman, and Rogerio Feris. Fashion iq: A new dataset towards retrieving images by natural language feedback. In Proceedings of the IEEE/CVF Conference on computer vision and pattern recognition , pages 11307– 11317, 2021. 2, 5 [56] Eric Xing, Pranavi Kolouju, Robert Pless, Abby Stylianou, and Nathan Jacobs. ConText-CIR: Learning from concepts in text for composed image retrieval. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) , pages 19638–19648, 2025. 5 [57] Guowei Xu, Peng Jin, Ziang Wu, Hao Li, Yibing Song, Lichao Sun, and Li Yuan. Llava-cot: Let vi-sion language models reason step-by-step. arXiv preprint arXiv:2411.10440 , 2024. 1 [58] Jinyu Yang, Jiali Duan, Son Tran, Yi Xu, Sampath Chanda, Liqun Chen, Belinda Zeng, Trishul Chilimbi, and Junzhou Huang. Vision-language pre-training with triple contrastive learning. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) , pages 15650–15659, 2022. 1 [59] Xun Yang, Shanshan Wang, Jian Dong, Jianfeng Dong, Meng Wang, and Tat-Seng Chua. Video moment retrieval with cross-modal neural architecture search. IEEE Transac-tions on Image Processing , 31:1204–1216, 2022. 1 [60] Zhenyu Yang, Dizhan Xue, Shengsheng Qian, Weiming Dong, and Changsheng Xu. Ldre: Llm-based divergent reasoning and ensemble for zero-shot composed image re-trieval. In Proceedings of the 47th International ACM SI-GIR Conference on Research and Development in Informa-tion Retrieval (SIGIR) , pages 80–90. ACM, 2024. 2 [61] Eric Zelikman, Yuhuai Wu, Jesse Mu, and Noah D. Good-man. Star: Bootstrapping reasoning with reasoning. In Ad-vances in Neural Information Processing Systems (NeurIPS) ,2022. 3 [62] Jinguo Zhu, Weiyun Wang, Zhe Chen, Zhaoyang Liu, Shen-glong Ye, Lixin Gu, Hao Tian, Yuchen Duan, Weijie Su, Jie Shao, et al. Internvl3: Exploring advanced training and test-time recipes for open-source multimodal models. arXiv preprint arXiv:2504.10479 , 2025. 1

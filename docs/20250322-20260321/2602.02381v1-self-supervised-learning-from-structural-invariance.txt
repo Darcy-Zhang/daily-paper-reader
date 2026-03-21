@@ -1,0 +1,1172 @@
+Title: Self-Supervised Learning from Structural Invariance
+
+URL Source: https://arxiv.org/pdf/2602.02381v1
+
+Published Time: Tue, 03 Feb 2026 04:05:34 GMT
+
+Number of Pages: 37
+
+Markdown Content:
+Published as a conference paper at ICLR 2026 
+
+# SELF -SUPERVISED LEARNING FROM STRUCTURAL INVARIANCE 
+
+Yipeng Zhang 1,2† Hafez Ghaemi 1,2,3 Jungyoon Lee 1,2 Shahab Bakhtiari 1,2
+
+Eilif B. Muller 1,2,3,5 Laurent Charlin 1,2,4,51Mila - Qu´ ebec AI Institute 2Universit´ e de Montr´ eal 3CHU Sainte-Justine 
+
+> 4
+
+HEC Montr´ eal 5CIFAR AI Chair 
+
+## ABSTRACT 
+
+Joint-embedding self-supervised learning (SSL), the key paradigm for unsuper-vised representation learning from visual data, learns from invariances between semantically-related data pairs. We study the one-to-many mapping problem in SSL, where each datum may be mapped to multiple valid targets. This arises when data pairs come from naturally occurring generative processes, e.g., succes-sive video frames. We show that existing methods struggle to flexibly capture this conditional uncertainty. As a remedy, we introduce a latent variable to account for this uncertainty and derive a variational lower bound on the mutual information between paired embeddings. Our derivation yields a simple regularization term for standard SSL objectives. The resulting method, which we call AdaSSL, applies to both contrastive and distillation-based SSL objectives, and we empirically show its versatility in causal representation learning, fine-grained image understanding, and world modeling on videos. 1
+
+## 1 INTRODUCTION 
+
+Over the last decade, joint-embedding self-supervised learning (SSL) has become the dominant ap-proach in representation learning from unlabeled visual data (Chen et al., 2020a; Zbontar et al., 2021; Grill et al., 2020; Radford et al., 2021; Assran et al., 2023). The intuition behind SSL is to obtain semantically-related data pairs, often called positive pairs , and encourage their representations to be similar, with proper regularization to prevent the encoder collapsing to a constant function (Wang & Isola, 2020; Garrido et al., 2023a; Zhuo et al., 2023). The hope is that invariance to the differences between positive pairs lead to generalizable representations. However, positive pairs are typically built with handcrafted augmentations (e.g., cropping, color jittering), which perturb pixels while preserving semantics. Such augmentations cannot precisely mimic changes in natural factors of variation that drive real-world distribution shifts (Ibrahim et al., 2023). For example, brightness jitter across pixels does not reproduce how lighting varies across objects or environments (e.g., from indoor to outdoor). Consequently, augmentations may fail to in-duce the right invariances (Ibrahim et al., 2023; 2022; Bouchacourt et al., 2021), discard fine-grained information (Chen et al., 2020a; Zhang et al., 2024), incur additional computation burden (Bordes et al., 2023), and require modality-specific heuristics (Balestriero et al., 2023), ultimately harming downstream performance. One alternative is to exploit naturally-paired data—e.g., nearby video frames (Klindt et al., 2021; Bardes et al., 2024; Sermanet et al., 2018), image–caption pairs (Radford et al., 2021), class la-bels (Khosla et al., 2020), or embeddings from other models (Sobal et al., 2025a; Feizi et al., 2024)—which (better) reflect real-world variations. From the lens of causal representation learning 
+
+(CRL) (Yao et al., 2025; Reizinger et al., 2025), positive pairs (x, x+) are deterministically mapped from latent factors sampled according to (z, z+) ∼ p(z)p(z+ | z), and we aim to recover z from x.Unlike augmentations that perturb the observations directly, natural positive pairs differ according to structured changes in latent factors of the data generating process (DGP). Modelling these latent 
+
+> †
+
+Correspondence to yipeng.zhang@mila.quebec .
+
+> 1
+
+Code will be made available at https://github.com/SkrighYZ/AdaSSL .
+
+1
+
+> arXiv:2602.02381v1 [cs.LG] 2 Feb 2026
+
+Published as a conference paper at ICLR 2026 changes often improves generalization (Ibrahim et al., 2022; Dittadi et al., 2021; Kaur et al., 2023) and visual understanding (Awal et al., 2024; Garrido et al., 2025; Lippe et al., 2023). Despite the aforementioned benefits, modeling natural pairs for SSL remains challenging. When learning with augmented pairs, we typically assume the semantic latent factors are invariant, so the latent conditional distribution p(z+ | z) is highly concentrated near z. However, natural pairs induce complex p(z+ | z). For example, in world modeling (Ha & Schmidhuber, 2018b;a; Hafner et al., 2025; Assran et al., 2025), the present state z may lead to multiple plausible futures {z+}
+
+(e.g., a car may turn left or right), making the conditional distribution inherently multimodal. For image–caption pairs, caption details vary with image complexity, producing heteroscedastic noise. SSL methods that fail to capture this uncertainty often discard information not shared between the pair, leading to degraded performance (Chen et al., 2020a; Radford et al., 2021; Jing et al., 2022; Yuksekgonul et al., 2023; Trusca et al., 2024; Zhang et al., 2024). We argue that leveraging the structure of p(z+ | z) enables SSL to learn more diverse and generalizable features—a principle we call SSL from structural invariance .Recent works enable contrastive SSL to learn p(z+ | z) that has constant, anisotropic noise (K¨ ugelgen et al., 2021; Zimmermann et al., 2021; Rusak et al., 2025). In this work, we con-tribute a solution to model more complex conditional distributions with unknown shapes. We are inspired by joint-embedding predictive architectures (JEPAs) (LeCun, 2022; Garrido et al., 2024; Assran et al., 2025), which use a latent variable to capture the prediction uncertainty. However, in contrast to prior work (Devillers & Lefort, 2023; Garrido et al., 2024; Ghaemi et al., 2024; Dan-govski et al., 2022), we do not assume access to this variable and infer it purely from (the structure hidden in) positive pairs. For contrastive learning, this latent variable allows us to derive a new tractable bound on the mutual information (MI) between paired embeddings—a core motivation for SSL (Linsker, 1988; Tschannen et al., 2020; Oord et al., 2018)—and we empirically show its compatibility with non-contrastive methods. We name our method Adaptive SSL (AdaSSL) to highlight that it can adapt to different conditional distributions. We evaluate AdaSSL in controlled settings with numerical data, natural images, and videos. On numerical data, we show that existing SSL methods lack the ability to model non-trivial condition-als, and AdaSSL achieves better performance both in- and out-of-distribution (OOD). On images, AdaSSL consistently recovers fine-grained features better than baselines and learns more disentan-gled representations. On videos, AdaSSL captures stochastic object accelerations that baselines discard without sacrificing class accuracy. In summary, our main contributions show that: • Naturally paired data that differ in their data-generating factors can help SSL methods to recover these factors better and lead to improved generalization performance. • Existing SSL methods cannot capture the non-trivial conditional distributions induced by natural pairs, and we propose two variants of AdaSSL to address this limitation. • AdaSSL consistently outperforms baselines on a variety of benchmarks, including weakly-supervised CRL, fine-grained image understanding, and world modeling. 
+
+## 2 PROBLEM FORMULATION 
+
+In this section, we lay out our problem (§2.1) and discuss the limitations of existing SSL methods in addressing it (§2.2, §2.3). We then present a theoretical result showing the importance of modeling heteroscedastic noise (§2.4), which motivates our method. 2.1 DATA GENERATING PROCESS 
+
+In CRL, representation learning is viewed as learning to invert the DGP such that the latent factors responsible for generating the data are recovered (Zimmermann et al., 2021; K¨ ugelgen et al., 2021; Rusak et al., 2025; Reizinger et al., 2025). We assume a data pair (x, x+) conforms to the following generative process: 
+
+z ∼ p(z) , r | z ∼ p(r | z) , z+ | z, r ∼ p(z+ | z, r) , x = g(z) , x+ = g(z+) , (1) 2Published as a conference paper at ICLR 2026 where g : Z → X is an unknown mixing function that produces the observations x, x+ ∈ X based on the latent factors z, z+ ∈ Z . We introduce a latent variable r that governs the transformation from z to z+. This factorizes p(z+ | z) into a two-step process: first, r is drawn from a distribution of possible latent influences on z; then p(z+ | z, r) uses r to produce z+ in latent space. For example, r may represent camera movement, agent actions, or temporal gaps—factors that modify the underlying latent factors before they are mapped to observations through g.Under Eq. 1, the variability in x is entirely captured by the latent factors z since g is deterministic. A representation that encodes the full latent variability is therefore important for supporting a broad range of downstream tasks, each relying on some (a priori unknown) semantic structure in z (Bengio et al., 2013a). When SSL models fail to accurately model p(z+ | z), they may discard features that contribute to the unmodeled variance, because doing so removes them from the target and thereby reduces the prediction error. Formally, our goal is to learn a function f : X → Rdf that encodes the data x ∈ X into an embedding space Rdf such that we can predict, or identify , a subset 2 of the latent factors that are useful for downstream tasks from f (x) with a simple function, e.g., an affine transformation. We denote this subset of latent factors as “content factors” c := zI for I ⊆ [dz ], and the other (less relevant) factors as “style” factors s := z[dz ]\I following K¨ ugelgen et al. (2021). 2.2 PRELIMINARIES : CONTRASTIVE SSL Contrastive SSL methods assumes the content factors c to be roughly unperturbed under the condi-tional law pz+|z, and use an objective that encourage f (x) and f (x+) to be similar. To prevent rep-resentation collapse where f becomes a constant function, contrastive objectives use another term to encourage the representations to have high entropy (Chen et al., 2020a; Zbontar et al., 2021; Bardes et al., 2022; Wang & Isola, 2020). In this work, we focus on sample-contrastive methods based on InfoNCE (Oord et al., 2018; Chen et al., 2020a), and observe the duality between dimension- and sample-contrastive methods (Garrido et al., 2023a; Balestriero & LeCun, 2022). The InfoNCE loss has the form: 
+
+LInfoNCE = E{(x(i),x+( i))}Ki=1 iid  
+
+> ∼p(x,x+)
+
+"
+
+1
+
+K
+
+> K
+
+X
+
+> i=1
+
+− log es(x(i),x+( i))/τ 
+
+> 1
+> K
+
+PKj=1 es(x(i),x+( j))/τ 
+
+#
+
+, (2) where τ is a temperature parameter and s(·, ·) is a similarity function over pairs. Intuitively, InfoNCE encourages the similarity function to assign a high score for positive pairs and a low score for pairs that does not come from the true joint. The similarity function often adopts a simple form on the normalized embeddings, i.e., s(x, y) = ψ(x)⊤ψ(y) where ψ(·) = f (·)  
+
+> ∥f(·)∥2
+
+. The simplicity of the similarity function allows features to be easily extracted from the embedding space because they are used to discriminate between data points linearly during training (Tschannen et al., 2020). It has been shown that when the marginal p(z+) is uniform, the similarity function implicitly mod-els the log conditional: s⋆(x, x+) ∝ log p(z+ | z) (Zimmermann et al., 2021). With a dot-product similarity, the hypothesis class of pz+|z reduces to von Mises-Fisher (vMF) distributions, where τ
+
+controls the concentration strength. Since vMF distribution does not account for anisotropic noise, Rusak et al. (2025) introduces a diagonal matrix Λ that weighs the concentration along each di-mension: s(x, y) = −(ψ(x) − ψ(y)) ⊤Λ(ψ(x) − ψ(y)) . Nevertheless, it remains unclear how to flexibly model an arbitrary conditional distribution p(z+ | z) while keeping the similarity function simple enough to allow efficient feature extraction. 
+
+2.3 PRELIMINARIES : DISTILLATION -BASED SSL Distillation-based SSL methods are sometimes appealing because they avoid the explicit regular-ization to prevent representation collapse. Our work addresses the limitations of the invariance component of the SSL objective, making it applicable to these methods as well. Typically, they use asymmetric encoders: an online branch predicts target representations, with a stop-gradient on 
+
+> 2Although full latent recovery is often the goal in theory, invariance to certain style factors can help gener-alization (Deng et al., 2022) and prevent shortcut solutions in SSL (Chen et al., 2020a) under finite data.
+
+3Published as a conference paper at ICLR 2026 x x+x x+                    
+
+> f(x+)f(x)
+> xx+
+> f(x+)f(x)̂
+> f(x+)
+> r⋆
+> ℒSSL ℒSSL ℒSSL
+> ℒReg
+> pθ(r∣x)qϕ(r∣x,x+)
+> f(x+)f(x)
+> KL
+> r
+> sample
+> f(x+)f(x)r
+> sparsity regularization
+> f(x)+∑
+> i
+> riti(f(x))̂
+> f(x+)̂f(x+)=
+> (a) Contrastive SSL (b) Distillation-based SSL (c) AdaSSL (Ours) (d) AdaSSL-V (e) AdaSSL-S
+> f(x+)f(x)r̂
+> f(x+)
+
+Figure 1: Visual comparison of models. Boxes denote vectors and arrows denote functions. We use 
+
+f to denote both encoders although they may use different parameters in practice. (a) Contrastive SSL typically uses a symmetric architecture. (b) Distillation-based SSL uses a predictor to predict the embeddings of one branch from the other, optionally with the help of some supervision r⋆ related to the difference between the inputs. (c) Our method, AdaSSL, extends SSL by modeling the latent variable r. (d) AdaSSL-V learns a variational distribution, qϕ(r | x, x+), and uses an MLP as predictor. (e) AdaSSL-S regularizes the sparsity of r and uses a modular predictor. the target (Grill et al., 2020; Chen & He, 2021). While empirically effective, the reason these de-sign choices prevent collapse is not fully understood (Tian et al., 2021; Zhang et al., 2022; Zhuo et al., 2023). We illustrate our findings with BYOL (Grill et al., 2020), the backbone of many recent successful distillation-based methods (Guo et al., 2022; Assran et al., 2025): 
+
+LBYOL = η(ψ(x)) − ψEMA (x+) 22, (3) where ψEMA is the exponential moving average taken over the parameters defining ψ over time and 
+
+η(·) is an MLP predictor. Because of the predictor, distillation-based methods frame the problem as predictive learning more explicitly than contrastive ones. Intuitively, the predictor accounts for cases where E[z+ | z]̸ = z;but it remains unclear how it can capture complex noise structures in p(z+ | z)—which may be heteroscedastic or even multimodal—without conditioning on additional information. 
+
+2.4 UNAVOIDABLE HETEROSCEDASTICITY 
+
+Before presenting our solution to these questions, we first provide a theoretical result that under-scores the importance of modeling heteroscedasticity between paired embeddings. 
+
+Proposition 2.1. Let Sdf ⊂ Rdf +1 denote the df -dimensional unit sphere. Let g : Rdz → Rdx
+
+be C1 diffeomorphic to its image, and let f : Rdx → Sdf be C1 almost everywhere. Define h := 
+
+f ◦ g : Rdz → Sdf . Assume further that the random vectors z, z+ ∈ Rdz are sampled as z ∼
+
+pz, z+ = z + ε, ε ∼ pε, where pz is not a point mass and ε is independent of z, E[ε] = 0 , and 
+
+Cov( ε) ≻ 0. Suppose that for pz-almost every z we have rank Dh (z) = dz . Write H = h(z) and 
+
+H+ = h(z+). Then the conditional law pH+|H (h(z+) | h(z)) is necessarily heteroscedastic: its conditional variance depends on h(z) for pz-almost every z.
+
+Proposition 2.1 shows that heteroscedasticity between paired embeddings emerges from the geo-metric mismatch between the embedding space and the ground-truth latent space, regardless of the encoding function or embedding dimensionality (proof in §B.1). Intuitively, mapping the flat latent space Rdz onto a curved manifold such as Sdf distorts local neighborhoods differently depending on the location of h(z), causing input-dependent variance in p(h(z+) | h(z)) . Here, we explicitly show the case of projecting from unbounded latent space Rdz to normalized embedding space Sdf
+
+and discuss the reverse scenario in §B.2. In SSL, standard similarity functions and predictors implicitly assume that positive pairs exhibit the same noise scale (§2.2, §2.3), but Proposition 2.1 shows that this cannot hold when the (un-known) geometry of Z and the embedding space differ. Consequently, common similarity functions such as the dot product fail to capture this conditional variance, since they aggregate the variability uniformly across all embedding directions and data pairs. We show this empirically in §4.2. 4Published as a conference paper at ICLR 2026 p(z+ ∣ z = z(1)) p(z+ ∣ z = z(2))                    
+
+> Constant Anisotropic Heteroscedastic Multimodal Complex
+> p(z+∣r=r(1),z=z(1))p(z+∣r=r(2),z=z(2))
+> Constant
+> condition on r
+
+Figure 2: Illustration of different types of noise structure in p(z+ | z). Here, “constant” refers to isotropic, homoscedastic noise. Conditioning on a latent variable r can transform the noise into a simpler form. For example, a car may turn left or right, producing a bimodal conditional distribution; conditioning on the driver’s intention removes the irrelevant mode. 
+
+## 3 METHOD 
+
+We now present our method, which addresses the aforementioned challenges by modeling uncer-tainty with a latent variable model. In §3.1, we introduce our overall objective. We then discuss two variants of AdaSSL in §3.2 and §3.3, which optimize this objective in distinct ways. 3.1 MODELING UNCERTAINTY WITH A LATENT VARIABLE 
+
+Learning a representation that maximally preserves the mutual information (MI) between paired embeddings is useful for representation learning and motivates SSL (Linsker, 1988; Tschannen et al., 2020; Oord et al., 2018). Contrastive SSL optimizes a lower bound on the mutual information 
+
+I(f (x); f (x+)) (Oord et al., 2018) but, as discussed in Sec. 2.2, relies on strong assumptions on the latent conditional p(z+ | z).To relax these assumptions, we offload the modeling of complex noise structures to the latent vari-able r. In Fig. 1, we visually compare our method to existing approaches. Intuitively, r should contain information about x+ that cannot be solely predicted from x. For example, if x shows an object just before it passes behind a wall and x+ shows it after reappearing, r may represent its ac-celeration while occluded. Consequently, modeling p(z+ | z, r) may require a simpler model (e.g., 
+
+s(·, ·) in Eq. 2 or η(·) in Eq. 3) compared to modeling the full p(z+ | z), as illustrated in Fig. 2. With this in mind, we can rearrange I(f (x); f (x+)) into a form that is more tractable. Specifically, by the chain rule of MI, 
+
+I f (x); f (x+) = I f (x), r; f (x+) − I r; f (x+) | f (x) . (4) Intuitively, optimizing the first term on the RHS involves modeling p(z+ | z, r) instead of p(z+ | z).This can be achieved through an SSL objective that encourages the model to use information in r
+
+to reduce the uncertainty of predicting x+ from x. However, without a constraint, r could encode 
+
+f (x+) directly, increasing the second term and creating a shortcut. This motivates the general form of our objective: 
+
+LAdaSSL = LSSL (( x, r), x+) + βLReg (r) , (5) where the SSL term is any standard SSL loss (e.g., LInfoNCE ) and the regularizer LReg (r) limits this degenerate behavior by discouraging overly informative r. The hyperparameter β controls the strength of regularization per standard practice (Higgins et al., 2017; Locatello et al., 2020). This objective matches the conceptual framework depicted in Fig. 13 of LeCun (2022). We propose two ways to model r, which we discuss next. 3.2 ADA SSL-V AND A LOWER BOUND ON I(f (x), f (x+)) 
+
+We first model r with a variational distribution qϕ(r | x, x+) (Kingma & Welling, 2014; Sohn et al., 2015). The joint then becomes ˜p(x, x+, r) := p(x, x+)q(r | x, x+). The informational-theoretical properties of contrastive learning allow us to optimize a lower bound on I(x, x+)3. Specifically, the           
+
+> 3For brevity, we use the notation I(x;x+)in this section, but in practice we optimize I(f(x); f(x+)) ≤
+> I(x;x+)because our method operates on paired embeddings.
+
+5Published as a conference paper at ICLR 2026 first term in Eq. 4 is bounded by InfoNCE (Oord et al., 2018) by treating (x, r) as a single variable: 
+
+I˜p(x, r; x+) ≥ −L InfoNCE = E{(x(i),x+( i),r(i))}Ki=1 iid  
+
+> ∼˜p
+
+"
+
+1
+
+K
+
+> K
+
+X
+
+> i=1
+
+log es(x(i),x+( i),r(i))/τ 
+
+> 1
+> K
+
+PKj=1 es(x(i),x+( j),r(i))/τ 
+
+#
+
+.
+
+(6) 
+
+Similarity function. As discussed in §2.2, our goal is to have a similarity function that is flexible yet simple. With r as a latent variable, we still use the dot-product similarity on embeddings: 
+
+s(x, x+, r) = ψ1(x, r)⊤ψ2(x+) , where ψ1(x, r) = t(f (x), r)
+
+∥t(f (x), r)∥2
+
+, ψ 2(x+) = f (x+)
+
+∥f (x+)∥2
+
+. (7) Specifically, we edit f (x) with the help of r and an editing function t(·, ·) such that it lies in the vicinity of f (x+). We parameterize t with a linear projection or two-layer MLPs for AdaSSL-V. We derive a bound for the second term of Eq. 4 in §A: 
+
+−I˜p(r; x+ | x) ≥ −L Reg = −Ep(x,x+)
+
+DKL (qϕ(r | x, x+)∥pθ (r | x))  , (8) where DKL (·∥· ) denotes the Kullback-Leibler divergence. Thus, by introducing a variational distribution on r, we obtain a tractable lower bound on I(x; x+).In practice, we parameterize qϕ and pθ using lightweight MLPs on top of the embeddings f (x) and 
+
+f (x+), modeling both as factorized Gaussians. Plugging the terms into Eq. 5, we get 
+
+LAdaSSL −V = LSSL 
+
+ Eqϕ ψ1(x, r), ψ 2(x+) + βD KL (qϕ(r | x, x+)∥pθ (r | x)) . (9) We call this variant of our method AdaSSL-V (variational). For InfoNCE, The first term is explicilty stated in Eq. 6. For BYOL, we replace the input to the predictor η(·) in Eq. 3 with ψ1(x, r).
+
+Remark. Although AdaSSL-V is only theoretically justified for contrastive SSL, one can use a non-constrastive SSL loss as well because they still encourage r to aid prediction of f (x+).3.3 ADA SSL-S AND SPARSE MODULAR EDITS 
+
+Natural transitions usually correspond to sparse changes in the latent factors, an inductive bias widely adopted in the CRL literature (Ahuja et al., 2022; Klindt et al., 2021; Lippe et al., 2023). Therefore, we hypothesize that we can implement Eq. 5 by predicting r and regularizing its sparsity. 
+
+AdaSSL-S (parse) realizes this idea. Instead of variational approximation, we predict r determin-istically from f (x) and f (x+): r = m(f (x), f (x+)) , where m is an MLP followed by tanh 
+
+activation. We then regularize the sparsity of r:
+
+LAdaSSL −S = LSSL 
+
+ ψ1(x, r), ψ 2(x+) + β∥r∥0 , (10) where the L0 penalty 4 is made differentiable through the Gumbel-Sigmoid estimator similar to the one used by Lachapelle et al. (2022); Brouillard et al. (2020). We include its details in §D.1. Inspired by Ibrahim et al. (2022); Hu et al. (2022), we use a modular editing function for AdaSSL-S: 
+
+t(f (x), r) = f (x) + 
+
+> dr
+
+X
+
+> i=1
+
+riti(f (x)) = f (x) + 
+
+> dr
+
+X
+
+> i=1
+
+ri(BiAif (x) + bi) , (11) where dr is the dimensionality of r. Each editing function ti(·) is an affine transformation parame-terized by a rank-1 matrix BiAi and a scalar offset bi. This design is motivated by the assumption that differences between the paired embeddings lie in a low-dimensional latent subspace, where edits are applied. In §4.4, we will show that AdaSSL-S works well with contrastive learning, but requires additional care for distillation-based methods in some setups. 
+
+> 4
+
+We slightly abuse the notation and use ∥r∥0 to denote the number of non-zero elements of r.
+
+6Published as a conference paper at ICLR 2026 
+
+## 4 EXPERIMENTS 
+
+We evaluate AdaSSL in various settings to show it learns diverse and generalizable representations. We start with two benchmarks where we have access to the ground-truth data generating factors. First, we generate numerical data where we systematically increase the complexity of p(z+ | z),and show AdaSSL mitigates the limitations of existing SSL methods (§4.2). Second, we use 3D-rendered images from 3DIdent (Zimmermann et al., 2021) and show AdaSSL identifies latent factors better than all baselines (§4.3). For other benchmarks, we do not have access to the ground-truth data generating factors. Instead, we use proxy tasks such as fine-grained classification to evaluate the quality of the learned representa-tions. On natural images from CelebA (Liu et al., 2015), AdaSSL captures fine-grained features and generalizes to OOD data (§4.4). On large-scale image data from iNat-2021 (Van Horn et al., 2021), we show that AdaSSL is more robust to noisy data pairings than vanilla SSL (§C.1). Finally, in §4.5, we show that AdaSSL outperforms baselines on modeling the uncertainty in video transitions on an extended Moving-MNIST dataset (Srivastava et al., 2015; Drozdov et al., 2024). Throughout this section, we refer to data pairs that differ in the underlying latent factors as natural pairs and those constructed using augmented views of the same image as standard pairs . We show that natural pairs enable us to learn better representations in these settings. 4.1 OVERVIEW OF EXPERIMENTAL PROTOCOL 
+
+Baselines. Our experiments in §4.2, §4.3 focus on contrastive SSL. As discussed in §2.2, In-foNCE (Chen et al., 2020a; Oord et al., 2018) and AnInfoNCE (Rusak et al., 2025) are the con-trastive baselines that account for isotropic and anisotropic noise in p(z+ | z), respectively. An-InfoNCE learns directional weights of the similarity function, Λ. For a fair comparison, we also use a learnable scalar weight λ for other methods in §4.2 and §4.4 and find it beneficial. Table 8 compares the similarity functions across methods. On natural images in §4.4, we experiment with both InfoNCE and BYOL (Grill et al., 2020). We also compare with Ibrahim et al. (2022), which models the change between latent factors as Lie group transformations; we denote this method as LieSSL. For the CRL benchmark in §4.3, we include classic disentanglement methods, including 
+
+β-VAE (Higgins et al., 2017) and AdaGVAE (Locatello et al., 2020). For the video experiments in §4.5, we use BYOL as our base SSL method. 
+
+H-InfoNCE. In addition to existing baselines, we introduce H-InfoNCE, which extend AnIn-foNCE to account for heteroscedastic noise by predicting Λx from f (x) with an affine function (H-InfoNCE Affine ) or an MLP (H-InfoNCE MLP ); it replaces Λ in AnInfoNCE’s similarity function with this conditional Λx. Additionally, H-InfoNCE uses another MLP predictor to predict f (x+)
+
+from f (x), similar to distillation-based SSL, except for in Table 1, where we ensure E[z+ | z] = z.Note that all InfoNCE, AnInfoNCE, and H-InfoNCE assume unimodal p(z+ | z) while AdaSSL relaxes this assumption by using a latent variable model. 
+
+Experimental setup. We use a five-layer MLP as f for the numerical experiments in §4.2, a ResNet-18 encoder followed by a two-layer MLP projector as f for the image experiments in §4.3 and §4.4, a ResNet-50 encoder followed by a two-layer MLP projector as f in §C.1, and a five-layer 3D CNN followed by a three-layer MLP projector as f for videos. Unless otherwise noted, we train the model from scratch on the training set and perform model selection based on the performance of an online affine probe on the validation set. For evaluation in §4.2 and §4.3, we follow Zimmermann et al. (2021) by training an affine probe on top of the embeddings produced by the frozen f on the training data. For evaluation in §4.4 and §4.5, we train an affine probe on both the embeddings (output of the projector) and the output of the frozen encoder, which we refer to as representations .We then evaluate the probes’ performance on the test set following standard practice (Chen et al., 2020a; Grill et al., 2020). All results are reported as the mean and standard deviation over at least three random seeds. Additional experimental details and data visualizations can be found in §D. 4.2 NUMERICAL DATA 
+
+In this section, we study the effect of complexity of the conditional variance in p(z+ | z). Specif-ically, we sample correlated latents c ∼ N (0 , Σ) , where Σ is sampled from an Inverse-Wishart 7Published as a conference paper at ICLR 2026 Table 1: Linear regression R2 on unimodal p(z+ | z). All experiments share the same Σ and the mixing function g for each trial. Although all models achieve good performance on the training set 
+
+p(z), a flexible model is crucial to achieving good OOD performance. Values below 0.7 are dimmed.                                                                                                                                                                                                                                        
+
+> Var( c+|c)Model MODEL SPACE :UNBOUNDED MODEL SPACE :HYPERSPHERE
+> p(z)N(0 ,5·I)N(0 ,5·I)OOD p(z)N(0 ,5·I)N(0 ,5·I)OOD
+> -Identity 0.7410 ±0.0943 0.5103 ±0.0374 0.1243 ±0.0883 0.7410 ±0.0943 0.5103 ±0.0374 0.1243 ±0.0883
+> 0InfoNCE 0.9912 ±0.0051 0.9614 ±0.0060 0.8924 ±0.0590 0.8657 ±0.1462 0.8004 ±0.0764 0.2683 ±0.2626
+> 1InfoNCE 0.9943 ±0.0031 0.9731 ±0.0070 0.9564 ±0.0074 0.9785 ±0.0178 0.9104 ±0.0154 0.6944 ±0.0657
+> H-InfoNCE Affine 0.9956 ±0.0019 0.9736 ±0.0080 0.9592 ±0.0072 0.9953 ±0.0021 0.9645 ±0.0065 0.9154 ±0.0100
+> Anisotropic InfoNCE 0.9968 ±0.0013 0.9764 ±0.0055 0.9668 ±0.0056 0.9509 ±0.0358 0.7755 ±0.1385 0.3523 ±0.2323
+> AnInfoNCE 0.9962 ±0.0019 0.9753 ±0.0068 0.9627 ±0.0088 0.9613 ±0.0418 0.8403 ±0.0299 0.4022 ±0.2316
+> H-InfoNCE Affine 0.9963 ±0.0019 0.9685 ±0.0032 0.9510 ±0.0023 0.9970 ±0.0017 0.9537 ±0.0149 0.9018 ±0.0035
+> InfoNCE 0.8553 ±0.0532 0.2664 ±0.0984 -0.1891 ±0.2545 0.7851 ±0.0920 0.2690 ±0.1024 0.0209 ±0.1110
+> Heteroscedastic AnInfoNCE 0.8447 ±0.0611 0.2745 ±0.1052 -0.2277 ±0.3284 0.7563 ±0.1276 0.2563 ±0.1092 0.0070 ±0.1230
+> (affine+activation) H-InfoNCE Affine 0.9826 ±0.0060 0.9482 ±0.0165 0.8666 ±0.0741 0.9426 ±0.0222 0.6276 ±0.1084 0.3106 ±0.1218
+> H-InfoNCE MLP 0.9892 ±0.0023 0.9610 ±0.0098 0.9149 ±0.0348 0.9856 ±0.0075 0.9288 ±0.0175 0.7633 ±0.0576
+
+distribution (mean I, with typically nonzero correlations), and sample c+ from different condi-tional distributions p(c+ | c). Style latents are sampled independently: s, s+ ∼ N (0 , I), yielding 
+
+z = [ c, s] and z+ = [ c+, s+]. Denote the training latent distribution as p(z). A random invertible MLP parameterizing g (details in §D.2) maps these latents to observations x, x+ via Eq. 1. We then train f on the (x, x+) pairs under the SSL algorithms and freeze it. In the evaluation phase, we train a linear regressor to predict c from the frozen representations, 
+
+f (x), where x = g([ c, s]) . We perform three types of evaluation by varying the training and testing distributions of the regressor: • p(z): both training and testing use z ∼ p(z).• N (0 , 5 · I): both training and testing use z ∼ N (0 , 5 · I). This tests whether the representation supports accurate prediction of c under covariate shift. • N (0 , 5 · I)OOD : the regressor is trained on z ∼ p(z) but evaluated on z ∼ N (0 , 5 · I). This corresponds to a practical scenario where distribution shifts happen after deployment when both the encoder and regressor are frozen. This setting requires not only a robust regressor but also that the representation be well aligned across the two distributions (Ruan et al., 2022). Following prior works (Zimmermann et al., 2021; K¨ ugelgen et al., 2021), we vary the latent space assumptions (unbounded or hypersphere) and model flexibility (InfoNCE, AnInfoNCE, or H-InfoNCE) by changing the similarity function. 4.2.1 UNIMODAL p(c+ | c).We first construct a unimodal conditional, where we expect H-InfoNCE to suffice. We sample c+
+
+following c +
+
+i | c ∼ N  c+
+
+i ; ci, σ (c)2
+
+i
+
+, with σ(c) either 0, isotropic, anisotropic, or heteroscedastic, where σ(·) is an affine function followed by softplus activation. Table 1 leads to two main observations. First, models achieve high performance when both their embedding space and model flexibility match the true conditional p(c+ | c); otherwise we see a decrease in performance, which corroborates the findings of Zimmermann et al. (2021). No-tably, we see a clear performance drop with InfoNCE and AnInfoNCE with normalized embedding space. H-InfoNCE improves the performance by a large margin by capturing heteroscedasticity, consistent with Proposition 2.1. Second, while latent correlations help all models perform well on in-distribution data p(z), flexible models’ improved performance is more pronounced under OOD evaluation. Under heteroscedastic noise, the encoders learned with InfoNCE and AnInfoNCE fall short, even trailing the identity function. Interestingly, when Var( c+ | c) = 0 , generalization per-formance of InfoNCE is weaker than the best models in each block, supporting our hypothesis that naturally varying pairs that have independent variation along latent factors can help generalization. 4.2.2 COMPLEX p(c+ | c)
+
+In this experiment, we design a DGP where p(c+ | c) is both multimodal and heteroscedastic. We hypothesize that natural pairs usually differ sparsely in c, and the differed factors are sometimes conditioned on a latent variable. Therefore, we randomly select some dimensions of c+ and c to 8Published as a conference paper at ICLR 2026 Table 3: Identifiability results on 3DIdent. AdaSSL achieves the best disentanglement and 
+
+R2 scores. “ ” denotes “same as above”.                                                                                                
+
+> Model Pairing DCI disent. (↑)R2(↑)
+> β-VAE β=1 -0.2076 ±0.0243 0.6649 ±0.0307
+> β-VAE β=16 -0.1883 ±0.0191 0.6672 ±0.0216
+> β-VAE β=100 -0.3352 ±0.0468 0.6691 ±0.0342
+> AdaGVAE β=1 Natural 0.4098 ±0.0413 0.6436 ±0.0343
+> AdaGVAE β=16 0.3800 ±0.0131 0.6511 ±0.0141
+> AdaGVAE β=100 0.4582 ±0.0154 0.6213 ±0.0143
+> InfoNCE Standard 0.1447 ±0.0032 0.3382 ±0.0074
+> AnInfoNCE 0.1349 ±0.0007 0.3704 ±0.0113
+> InfoNCE Natural 0.1178 ±0.0073 0.8184 ±0.0047
+> AnInfoNCE 0.2772 ±0.0184 0.8243 ±0.0002
+> AdaSSL-V Additive 0.4661 ±0.0467 0.8857 ±0.0012
+> AdaSSL-V Linear 0.2756 ±0.0266 0.9331 ±0.0077
+> AdaSSL-V MLP 0.1027 ±0.0048 0.8948 ±0.0017
+> AdaSSL-S 0.1777 ±0.1009 0.9309 ±0.0096
+
+x 1-NN of  t (f(x), ˜r)
+
+Position 
+
+Spotlight 
+
+Hue 
+
+All 
+
+Sample 
+
+Figure 3: AdaSSL-V performs controllable re-trieval. From the query image x, we sample ˜r
+
+from different dimensions of the learned prior 
+
+pθ (r | x) which correspond to interpretable changes in the edited image t(f (x), ˜r).be shared, while the rest follow Gaussians conditioned on a latent variable κ, i.e., c i, c+ 
+
+> i
+
+| κ ∼N  μ(κ)i, σ (κ)2
+
+> i
+
+. See §D.2 for details. Table 2: Linear regression R2 on complex 
+
+p(c+ | c). All models normalize embed-dings and AdaSSL outperforms baselines.                                                         
+
+> Model p(z)N(0 ,5·I)N(0 ,5·I)OOD
+> InfoNCE 0.5210 ±0.1611 0.5024 ±0.0850 0.0395 ±0.3141
+> AnInfoNCE 0.5446 ±0.1745 0.5578 ±0.1271 0.1652 ±0.2261
+> H-InfoNCE MLP 0.8750 ±0.0658 0.7784 ±0.0915 0.5471 ±0.2480
+> AdaSSL-V 0.8609 ±0.0740 0.8656 ±0.0195 0.6638 ±0.0956
+> AdaSSL-S 0.9187 ±0.0174 0.8472 ±0.0292 0.6325 ±0.0737
+
+Table 2 shows that InfoNCE and AnInfoNCE strug-gle to recover the latent factors, especially on the hardest OOD evaluation, N (0 , 5 · I)OOD . H-InfoNCE improves performance, and AdaSSL vari-ants improve further. We visualize the learned condi-tionals in §C.5, where AdaSSL best fits the ground truth, suggesting that its improvement comes from more accurate uncertainty modeling. 4.3 SYNTHETIC IMAGES 
+
+We next show AdaSSL can be used to recover all data-generating factors from natural pairs on 3DI-dent (Zimmermann et al., 2021), a dataset of realistically rendered images of a teapot varying in ten data generating factors such as position, spotlight, and hue. Following Locatello et al. (2020), we generate natural pairs by first drawing two samples from the marginal latent distribution. Then, each latent coordinate is replaced with some probability by the corresponding coordinate from the other sample. We evaluate (a) disentanglement in the learned embeddings with the DCI disentan-glement score (Eastwood & Williams, 2018), and (b) the recovery of latent factors, i.e., “empirical” identifiability, up to affine transformations with R2.Table 3 shows that β-VAE and AdaGVAE fail to identify the latent factors, though AdaGVAE achieves decent disentanglement. InfoNCE with augmentations performs worse, likely because augmentation invariance conflicts with the CRL objective. SSL baselines using natural pairs achieve good latent recovery but yield more entangled latent factors. We hypothesize that AdaSSL’s regu-larization encourages efficient encodings of r, akin to β-VAE (Higgins et al., 2017; Burgess et al., 2018). Since r is modeled as factorized Gaussians, some disentanglement in r is expected. To verify this, we vary the complexity of the editing function t (additive, linear, nonlinear), as shown in the subscripts in Table 3. With simpler t, the dimensions of f (x) must align more directly with those of r, making any disentanglement in r more visible in f (x). Indeed, simpler t leads to more disentagled embeddings while consistently outperforming baselines on regression performance. In particular, AdaSSL-V Linear and AdaSSL-S, which both use linear editing functions, achieve the highest regression performance. To better understand the learned r, we visualize its effect by retrieving nearest neighbor of a query image x after editing it with samples ˜r (Fig. 3). Given evidence of disentanglement, we expect sam-pling specific latent dimensions to induce meaningful changes in the edited embeddings t(f (x), ˜r).Concretely, we sample ˜ri ∼ pθ (ri | x) for i ∈ L ⊆ [dr ] for some set of latent indices L, and fix all others to their expectations. Fig. 3 shows results for three different L’s. We find that we can retrieve objects that differ in position, spotlight, and color, while leaving most other factors unchanged, 9Published as a conference paper at ICLR 2026 Table 4: Linear F1 scores on representations (en-coder output) and embeddings (projector output) trained on CelebA, under weak or strong augmentations. AdaSSL+GT, a soft performance upper bound, uses the ground-truth attribute difference as r.                                                                                                                                                                                    
+
+> Model Pairing WEAK AUGMENTATION STRONG AUGMENTATION
+> Repr. Emb. Repr. Emb.
+> CONTRASTIVE
+> InfoNCE Standard 0.2698 ±0.0030 0.1295 ±0.0051 0.5965 ±0.0004 0.5694 ±0.0011
+> AnInfoNCE 0.2534 ±0.0064 0.1822 ±0.0036 0.5967 ±0.0015 0.5742 ±0.0030
+> InfoNCE Natural 0.5473 ±0.0027 0.3747 ±0.0051 0.5784 ±0.0008 0.4941 ±0.0035
+> AnInfoNCE 0.5413 ±0.0010 0.4249 ±0.0032 0.5789 ±0.0008 0.4987 ±0.0033
+> LieSSL 0.5029 ±0.0061 0.4525 ±0.0098 0.5926 ±0.0036 0.5685 ±0.0015
+> H-InfoNCE MLP 0.5521 ±0.0042 0.4559 ±0.0058 0.5789 ±0.0016 0.5138 ±0.0023
+> AdaSSL-V 0.5784 ±0.0025 0.4794 ±0.0015 0.6014 ±0.0008 0.5706 ±0.0034
+> AdaSSL-S 0.5676 ±0.0049 0.4581 ±0.0016 0.5911 ±0.0014 0.5654 ±0.0007
+> AdaSSL+GT 0.6818 ±0.0011 0.6840 ±0.0019 0.6779 ±0.0003 0.6832 ±0.0011
+> DISTILLATION  BYOL Standard 0.2989 ±0.0025 0.1832 ±0.0037 0.5368 ±0.0013 0.5043 ±0.0037
+> BYOL Natural 0.5465 ±0.0018 0.4263 ±0.0019 0.5608 ±0.0004 0.5019 ±0.0013
+> AdaSSL-V 0.5816 ±0.0035 0.5067 ±0.0051 0.5702 ±0.0017 0.5302 ±0.0018
+> AdaSSL-S 0.4520 ±0.0130 0.3014 ±0.0107 0.5334 ±0.0057 0.4772 ±0.0051
+> AdaSSL+GT 0.5948 ±0.0042 0.5730 ±0.0016 0.5984 ±0.0024 0.5872 ±0.0003 0.88 0.90 0.92
+
+Velocity decoding ( R2) 
+
+> 88
+> 89
+> 90
+> 91
+> 92
+> 93
+> 94
+> Top-1 accuracy (%)
+> BYOL
+> BYOL+GT
+> BYOL+Future
+> AdaSSL-S
+> AdaSSL-V ( dr,)
+> (2, 0)
+> (2, 0.001)
+> (2, 0.005)
+> (2, 0.01)
+> (5, 0.001)
+> (5, 0.01)
+> (10, 0.001)
+> (10, 0.01)
+
+Figure 4: Velocity decoding and digit recognition from representations on stochastic Moving-MNIST. Marker ra-dius indicates standard deviation. though orientation remains entangled with other factors. Finally, when sampling from the full prior, we retrieve images that differ sparsely in latent factors, consistent with the training DGP. Together, these results highlight SSL as a promising path for CRL given its efficiency (no recon-struction) and demonstrated scalability to high-dimensional images. 4.4 NATURAL IMAGES 
+
+Although we do not have access to the ground-truth data generating factors of natural images, we perform experiments on the CelebA dataset (Liu et al., 2015) which contains celebrity images with annotated facial attributes. We obtain real-world natural pairs by matching different photos of the same celebrity, which differ sparsely in their facial attributes (§D.4). We then train models on paired images and evaluate with affine probes on 40 facial attributes of unseen identities, inducing a natural distribution shift. Results in Table 4 show that standard pairing rely on strong augmentations to work well. However, using natural pairs largely reduces the gap, and AdaSSL-V is the only method that consistently improves upon the standard pairing baselines across all settings. This exposes the weakness of vanilla SSL objectives under complex conditionals in natural pairs. We still observe a gap between AdaSSL and AdaSSL+GT, indicating room for improvement in future work. Interestingly, while AdaSSL-S consistently improves InfoNCE on natural pairs, this benefit is not observed when combined with BYOL. We hypothesize that explicitly regularizing the embeddings’ information content (as in the denominator of Eq. 2) pressures the model to utilize r effectively. In contrast, distillation-based methods lack this direct tension and may require additional regularization on r to achieve the same effect. We provide empirical support of this hypothesis in §C.3. We show AdaSSL scales to larger data and backbones in §C.1. 4.5 WORLD MODELING ON VIDEOS 
+
+In sections above, we have shown AdaSSL models p(z+ | z) well. Since modeling this transition distribution is central to world modeling on videos, we test AdaSSL on it. We hypothesize that inability to model uncertainty drives the model to discard variant factors. We introduce uncertainty by injecting random changes in velocity between two segments of Moving-MNIST (Srivastava et al., 2015; Drozdov et al., 2024), which are then used as positive pairs. We use BYOL (Grill et al., 2020) as the SSL method for this experiment, whose predictions can condition on a future segment (BYOL+Future) similar to Liu et al. (2025) or the ground-truth change in velocity (BYOL+GT). Fig. 4 shows that AdaSSL captures both the invariant factor, digit, and the variant factor, velocity, better than baselines. Ablation on AdaSSL-V shows its robustness to the dimensionality of r under proper regularization. We include full results in Table 6 and details in §D. We include additional analysis on AdaSSL’s world modeling capabilities in §C.4. 10 Published as a conference paper at ICLR 2026 
+
+## 5 RELATED WORK 
+
+Self-supervised learning. SSL in the latent space has evolved from solving hand-crafted pretext tasks (Noroozi & Favaro, 2016; Doersch et al., 2015; Dosovitskiy et al., 2014; Gidaris et al., 2018) to learning semantic-preserving representations from invariance to augmentations (Oord et al., 2018; Wu et al., 2018; Gutmann & Hyv¨ arinen, 2010; Chen et al., 2020b; Caron et al., 2020; Wu et al., 2018; He et al., 2020; Radford et al., 2021; Caron et al., 2021; Zbontar et al., 2021; Bardes et al., 2022; Ermolov et al., 2021; Chen & He, 2021; Grill et al., 2020; Assran et al., 2023; Baevski et al., 2022; Caron et al., 2020; He et al., 2016). Studies have also explored the relationship between in-variant representations and variational inference (Bizeul et al., 2024; Sinha & Dieng, 2021). Beyond invariance, equivariant representations preserve transformation information (Hinton et al., 2011). In SSL, this is achieved by providing augmentation parameters to the predictor (Garrido et al., 2023b; Ghaemi et al., 2024; Devillers & Lefort, 2023; Garrido et al., 2024; Park et al., 2022), or using subspaces for different invariances (Xiao et al., 2021; Eastwood et al., 2023). However, these ap-proaches are tied to chosen augmentations and break down when the sources of uncertainty are un-known. Alternatively, one can exploit the invariance between observation pairs that are transformed similarly (Shakerinava et al., 2022), or model transformation with Lie groups (Ibrahim et al., 2022); the latter requires jointly optimizing the vanilla SSL loss and only learns a single factor of variation. Lastly, Lavoie et al. (2024) reduce prediction uncertainty between image–caption pairs by condition-ing visual representations on textual ones through a cross-attention mechanism, thereby improving the feature diversity of contrastive vision–language models. Unlike prior work, our method does not require transformation labels, handles multiple varying factors, and provides a simple, theoretically justified objective that is compatible with standard SSL methods across diverse settings. 
+
+Causal representation learning. Much research examines recovering data-generating factors and their causal relations (Hyvarinen & Morioka, 2016; Sch¨ olkopf et al., 2021; von K¨ ugelgen et al., 2023; Ahuja et al., 2023; Brehmer et al., 2022; Locatello et al., 2020; Lachapelle et al., 2022; Lippe et al., 2023; Klindt et al., 2021; Ahuja et al., 2022; Lippe et al., 2022; Yao et al., 2025). While offering theoretical guarantees, these methods often rely on strong assumptions or probabilistic gen-erative models, limiting scalability. SSL has been connected to CRL (Zimmermann et al., 2021; K¨ ugelgen et al., 2021; Rusak et al., 2025; Yao et al., 2024), where studies focus on identifying the content factors that follow simple conditionals (§2.2). This work relaxes these assumptions by allowing structured variation between paired latents and demonstrates strong performance on weakly-supervised CRL, a step towards understanding and advancing SSL (Reizinger et al., 2025). 
+
+World modeling with SSL. Unlike image-based SSL that rely on augmentations, video world models with SSL learn the transition dynamics of videos, often by predicting target frames given some context (Sermanet et al., 2018; Feichtenhofer et al., 2021; Bardes et al., 2024; Assran et al., 2025; Schwarzer et al., 2021; Guo et al., 2022). Through the process, the model learns useful rep-resentations for downstream tasks such as video understanding. A key challenge is that uncertainty grows with the temporal gap between positive pairs, forcing models to fix temporal resolution (Fe-ichtenhofer et al., 2021; Bardes et al., 2024), which may limit their ability to learn features at dif-ferent levels of abstractions (Zacks & Tversky, 2001) because the model can discard variant factors. Introducing a latent variable r, as we do, can reduce the uncertainty and learn more diverse fea-tures (§4.4). Finally, although we focus on improving SSL in the latent space, we note there are successful approaches that predict in the observation space (Schmidt & Jiang, 2024; Tong et al., 2022; Feichtenhofer et al., 2022; Jang et al., 2024; Bruce et al., 2024; Yang et al., 2024). 
+
+## 6 LIMITATIONS AND FUTURE WORK 
+
+In this section, we discuss the limitations of our work and suggest future directions. First, while we perform experiments on controlled settings with ResNet-18/50, it would be inter-esting to explore AdaSSL’s behavior with ViT backbones and on uncurated data, such as web-scale image-caption pairs and natural videos. On such data, one can investigate the types of uncertainty (e.g., object-level versus global, kinematic versus intrinsic) that AdaSSL prioritizes to learn. Two recent works, while potentially incorporating stronger inductive bias, share a similar conceptual motivation to AdaSSL on these specific settings (Lavoie et al., 2024; Hoang & Ren, 2025). 11 Published as a conference paper at ICLR 2026 Second, the world model t in AdaSSL must reason about how the latent cause r transforms the environment, i.e., p(z+ | z, r), a task that naturally scales in difficulty with the complexity of the underlying transition. However, we hypothesize that operating in the latent space makes this transition distribution considerably easier to model than in observation space. Future work could explore more structured transition models to better capture how latent factors drive world dynamics. Third, a natural extension of AdaSSL is action-free representation learning on videos, where the model discovers an implicit action space from naturally occurring changes. This learned action space can then support downstream tasks. For example, one may train a decoder on the frozen world model and prior over r for controllable video generation. We can also learn a projection between actions and the learned latent space to enable planning (Sobal et al., 2025b; Assran et al., 2025). We perform a preliminary step of this idea where we evaluate the world model’s capability to predict future trajectories with a given action in §C.4.2. Finally, we do not provide theoretical guarantees for identifiability and leave it as future work. 
+
+## 7 CONCLUSION 
+
+In this work, we reveal the limitation of SSL methods when trained on naturally paired data and introduce AdaSSL, which learns a latent variable that captures the uncertainty in prediction targets. Our approach consistently outperforms existing methods across all benchmarks. We believe this is a promising step in expanding the capability of SSL methods, leading to potentially fruitful advance-ments in learning generalizable representations, identifying latent factors from high-dimensional images, and world modeling with uncertainty. ACKNOWLEDGMENTS 
+
+We appreciate the constructive feedback from the anonymous reviewers. We also thank Siddarth Venkatraman, Michael Chong Wang, Emiliano Penaloza, and Omar Salemohamed for insightful discussions, Anirudh Buvanesh and Lucas Maes for precise pointers to literature, and Mehran Shak-erinava for proofreading. Additionally, YZ would like to thank Xiaofeng Zhang and Dhanya Sridhar for helpful feedback during the early development of the idea. YZ, HG, EBM, and LC acknowledge the generous support of the CIFAR AI Chair program. Addi-tionally, YZ is supported by the AI Scholarship from Universit´ e de Montr´ eal. HG is supported by the UNIQUE Centre (unique.quebec). EBM is supported by NSERC Discovery Grants (RGPIN-2022-05033). SB is supported by NSERC Discovery Grants (RGPIN-2023-03875) and the Canada Excel-lence Research Chairs (CERC) Program. This research was enabled in part by compute resources provided by Mila (mila.quebec) and the Digital Research Alliance of Canada (alliancecan.ca). ETHICS STATEMENT 
+
+This work uses the CelebA dataset (Liu et al., 2015), which consists of publicly available celebrity face images collected from the internet. We use it solely for non-commercial academic research in facial attribute learning, under its research-only license. Our use does not involve face generation or manipulation, and all experiments are conducted strictly for evaluating algorithmic performance, in line with the intended use of the dataset. REPRODUCIBILITY STATEMENT 
+
+We comprehensively detail our experimental setup in §D. Code to reproduce our results will be made available at https://github.com/SkrighYZ/AdaSSL .
+
+## REFERENCES 
+
+Kartik Ahuja, Jason S Hartford, and Yoshua Bengio. Weakly supervised representation learning with sparse perturbations. Advances in Neural Information Processing Systems , 35:15516–15528, 2022. 12 Published as a conference paper at ICLR 2026 Kartik Ahuja, Divyat Mahajan, Yixin Wang, and Yoshua Bengio. Interventional causal representa-tion learning. In International conference on machine learning , pp. 372–407. PMLR, 2023. Mahmoud Assran, Quentin Duval, Ishan Misra, Piotr Bojanowski, Pascal Vincent, Michael Rabbat, Yann LeCun, and Nicolas Ballas. Self-supervised learning from images with a joint-embedding predictive architecture. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pp. 15619–15629, 2023. Mido Assran, Adrien Bardes, David Fan, Quentin Garrido, Russell Howes, Matthew Muckley, Am-mar Rizvi, Claire Roberts, Koustuv Sinha, Artem Zholus, et al. V-jepa 2: Self-supervised video models enable understanding, prediction and planning. arXiv preprint arXiv:2506.09985 , 2025. Rabiul Awal, Saba Ahmadi, Le Zhang, and Aishwarya Agrawal. Vismin: Visual minimal-change understanding. Advances in Neural Information Processing Systems , 37:107795–107829, 2024. Alexei Baevski, Wei-Ning Hsu, Qiantong Xu, Arun Babu, Jiatao Gu, and Michael Auli. Data2vec: A general framework for self-supervised learning in speech, vision and language. In International Conference on Machine Learning , pp. 1298–1312. PMLR, 2022. Randall Balestriero and Yann LeCun. Contrastive and non-contrastive self-supervised learning re-cover global and local spectral embedding methods. Advances in Neural Information Processing Systems , 35:26671–26685, 2022. Randall Balestriero, Mark Ibrahim, Vlad Sobal, Ari Morcos, Shashank Shekhar, Tom Goldstein, Florian Bordes, Adrien Bardes, Gregoire Mialon, Yuandong Tian, et al. A cookbook of self-supervised learning. arXiv preprint arXiv:2304.12210 , 2023. Adrien Bardes, Jean Ponce, and Yann LeCun. VICReg: Variance-invariance-covariance regulariza-tion for self-supervised learning. In International Conference on Learning Representations , 2022. URL https://openreview.net/forum?id=xm6YD62D1Ub .Adrien Bardes, Quentin Garrido, Jean Ponce, Xinlei Chen, Michael Rabbat, Yann LeCun, Mido Assran, and Nicolas Ballas. Revisiting feature prediction for learning visual representations from video. Transactions on Machine Learning Research , 2024. ISSN 2835-8856. URL https: //openreview.net/forum?id=QaCCuDfBk2 . Featured Certification. Yoshua Bengio, Aaron Courville, and Pascal Vincent. Representation learning: A review and new perspectives. IEEE transactions on pattern analysis and machine intelligence , 35(8):1798–1828, 2013a. Yoshua Bengio, Nicholas L´ eonard, and Aaron Courville. Estimating or propagating gradients through stochastic neurons for conditional computation. arXiv preprint arXiv:1308.3432 , 2013b. Alice Bizeul, Bernhard Sch¨ olkopf, and Carl Allen. A probabilistic model behind self- supervised learning. Transactions on Machine Learning Research , 2024. ISSN 2835-8856. URL https: //openreview.net/forum?id=QEwz7447tR .Florian Bordes, Randall Balestriero, and Pascal Vincent. Towards democratizing joint-embedding self-supervised learning. arXiv preprint arXiv:2303.01986 , 2023. Diane Bouchacourt, Mark Ibrahim, and Ari Morcos. Grounding inductive biases in natural images: invariance stems from variations in data. Advances in Neural Information Processing Systems ,34:19566–19579, 2021. Johann Brehmer, Pim De Haan, Phillip Lippe, and Taco S Cohen. Weakly supervised causal repre-sentation learning. Advances in Neural Information Processing Systems , 35:38319–38331, 2022. Philippe Brouillard, S´ ebastien Lachapelle, Alexandre Lacoste, Simon Lacoste-Julien, and Alexandre Drouin. Differentiable causal discovery from interventional data. Advances in Neural Information Processing Systems , 33:21865–21877, 2020. Jake Bruce, Michael D Dennis, Ashley Edwards, Jack Parker-Holder, Yuge Shi, Edward Hughes, Matthew Lai, Aditi Mavalankar, Richie Steigerwald, Chris Apps, et al. Genie: Generative inter-active environments. In Forty-first International Conference on Machine Learning , 2024. 13 Published as a conference paper at ICLR 2026 Christopher P Burgess, Irina Higgins, Arka Pal, Loic Matthey, Nick Watters, Guillaume Des-jardins, and Alexander Lerchner. Understanding disentangling in β-vae. arXiv preprint arXiv:1804.03599 , 2018. Mathilde Caron, Ishan Misra, Julien Mairal, Priya Goyal, Piotr Bojanowski, and Armand Joulin. Unsupervised learning of visual features by contrasting cluster assignments. Advances in neural information processing systems , 33:9912–9924, 2020. Mathilde Caron, Hugo Touvron, Ishan Misra, Herv´ e J´ egou, Julien Mairal, Piotr Bojanowski, and Armand Joulin. Emerging properties in self-supervised vision transformers. In Proceedings of the IEEE/CVF international conference on computer vision , pp. 9650–9660, 2021. Ting Chen, Simon Kornblith, Mohammad Norouzi, and Geoffrey Hinton. A simple framework for contrastive learning of visual representations. In International conference on machine learning ,pp. 1597–1607. PmLR, 2020a. Ting Chen, Simon Kornblith, Mohammad Norouzi, and Geoffrey Hinton. A simple framework for contrastive learning of visual representations. In International Conference on Machine Learning (ICML) , 2020b. URL https://proceedings.mlr.press/v119/chen20j.html .Xinlei Chen and Kaiming He. Exploring simple siamese representation learning. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , pp. 15750–15758, 2021. Rumen Dangovski, Li Jing, Charlotte Loh, Seungwook Han, Akash Srivastava, Brian Cheung, Pulkit Agrawal, and Marin Soljacic. Equivariant self-supervised learning: Encouraging equivariance in representations. In International Conference on Learning Representations , 2022. URL https: //openreview.net/forum?id=gKLAAfiytI .Weijian Deng, Stephen Gould, and Liang Zheng. On the strong correlation between model invari-ance and generalization. Advances in Neural Information Processing Systems , 35:28052–28067, 2022. Alexandre Devillers and Mathieu Lefort. Equimod: An equivariance module to improve visual instance discrimination. In The Eleventh International Conference on Learning Representations ,2023. URL https://openreview.net/forum?id=eDLwjKmtYFt .Andrea Dittadi, Frederik Tr¨ auble, Francesco Locatello, Manuel Wuthrich, Vaibhav Agrawal, Ole Winther, Stefan Bauer, and Bernhard Sch¨ olkopf. On the transfer of disentangled representations in realistic settings. In International Conference on Learning Representations , 2021. URL https: //openreview.net/forum?id=8VXvj1QNRl1 .Carl Doersch, Abhinav Gupta, and Alexei A Efros. Unsupervised visual representation learning by context prediction. In Proceedings of the IEEE international conference on computer vision , pp. 1422–1430, 2015. Alexey Dosovitskiy, Jost Tobias Springenberg, Martin Riedmiller, and Thomas Brox. Discrimi-native unsupervised feature learning with convolutional neural networks. Advances in neural information processing systems , 27, 2014. Matthijs Douze, Alexandr Guzhva, Chengqi Deng, Jeff Johnson, Gergely Szilvasy, Pierre-Emmanuel Mazar´ e, Maria Lomeli, Lucas Hosseini, and Herv´ e J´ egou. The faiss library. 2024. Katrina Drozdov, Ravid Shwartz-Ziv, and Yann LeCun. Video representation learning with joint-embedding predictive architectures. arXiv preprint arXiv:2412.10925 , 2024. Cian Eastwood and Christopher K. I. Williams. A framework for the quantitative evaluation of disentangled representations. In International Conference on Learning Representations , 2018. URL https://openreview.net/forum?id=By-7dz-AZ .Cian Eastwood, Julius von K¨ ugelgen, Linus Ericsson, Diane Bouchacourt, Pascal Vincent, Mark Ibrahim, and Bernhard Sch¨ olkopf. Self-supervised disentanglement by leveraging structure in data augmentations. In Causal Representation Learning Workshop at NeurIPS 2023 , 2023. URL 
+
+https://openreview.net/forum?id=JoISqbH8vl .14 Published as a conference paper at ICLR 2026 Aleksandr Ermolov, Aliaksandr Siarohin, Enver Sangineto, and Nicu Sebe. Whitening for self-supervised representation learning. In Marina Meila and Tong Zhang (eds.), Proceedings of the 38th International Conference on Machine Learning , volume 139 of Proceedings of Machine Learning Research , pp. 3015–3024. PMLR, 18–24 Jul 2021. URL https://proceedings. mlr.press/v139/ermolov21a.html .Christoph Feichtenhofer, Haoqi Fan, Bo Xiong, Ross Girshick, and Kaiming He. A large-scale study on unsupervised spatiotemporal representation learning. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , pp. 3299–3309, 2021. Christoph Feichtenhofer, Yanghao Li, Kaiming He, et al. Masked autoencoders as spatiotemporal learners. Advances in neural information processing systems , 35:35946–35958, 2022. Aarash Feizi, Randall Balestriero, Adriana Romero-Soriano, and Reihaneh Rabbany. Gps-ssl: Guided positive sampling to inject prior into self-supervised learning. arXiv preprint arXiv:2401.01990 , 2024. Quentin Garrido, Yubei Chen, Adrien Bardes, Laurent Najman, and Yann LeCun. On the dual-ity between contrastive and non-contrastive self-supervised learning. In The Eleventh Interna-tional Conference on Learning Representations , 2023a. URL https://openreview.net/ forum?id=kDEL91Dufpa .Quentin Garrido, Laurent Najman, and Yann Lecun. Self-supervised learning of split invariant equivariant representations. In International Conference on Machine Learning , pp. 10975–10996. PMLR, 2023b. Quentin Garrido, Mahmoud Assran, Nicolas Ballas, Adrien Bardes, Laurent Najman, and Yann LeCun. Learning and leveraging world models in visual representation learning. arXiv preprint arXiv:2403.00504 , 2024. Quentin Garrido, Nicolas Ballas, Mahmoud Assran, Adrien Bardes, Laurent Najman, Michael Rab-bat, Emmanuel Dupoux, and Yann LeCun. Intuitive physics understanding emerges from self-supervised pretraining on natural videos. arXiv preprint arXiv:2502.11831 , 2025. Quentin Garrido, Tushar Nagarajan, Basile Terver, Nicolas Ballas, Yann LeCun, and Michael Rab-bat. Learning latent action world models in the wild. arXiv preprint arXiv:2601.05230 , 2026. Hafez Ghaemi, Eilif Benjamin Muller, and Shahab Bakhtiari. Seq-JEPA: Autoregressive predictive learning of invariant-equivariant world models. In NeurIPS 2024 Workshop: Self-Supervised Learning - Theory and Practice , 2024. URL https://openreview.net/forum?id= MO1OLAKcsJ .Spyros Gidaris, Praveer Singh, and Nikos Komodakis. Unsupervised representation learning by predicting image rotations. In International Conference on Learning Representations , 2018. URL 
+
+https://openreview.net/forum?id=S1v4N2l0-.Jean-Bastien Grill, Florian Strub, Florent Altch´ e, Corentin Tallec, Pierre Richemond, Elena Buchatskaya, Carl Doersch, Bernardo Avila Pires, Zhaohan Guo, Mohammad Gheshlaghi Azar, et al. Bootstrap your own latent-a new approach to self-supervised learning. Advances in neural information processing systems , 33:21271–21284, 2020. Zhaohan Guo, Shantanu Thakoor, Miruna Pˆ ıslar, Bernardo Avila Pires, Florent Altch´ e, Corentin Tallec, Alaa Saade, Daniele Calandriello, Jean-Bastien Grill, Yunhao Tang, et al. Byol-explore: Exploration by bootstrapped prediction. Advances in neural information processing systems , 35: 31855–31870, 2022. Sharut Gupta, Chenyu Wang, Yifei Wang, Tommi Jaakkola, and Stefanie Jegelka. In-context sym-metries: Self-supervised learning through contextual world models. Advances in Neural Informa-tion Processing Systems , 37:104250–104280, 2024. Michael Gutmann and Aapo Hyv¨ arinen. Noise-contrastive estimation: A new estimation principle for unnormalized statistical models. In Proceedings of the International Conference on Artificial Intelligence and Statistics (AISTATS) , pp. 297–304. JMLR Workshop and Conference Proceed-ings, 2010. 15 Published as a conference paper at ICLR 2026 David Ha and J¨ urgen Schmidhuber. Recurrent world models facilitate policy evolution. Advances in neural information processing systems , 31, 2018a. David Ha and J¨ urgen Schmidhuber. World models. arXiv preprint arXiv:1803.10122 , 2018b. Danijar Hafner, Jurgis Pasukonis, Jimmy Ba, and Timothy Lillicrap. Mastering diverse control tasks through world models. Nature , pp. 1–7, 2025. Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun. Deep residual learning for image recog-nition. In Proceedings of the IEEE conference on computer vision and pattern recognition , pp. 770–778, 2016. Kaiming He, Haoqi Fan, Yuxin Wu, Saining Xie, and Ross Girshick. Momentum contrast for unsupervised visual representation learning. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , pp. 9729–9738, 2020. Irina Higgins, Loic Matthey, Arka Pal, Christopher Burgess, Xavier Glorot, Matthew Botvinick, Shakir Mohamed, and Alexander Lerchner. beta-vae: Learning basic visual concepts with a constrained variational framework. In International conference on learning representations , 2017. Geoffrey E Hinton, Alex Krizhevsky, and Sida D Wang. Transforming auto-encoders. In Interna-tional conference on artificial neural networks , pp. 44–51. Springer, 2011. Christopher Hoang and Mengye Ren. Midway network: Learning representations for recognition and motion from latent dynamics. arXiv preprint arXiv:2510.05558 , 2025. Edward J Hu, yelong shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang, and Weizhu Chen. LoRA: Low-rank adaptation of large language models. In International Con-ference on Learning Representations , 2022. URL https://openreview.net/forum? id=nZeVKeeFYf9 .Aapo Hyvarinen and Hiroshi Morioka. Unsupervised feature extraction by time-contrastive learning and nonlinear ica. Advances in neural information processing systems , 29, 2016. Mark Ibrahim, Diane Bouchacourt, and Ari Morcos. Robust self-supervised learning with lie groups. 
+
+arXiv preprint arXiv:2210.13356 , 2022. Mark Ibrahim, Quentin Garrido, Ari S. Morcos, and Diane Bouchacourt. The robustness limits of soTA vision models to natural variation. Transactions on Machine Learning Research , 2023. ISSN 2835-8856. URL https://openreview.net/forum?id=QhHLwn3D0Y .Huiwon Jang, Dongyoung Kim, Junsu Kim, Jinwoo Shin, Pieter Abbeel, and Younggyo Seo. Vi-sual representation learning with stochastic frame prediction. In Ruslan Salakhutdinov, Zico Kolter, Katherine Heller, Adrian Weller, Nuria Oliver, Jonathan Scarlett, and Felix Berkenkamp (eds.), Proceedings of the 41st International Conference on Machine Learning , volume 235 of 
+
+Proceedings of Machine Learning Research , pp. 21289–21305. PMLR, 21–27 Jul 2024. URL 
+
+https://proceedings.mlr.press/v235/jang24c.html .Li Jing, Pascal Vincent, Yann LeCun, and Yuandong Tian. Understanding dimensional collapse in contrastive self-supervised learning. In International Conference on Learning Representations ,2022. URL https://openreview.net/forum?id=YevsQ05DEN7 .Jivat Neet Kaur, Emre Kiciman, and Amit Sharma. Modeling the data-generating process is neces-sary for out-of-distribution generalization. In The Eleventh International Conference on Learning Representations , 2023. URL https://openreview.net/forum?id=uyqks-LILZX .Prannay Khosla, Piotr Teterwak, Chen Wang, Aaron Sarna, Yonglong Tian, Phillip Isola, Aaron Maschinot, Ce Liu, and Dilip Krishnan. Supervised contrastive learning. Advances in neural information processing systems , 33:18661–18673, 2020. Diederik P Kingma and Max Welling. Auto-encoding variational bayes. In International Conference on Learning Representations , 2014. 16 Published as a conference paper at ICLR 2026 Thomas Kipf, Elise van der Pol, and Max Welling. Contrastive learning of structured world models. In International Conference on Learning Representations , 2020. URL https: //openreview.net/forum?id=H1gax6VtDB .David A. Klindt, Lukas Schott, Yash Sharma, Ivan Ustyuzhaninov, Wieland Brendel, Matthias Bethge, and Dylan Paiton. Towards nonlinear disentanglement in natural data with tempo-ral sparse coding. In International Conference on Learning Representations , 2021. URL 
+
+https://openreview.net/forum?id=EbIDjBynYJ8 .Julius Von K¨ ugelgen, Yash Sharma, Luigi Gresele, Wieland Brendel, Bernhard Sch¨ olkopf, Michel Besserve, and Francesco Locatello. Self-supervised learning with data augmentations prov-ably isolates content from style. In A. Beygelzimer, Y. Dauphin, P. Liang, and J. Wortman Vaughan (eds.), Advances in Neural Information Processing Systems , 2021. URL https: //openreview.net/forum?id=4pf_pOo0Dt .S´ ebastien Lachapelle, Pau Rodriguez, Yash Sharma, Katie E Everett, R´ emi Le Priol, Alexandre Lacoste, and Simon Lacoste-Julien. Disentanglement via mechanism sparsity regularization: A new principle for nonlinear ica. In Conference on Causal Learning and Reasoning , pp. 428–484. PMLR, 2022. Samuel Lavoie, Polina Kirichenko, Mark Ibrahim, Mido Assran, Andrew Gordon Wilson, Aaron Courville, and Nicolas Ballas. Modeling caption diversity in contrastive vision-language pre-training. In International Conference on Machine Learning , pp. 26070–26084. PMLR, 2024. Yann LeCun. A path towards autonomous machine intelligence version 0.9. 2, 2022-06-27. Open Review , 62(1):1–62, 2022. Ralph Linsker. Self-organization in a perceptual network. Computer , 21(3):105–117, 1988. Phillip Lippe, Sara Magliacane, Sindy L¨ owe, Yuki M Asano, Taco Cohen, and Stratis Gavves. Citris: Causal identifiability from temporal intervened sequences. In International Conference on Machine Learning , pp. 13557–13603. PMLR, 2022. Phillip Lippe, Sara Magliacane, Sindy L¨ owe, Yuki M Asano, Taco Cohen, and Efstratios Gavves. Biscuit: Causal representation learning from binary interactions. In Uncertainty in Artificial Intelligence , pp. 1263–1273. PMLR, 2023. Yang Liu, Qianqian Xu, Peisong Wen, Siran Dai, and Qingming Huang. When the future becomes the past: Taming temporal correspondence for self-supervised video representation learning. In 
+
+Proceedings of the Computer Vision and Pattern Recognition Conference , pp. 24033–24044, 2025. Ziwei Liu, Ping Luo, Xiaogang Wang, and Xiaoou Tang. Deep learning face attributes in the wild. In Proceedings of International Conference on Computer Vision (ICCV) , December 2015. Francesco Locatello, Ben Poole, Gunnar R¨ atsch, Bernhard Sch¨ olkopf, Olivier Bachem, and Michael Tschannen. Weakly-supervised disentanglement without compromises. In International confer-ence on machine learning , pp. 6348–6359. PMLR, 2020. Ilya Loshchilov and Frank Hutter. Decoupled weight decay regularization. In International Confer-ence on Learning Representations , 2019. URL https://openreview.net/forum?id= Bkg6RiCqY7 .Chris J. Maddison, Andriy Mnih, and Yee Whye Teh. The concrete distribution: A continuous re-laxation of discrete random variables. In International Conference on Learning Representations ,2017. URL https://openreview.net/forum?id=S1jE5L5gl .Mehdi Noroozi and Paolo Favaro. Unsupervised learning of visual representations by solving jigsaw puzzles. In European conference on computer vision , pp. 69–84. Springer, 2016. Aaron van den Oord, Yazhe Li, and Oriol Vinyals. Representation learning with contrastive predic-tive coding. arXiv preprint arXiv:1807.03748 , 2018. 17 Published as a conference paper at ICLR 2026 Jung Yeon Park, Ondrej Biza, Linfeng Zhao, Jan-Willem Van De Meent, and Robin Walters. Learn-ing symmetric embeddings for equivariant world models. In International Conference on Machine Learning , pp. 17372–17389. PMLR, 2022. Alec Radford, Jong Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh, Sandhini Agarwal, Girish Sastry, Amanda Askell, Pamela Mishkin, Jack Clark, et al. Learning transferable visual models from natural language supervision. In International conference on machine learning , pp. 8748–8763. PMLR, 2021. Patrik Reizinger, Randall Balestriero, David Klindt, and Wieland Brendel. Position: An empirically grounded identifiability theory will accelerate self supervised learning research. In Forty-second International Conference on Machine Learning Position Paper Track , 2025. URL https:// openreview.net/forum?id=ET6qJpllEi .Yangjun Ruan, Yann Dubois, and Chris J. Maddison. Optimal representations for covariate shift. In 
+
+International Conference on Learning Representations , 2022. URL https://openreview. net/forum?id=Rf58LPCwJj0 .Evgenia Rusak, Patrik Reizinger, Attila Juhos, Oliver Bringmann, Roland S. Zimmermann, and Wieland Brendel. InfoNCE: Identifying the gap between theory and practice. In The 28th International Conference on Artificial Intelligence and Statistics , 2025. URL https:// openreview.net/forum?id=RNQzrXWhIs .Dominik Schmidt and Minqi Jiang. Learning to act without actions. In The Twelfth International Conference on Learning Representations , 2024. URL https://openreview.net/forum? id=rvUq3cxpDF .Bernhard Sch¨ olkopf, Francesco Locatello, Stefan Bauer, Nan Rosemary Ke, Nal Kalchbrenner, Anirudh Goyal, and Yoshua Bengio. Toward causal representation learning. Proceedings of the IEEE , 109(5):612–634, 2021. Max Schwarzer, Ankesh Anand, Rishab Goel, R Devon Hjelm, Aaron Courville, and Philip Bach-man. Data-efficient reinforcement learning with self-predictive representations. In International Conference on Learning Representations , 2021. URL https://openreview.net/forum? id=uCQfPZwRaUu .Pierre Sermanet, Corey Lynch, Yevgen Chebotar, Jasmine Hsu, Eric Jang, Stefan Schaal, Sergey Levine, and Google Brain. Time-contrastive networks: Self-supervised learning from video. In 
+
+2018 IEEE international conference on robotics and automation (ICRA) , pp. 1134–1141. IEEE, 2018. Mehran Shakerinava, Arnab Kumar Mondal, and Siamak Ravanbakhsh. Structuring representations using group invariants. Advances in Neural Information Processing Systems , 35:34162–34174, 2022. Samarth Sinha and Adji Bousso Dieng. Consistency regularization for variational auto-encoders. 
+
+Advances in Neural Information Processing Systems , 34:12943–12954, 2021. Vlad Sobal, Mark Ibrahim, Randall Balestriero, Vivien Cabannes, Diane Bouchacourt, Pietro As-tolfi, Kyunghyun Cho, and Yann LeCun. $\mathbb {X}$-sample contrastive loss: Improving contrastive learning with sample similarity graphs. In The Thirteenth International Confer-ence on Learning Representations , 2025a. URL https://openreview.net/forum?id= c1Ng0f8ivn .Vlad Sobal, Wancong Zhang, Kyunghyun Cho, Randall Balestriero, Tim GJ Rudner, and Yann LeCun. Learning from reward-free offline data: A case for planning with latent dynamics models. 
+
+arXiv preprint arXiv:2502.14819 , 2025b. Kihyuk Sohn, Honglak Lee, and Xinchen Yan. Learning structured output representation using deep conditional generative models. Advances in neural information processing systems , 28, 2015. Nitish Srivastava, Elman Mansimov, and Ruslan Salakhudinov. Unsupervised learning of video rep-resentations using lstms. In International conference on machine learning , pp. 843–852. PMLR, 2015. 18 Published as a conference paper at ICLR 2026 Yuandong Tian, Xinlei Chen, and Surya Ganguli. Understanding self-supervised learning dynamics without contrastive pairs. In International Conference on Machine Learning , pp. 10268–10278. PMLR, 2021. Zhan Tong, Yibing Song, Jue Wang, and Limin Wang. Videomae: Masked autoencoders are data-efficient learners for self-supervised video pre-training. Advances in neural information process-ing systems , 35:10078–10093, 2022. Maria Mihaela Trusca, Wolf Nuyts, Jonathan Thomm, Robert Honig, Thomas Hofmann, Tinne Tuytelaars, and Marie-Francine Moens. Object-attribute binding in text-to-image generation: Evaluation and control. arXiv preprint arXiv:2404.13766 , 2024. Michael Tschannen, Josip Djolonga, Paul K. Rubenstein, Sylvain Gelly, and Mario Lucic. On mu-tual information maximization for representation learning. In International Conference on Learn-ing Representations , 2020. URL https://openreview.net/forum?id=rkxoh24FPH .Grant Van Horn, Elijah Cole, Sara Beery, Kimberly Wilber, Serge Belongie, and Oisin Mac Aodha. Benchmarking representation learning for natural world image collections. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , pp. 12884–12893, 2021. Julius von K¨ ugelgen, Michel Besserve, Liang Wendong, Luigi Gresele, Armin Keki´ c, Elias Barein-boim, David Blei, and Bernhard Sch¨ olkopf. Nonparametric identifiability of causal represen-tations from unknown interventions. Advances in Neural Information Processing Systems , 36: 48603–48638, 2023. Tongzhou Wang and Phillip Isola. Understanding contrastive representation learning through align-ment and uniformity on the hypersphere. In International Conference on Machine Learning , pp. 9929–9939. PMLR, 2020. Zhirong Wu, Yuanjun Xiong, Stella X Yu, and Dahua Lin. Unsupervised feature learning via non-parametric instance discrimination. In Proceedings of the IEEE conference on computer vision and pattern recognition , pp. 3733–3742, 2018. Tete Xiao, Xiaolong Wang, Alexei A Efros, and Trevor Darrell. What should not be contrastive in contrastive learning. In International Conference on Learning Representations , 2021. URL 
+
+https://openreview.net/forum?id=CZ8Y3NzuVzO .Sherry Yang, Yilun Du, Seyed Kamyar Seyed Ghasemipour, Jonathan Tompson, Leslie Pack Kaelbling, Dale Schuurmans, and Pieter Abbeel. Learning interactive real-world simulators. In The Twelfth International Conference on Learning Representations , 2024. URL https: //openreview.net/forum?id=sFyTZEqmUY .Dingling Yao, Danru Xu, Sebastien Lachapelle, Sara Magliacane, Perouz Taslakian, Georg Martius, Julius von K¨ ugelgen, and Francesco Locatello. Multi-view causal representation learning with partial observability. In The Twelfth International Conference on Learning Representations , 2024. URL https://openreview.net/forum?id=OGtnhKQJms .Dingling Yao, Dario Rancati, Riccardo Cadei, Marco Fumero, and Francesco Locatello. Unifying causal representation learning with the invariance principle. In The Thirteenth International Con-ference on Learning Representations , 2025. URL https://openreview.net/forum? id=lk2Qk5xjeu .Mert Yuksekgonul, Federico Bianchi, Pratyusha Kalluri, Dan Jurafsky, and James Zou. When and why vision-language models behave like bags-of-words, and what to do about it? In The Eleventh International Conference on Learning Representations , 2023. URL https://openreview. net/forum?id=KRLUvxh8uaX .Jeffrey M Zacks and Barbara Tversky. Event structure in perception and conception. Psychological bulletin , 127(1):3, 2001. Jure Zbontar, Li Jing, Ishan Misra, Yann LeCun, and St´ ephane Deny. Barlow twins: Self-supervised learning via redundancy reduction. In International conference on machine learning , pp. 12310– 12320. PMLR, 2021. 19 Published as a conference paper at ICLR 2026 Chaoning Zhang, Kang Zhang, Chenshuang Zhang, Trung X. Pham, Chang D. Yoo, and In So Kweon. How does simsiam avoid collapse without negative samples? a unified understanding with self-supervised contrastive learning. In International Conference on Learning Representa-tions , 2022. URL https://openreview.net/forum?id=bwq6O4Cwdl .Le Zhang, Rabiul Awal, and Aishwarya Agrawal. Contrasting intra-modal and ranking cross-modal hard negatives to enhance visio-linguistic compositional understanding. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pp. 13774–13784, 2024. Zhijian Zhuo, Yifei Wang, Jinwen Ma, and Yisen Wang. Towards a unified theoretical understanding of non-contrastive learning via rank differential mechanism. In The Eleventh International Con-ference on Learning Representations , 2023. URL https://openreview.net/forum? id=cIbjyd2Vcy .Roland S Zimmermann, Yash Sharma, Steffen Schneider, Matthias Bethge, and Wieland Brendel. Contrastive learning inverts the data generating process. In International conference on machine learning , pp. 12979–12990. PMLR, 2021. 20 Published as a conference paper at ICLR 2026 
+
+# APPENDIX 
+
+A Derivation of Eq. 8 22 B Theory 22 C Additional results and analysis 25 
+
+C.1 Robustness to noisy data pairings on iNat-1M . . . . . . . . . . . . . . . . . . . . 25 C.2 Leveraging an additional view . . . . . . . . . . . . . . . . . . . . . . . . . . . . 26 C.3 A deeper look into AdaSSL-S’s behavior . . . . . . . . . . . . . . . . . . . . . . . 27 C.4 World modeling . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 28 C.5 Density . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 30 C.6 Retrieval . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 30 
+
+D Data and implementation details 31 
+
+D.1 Implementation of L0 penalty . . . . . . . . . . . . . . . . . . . . . . . . . . . . 31 D.2 Numerical experiments in §4.2 . . . . . . . . . . . . . . . . . . . . . . . . . . . . 31 D.3 3DIdent experiments in §4.3 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 32 D.4 CelebA experiments in §4.4 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 33 D.5 Video experiments in §4.4 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 34 D.6 iNat-1M experiments in §C.1 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 36 21 Published as a conference paper at ICLR 2026 
+
+## A DERIVATION OF EQ. 8 
+
+− I˜p(r; x+ | x)= −E˜p
+
+
+
+log q(r | x, x+)˜p(r | x)
+
+
+
+= −E˜p
+
+
+
+log q(r | x, x+)˜p(r | x) + log p(r | x) − log p(r | x)
+
+
+
+= −E˜p
+
+
+
+log q(r | x, x+)
+
+p(r | x) + log p(r | x)˜p(r | x)
+
+
+
+= −Ep(x,x+)
+
+DKL (q(r | x, x+)∥p(r | x))  + E˜p
+
+
+
+log ˜p(r | x)
+
+p(r | x)
+
+
+
+= −Ep(x,x+)
+
+DKL (q(r | x, x+)∥p(r | x))  +
+
+Z Z Z
+
+p(x)p(x+ | x)q(r | x, x+) log ˜p(r | x)
+
+p(r | x) drdx+dx
+
+= −Ep(x,x+)
+
+DKL (q(r | x, x+)∥p(r | x))  +
+
+Z Z
+
+p(x)
+
+Z 
+
+p(x+ | x)q(r | x, x+)dx+
+
+
+
+log ˜p(r | x)
+
+p(r | x) drdx
+
+= −Ep(x,x+)
+
+DKL (q(r | x, x+)∥p(r | x))  +
+
+Z Z
+
+p(x)˜ p(r | x) log ˜p(r | x)
+
+p(r | x) drdx
+
+= −Ep(x,x+)
+
+DKL (q(r | x, x+)∥p(r | x))  + Ep(x) ˜ p(r|x)
+
+
+
+log ˜p(r | x)
+
+p(r | x)
+
+
+
+= −Ep(x,x+)
+
+DKL (q(r | x, x+)∥p(r | x))  + Ep(x)[DKL (˜ p(r | x)∥p(r | x))] 
+
+≥ − Ep(x,x+)
+
+DKL (q(r | x, x+)∥p(r | x))  .
+
+## B THEORY 
+
+Lemma B.1. Let A ∈ Rm×n and let Σ ∈ Rn×n be symmetric positive definite. Then 
+
+range( AΣA⊤) = range( A).
+
+Proof. For any x ∈ Rm, we have 
+
+x⊤(AΣA⊤)x = ( A⊤x)⊤Σ( A⊤x).
+
+Since Σ is symmetric positive definite, the right-hand side is zero if and only if A⊤x = 0 . Thus, 
+
+ker( AΣA⊤) = ker( A⊤).
+
+Taking orthogonal complements yields 
+
+range( AΣA⊤) = range( A).
+
+Remark. This is a standard linear algebra fact; we include it here for completeness. 
+
+Proposition B.1. Let Sk ⊂ Rk+1 denote the k-dimensional unit sphere. Let g : Rd → Rd′
+
+be C1
+
+diffeomorphic to its image, and let f : Rd′
+
+→ Sk be C1 almost everywhere. Define h := f ◦ g :
+
+Rd → Sk. Assume further that the random vectors z, z + ∈ Rd are sampled as 
+
+z ∼ pZ , z+ = z + ε, ε ∼ pε,
+
+where pZ is not a point mass and ε is independent of z, E[ε] = 0 , and Cov( ε) ≻ 0.Suppose that for pZ -almost every z we have h(z) ∈ Sk and rank Dh (z) = d. Write H = h(z) and 
+
+H+ = h(z+). Then the conditional law 
+
+pH+|H (h(z+) | h(z)) ,
+
+is necessarily heteroscedastic: its conditional variance depends on h(z) for pZ -almost every z.
+
+22 Published as a conference paper at ICLR 2026 
+
+Proof. Fix z where h is C1 and rank Dh (z) = d. For σ > 0 small, define z+ = z +σε with ε ∼ pε.A first-order Taylor expansion and the delta method give 
+
+h(z + σε ) = h(z) + Dh (z) σε + o(σ),
+
+which implies 
+
+Cov[ h(z + σε ) | z] = σ2Dh (z) Σ Dh (z)⊤ + o(σ2).
+
+If the conditional covariance were homoscedastic at leading order, there exists a fixed positive semidefinite matrix C such that 
+
+Dh (z) Σ Dh (z)⊤ ≡ C for pZ -almost every z. 
+
+Let W := range( C). By Lemma B.1 and Σ ≻ 0 we have 
+
+range  Dh (z) = range  Dh (z)Σ Dh (z)⊤ = range( C) = W, 
+
+so range( Dh (z)) ≡ W is the same d-dimensional subspace for pZ -almost every z. Because h(z) ∈
+
+Sk we have ∥h(z)∥2 ≡ 1, so differentiating yields 
+
+h(z)⊤Dh (z) = 0 ,
+
+i.e. range( Dh (z)) ⊂ h(z)⊥. Since range( Dh (z)) = W for almost every z, we obtain W ⊂ h(z)⊥
+
+almost everywhere, hence h(z) ∈ W ⊥ for almost every z.Pick any nonzero w ∈ W . Then w⊤h(z) = 0 for almost every z, and differentiating gives 
+
+w⊤Dh (z) = 0 for almost every z, i.e. w ⊥ range( Dh (z)) = W . Thus W ⊂ W ⊥, which forces 
+
+W = {0}. This contradicts rank Dh (z) = d > 0. Therefore the hypothesis that Dh (z)Σ Dh (z)⊤ is constant in z is false, so the leading-order conditional covariance must depend on z for pZ -almost every z.
+
+Remark. The above argument establishes heteroscedasticity at leading order in the noise scale σ,which rigorously shows that the conditional covariance depends on z for sufficiently small σ. For larger σ, higher-order terms in the Taylor expansion of h become significant and the exact condi-tional covariance may be more complicated; nevertheless, the local Jacobian Dh (z) still transforms the noise differently at different points, so the conditional variance remains intuitively location-dependent, even if no simple closed-form expression exists. 
+
+Proposition B.2 (Tangent-space variant of Proposition B.1) . Let Sk ⊂ Rk+1 denote the k-dimensional unit sphere, and U ⊂ Sk an open set. Let g : Sk → Sk′
+
+be C1 diffeomorphic to its image, and let f : Sk′
+
+→ Rd be C1 almost everywhere. Define h := f ◦ g : U → Rd. We assume that h is nondegenerate, i.e., h(U ) is not contained in any proper affine subspace of its intrinsic dimension. Suppose that for almost every z ∈ U , the derivative Dh (z) : Tz Sk → Rd has full rank, i.e. rank Dh (z) = k. Assume further that the conditional distribution of z+ ∈ Sk given z is locally Gaussian in the tangent space 
+
+p(z+ | z) ∝ exp 
+
+
+
+− (z+ − z)⊤Λ( z+ − z)
+
+
+
+,
+
+with a constant positive definite diagonal matrix Λ.Define H = h(z) and H+ = h(z+). Then for generic nondegenerate C1 maps h, the conditional law 
+
+pH+|H (h(z+) | h(z)) ,
+
+is heteroscedastic for almost every z ∈ U .Proof. We construct z+ by a small Gaussian step in Rk+1 and normalization: 
+
+z+ = z + ε
+
+∥z + ε∥ , ε ∼ N (0 , Λ−1).
+
+A first-order approximation for small ε gives 
+
+z+ − z = Pz ε + O(∥ε∥2),
+
+23 Published as a conference paper at ICLR 2026 where Pz = I − zz ⊤ is the projector to the tangent space, and the pushforward density on the sphere matches 
+
+p(z+ | z) ∝ exp   − (z+ − z)⊤Λ( z+ − z)
+
+up to higher-order terms. Fix z ∈ U where h is C1 and rank Dh (z) has full rank. A Euclidean Taylor expansion gives 
+
+h(z+) = h(z) + Dh (z)( z+ − z) + O(∥z+ − z∥2).
+
+Substituting z+ − z ≈ Pz εh(z+) = h(z) + Dh (z)Pz ε + R(z),
+
+where R(z) collects higher-order terms, and the leading-order conditional covariance is 
+
+Cov( h(z+) | z) = Dh (z)Σ tan  
+
+> z
+
+Dh (z)⊤ + R(z), Σtan  
+
+> z
+
+= Pz Λ−1Pz ,
+
+with R(z) continuous and symmetric. Suppose that Cov( h(z+) | z) were constant across z ∈ U . With Σtan  
+
+> z
+
+≻ 0, the range of the leading term range( Dh (z)Σ tan  
+
+> z
+
+Dh (z)⊤) = range( Dh (z)) would have to be the same subspace W ⊂ Rd
+
+for almost every z ∈ U .For any differentiable curve z(t) ⊂ U through points where Dh (z(t)) has full rank, we can write 
+
+ddt h(z(t)) = Dh (z(t)) ˙ z(t) ∈ W
+
+Integrating along all such curves in U gives 
+
+h(U ) ⊂ h(z0) + W, 
+
+for some base point z0. This would imply that the image h(U ) is contained in a fixed affine subspace 
+
+W ⊂ Rd, contradicting the nondegeneracy assumption on h. Therefore, a constant pushforward covriance can only occur in the trivial case of no noise ( Σtan  
+
+> z
+
+= 0 , or Λ−1 = 0 ) or in a highly specific algebraic cancellation between Dh (z) and Σtan  
+
+> z
+
+. For generic nondegenerate C1 maps h and almost every z ∈ U , the conditional covariance is therefore heteroscedastic. 
+
+Remark. This is analogous to Proposition B.1, but with domain and codomain swapped; the argu-ment relies on the Jacobian of the map and the local Gaussian structure in the tangent space. 
+
+Proposition B.3 (Extension of Proposition B.1) . Let g : Rd → Rd′
+
+be a C2 with a local diffeomor-phism and f : Rd′
+
+→ M be C2 almost everywhere. Define h := f ◦ g : Rd → M where M is a Riemannian manifold with strictly positive sectional curvature on a nonempty open set. Assume further that the random vectors z, z + ∈ Rd are sampled as 
+
+z ∼ pZ , z+ = z + ε, ε ∼ pε,
+
+where pZ is not a point mass and ε is independent of z, E[ε] = 0 , and Cov( ε) ≻ 0.Suppose that for pZ -almost every z we have h(z) ∈ M and rank Dh (z) = d. Write H = h(z) and 
+
+H+ = h(z+). Then the conditional law 
+
+pH+|H (h(z+) | h(z)) ,
+
+is necessarily heteroscedastic: its conditional variance depends on h(z) for pZ -almost every z.Proof. Following the same reasoning as in Theorem B.1, homoscedasticity at leading order would require a constant positive semidefinite matrix C such that 
+
+Dh (z) Σ Dh (z)⊤ ≡ C for pZ -almost every z. 
+
+Since Σ ≻ 0, the above condition is equivalent to requiring that 
+
+⟨u, v ⟩Σ := u⊤Σv = ⟨Dh (z)u, Dh (z)v⟩Rk+1 ∀u, v ∈ Rd, for a.e. z
+
+24 Published as a conference paper at ICLR 2026 
+
+Figure 5: Visualization of images paired by class label from the iNat-1M dataset. 
+
+Figure 6: Visualization of images paired by superclass label from the iNat-1M dataset. 0 25 50 75 100         
+
+> 20
+> 40
+> 60
+> Accuracy [%]
+> Top-1, 5000-Class
+> InfoNCE
+> AdaSSL-V
+> 025 50 75 100
+> Corrupted Labels [%]
+> 40
+> 60
+> 80
+> Top-5, 5000-Class
+> InfoNCE
+> AdaSSL-V
+> 025 50 75 100
+> 93
+> 94
+> 95
+> 96
+> Top-1, 11-Superclass
+> InfoNCE
+> AdaSSL-V
+
+Figure 7: Results on iNat-1M. We gradually increase the percentage of pairings that are corrupted. Performance of online linear probes on the validation set is reported. Left: top-1 accuracy across 5000 classes. Middle: top-5 accuracy across 5000 classes. Right: top-1 accuracy across 11 super-classes. AdaSSL-V’s performance decays more gracefully than InfoNCE, showing its robustness to noisy pairings. i.e., h is a local Riemannian isometry from the flat space (Rd, ⟨· , ·⟩ Σ) to the positively curved manifold (M, g M). However, local isometries preserve sectional curvature (Gauss’ Theorema Egregium), so no such local isometry from an open subset of Rd to an open subset of M exists. Hence, the homoscedasticity condition cannot hold. Therefore, for all sufficiently small σ > 0, the conditional covariance 
+
+Cov[ h(z + σε ) | z] = σ2Dh (z) Σ Dh (z)⊤ + o(σ2)
+
+depends on z, and the conditional distribution of h(z+) given h(z) is necessarily heteroscedastic for 
+
+pZ -almost every z.
+
+## C ADDITIONAL RESULTS AND ANALYSIS 
+
+C.1 ROBUSTNESS TO NOISY DATA PAIRINGS ON I NAT -1M In this experiment, we train InfoNCE and AdaSSL-V with a ResNet-50 backbone at 224 ×224 reso-lution on a subset of iNat2021 (Van Horn et al., 2021), a large-scale image dataset that contains fine-grained (class) and coarse-grained (superclass) species labels. We call this subset iNat-1M, which contains one million training and 250 000 validation images across 5000 fine-grained classes and 11 25 Published as a conference paper at ICLR 2026 Table 5: Ablation of the additional view x++ on CelebA, trained with natural pairs under weak or strong augmentations. Linear F1 scores on representations (encoder output) and embeddings (projector output) are reported. AdaSSL trained without x++ outperforms the baseline, and using 
+
+x++ improves it further.                                                                      
+
+> Model Pairing WEAK AUGMENTATION STRONG AUGMENTATION
+> Repr. Emb. Repr. Emb.
+> InfoNCE Natural 0.5473 ±0.0027 0.3747 ±0.0051 0.5784 ±0.0008 0.4941 ±0.0035
+> AdaSSL-S 0.5676 ±0.0049 0.4581 ±0.0016 0.5911 ±0.0014 0.5654 ±0.0007
+> ⌞without x++ 0.5505 ±0.0045 0.4466 ±0.0026 0.5716 ±0.0046 0.5149 ±0.0076
+> AdaSSL-V 0.5784 ±0.0025 0.4794 ±0.0015 0.6014 ±0.0008 0.5706 ±0.0034
+> ⌞without x++ 0.5550 ±0.0037 0.4351 ±0.0042 0.5869 ±0.0011 0.5117 ±0.0014
+
+superclasses. Fine-grained classification on iNat-1M serves as a proxy task to evaluate whether the model learns diverse features. Since the goal of AdaSSL is to learn diverse features under target uncertainty, we hypothesize that it is more robust to noisy data pairings than vanilla SSL. The ideal setting is one where we have perfect class labels and we can pair up images within the same class (Fig. 5). To control the amount of noise in the pairings, we corrupt a subset of labels such that these corrupted data is paired with another image from the same super class instead (Fig. 6). This simulates real-world label noise, which is rarely random, but instead structured; it is much more likely for a dog to be mislabeled as a wolf than as an avocado. We gradually increase the percentage of data that are corrupted, and investigate how it affects the performance of online linear probes trained on top of the representations. Fig. 7 shows that both InfoNCE and AdaSSL-V suffers decay in fine-grained classification accuracy when we increase the corruption rate. However, AdaSSL-V’s accuracy decays more gracefully. We also observe its advantage to be more visible when the corruption rate passes 50%. Interestingly, AdaSSL-V slightly improves InfoNCE even when we do not corrupt any labels. We hypothesize that this could be due to the potential label noise that already exist in the dataset as well as the unavoidable heteroscedastic noise (Proposition 2.1). We observe a slight drop in the superclass classification accuracy and do not observe the gap between AdaSSL and InfoNCE to change much across corruption rates. This is expected because we always pair up data within the same superclass. C.2 LEVERAGING AN ADDITIONAL VIEW 
+
+Chen et al. (2020a) show that we need strong augmentations to create differences between views in their low-level image statistics. Otherwise, encoding these statistics alone is sufficient to satisfy the SSL objective—a shortcut solution (e.g., standard pairing with weak augmentations in Table 4). For both AdaSSL-V and AdaSSL-S, the model is expected to learn the factors explaining the dif-ferences in the paired views. Allowing r to encode any differences facilitates this shortcut solution. Furthermore, applying pixel-level augmentations may exacerbate this issue by increasing the incen-tive to learn these discriminative, yet less semantic transformations. One way to ensure r learns the desired transformations while remaining invariant to others is to use a surrogate view x++ —whose relationship with x in the underlying content factors c and 
+
+c++ mimics that between c and c+ but differ in low-level statistics—to replace x+. In other words, AdaSSL-V uses r sampled from qϕ(r | f (x), f (x++ )) and AdaSSL-S uses r predicted by 
+
+m(f (x), f (x++ )) . These additional views are usually easy to obtain, e.g., by applying the same random augmentations—that created the differences between x and x+—to x+. We detail the x++ 
+
+that we use in each experiment below. Notably, this additional view is not always required. When low-level statistics alone are insufficient for instance discrimination, the model is incentivized to learn other features. This is demonstrated in our CRL experiments in §4.3, where we learn to recover all data-generating factors from natural pairs without augmentations or x++ .We perform ablation studies of x++ in Table 5 and observe consistent benefits. 26 Published as a conference paper at ICLR 2026 0K 20K 40K 60K 80K            
+
+> Step
+> 0
+> 2
+> 4
+> 6
+> # of Active Latents
+> 0K 20K 40K 60K 80K
+> Step
+> 0
+> 1
+> 2
+> 3
+> Entropy
+> 0K 20K 40K 60K 80K
+> Step
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> F1
+> =0.1 =0.2 =0.5 =1.0
+
+Figure 8: Utilization of r and performance on CelebA throughout training when AdaSSL-S is ap-plied to InfoNCE. Left: the number of active latent dimensions of r. Middle: the entropy of the probability vector with which the model picks which latent of r to activate. Right: training F1 score of an online linear probe on representations. 0K 20K 40K 60K 80K            
+
+> Step
+> 0
+> 2
+> 4
+> 6
+> # of Active Latents
+> 0K 20K 40K 60K 80K
+> Step
+> 0
+> 1
+> 2
+> 3
+> Entropy
+> 0K 20K 40K 60K 80K
+> Step
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> F1
+> =0.001 =0.002 =0.005 =0.1
+
+Figure 9: Utilization of r and performance on CelebA throughout training when AdaSSL-S is ap-plied to BYOL. Left: the number of active latent dimensions of r. Middle: the entropy of the probability vector with which the model picks which latent of r to activate. Right: training F1 score of an online linear probe on representations. C.3 A DEEPER LOOK INTO ADA SSL-S’ S BEHAVIOR 
+
+Both AdaSSL-V and AdaSSL-S improves InfoNCE on natural pairs, but only AdaSSL-V consis-tently improves BYOL. We hypothesize that explicitly regularizing the embeddings’ information content (as in the denominator of Eq. 2) pressures the model to utilize r effectively. In contrast, distillation-based methods lack this direct tension. Since AdaSSL-S only regularizes the sparsity, it may require additional regularization on r that encourages efficient utilization. In Fig. 8 and Fig. 9, we show statistics of r throughout training on CelebA with natural pairs and strong augmentations, for AdaSSL-S trained with InfoNCE and BYOL, respectively. For a meaning-ful comparison, we fix dr = 20 and plot the curves for different values of β. We show three metrics. First, we show the sparsity of latent usage and plot average number of active dimensions of r across the batch, i.e., E[∥r∥0]. Second, we show the spread of usage across dimensions. To do so, define latent variable ρ in the dr -dimensional probability simplex as the probability with which the model picks each dimension of r to activate within each batch. We then plot H(ρ), the Shannon entropy of ρ. Third, we plot the F1 trace on the training set. We expect a successful model to activate a few dimensions of r each time, but utilize the entire space across different data pairs. As shown in Fig. 8 and Fig. 9, the strength of regularization controls how many latents are active for both InfoNCE and BYOL. However, BYOL +AdaSSL-S fails to maintain a high spread of informa-tion across r’s latent dimensions, as reflected by a lower H(ρ). We also observe higher instabilities when training AdaSSL-S with BYOL than with InfoNCE. In the latter case, we observe that the model’s performance is robust to different β.We hypothesize that AdaSSL-V works well with both contrastive and distillation-based SSL because minimizing the KL divergence enforces non-zero variance, which promotes utilization, while using 27 Published as a conference paper at ICLR 2026 Table 6: Performance of linear probes trained on frozen representations and embeddings on stochas-tic Moving-MNIST. Evaluation is performed on the online branch of BYOL.                                                                                                                                                              
+
+> Model
+> SETTING ASETTING B
+> Representations Embeddings Representations Embeddings
+> Acc. [%] Velocity [ R2]Acc. [%] Velocity [ R2]Acc. [%] Velocity [ R2]Acc. [%] Velocity [ R2]BYOL 90.42 ±0.94 0.8753 ±0.0044 87.09 ±2.41 0.1079 ±0.0061 91.00 ±1.07 0.8810 ±0.0057 88.61 ±1.79 0.1486 ±0.0303
+> BYOL+Future 88.31 ±1.14 0.9005 ±0.0063 78.68 ±0.55 0.5890 ±0.0242 88.33 ±1.09 0.8996 ±0.0059 78.99 ±0.45 0.6041 ±0.0186
+> BYOL+GT 93.09 ±0.24 0.8814 ±0.0078 88.95 ±0.56 -0.0038 ±0.0060 93.55 ±0.50 0.8884 ±0.0062 87.99 ±0.36 -0.0028 ±0.0045
+> AdaSSL-V β=0 94.18 ±0.51 0.8951 ±0.0066 90.54 ±0.54 0.2867 ±0.0184 94.17 ±0.19 0.8961 ±0.0028 90.34 ±0.66 0.2875 ±0.0219
+> AdaSSL-V 93.83 ±0.22 0.9168 ±0.0015 91.28 ±0.43 0.8695 ±0.0185 94.31 ±0.48 0.9188 ±0.0006 92.32 ±0.73 0.8594 ±0.0035
+> AdaSSL-S 91.89 ±0.74 0.9121 ±0.0028 86.00 ±0.33 0.8901 ±0.0247 91.95 ±0.53 0.9121 ±0.0032 85.53 ±1.90 0.8750 ±0.0121
+
+Table 7: Quantitative retrieval results on Stochastic Moving-MNIST. We encode the first three-frame segments of randomly sampled videos and use the learned predictors of BYOL and AdaSSL-S/V to predict one sampled future in the embedding space. We then retrieve the best matched future trajectory from a pool of 4096 video segments (consisting of 64 randomly sampled future trajectories of 64 random initial segments), including the correct segment. We report the mean recipricol rank (MRR) and hit rate at k (Hit@ k) for the retrievals. 
+
+Model MRR ( ↑) Hit@1 ( ↑) Hit@5 ( ↑)
+
+BYOL 0.1758 0.1182 0.1802 AdaSSL-V 0.4102 0.3071 0.5129 AdaSSL-S 0.5291 0.4338 0.6287 
+
+a factorized prior discourages redundancy. Together, the KL regularization encourages learning an efficient representations of r, as we discussed in the disentanglement analysis in Sec. 4.3. Our findings corroborates the motivation of designing additional regularization terms for sparsity regularization in concurrent work (Garrido et al., 2026), where the authors learn a world model with latent variable regularization on frozen representations. C.4 WORLD MODELING 
+
+C.4.1 NUMERICAL RESULTS FOR FIG . 4 We provide full evaluation results on stochastic Moving-MNIST in Table 6. These results further demonstrate AdaSSL’s effectiveness in achieving strong performance in both digit recognition and velocity decoding. Our results and ablations in the main text in Fig. 4 uses Setting A because we do not find significant difference between the results. C.4.2 FUTURE TRAJECTORY PREDICTION 
+
+Given a source (initial) trajectory and its ground-truth latent r (change in velocity), we predict the embedding of the corresponding target (future) trajectory with the learned predictors of BYOL and AdaSSL-V/S and retrieve the nearest neighbors from a pool of 4096 target trajectory embeddings. To generate this pool, we randomly sample 64 initial trajectories from the validation set and generate 64 future trajectories for each of them. To map the ground-truth r space to the r space learned by AdaSSL-S/V, we train a projection (an MLP with one hidden layer of dimension 128 ) by minimizing the prediction error on the training set using the frozen encoder f and predictor η.Table 7 reports mean reciprocal rank (MRR) and hit rate at k (Hit@ k) which are standard metrics for assessing predictor quality (Kipf et al., 2020; Park et al., 2022; Garrido et al., 2023b; Gupta et al., 2024). AdaSSL consistently outperforms BYOL. Fig. 10 shows the retrieved trajectories and the rank of the ground-truth target in the retrievals. We observe that all methods are able to retrieve the correct digit, while AdaSSL-V and AdaSSL-S predict the direction and velocity of the ground-truth target better than BYOL. 28 Published as a conference paper at ICLR 2026 rank=13  rank=2  rank=3                            
+
+> BYOL Target AdaSSL -VAdaSSL -SContext Target Context
+> rank=37 rank=1 rank=2 rank=59 rank=4 rank=2
+> BYOL AdaSSL -VAdaSSL -S
+> rank=52 rank=8 rank=3
+> rank=41 rank=1 rank=5 rank=39 rank=13 rank=5
+> rank=59 rank=1 rank=2 rank=62 rank=4 rank=3
+> rank=33 rank=2 rank=6 rank=64 rank=1 rank=1
+
+Figure 10: Future prediction visualization. Given a source trajectory and its ground-truth latent 
+
+r (change in velocity), we predict the embedding of the corresponding future trajectory with the learned predictors of BYOL and AdaSSL-V/S and retrieve the three nearest matches from a pool of 4096 future trajectory embeddings. All methods predict the correct digit, while AdaSSL-V and AdaSSL-S predict the directional velocity of the ground-truth target better than BYOL. Retrieval ranks ( ↓) for the ground-truth target are reported below each visualization. BYOL GT  AdaSSL -VContext  BYOL GT  AdaSSL -VContext  BYOL GT  AdaSSL -VContext 
+
+Figure 11: Sampling future trajectories. Given a source trajectory, we visualize the nearest neigh-bor (via cosine similarity of the embeddings) of the predictions of BYOL (middle) and AdaSSL-V (right). Samples from the ground-truth (GT) transition distribution is shown on the left. AdaSSL-V samples multiple future trajectories from the learned prior while BYOL produces a deterministic prediction. C.4.3 FUTURE TRAJECTORY SAMPLING 
+
+In this section, we evaluate the diversity of the predicted future trajectories on Stochastic Moving-MNIST. We first sample a random source trajectory x from the validation set and 64 future tra-jectories from the ground-truth p(x+ | x). We encode the source and targets using BYOL and AdaSSL-V. Next, we retrieve the nearest neighbor of their predictions and visualize them in Fig. 11. For AdaSSL-V, we use the learned prior to sample multiple r’s and condition the predictor t to predict 10 target embeddings. We then retrieve the nearest neighbors of these targets. Fig. 11 shows the overlaid ground-truth future trajectories (left) and predictions by BYOL and AdaSSL-V. BYOL produces a single deterministic prediction, whereas the AdaSSL-V predicts di-verse plausible futures. 29 Published as a conference paper at ICLR 2026 InfoNCE 
+
+AdaSSL-V 
+
+(Ours) 
+
+Ground 
+
+Truth 
+
+Pairs of latent dimensions 
+
+H-InfoNCE 
+
+Figure 12: Aggregated marginal distributions Ez[pmodel (z+ | z)] across latent dimension pairs. InfoNCE produces collapsed densities and H-InfoNCE partially recovers variability, while AdaSSL-V aligns closely with the ground truth. The improvement is most evident in columns two and three, where AdaSSL-V captures both spread and orientation while baselines do not. x 1-NN of by AdaSSL-V t (f(x), ˜r)              
+
+> pθ(r∣x,vary position )
+> pθ(r∣x,vary spotlight )
+> pθ(r∣x,vary hue )
+> pθ(r∣x)
+> InfoNCE
+
+5-NN s of  f(x) 
+
+> AdaSSL-V (Ours)
+> AdaSSL-S (Ours)
+> ˜r∼
+
+Figure 13: Image retrieval results on 3DIdent. Top left: query image. Bottom left: five nearest neighbors on the embeddings. Right: controllable retrieval by AdaSSL-V. C.5 DENSITY 
+
+To understand why AdaSSL outperforms baselines in Table 2, we visualize the aggregated marginal distribution of z+ implied by the learned predictor, Ez[pmodel (z+ | z)] . We define one Monte-Carlo sample of pmodel (z+ | z) for each z as follows. For InfoNCE, we first encode the input 
+
+x = g(z) and then learn a projection from the embedding space to the ground-truth latent space by training a linear regressor from f (g(z)) to z+. For H-InfoNCE, we pass f (g(z)) through the predictor and project the predicted representations. For AdaSSL-V, we sample from the learned prior 
+
+˜r ∼ pθ (r | x) and use ˜r to edit the embeddings with t(f (x), ˜r) and project the edited embeddings. We repeat this process for random samples of z ∼ p(z) and visualize them in Fig. 12. InfoNCE embeddings produce overly concentrated densities, indicating their inability to accurately capture complex conditional uncertainties. H-InfoNCE partially corrects this, while AdaSSL best fits the ground-truth distribution, suggesting that its improvement arises from more accurate modeling of the conditional uncertainty. C.6 RETRIEVAL 
+
+In Fig. 13 (left), we perform standard retrieval to accompany our analysis in §4.3. We retrieve the five nearest neighbors of the query image in the embedding space. We observe that both AdaSSL and the baselines are able to retrieve visually similar images. There are still some wrong retrievals in color and spotlight, and rotation is especially hard to learn for all methods. 30 Published as a conference paper at ICLR 2026 Table 8: Similarity functions used by different models, where ψ(·) = f (·)  
+
+> ∥f(·)∥2
+
+if the model assumes a normalized latent space, in which case InfoNCE and AdaSSL’s similarity functions are equivalent to a dot product; otherwise ψ(·) = f (·). The same applies to ψ1 and ψ2, whose subscripts are used to indicate the asymmetry of H-InfoNCE and AdaSSL. Note that in Table 1, H-InfoNCE has ψ1 = ψ2
+
+because E[c+ | c] = c.Model s(x, y)
+
+InfoNCE −λ(ψ(x) − ψ(y)) ⊤(ψ(x) − ψ(y)) 
+
+AnInfoNCE −(ψ(x) − ψ(y)) ⊤Λ(ψ(x) − ψ(y)) 
+
+H-InfoNCE −(ψ1(x) − ψ2(y)) ⊤Λx(ψ1(x) − ψ2(y)) 
+
+AdaSSL −λ(ψ1(x, ˆr) − ψ2(y)) ⊤(ψ1(x, ˆr) − ψ2(y)) 
+
+## D DATA AND IMPLEMENTATION DETAILS 
+
+D.1 IMPLEMENTATION OF L0 PENALTY 
+
+For AdaSSL-S, we implement the sparsity regularization following Lachapelle et al. (2022); Brouil-lard et al. (2020). Specifically, we implement r as m ⊙ ˜r, where mi ∼ Bern( πi) is a binary mask and ˜r is the value of the latent. Both the Bernoulli logits and the vector ˜r are predicted by the MLP 
+
+m(f (x), f (x+)) or m(f (x), f (x++ )) .We encourage sparsity by penalizing the expected number of active gates: 
+
+E[∥m∥0] = E
+
+"X
+
+> i
+
+mi
+
+#
+
+= X
+
+> i
+
+E[m i] = X
+
+> i
+
+πi , (12) which is differentiable w.r.t. π.Next, we sample the binary mask m using the Gumbel-Sigmoid reparameterization of the Bernoulli distribution (Maddison et al., 2017). To enable backpropagation through this discrete decision, we use a straight-through estimator, which backpropagates through the relaxed gates in the backward pass (Bengio et al., 2013b). D.2 NUMERICAL EXPERIMENTS IN §4.2 In the numerical experiments, most of our setup follows prior work (K¨ ugelgen et al., 2021; Zimmer-mann et al., 2021). We list the similarity functions used by the models in Table 8. 
+
+Complex p(c+ | c), formally stated. 
+
+κ ∼ N (0 , Σ) , ci | κ ∼ N (μ(κ)i, σ (κ)2 
+
+> i
+
+) , (13) 
+
+ιi | κ ∼ Bern( π(κ)i) , c+ 
+
+> i
+
+| ιi, ci, κ ∼
+
+δ(c+ 
+
+> i
+
+= ci), ιi = 0 
+
+N  μ(κ)i, σ (κ)2
+
+> i
+
+, ιi = 1 . (14) 
+
+Data. We set nc = ns = 5 and sample Σ ∼ W−1(nc + 2 , I). For anisotropic noise, we sample σ(c)2 
+
+> i
+
+∼ InvGamma(2 , 1) . For heteroscedastic noise, we set σ(c)2 =softplus  Wσ c + softplus −1(1) . For complex p(c+ | c), we use μ(κ) = W⊤ 
+
+> μ
+
+κ + b, σ(κ)2 =softplus  Wσ κ + softplus −1(1) , and πi(κ) = Sigmoid 
+
+ κi 
+
+> Σii
+
+− 1
+
+
+
+. We sample each element of 
+
+Wμ, Wσ , and b from N (0 , 1) . We parameterize gMLP as a three-layer MLP with LeakyReLU ac-tivation (negative slope 0.2) with the same number of units in all layers. We ensure invertibility by using L2-normalized weight matrices that has the lowest condition number among 25 000 uniformly sampled candidates. We use x++ = gMLP ([ c+, s++ ]) where c+ is the same content factor as in x+
+
+and s++ ∼ N (0 , I).31 Published as a conference paper at ICLR 2026 
+
+Architecture. For the encoder f , we use an MLP with four hidden layers of dimensionality 10 n
+
+where n = nc +ns is the input dimension. For models that apply L2 normalization to the outputs, we set the output dimensionality to n + 1 to accommodate for the missing degree of freedom; otherwise we set it to n. For H-InfoNCE Affine , we use an affine layer followed by softplus activation to predict Λx. For H-InfoNCE MLP , we use an MLP with three hidden layers of size 10 n followed by 
+
+softplus activation to predict Λx and an MLP of the same size to predict ϕ1(x) in Table 2. For AdaSSL, we set dr = 5 . We use MLPs with two hidden layers of dimension 64 to parameterize qϕ,
+
+pθ , and m and use a linear t for AdaSSL-V. All MLPs except the encoder use a BatchNorm layer followed by LeakyReLU with the default negative slope ( 0.01 ) after each hidden layer. 
+
+Hyperparameters. We use the AdamW optimizer (Loshchilov & Hutter, 2019) with learning rate 
+
+5 × 10 −4 and weight decay 10 −4 on the parameters except biases. We use a batch size of 2048. For the experiments on complex p(c+ | c), we apply the loss symmetrically similar to Chen et al. (2020a) because the sampling process of c and c+ is symmetric. We train the models for 200 000 steps and observe convergence. For AdaSSL-V, we linearly warmup β from 0 to 0.5 for 1000 steps to prevent early KL instabilities. We keep β = 1 fixed throughout training for AdaSSL-S. For the unimodal p(c+ | c) experiments, we set τ = E[σ2 
+
+> i
+
+(c)] = 1 except when the variance is fixed to 0,in which case we set τ = 0 .1. For the complex p(c+ | c) experiments, we set τ = 0 .1.
+
+Evaluation. We perform evaluation by training a linear regressor on top of the frozen representa-tions on 100 000 unseen data samples and evaluate it on another 100 000 samples. 
+
+Hardware. Each trial of this experiment required approximately 15-20 hours to run, using eight CPU cores, 4 GB of system memory, and an MIG-partitioned slice of an NVIDIA H100 GPU providing roughly a quarter of the GPU’s compute capacity and 20 GB of GPU memory. D.3 3DI DENT EXPERIMENTS IN §4.3 
+
+Data. 3DIdent contains 250 000 training images in Dtrain and 25 000 test images in Dtest , which we use for CRL experiments. We sample latent pairs (z, z+) following 
+
+z ∼ p(z) , ˜z ∼ p(˜ z) , ι i ∼ Bern(0 .2) , z+ 
+
+> i
+
+= zi if ιi = 0 else z + 
+
+> i
+
+= ˜ zi for i ∈ [dz ] . (15) Since 3DIdent is a finite dataset, after obtaining a latent pair, we find their nearest neighbor in the training set with FAISS (Douze et al., 2024) and use the correspondingly rendered observations as inputs following the original authors (Zimmermann et al., 2021). AdaSSL does not use an additional view in this experiment. 
+
+Data augmentations. For standard pairs, we use the same set of strong augmentations used for CelebA (§D.4). For natural pairs, we do not perform augmentations. We resize the images to 
+
+128 × 128 resolution. 
+
+Architecture. We use a ResNet-18 encoder followed by a two layer MLP projector with hidden size of 128 and output size of 16 as f . The hidden layer is followed by ReLU activation without 
+
+BatchNorm , and the output layer does not have bias. For AdaSSL, we set dr = 16 . We use MLPs with two hidden layers of dimension 128 to parameterize qϕ, pθ , and m. These MLPs use a BatchNorm layer followed by ReLU activation after each hidden layer. As discussed in §4.3, we ablate the parameterization of t for AdaSSL-V; the MLP parameterization has a hidden layer of dimensionality 128 with BatchNorm followed by ReLU activations. The VAE-based methods use a ResNet-18 decoder that mirror the encoder. 
+
+Hyperparameters. We use the AdamW optimizer with learning rate 10 −4, weight decay 10 −5
+
+on non-bias parameters, and a batch size of 256. For contrastive learning, we calculate the loss symmetrically following standard practice (Chen et al., 2020a). We train all models for 150 000 steps and observe convergence on Dtrain . All SSL methods use a normalized embedding space, use 
+
+τ = 0 .05 , and do not learn λ in this experiment. For AdaSSL-V, we perform linear warmup of β
+
+from 0 to 0.5 for 10 000 steps to prevent early KL instabilities. For AdaSSL-S, we fix β = 0 .5. For AdaGVAE, we search within the authors’ recommended set of β’s, [1, 2, 4, 8, 16], but find β = 100 
+
+to give the best disentanglement. 32 Published as a conference paper at ICLR 2026 
+
+Figure 14: Visualization of images paired by identity from the CelebA dataset. 
+
+Evaluation. We perform evaluation on Dtest with the frozen embeddings and ground-truth latent factors with linear regression and the DCI disentanglement score. We normalize the embeddings for the SSL based models such that they align with the training objective, similar to Zimmermann et al. (2021). We use the posterior mean as the embeddings for VAE-based models and do not normalize them. For the DCI disentanglement score, we use the weights of Lasso regressors as the relative importance matrix. 
+
+Hardware. Each trial of this experiment required approximately 15-20 hours to run, using eight CPU cores, 32 GB of system memory, and an MIG-partitioned slice of an NVIDIA H100 GPU providing roughly three-eighths of the GPU’s compute capacity and 40 GB of GPU memory. D.4 CELEB A EXPERIMENTS IN §4.4 0 5 10 15 20 
+
+> # of differed attributes
+> between pairs
+> 0.00
+> 0.04
+> 0.08
+> 0.12
+> Density
+> 6.38
+
+Figure 15: Distribution of the number of differed attributes between pairs of im-ages of the same identity. 
+
+Data. We split the CelebA dataset into Dtrain , Dval ,and Dtest following an 8-1-1 ratio; this gives us 161 908 training images, 20 346 images in the validation set and 20 345 images in the test set. To create a natural distri-bution shift, we sample celebrity identity such that the people in Dtrain does not appear in Dval ∪ D test . This gives us 8142 celebrities in Dtrain and 2035 celebrities in 
+
+Dval ∪ D test . To construct a structured positive pair, we randomly sample two images of the same person. This results in 1 850 918 possible positive pairs. Data pairs ex-amples are visualized in Fig. 14 and the distribution of the number of differed attributes between pairs are shown in Fig. 15, confirming that attributes differ sparsely be-tween positive pairs. During training, we augment the sampled pair using data augmentations and obtain x and 
+
+x+. We use another augmented view of x+ as x++ . This is helpful because our goal is not to learn the low-level style factors, but instead the semantic content factors that differ structurally between x+ and x. The standard pairing process still use augmented versions of the same image as positive pairs. 
+
+Data augmentations. We investigate the effect of both strong and weak augmentations. For strong augmentations, we apply the standard set of augmentations used in SSL studies (Chen et al., 2020a; Grill et al., 2020). We use RandomHorizontalFlip with 0.5 probability, then 
+
+RandomResizedCrop with crops of size within [8% , 100%] of the original image and aspect ratio within [0 .75 , 1.33] , which are then resized to 64 × 64 . Next, with probability 0.8, we randomly apply ColorJitter where the brightness, contrast, saturation and hue of the im-age are shifted by a uniformly random offset. We use parameters 0.4, 0.4, 0.2, 0.1, respectively. 33 Published as a conference paper at ICLR 2026 Finally, we apply RandomGrayScale with probability 0.2, GaussianBlur with probabil-ity 0.5, and Solarization with probability 0.2. For weak augmentations, we only apply 
+
+RandomHorizontalFlip with probability of 0.5 and RandomResizedCrop with crops of size within [80% , 100%] of the original image and aspect ratio within [0 .9, 1.1] . Notice that this cropping operation is significantly weaker than the one used for strong augmentations. 
+
+Architecture. We use a ResNet-18 encoder (He et al., 2016) followed by a two layer MLP projec-tor with hidden size of 1024 and output size of 128 as f . For InfoNCE, the hidden layer is followed by ReLU activation without BatchNorm , and the output layer does not have bias following Chen et al. (2020a). For BYOL, the hidden layer uses BatchNorm followed by ReLU activation, and the output layer does not have bias following Grill et al. (2020). BYOL’s predictor design is the same as its projector. For AdaSSL, we set dr = 20 . We use MLPs with one hidden layer of dimension 1024 to parameterize qϕ, pθ , and m. We use an MLP with one hidden layer of dimension 512 to parameterize t for AdaSSL-V; this MLP does not have a bias term in the output layer, similar to the predictor in BYOL. These MLPs use a BatchNorm layer followed by ReLU activation after each hidden layer. 
+
+Hyperparameters. We use the AdamW optimizer with learning rate 2 × 10 −4 and weight decay 
+
+10 −4 on the parameters except biases. We use a batch size of 512. We calculate the SSL loss sym-metrically following standard practice (Chen et al., 2020a). We train the models for 80 000 steps and observe convergence on Dval . For contrastive learning, all models use a normalized embedding space and use τ = 0 .1. The following are the hyperparameters of different methods used in combi-nation with InfoNCE. For AdaSSL-V, we perform linear warmup of β from 0 to 0.1 for 10 000 steps to prevent early KL instabilities. For AdaSSL-S, we fix β = 0 .5. For LieSSL, we search for the best-performing coefficient of the last regularization term from [0.01, 0.1, 1, 10] because we do not assume access to transformation labels, and choose the best-performing number of basis functions from [1, 10, 20, 40]. For BYOL, we anneal the EMA momentum from 0.996 to 1 following a cosine schedule. With BYOL, AdaSSL-V uses a linear warmup of β from 0 to 0.005 for 10 000 steps for weak augmentations and to 0.001 for strong augmentations. For AdaSSL-S, we fix β = 0 .002 for weak augmentations and β = 0 .0005 for strong augmentations. 
+
+Evaluation. Following standard practice, we train a linear classifier with the 
+
+BinaryCrossEntropy loss for each attribute on top of the frozen representations and embeddings on Dtrain until convergence and evaluate it on Dtest . We use the F1 score of the minority class as the evaluation metric because the attributes are highly imbalanced. To do that, we compute the F1 score for each attribute then report the mean score over attributes. 
+
+Hardware. Each trial of this experiment required approximately 15-20 hours to run, using 12 CPU cores, 24 GB of system memory, and an NVIDIA L40S GPU with 48 GB of GPU memory. D.5 VIDEO EXPERIMENTS IN §4.4 
+
+Data. We construct a custom dataset similar to Moving-MNIST (Srivastava et al., 2015; Drozdov et al., 2024), where nine-frame videos are generated stochastically on the fly from sample images in MNIST. For a given image, we first create a black 64 × 64 canvas. Afterwards, we resize the original 28 × 28 image to 16 × 16 and place it on the canvas after uniformly sampling its initial center coordinates from [8 , 16] . In frames 1-3, the digit moves from this center based on a velocity in the horizontal direction, denoted by vx, 1:3 , and in the vertical direction, denoted by vy, 1:3 . We sample these initial velocities uniformly from [0 , v 0] where v0 = 3 . Then, with an equal probability, we sample one direction and change its velocity by adding a Gaussian noise proportional to the initial velocity (i.e., heteroscedastic): 
+
+ι ∼ Bern(0 .5) ,
+
+vx, 4:9 ∼ N  vx, 1:3 , 23 vx, 1:3 
+
+ , v y, 4:9 = vy, 1:3 , ι = 0 
+
+vy, 4:9 ∼ N  vy, 1:3 , 23 vy, 1:3 
+
+ , v x, 4:9 = vx, 1:3 , ι = 1 . (16) This makes the new velocity in frame 4-9 within (−v0, 3v0) with high probability. Generated video samples are shown in Figure 16. We refer to this as Setting A .34 Published as a conference paper at ICLR 2026 
+
+Figure 16: Random samples (nine-frame video sequences) from the stochastic Moving-MNIST dataset. For each example, the first three frames (context) are shown on the left. Then, three different future trajectories of the next six frames (targets) are randomly sampled according to Eq. 16 and visualized to the right of the initial three-frame segment. The third frame is overlaid on all canvases for reference. The motion uncertainty arises from random velocity changes along spatial directions. In Setting B , we let ι depend on the digit input. Concretely, we use equally spaced bins between 0.1 and 0.9 for the ten digits: 
+
+ιk ∼ Bern( pk) , where pk = 0 .1 + k · 0.9 − 0.110 − 1 , k = 0 , . . . , 9 . (17) This means the distribution of the direction of acceleration varies for different digits. We partition each sampled video into three-frame segments and use them as x, x+, and x++ (§C.2). The model predicts f (x+) from f (x) (and optionally f (x++ ) by AdaSSL and BYOL+Future). The goal is to capture both the digit class and the velocity in the three-frame video representations. We partition the 60 000 MNIST images into 50 000 training images and 10 000 validation images and use each set for generating training and validation videos on the fly. Note that we always sample the velocities online, and the model observes different videos in every epoch. 
+
+Architecture. The encoder f consists of a 3D convolutional encoder, followed by an MLP projec-tor. The 3D convolutional encoder consists of five convolutional layers with [32 , 64 , 128 , 128 , 256] 
+
+channels with BatchNorm and ReLU activations after each layer. The first two and the last layer have spatial-only kernels of dimensions [1 , 3, 3] and the third and fourth layers have temporal con-volutions with kernels of dimensions [3 , 1, 1] . The encoder outputs are average-pooled on the spatial dimensions and then flattened across the temporal dimension resulting in a 768-dimensional repre-sentation. The representations are passed to an MLP projector with two hidden layers of size 1024, each followed by BatchNorm and ReLU activations. The output embeddings have a dimension-ality of 128, and are batch-normalized. The projector is followed by an MLP predictor h with two hidden layers of dimensionality 1024 with BatchNorm and ReLU activations after each hidden layer. The predictor output does not use BatchNorm or ReLU . For AdaSSL-V, we use a two-dimensional r, which is concatenated to f (x) as the predictor input. We use MLPs with one hidden layer of dimensionality 1024 to parameterize qϕ, pθ , and m. These MLPs use a BatchNorm layer followed by ReLU activation after each hidden layer. For BYOL+Future, we concatenate the pro-jector embeddings f (x) and f (x++ ) and use it as the predictor input. BYOL+GT predicts f (x+)
+
+from f (x) and r⋆, the ground-truth difference between the velocities of x and x+. We experiment 35 Published as a conference paper at ICLR 2026 with concatenating r⋆ directly with f (x) or passing it through a learnable linear embedding before concatenation, and find that using an embedding layer slightly improves performance. 
+
+Hyperparameters. For all methods, we train the model for 75 000 steps with the AdamW optimizer using a batch size of 128 . We use an initial learning rate of 10 −4 and decay it following a cosine schedule, following Grill et al. (2020). We use a constant weight decay of 10 −4. For the EMA momentum, we use a constant decay rate of 0.996 . In BYOL+GT, we learn an affine projection to create an embedding for r⋆ of dimensionality 32. For all AdaSSL models, we use a constant regularization coefficient β, and in our default setting, dr = 2 and β = 0 .001 .
+
+Evaluation. To perform evaluation, we train linear probes with CrossEntropy (for digit clas-sification) and MSE (for velocity regression) losses on top of the frozen video representations and embeddings of the online branch on Dtrain until convergence. We then report the digit prediction accuracy and velocity decoding R2 scores on a fixed video test set generated from the 10 000 test images of MNIST. 
+
+Hardware. Each trial of this experiment required approximately 6-8 hours to run, using six CPU cores, 32 GB of system memory, and an NVIDIA H100 GPU with 80 GB of GPU memory. D.6 INAT -1M EXPERIMENTS IN §C.1 
+
+Data. iNat2021 (Van Horn et al., 2021) is a large-scale image dataset collected and annotated by community scientists that contains fine-grained (class) and coarse-grained (superclass) species labels. We create a balanced subset from iNat2021 of about half of its size. We first randomly sample 5000 classes that have at least 250 images from iNat2021’s training set. We then randomly pick 200 images as Dtrain and 50 as Dval . This results in a one-million-image training set and a validation set of 250 000 images. We name this subset of iNat2021 as iNat-1M. During training, we investigate the model’s behavior under different natural pairings. We start with a setting where we pair up each image with an image from the same class, randomly sampled at each step. Since we evaluate the model’s performance on fine-grained classes, this setting is similar to supervised contrastive learning (Khosla et al., 2020) because the model is encouraged to cluster images within the same class together. For the rest of the settings, we randomly corrupt the pairing process of each image with probability ω ∈ { 0.25 , 0.5, 0.75 , 1}. Our corruption changes the pairing method for selected images to pairing within the same superclass. We expect AdaSSL to adapt to different corruption ratios better than baselines because it’s less restricted on the uncertainty in features that could change under a coarse/corrupted pairing. We augment paired data using data augmentations and obtain x and x+ for all methods. We use another augmented view of x+ as x++ .
+
+Data augmentations. We resize the images to 224 × 224 resolution and use the same set of strong augmentations used for CelebA (§D.4). 
+
+Architecture. We use a ResNet-50 encoder (He et al., 2016) followed by a two layer MLP projec-tor with hidden size of 1024 and output size of 128 as f . The hidden layer is followed by ReLU acti-vation without BatchNorm , and the output layer does not have bias following Chen et al. (2020a). For AdaSSL, we set dr = 8 . We use MLPs with one hidden layer of dimension 1024 to parameterize 
+
+qϕ, pθ , and t. t does not have a bias term in the output layer. These MLPs use a BatchNorm layer followed by ReLU activation after each hidden layer. 
+
+Hyperparameters. We use the AdamW optimizer with learning rate 2 × 10 −4 and weight decay 
+
+10 −4 on the parameters except biases. We calculate the SSL loss symmetrically. We use a batch size of 256 and train the models for 200 000 steps. For contrastive learning, all models use a normalized embedding space and use τ = 0 .1. For AdaSSL-V, we perform linear warmup of β from 0 to βfinal 
+
+for 10 000 steps. We search βfinal from {0.2, 0.4, 0.6, 0.8} and find βfinal = 0 .8 performs the best for all settings except on the noisiest setting when ω = 1 , where we need weaker regularization, 
+
+βfinal = 0 .4, to accommodate the higher uncertainty. 36 Published as a conference paper at ICLR 2026 
+
+Evaluation. We train two online linear probes with CrossEntropy loss on top of the represen-tations, one for predicting the superclass and one for the fine-grained species classes. The gradient of these losses do not propagate back to the encoder. We then report their performance on Dval .
+
+Hardware. Each trial of this experiment required approximately 40 hours to run, using 12 CPU cores, 60 GB of system memory, and an NVIDIA H100 GPU with 80 GB of GPU memory. 37

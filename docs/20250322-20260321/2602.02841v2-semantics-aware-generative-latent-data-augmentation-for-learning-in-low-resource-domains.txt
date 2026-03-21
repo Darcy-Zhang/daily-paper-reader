@@ -1,0 +1,1028 @@
+Title: Semantics-Aware Generative Latent Data Augmentation for Learning in Low-Resource Domains
+
+URL Source: https://arxiv.org/pdf/2602.02841v2
+
+Published Time: Tue, 10 Feb 2026 03:45:24 GMT
+
+Number of Pages: 21
+
+Markdown Content:
+## Semantics-Aware Generative Latent Data Augmentation for Learning in Low-Resource Domains 
+
+Jaesung Bae 1 Minje Kim 1
+
+Abstract 
+
+Despite strong performance in data-rich regimes, deep learning often underperforms in the data-scarce settings common in practice. While foun-dation models (FMs) trained on massive datasets demonstrate strong generalization by extracting general-purpose features, they can still suffer from scarce labeled data during downstream fine-tuning. To address this, we propose GeLDA, a semantics-aware generative latent data augmen-tation framework that leverages conditional dif-fusion models to synthesize samples in an FM-induced latent space. Because this space is low-dimensional and concentrates task-relevant in-formation compared to the input space, GeLDA enables efficient, high-quality data generation. GeLDA conditions generation on auxiliary fea-ture vectors that capture semantic relationships among classes or subdomains, facilitating data augmentation in low-resource domains. We vali-date GeLDA in two large-scale recognition tasks: (a) in zero-shot language-specific speech emo-tion recognition, GeLDA improves the Whisper-large baseline’s unweighted average recall by 6.13%; and (b) in long-tailed image classifica-tion, it achieves 74.7% tail-class accuracy on ImageNet-LT, setting a new state-of-the-art result. 
+
+1. Introduction 
+
+In many real-world applications, collecting labeled data is costly, and some categories are systematically under-represented (e.g., in low-resource languages or a dataset with a long-tailed distribution). This yields label imbal-ance , where a small number of classes dominate the training set and substantially degrade recognition performance. A common approach to mitigate this issue is to learn gen-eralizable representations from large-scale unlabeled data  
+
+> 1Siebel School of Computing and Data Science, University of Illinois Urbana-Champaign, Illinois, USA. Correspondence to: Jaesung Bae <jb82@illinois.edu >.
+> Preprint. February 10, 2026.
+
+with large model capacity, i.e., by using foundation mod-els (Baevski et al., 2020; Radford et al., 2023; 2021; Devlin et al., 2019; Chen et al., 2022b; Elizalde et al., 2023; Oquab et al., 2024), and then fine-tune them for downstream tasks using lightweight adapters (Hu et al., 2022; Gao et al., 2024; Chen et al., 2022a). However, when the data for the down-stream task is scarce or heavily imbalanced, adapter training can still overfit to dominant classes. Methods such as loss re-weighting (Menon et al., 2021; Lin et al., 2020) or gradi-ent adjustment (Tan et al., 2023) can partially mitigate this issue, but the lack of data variability is a fundamental issue causing underrepresented classes. Data augmentation (DA) addresses the data scarcity issue by generating additional samples that follow the original data distribution. Since the empirical distribution is not represen-tative for certain classes, a DA method needs to be carefully designed to improve the variability of the dataset in a legiti-mate way, i.e., the augmented empirical distribution to be a better approximation of the original. A typical approach is to manipulate raw data samples (e.g., images, text, or audio) directly in the input space (Shorten & Khoshgoftaar, 2019; Perez & Wang, 2017; Zhang et al., 2018; Yun et al., 2019; Trinh et al., 2022; Terashima et al., 2022; Park et al., 2019). Alternatively, advanced generative models, such as text-to-speech (TTS) (Park et al., 2024; Yang et al., 2023; Kuznetsova et al., 2023; Huybrechts et al., 2021; Song et al., 2022a) or image diffusion models (Islam et al., 2024; Tra-bucco et al., 2024; Ban et al., 2024), can synthesize more realistic samples, while they do not guarantee improved diversity that also matches the unseen data distribution. It is due to the high dimensionality and complexity of the raw data space, making modeling challenging. This makes input-space DA especially difficult for underrepresented data. Moreover, since raw data often includes details un-necessary for a downstream task, respecting such subtleties during generation is wasteful. Alternatively, DA can operate in a well-structured feature space, which is typically low-dimensional and highly ab-stract. This space can be more efficient and effective than the input space, as DA can focus on the task-relevant core information rather than being distracted by creating the pe-ripheral details. Moreover, semantic similarity between 1
+
+> arXiv:2602.02841v2 [cs.LG] 9 Feb 2026 Semantics-Aware Generative Latent Data Augmentation for Learning in Low-Resource Domains
+
+classes or domains is often better captured in feature spaces, enabling the DA to operate in the “easier” space and to better handle label imbalance. Previous latent space DA methods often rely on the simple statistical manipulation of existing data points, based on the strong assumption that well-learned feature spaces are approximately convex (Che-ung & Yeung, 2021; Bae et al., 2024; DeVries & Taylor, 2017). More recently, a few studies have explored gener-ative model-based approaches (Liu et al., 2023b; Kumar et al., 2019; Han et al., 2024), but a research gap remains in understanding the role of generative models for DA. For example, their interplay with existing foundation models (FMs), effective conditioning methods, and how different levels of abstraction in the feature spaces affect the DA quality, are the research questions of this paper. In this work, we propose a semantics-aware generative la-tent DA (GeLDA) framework as an efficient and effective alternative to input-space DA. It is characterized by the use of pretrained FMs and their fine-tuned versions to ensure DA is performed in a well-structured, task-relevant latent space. Diffusion models are adopted to generate latent samples, by being conditioned on augmented label information to facilitate the connection between the high-resource and low-resource classes or domains. This makes GeLDA especially powerful in severely low-resource data setups. We challenge the GeLDA framework in two realistic data-scarcity scenar-ios: (a) zero-shot (i.e., without any labeled data) speech emotion recognition (SER) for low-resource languages, and (b) long-tailed image classification on a highly imbalanced dataset. In the SER task, GeLDA improves unweighted aver-age recall by 6.2% with Whisper-large (Radford et al., 2023) as the FM, using a small diffusion model (21M parameters) trained on only 83 hours of data. On the ImageNet Long Tail (LT) dataset (Liu et al., 2019), GeLDA achieves 74.7% tail-class accuracy, setting a new state-of-the-art (SOTA) result, while maintaining the middle- and head-class accu-racies. These results suggest that GeLDA is applicable to a range of real-world tasks, mitigating the well-known diffi-culties in low-resource and label-imbalanced scenarios. Our contributions are summarized as follows: • GeLDA proposes a semantics-aware generative DA frame-work that synthesizes data in an FM-learned latent space, more efficiently and effectively than input-space DA. • We propose augmenting the label and subdomain infor-mation to capture the relationship between labels and conditioning the generative model on it. We show that the augmented side information successfully facilitates DA in low-resource domains. • Through ablations, we analyze how different abstraction choices in the latent space affect GeLDA. • We validate GeLDA on SER and ImageNet-LT tasks to show its merit in different modalities and few- and zero-shot task variations. 
+
+2. Related Works 
+
+Foundation models: An FM is trained on large-scale, diverse data, typically using self-supervised or weakly-supervised learning. It is designed to generalize to various downstream tasks (Bommasani et al., 2021). For example, wav2vec 2.0 (Baevski et al., 2020), WavLM (Chen et al., 2022b), and BERT (Devlin et al., 2019) are trained with masked-prediction objectives for speech and text. More task-oriented speech FMs have also emerged, including Whisper (Radford et al., 2023) for automatic speech recog-nition (ASR) and emotion2vec (Ma et al., 2024b) for SER. Notably, Whisper’s encoder is known to transfer well to non-ASR tasks such as emotion recognition (Goron et al., 2024; Ma et al., 2024a) and audio tagging (Gong et al., 2023). In the vision-language domain, CLIP (Radford et al., 2021) has been successful in learning a shared semantic space between image and text modalities, showcasing ex-cellent zero-shot image classification performance (Qian & Hu, 2024; Song et al., 2022b). To the best of our knowledge, though, GeLDA is the first work that extensively studies the relationship between the FM-learned latent space and DA. We leverage their ability to capture the semantics in the feature space, where the DA is performed. 
+
+Input-space data augmentation: Transformation tech-niques can alter data distributions, e.g., rotation, flipping, cropping, and color change in vision applications (Shorten & Khoshgoftaar, 2019; Perez & Wang, 2017), along with mixing examples and labels (Zhang et al., 2018; Yun et al., 2019). In audio, adding noise (Trinh et al., 2022), pitch modulation (Terashima et al., 2022), and masking (Park et al., 2019) are widely used. These methods increase diver-sity but are not guaranteed to effectively recover the unseen parts of the data distribution, limiting the generalizability of the learned models. Recently, generative models have been adopted for input-space DA. In speech, generative models for voice conversion and TTS can synthesize new utterances with varying conditions, such as speaker identity and text content, benefiting ASR (Yang et al., 2023), keyword spot-ting (Park et al., 2024), TTS (Huybrechts et al., 2021; Song et al., 2022a), speech enhancement (Kuznetsova et al., 2023; Bae et al., 2025), and emotion recognition (Bo-Hao et al., 2025). In vision, diffusion-based image generation has also gained popularity for DA (Islam et al., 2024; Trabucco et al., 2024; Ban et al., 2024). Despite these successes, generative input-space DA often requires large training datasets and models, making it impractical for low-resource domains. 
+
+Latent-space data augmentation: An intuitive way to perform DA in the latent space is to use a linear transfor-mation or add a random perturbation to the existing latent vectors (Kumar et al., 2019; Liu et al., 2018b; DeVries & Taylor, 2017; Bae et al., 2024; Cheung & Yeung, 2021), 2Semantics-Aware Generative Latent Data Augmentation for Learning in Low-Resource Domains 
+
+assuming the data distribution in the latent space is smooth. To further ensure a convex, simple latent space, adversarial loss functions can be used (Liu et al., 2018b; Cheung & Ye-ung, 2021). Based on the simplicity in the latent space, prior studies used mixing or recombining latent representations across samples (Liu et al., 2018a; Chu et al., 2020). Other works utilize consistency loss to improve generation quality for image recognition (Sakurai et al., 2025) and TTS (Bae et al., 2024). Recently, LCReg leverages shared features between high- and low-resource classes (Liu et al., 2024), but their method explicitly computes and stores these shared features, and then performs statistics-based sampling for DA. Generative model-based approaches, including varia-tional autoencoders (VAEs) (Liu et al., 2023b; Kumar et al., 2019) and diffusion models (Han et al., 2024), have also been studied. However, they remain less explored than input-space methods. To the best of our knowledge, no prior work has investigated how the choice of latent space properties affects the effectiveness of DA. To this end, the proposed GeLDA framework leverages FM-learned and fine-tuned latent representations as well as versatile label and sub-domain conditioning via classifier-free guidance (CFG) in diffusion models. It enables latent-space DA in challenging, data-scarce settings. 
+
+3. Problem Definition 
+
+Our target applications are recognition tasks under data imbalance. We first describe the FM-based recognition framework and then formalize the data imbalance scenarios. 
+
+Recognition with foundation models: A recognition model maps an input x ∈ X to a label y ∈ Y =
+
+{c|1, 2, . . . , C }. Modern recognition systems commonly employ a pretrained FM F : RD → RM to transform x into a latent representation z ∈ Z (typically M < D ). While this latent space Z is generally well structured with abstrac-tion, it may still contain information irrelevant to a specific downstream task. To adapt Z further to the downstream task, we train a lightweight task adapter H on top of F,often implemented as L stacked linear layers: 
+
+ˆy = Softmax ◦ H (L) ◦ · · · ◦ H (1) ◦ F (x), (1) where each layer H(l) induces a progressively more task-specific latent space Z(l), with Z(0) being the FM’s output. Fig. 1a illustrates the common recognition framework. 
+
+Imbalanced datasets: Training data often suffers from 
+
+label imbalance . Let D = FCc=1 Dc be the training set with 
+
+Dc = {(xi, y i)|yi = c}. The dataset is imbalanced when the sample distribution over Y is skewed, such that some classes are substantially underrepresented, e.g., there exists a class-specific subset Dγ with a very low cardinality. In such a case, few-shot learning aims to maximize the use of Foundation 
+
+Model 
+
+Label 
+
+<latexit sha1_base64="XPldoHRKAmauH/FY+1WHF3dufbM=">AAAB+nicbVDLSsNAFL2pr1pfqS7dBItQNyURqS6LblxWsA9sY5lMJ+3QySTMTJQS8yluXCji1i9x5984abPQ1gMDh3Pu5Z45XsSoVLb9bRRWVtfWN4qbpa3tnd09s7zflmEsMGnhkIWi6yFJGOWkpahipBsJggKPkY43ucr8zgMRkob8Vk0j4gZoxKlPMVJaGpjlfoDUGCOW3KX3SdU5SQdmxa7ZM1jLxMlJBXI0B+ZXfxjiOCBcYYak7Dl2pNwECUUxI2mpH0sSITxBI9LTlKOASDeZRU+tY60MLT8U+nFlzdTfGwkKpJwGnp7MgspFLxP/83qx8i/chPIoVoTj+SE/ZpYKrawHa0gFwYpNNUFYUJ3VwmMkEFa6rZIuwVn88jJpn9aceq1+c1ZpXOZ1FOEQjqAKDpxDA66hCS3A8AjP8ApvxpPxYrwbH/PRgpHvHMAfGJ8/20+TwA==</latexit> 
+
+Z(1) 
+
+Linear 
+
+Linear 
+
+Linear 
+
+Imbalanced 
+
+Dataset 
+
+<latexit sha1_base64="J186KKFX+eTVRzJsHImp+A2xcKg=">AAAB8nicbVDLSgMxFM3UV62vqks3wSK4KjMi1WVRFy4r2AdMh5JJM21oJhmSO0IZ+hluXCji1q9x59+YaWehrQcCh3PuJeeeMBHcgOt+O6W19Y3NrfJ2ZWd3b/+genjUMSrVlLWpEkr3QmKY4JK1gYNgvUQzEoeCdcPJbe53n5g2XMlHmCYsiMlI8ohTAlby+zGBMSUiu5sNqjW37s6BV4lXkBoq0BpUv/pDRdOYSaCCGON7bgJBRjRwKtis0k8NSwidkBHzLZUkZibI5pFn+MwqQxwpbZ8EPFd/b2QkNmYah3Yyj2iWvVz8z/NTiK6DjMskBSbp4qMoFRgUzu/HQ64ZBTG1hFDNbVZMx0QTCralii3BWz55lXQu6l6j3ni4rDVvijrK6ASdonPkoSvURPeohdqIIoWe0St6c8B5cd6dj8VoySl2jtEfOJ8/eG+RZQ==</latexit> 
+
+D
+
+(a) Diffusion 
+
+<latexit sha1_base64="JUHbvAe/oQTqDfDd5i9uM8IFQYk=">AAACCHicbVDLSsNAFJ3UV62vqMtuBotQoZREpLosutGNVLAPaEKZTCft0JkkzEyEErJw64+4rStx60cI/o2TNgttPTDM4Zx7ufceL2JUKsv6Ngpr6xubW8Xt0s7u3v6BeXjUkWEsMGnjkIWi5yFJGA1IW1HFSC8SBHGPka43ucn87hMRkobBo5pGxOVoFFCfYqS0NDDLDkdqjBFL7tOq4/HESmsw++/Ss4FZserWHHCV2DmpgBytgfnlDEMccxIozJCUfduKlJsgoShmJC05sSQRwhM0In1NA8SJdJP5ESk81coQ+qHQL1Bwrv7uSBCXcso9XZmtLJe9TKxBj//n92PlX7kJDaJYkQAvhvkxgyqEWSpwSAXBik01QVhQvS/EYyQQVjq7kg7CXj57lXTO63aj3ni4qDSv80iKoAxOQBXY4BI0wS1ogTbA4Bm8ghl4M16MmfFufCxKC0becwz+wPj8AWr2mM8=</latexit> 
+
+N (0, I)
+
+Noise 
+
+Augmented 
+
+Label Info. 
+
+<latexit sha1_base64="DHtpRMXTiT8/GAPIUww9m2zQqnI=">AAACFXicbVDLSsNAFJ34rPUVdelmsAgVpCQi1WXRjcsK9oFNLJPppB06k4SZiVBDfsGtP+K2rsStO8G/cZJmoa0HLhzOuZd77/EiRqWyrG9jaXlldW29tFHe3Nre2TX39tsyjAUmLRyyUHQ9JAmjAWkpqhjpRoIg7jHS8cbXmd95JELSMLhTk4i4HA0D6lOMlJb6ZtXxkEie0oekap+kjqQ8FxyO1AgjltynhdU3K1bNygEXiV2QCijQ7JtfziDEMSeBwgxJ2bOtSLkJEopiRtKyE0sSITxGQ9LTNECcSDfJP0rhsVYG0A+FrkDBXP09kSAu5YR7ujO7VM57mXgKPf6f34uVf+kmNIhiRQI8W+bHDKoQZhHBARUEKzbRBGFB9b0Qj5BAWOkgyzoIe/7tRdI+q9n1Wv32vNK4KiIpgUNwBKrABhegAW5AE7QABs/gFUzBm/FiTI1342PWumQUMwfgD4zPH4GPnuI=</latexit> 
+
+¯z(1) → ¯Z(1) 
+
+<latexit sha1_base64="DchkDG+V69etYtu3im2v2rJZ+hA=">AAAB8HicbVDLSgNBEOyNrxhfUY9eBoMQL2FXJHoMevEYwTwkWULvZDYZMrO7zMwKIeQrvHhQxKuf482/cZLsQRMLGoqqbrq7gkRwbVz328mtrW9sbuW3Czu7e/sHxcOjpo5TRVmDxiJW7QA1EzxiDcONYO1EMZSBYK1gdDvzW09MaR5HD2acMF/iIOIhp2is9JiWuwOUEs97xZJbcecgq8TLSAky1HvFr24/pqlkkaECte54bmL8CSrDqWDTQjfVLEE6wgHrWBqhZNqfzA+ekjOr9EkYK1uRIXP198QEpdZjGdhOiWaol72Z+J/XSU147U94lKSGRXSxKEwFMTGZfU/6XDFqxNgSpIrbWwkdokJqbEYFG4K3/PIqaV5UvGqlen9Zqt1kceThBE6hDB5cQQ3uoA4NoCDhGV7hzVHOi/PufCxac042cwx/4Hz+ACyikAQ=</latexit> 
+
+u(ω) (b) Label 
+
+Linear 
+
+Linear 
+
+Foundation 
+
+Model 
+
+Linear Diffusion 
+
+<latexit sha1_base64="JUHbvAe/oQTqDfDd5i9uM8IFQYk=">AAACCHicbVDLSsNAFJ3UV62vqMtuBotQoZREpLosutGNVLAPaEKZTCft0JkkzEyEErJw64+4rStx60cI/o2TNgttPTDM4Zx7ufceL2JUKsv6Ngpr6xubW8Xt0s7u3v6BeXjUkWEsMGnjkIWi5yFJGA1IW1HFSC8SBHGPka43ucn87hMRkobBo5pGxOVoFFCfYqS0NDDLDkdqjBFL7tOq4/HESmsw++/Ss4FZserWHHCV2DmpgBytgfnlDEMccxIozJCUfduKlJsgoShmJC05sSQRwhM0In1NA8SJdJP5ESk81coQ+qHQL1Bwrv7uSBCXcso9XZmtLJe9TKxBj//n92PlX7kJDaJYkQAvhvkxgyqEWSpwSAXBik01QVhQvS/EYyQQVjq7kg7CXj57lXTO63aj3ni4qDSv80iKoAxOQBXY4BI0wS1ogTbA4Bm8ghl4M16MmfFufCxKC0becwz+wPj8AWr2mM8=</latexit> 
+
+N (0, I)
+
+<latexit sha1_base64="E3behLeudwvzw5P8M0Z7pUNAVKk=">AAACBHicbVDLSsNAFJ3UV62vqAsXbgaLUEFKIlJdFt24rGAf2MQymU7boTOTMDMRSsjWH3FbV+LWzxD8GydtFtp64MLhnHu5954gYlRpx/m2Ciura+sbxc3S1vbO7p69f9BSYSwxaeKQhbITIEUYFaSpqWakE0mCeMBIOxjfZn77mUhFQ/GgJxHxORoKOqAYaSP17CMvQDLxONIjjFjymKZPScU9S3t22ak6M8Bl4uakDHI0evaX1w9xzInQmCGluq4TaT9BUlPMSFryYkUihMdoSLqGCsSJ8pPZAyk8NUofDkJpSmg4U39PJIgrNeGB6cwuVYteJp7DgP/nd2M9uPYTKqJYE4HnywYxgzqEWSKwTyXBmk0MQVhScy/EIyQR1ia3kgnCXXx7mbQuqm6tWru/LNdv8kiK4BicgApwwRWogzvQAE2AQQpewRS8WS/W1Hq3PuatBSufOQR/YH3+AEjXl7g=</latexit> 
+
+¯Z(1) 
+
+<latexit sha1_base64="5W686PWj+/FHq/EV0nHYetfszTw=">AAACAHicbVDLSgMxFM3UV62v0S7dBItQQcqMSHVZdOOygn1gO5ZMmmlDk8yQZIRhmI0/4rauxK0fIvg3ZtoutPVA4HDOvdyT40eMKu0431ZhbX1jc6u4XdrZ3ds/sA+P2iqMJSYtHLJQdn2kCKOCtDTVjHQjSRD3Gen4k9vc7zwTqWgoHnQSEY+jkaABxUgbaWCX0z5HeowRSx+z7CmtumfZwK44NWcGuErcBamABZoD+6s/DHHMidCYIaV6rhNpL0VSU8xIVurHikQIT9CI9AwViBPlpbPwGTw1yhAGoTRPaDhTf2+kiCuVcN9M5knVspeL59Dn//m9WAfXXkpFFGsi8PxYEDOoQ5i3AYdUEqxZYgjCkpq8EI+RRFibzkqmCHf526ukfVFz67X6/WWlcbOopAiOwQmoAhdcgQa4A03QAhgk4BVMwZv1Yk2td+tjPlqwFjtl8AfW5w8t7pX/</latexit> 
+
+Z(1) 
+
+<latexit sha1_base64="J186KKFX+eTVRzJsHImp+A2xcKg=">AAAB8nicbVDLSgMxFM3UV62vqks3wSK4KjMi1WVRFy4r2AdMh5JJM21oJhmSO0IZ+hluXCji1q9x59+YaWehrQcCh3PuJeeeMBHcgOt+O6W19Y3NrfJ2ZWd3b/+genjUMSrVlLWpEkr3QmKY4JK1gYNgvUQzEoeCdcPJbe53n5g2XMlHmCYsiMlI8ohTAlby+zGBMSUiu5sNqjW37s6BV4lXkBoq0BpUv/pDRdOYSaCCGON7bgJBRjRwKtis0k8NSwidkBHzLZUkZibI5pFn+MwqQxwpbZ8EPFd/b2QkNmYah3Yyj2iWvVz8z/NTiK6DjMskBSbp4qMoFRgUzu/HQ64ZBTG1hFDNbVZMx0QTCralii3BWz55lXQu6l6j3ni4rDVvijrK6ASdonPkoSvURPeohdqIIoWe0St6c8B5cd6dj8VoySl2jtEfOJ8/eG+RZQ==</latexit> 
+
+D
+
+Imbalanced 
+
+Dataset 
+
+<latexit sha1_base64="DchkDG+V69etYtu3im2v2rJZ+hA=">AAAB8HicbVDLSgNBEOyNrxhfUY9eBoMQL2FXJHoMevEYwTwkWULvZDYZMrO7zMwKIeQrvHhQxKuf482/cZLsQRMLGoqqbrq7gkRwbVz328mtrW9sbuW3Czu7e/sHxcOjpo5TRVmDxiJW7QA1EzxiDcONYO1EMZSBYK1gdDvzW09MaR5HD2acMF/iIOIhp2is9JiWuwOUEs97xZJbcecgq8TLSAky1HvFr24/pqlkkaECte54bmL8CSrDqWDTQjfVLEE6wgHrWBqhZNqfzA+ekjOr9EkYK1uRIXP198QEpdZjGdhOiWaol72Z+J/XSU147U94lKSGRXSxKEwFMTGZfU/6XDFqxNgSpIrbWwkdokJqbEYFG4K3/PIqaV5UvGqlen9Zqt1kceThBE6hDB5cQQ3uoA4NoCDhGV7hzVHOi/PufCxac042cwx/4Hz+ACyikAQ=</latexit> 
+
+u(ω) (c) Figure 1. Example of the GeLDA framework with an L = 3 
+
+task adapter in Z(1) . (a) Repurposing the FM into a downstream recognition model via adapter layers. (b) Training a latent diffusion model to synthesize features in Z(1) , conditioned on augmented label information u(γ) to transfer cues to the low-resource class 
+
+γ from related high-resource classes. (c) Fine-tuning the model using synthesized and ground-truth samples in Z(1) .
+
+samples in Dγ , while zero-shot corresponds to |D γ | = 0 .The imbalance is detrimental when the empirical distribu-tion ˆp(x|y = γ) induced from Dγ poorly approximates 
+
+p(x|y = γ). In Sec. 6.2, we show decreasing performance of the image classification models in the tail classes. As a remedy, GeLDA relates a low-resource class to its semanti-cally related high-resource classes during the synthesis. 
+
+Subdomains with severer label imbalance: If the task can be divided into subdomains (e.g., language-agnostic SER broken down into language-specific SER), label im-balance can get severe. With a shared label space Y, we write D = SKk=1 
+
+FCc=1 D(k)
+
+c , where D(k)
+
+c denotes class-c
+
+samples from subdomain k. Even if class c has enough samples across all the subdomains, it may be scarce in the target subdomain κ, i.e., |D c| ≫ |D (κ)
+
+c | (e.g., missing SUR -
+
+PRISE samples in the German corpus). We assume DA can leverage the similarity between a low-resource class in κ
+
+and a related high-resource subdomain k′ (e.g., SURPRISE 
+
+in the English set). We thus propose conditioning the gener-ative DA model on discriminative subdomain information (e.g., the target language) to implicitly guide generation via related subdomains that have more data. 
+
+4. Design Principles of GeLDA 
+
+4.1. Why Data Augmentation in Latent Space? 
+
+The goal of DA for a low-resource class γ is to reconstruct its class-conditional distribution p(x|y = γ). However, na ¨ıve strategies (e.g., sample interpolation) are often subop-timal as the raw data distribution p(x|y) is heavily affected by task-irrelevant nuances, such as sensor noise, visual style, speaker identity, or acquisition conditions, that vary indepen-dently of y. As a result, DA may fail to preserve semantic 3Semantics-Aware Generative Latent Data Augmentation for Learning in Low-Resource Domains X1  
+
+> X2
+> p(x|c= 1)
+> p(x|c= 2)
+> Decision Boundary
+
+(a) Z1   
+
+> Z2
+> p(z|c= 1)
+> p(z|c= 2)
+> Decision Boundary
+
+(b) Z1       
+
+> Z2
+> p( ) (z|c= 1)
+> p( ) (z|c= 2)
+> z∼ D ( )
+> c= 1
+> z∼ D ( )
+> c= 2
+
+(c) Z1           
+
+> Z2
+> p(k’) (z|c= 1)
+> p(k’) (z|c= 2)
+> ¯z∼ G (N(0 , I ); u(c= 1 ,))
+> ¯z∼ G (N(0 , I ); u(c= 2 ,))
+
+(d) Figure 2. Illustration of the proposed GeLDA in the feature space. (a) Original data distribution X with a complex decision boundary. (b) More separable class distributions in the learned feature space Z. (c) Few samples from the low-resource subset D(κ). Contours are from the unknown ground-truth distribution of subdomain κ. (d) GeLDA’s feature-space data augmentation results ¯z, whose sample distribution resemble the distribution of k′. κ and k′ are semantically similar subdomains. 
+
+relatedness between the generated samples and the label. To address this, GeLDA augments data in a latent embed-ding space Z extracted from an FM and task adapter. This space is more structured than X , as it abstracts away task-irrelevant low-level variations while preserving task-relevant semantic information. Formally, 
+
+Proposition 1. Given a pair of samples (xi, x j ) and their task-relevant semantic similarity Esemantic (xi, x j ), there ex-ists a function F : RD → RM with M < D , whose output 
+
+zi ← F (xi) and zj ← F (xj ) provide a better preserva-tion of the original semantic similarity in the form of their Euclidean distance than the raw data do. Formally: 
+
+Exi,x j ∼p(xdata ) ∥zi − zj ∥22 − E semantic (xi, x j )
+
+< Exi,x j ∼p(xdata ) ∥xi − xj ∥22 − E semantic (xi, x j ) . (2) where p(xdata ) denotes the data distribution. Figs. 2a and 2b contrast the input and feature spaces in terms of their relationship with the complexity of the de-cision boundary. While this proposition is not proven 1, it is strongly supported by empirical studies in the literature. Prior work shows that supervised feature transformations progressively increase class separability, abstraction, and task-specificity in deeper layers (Rangamani et al., 2023; Papyan et al., 2020). Similarly, latent diffusion models oper-ate in a structured latent space Z rather than X to generate high-level semantics first, improving stability and semantic fidelity (Rombach et al., 2022; Liu et al., 2023a). 
+
+4.2. Class-Conditioned GeLDA 
+
+Inspired by this, we train the generative model directly in the latent space Z(l), reducing the burden of modeling low-level variability and making it easier to exploit semantic relatedness between the low-resource class γ and its rele-vant high-resource classes. Our key assumption is that the 
+
+> 1
+
+Our empirical analysis measures the average intra-class Eu-clidean distance between ImageNet-LT test samples; CLIP embed-dings yield 37.8% smaller distances than raw images. 
+
+semantic similarity between labels is learned in an embed-ding space u(c). Hence, u(γ) can be seen as an augmented 
+
+version of the label information γ, overcoming its underrep-resentedness via its semantic relationship with other classes. The augmented reference conditions are generated as fol-lows: 
+
+z = G(ϵ; u(γ)) , ϵ ∼ N (0 , I) (3) where G denotes a conditional generator. For example, u(c) can be a multimodal FM (e.g., CLIP (Rad-ford et al., 2021)) that learns the semantic relationship be-tween images and text in a shared embedding space, with text labels also contextualized. Hence, even if γ is unseen during image recognition training, u(γ) can still condition generation via its semantic similarity to other classes. 
+
+4.3. Subdomain and class-conditioned GeLDA 
+
+In order to consider subdomain specificity, our key depar-ture from class-conditional generation is to additionally condition on a subdomain reference κ alongside the low-resource label condition γ. This extra conditioning pro-vides structural cues about the intended latent distribution, enabling more controllable data augmentation for κ. To this end, we redefine the label augmentation process in Eq. (3) by putting κ as additional information: u(γ, κ ). For a language-specific subdomain of the SER problem, for ex-ample, u(γ, κ ) computes an embedding vector that informs the generation process of the target emotion γ and the lan-guage subdomain κ altogether. In doing so, we postulate that u(γ, κ ) can be compared with u(γ, k ′), an adjacent subdomain’s conditioning vector due to the cross-language similarity between κ and k′. Figs. 2c and 2d illustrate this process: In 2c, with only two samples per class, i.e., 
+
+|D (κ)
+
+> c=1
+
+| = |D (κ)
+
+> c=2
+
+| = 2 , the empirical distribution ˆp(κ)(x|y)
+
+must be unstable compared to the ground-truth p(κ)(x|y)
+
+(the contours). GeLDA conditions on both γ and κ to syn-thesize samples that follow the adjacent subdomain-specific distributions p(k′)(x|y). Although there is still some dis-crepancy, the learned decision boundary in 2d is comparable to the ground-truth (GT) in 2c. 4Semantics-Aware Generative Latent Data Augmentation for Learning in Low-Resource Domains 
+
+4.4. On the choice of a proper feature layer 
+
+If the task adapter consists of multiple layers, GeLDA can operate in different embedding spaces Z(l), which involves an inherent trade-off. If l is too close to the final layer L, the layers before l (i.e., the first linear layer in Fig. 1) cannot be updated by the generated data, reducing the model’s flexi-bility and the benefit of DA during fine-tuning. Moreover, as l increases, class representations in Z(l) tend to become increasingly isotropic and convex, and may collapse into a simplex structure (Rangamani et al., 2023; Papyan et al., 2020), thereby diminishing the feature space’s diversity and the effectiveness of GeLDA. Conversely, applying GeLDA at very early layers or to feature spaces learned by a weak FM yields noisy, unstable representations, making it difficult for the generative model to capture semantically meaning-ful variations. Thus, selecting an appropriate layer l for the given task is essential for GeLDA. We investigate this trade-off in Sec. 6.1. 
+
+5. Training Methods for GeLDA 
+
+Fig. 1 illustrates the overall pipeline of GeLDA. In this sec-tion, we consider the class-imbalance setting characterized by a low-resource class Dγ , while the same procedure can be applied to the subdomain imbalance case, D(κ) 
+
+> γ
+
+, too. 
+
+Stage 1: Generic recognition model training: Fig. 1a depicts Stage 1. Throughout all stages, the FM is kept fully frozen , so that GeLDA can work with any black-box FMs. We instead train a lightweight task adapter H on top of the FM representations. For speech FMs, we apply temporal average pooling to aggregate frame-level representations into an utterance-level feature. For images, CLIP’s class token is extracted as features. In this stage, the model is trained on the full, imbalanced dataset D, which can lead to suboptimal performance on the low-resource class γ.
+
+Stage 2: Training a diffusion model for GeLDA: To augment training data for the low-resource class γ, we train a diffusion model to synthesize feature vectors in γ. Unlike latent diffusion models (Rombach et al., 2022) learned to work with an autoencoder, our diffusion model generates in a task-specific feature space Z(l). To incorporate condi-tioning as in Eq. 3, we adopt CFG (Ho & Salimans, 2021). After training, we generate augmented latent vectors ¯z(l)
+
+from the diffusion model and construct the augmented set 
+
+¯Dγ . Fig. 1b describes the process. 
+
+Stage 3: Fine-tuning with augmented latent vectors: 
+
+As shown in Fig. 1c, we fine-tune the recognition model on the original low-resource dataset Dγ by passing it through the FM and adapter layers. As for the augmented feature set 
+
+¯Dγ , they are fed directly to H(l+1) , as they are already in the Z(l) space. In doing so, we freeze the FM and all layers up to the target latent space ≤ l, and fine-tune layers beyond it (i.e., > l ). After this stage, the resulting model special-izes from a generic recognition model into a class-specific recognition model for the low-resource class γ.
+
+6. Experiments 
+
+We evaluate the effectiveness and generalization of GeLDA on two challenging tasks from different domains: zero-shot SER and imbalanced image classification. 
+
+6.1. Zero-shot Speech Emotion Recognition 
+
+6.1.1. T ASK DEFINITION AND DATASET 
+
+In multilingual SER, the output space Y represents emo-tion classes and is shared across subdomains k, where each subdomain corresponds to a language. We define a low-resource language such that the κ-th subset D(κ) contains no labeled samples except for a few NEUTRAL utterances, i.e., Y(κ) = {NEUTRAL }, which yields a zero-shot setting. We collect a multilingual speech emotion dataset following EmoBox (Ma et al., 2024a); its language and emotion dis-tribution is summarized in Table 5. The dataset exhibits a heavy but common imbalance issue across emotions and languages (e.g., > 50 hours of English vs. 0.21 hours of German, missing SURPRISE for German and Spanish). To simulate a zero-shot recognition environment, we select a target low-resource language κ and we remove all its sam-ples except those in the neutral class, repurposing D(κ) into 
+
+D(κ) 
+
+> NEU
+
+= {(xi, y i) | yi = NEUTRAL }. We use 3 folds and report average results. The total number of speech samples is 84 ,283, and the average duration is 3.52 seconds. 6.1.2. E XPERIMENT SETUP 
+
+We add task adapter layers to three pretrained FMs, WAV LM-LARGE (Chen et al., 2022b), EMOTION 2VEC - 
+
+> BASE
+
+(Ma et al., 2024b), and W HISPER -LARGE (Radford et al., 2023), to build SER models. We use task adapters with L = 3 linear layers with ReLU activations, and choose one of the task adapter layer output spaces to train the latent diffusion model. For the generic model pretraining stage, we merge two partitions: all language subsets except for the target, D\κ, and the neutral utterances from the target, D(κ) 
+
+> NEU
+
+.For the second stage, we condition the diffusion model on emotion class c via a learnable lookup table. To condition the model on subdomain κ, we use a randomly sampled fea-ture embedding z(l) ∈ D (κ) when operating in Z(l) space. Ablation study on this choice will be described in Table 2. The diffusion model then generates new feature vectors ¯z(l)
+
+for each emotion c and the target language κ, forming a synthetic dataset ¯D(κ). Finally, in the fine-tuning stage, the 5Semantics-Aware Generative Latent Data Augmentation for Learning in Low-Resource Domains 
+
+task adapter layers later than l are updated using neutral GT examples D(κ) 
+
+> NEU
+
+as well as the synthesized examples ¯D(κ) in 
+
+Z(l). Additional implementation details are in Appendix B. Due to the strong class imbalance in emotional speech datasets, we evaluate SER models using unweighted aver-age (UA) recall and weighted average (WA) recall (Schuller et al., 2009). UA computes recall per emotion and then av-erages across classes, preventing the majority classes from dominating the score. We also report Macro-F1, which averages the per-class F1 scores. 6.1.3. C OMPARISON MODELS 
+
+For comparison, we construct two baseline models using the original data (i.e., without augmentation): (1) a PRE -
+
+TRAINED SER model trained on all other languages than κ,
+
+D\κ, serving as a lower bound, and (2) a model trained on the full multilingual dataset D, serving as an ORACLE upper bound. We omit the results from a language-specific model trained or fine-tuned on the GT D(κ) 
+
+> NEU
+
+, as it is suboptimal due to the lack of labeled data: the multilingual version is better as it leverages language-agnostic features. As input-space DA baselines, we use SOTA speech trans-lation systems, S EAMLESS M4T-L ARGE and S EAMLESS 
+
+EXPRESSIVE (Communication et al., 2023), to synthesize speech in X , where S EAMLESS EXPRESSIVE is a variant of SEAMLESS M4T focusing on speech expressiveness. These systems translate a prompt utterance in the source language into the target language while imitating the source’s speak-ing style and speaker identity. For any given target language 
+
+κ, we use randomly chosen English utterances with varying emotion categories as sources. These input-space generative models require > 20 K hours of training data and 450M parameters, making them difficult to generalize to low-resource target languages. S EAMLESS 
+
+EXPRESSIVE supports only French, German, Italian, and Spanish in our dataset, so we report the average results over these four target languages. In contrast, GeLDA requires only 83 hours of data and 21M parameters for its diffusion-based generation, showing much greater efficiency and gen-eralization capability, beyond the four targets this section covers (Appendix D.3). Additional efficiency and perfor-mance comparisons are provided in Figs. 3 and Appendix C. 6.1.4. R ESULTS 
+
+Unaugmented baselines: Table 1 shows results for three different backbone FMs, averaged over all choices of target languages. Pretraining on the non-target multilingual set shows a certain level of effectiveness (UA 52.4, 42.8, and 57.4% for W AV LM-LARGE , EMOTION 2VEC -BASE , and WHISPER -LARGE , respectively). This is because the model learns the shared emotion expressions across languages. 
+
+Input-space DA baselines: SEAMLESS EXPRESSIVE out-performs S EAMLESS M4T for all three FM backbones, but neither improves performance over the baselines, and both remain biased toward predicting NEUTRAL . We attribute this to the difficulty of generating high-quality, emotion-preserving speech in the input space. 
+
+Our proposed GeLDA method: We apply GeLDA at different adapter layers for comparison and achieve the best average performance at Z(0) for all backbone FMs. GeLDA outperforms the baseline models, W AV LM-LARGE ,
+
+EMOTION 2VEC -BASE , and W HISPER -LARGE , by 0.2%, 3.2%, and 6.2% in UA, respectively. Moreover, GeLDA’s improvement is more prominent in emotion categories where the baseline models suffer (e.g., 18.0% point im-provement in FEAR and 14.0% in SURPRISE compared to the best baseline backbone, W HISPER -LARGE ). These re-sults demonstrate that GeLDA effectively addresses the data imbalance issue by improving the long-tail classes’ perfor-mance more. We attribute the superiority of Z(0) to its rich, well-structured representations inherited from the FMs. Augmenting at Z(0) with a sufficiently powerful diffusion model generates diverse, high-quality samples and enables the fine-tuning of more downstream layers. Conversely, 
+
+Z(1) and Z(2) discard task-irrelevant information, which reduces sample diversity. Appendix D provides additional ablation tests. As shown in Fig. 4, although these feature spaces can simplify generation, reduced diversity leads to performance degradation as the number of augmented sam-ples increases. We also observe that the input-space DA methods show a sharp decrease in performance as they aug-ment more data. Per-language breakdowns of the results are also provided in Appendix D.3. 10 7 10 8 10 9             
+
+> Number of Parameters
+> 40
+> 50
+> 60
+> UA (%)
+> GeLDA (0)
+> GeLDA (1)
+> GeLDA (2)
+> Seamless Expressive
+> Seamless M4T
+> 10 710 810 9
+> Number of Parameters
+> 40
+> 50
+> 60
+> WA (%)
+> GeLDA (0)
+> GeLDA (1)
+> GeLDA (2)
+> Seamless Expressive
+> Seamless M4T
+> 10 710 810 9
+> Number of Parameters
+> 40
+> 50
+> 60
+> Macro-F1 (%)  GeLDA (0)
+> GeLDA (1)
+> GeLDA (2)
+> Seamless Expressive
+> Seamless M4T
+
+Figure 3. Graph of GeLDA performance across various diffusion model sizes. Results use W HISPER -LARGE as the backbone FM with 200 augmented samples per emotion. 
+
+Ablation study on different diffusion model sizes: Fig. 3 analyzes the effect of diffusion model size. Small diffusion models suffice for DA in Z(1) and Z(2) , and can outper-form Z(0) due to their lower-dimensional, more abstract feature spaces that require less generative power. As model size increases, however, they become more prone to over-fitting. In contrast, the lowest-layer feature Z(0) tends to contain richer information, which necessitates a more capa-ble diffusion model to improve the representativeness of the synthesized features. Finally, we emphasize that, compared to input-space DA, which requires larger models to capture 6Semantics-Aware Generative Latent Data Augmentation for Learning in Low-Resource Domains 
+
+Table 1. Average test results for zero-shot SER experiments on four target languages: French, German, Spanish, Italian. Aug. Space indicates the different locations where DAs are applied. For the augmentation, we generate 200 samples per emotion. “UA w/o Neutral” indicates the UA over all emotions except NEUTRAL . D\κ, D(κ) 
+
+> NEU
+
+, and ¯D(κ), indicate the original dataset without target language κ, the target language κ’s subset with only neutral emotion samples, and the augmented dataset for κ, respectively.                                                                                                                                                                                                                                                                                                                
+
+> FM Model Pretrain Fine-tune Aug. Space Per emotion recall (%) UA WA Macro-F1 UA w/o Dataset Dataset Angry Disgust Fear Happy Neutral Sad Surprise (%) (%) (%) Neutral (%)
+> WavLM-large Pretrained D\κ––67.5 46.0 34.0 54.5 71.8 50.0 31.5 52.4 53.2 52.5 48.9 Oracle D––79.2 67.8 63.5 68.0 76.8 72.5 61.0 70.8 71.0 71.1 69.6 Seamless M4T D\κSD(κ)
+> NEU D(κ)
+> NEU
+> S¯D(κ)X32.5 15.5 10.8 26.0 96.0 33.0 17.5 34.7 34.9 30.7 23.5 Seamless Expressive 45.8 20.8 22.0 34.8 91.0 46.0 33.0 42.8 42.9 40.6 34.0
+> D\κSD(κ)
+> NEU D(κ)
+> NEU
+> S¯D(κ)
+> Z(0) 68.5 47.0 42.7 43.0 64.7 51.7 47.5 52.6 53.3 52.1 50.6 GeLDA (Ours) Z(1) 65.0 43.7 47.7 44.7 53.2 47.0 42.5 49.6 51.0 48.8 49.2
+> Z(2) 66.7 46.5 34.2 52.5 59.5 55.0 45.0 51.8 52.1 50.6 50.7 emotion2vec-base Pretrained D\κ––58.2 40.7 27.5 33.2 52.7 53.7 23.5 42.8 43.0 42.7 41.0 Oracle D––66.2 57.2 50.0 49.2 69.5 65.0 49.5 58.8 59.0 58.9 56.9 Seamless M4T D\κSD(κ)
+> NEU D(κ)
+> NEU
+> S¯D(κ)X18.2 12.5 9.2 6.7 94.0 20.2 6.5 25.5 25.3 19.5 13.1 Seamless Expressive 32.7 16.7 24.5 17.5 92.2 41.0 13.5 36.0 35.7 32.8 25.7
+> D\κSD(κ)
+> NEU D(κ)
+> NEU
+> S¯D(κ)
+> Z(0) 44.2 47.2 37.2 31.0 78.2 44.2 29.0 46.0 45.0 44.4 40.3 GeLDA (Ours) Z(1) 47.2 38.0 33.2 26.0 54.5 43.2 34.5 39.9 39.7 38.4 37.4
+> Z(2) 58.5 44.5 32.7 28.7 55.7 45.0 28.5 43.1 42.9 41.9 40.9 Whisper-large Pretrained D\κ––68.0 46.2 41.7 56.0 76.0 64.0 43.5 57.4 58.5 57.2 54.1 Oracle D––85.0 71.2 70.0 75.7 88.5 74.5 70.5 77.0 77.4 77.2 75.0 Seamless M4T D\κSD(κ)
+> NEU D(κ)
+> NEU
+> S¯D(κ)X39.2 22.2 13.5 38.0 97.2 36.5 25.5 40.4 41.2 37.9 30.0 Seamless Expressive 49.7 29.7 32.2 46.2 94.2 41.7 49.0 49.1 49.3 48.7 40.8
+> D\κSD(κ)
+> NEU D(κ)
+> NEU
+> S¯D(κ)
+> Z(0) 75.5 51.2 59.7 64.0 77.5 54.7 57.5 63.6 64.5 63.3 61.1 GeLDA (Ours) Z(1) 69.5 53.5 44.0 62.0 62.2 60.0 54.5 58.2 59.1 57.6 57.7
+> Z(2) 70.5 56.0 47.5 59.5 73.2 55.5 51.5 59.9 60.7 59.4 57.5
+
+Table 2. Ablation study on subdomain conditioning for the diffu-sion model. The backbone FM is W HISPER -LARGE .                             
+
+> Method Aug. Space UA (%) WA (%) Macro-F1 (%) UA w/o Neutral (%)
+> No language condition
+> Z(0) 57.8 58.7 56.5 50.7
+> Z(1) 57.9 58.7 56.9 51.3
+> Z(2) 57.6 58.8 56.6 50.8 Fixed language embedding
+> Z(0) 63.1 64.0 63.1 60.6
+> Z(1) 58.9 59.6 58.4 59.0
+> Z(2) 59.2 60.1 59.3 58.0
+
+surface-level variability, our approach achieves significantly better performance while requiring a model size more than an order of magnitude smaller. 
+
+Ablation study on different subdomain conditioning: 
+
+To assess the role of subdomain (language) conditioning, we compare several conditioning strategies in Table 2. Remov-ing conditioning causes a large performance drop, showing that subdomain conditioning is essential for effective DA in zero-shot SER. We also test a fixed language embedding baseline by extracting the learned language embedding to-ken from W HISPER and using the same embedding for all utterances in a given language. This performs slightly worse than our method but is overall comparable. We hypothesize that our random embedding selection provides additional implicit subdomain cues beyond language, such as speaker characteristics, thereby increasing diversity and improving robustness. 
+
+Additional ablations: Since the GT D(κ) is already a few-shot dataset for the subdomain (language) κ, additional results for this few-shot setting are provided in Appendix E. 
+
+6.2. Imbalanced Image Classification 
+
+6.2.1. T ASK DEFINITION AND DATASET 
+
+We further evaluate GeLDA on imbalanced image classifica-tion using ImageNet-LT and Places-LT datasets (Liu et al., 2019). ImageNet-LT is derived from ImageNet-2012 (Rus-sakovsky et al., 2015) and contains 1,000 categories and 186.3K images. Places-LT is a large-scale dataset for place recognition and scene understanding, with 365 categories and 1.7M images. Following prior work, we report accuracy on MANY (> 100 samples per class), MEDIUM (20 –100 ), and SMALL (< 20 ) classes to reflect long-tailed learning. Our goal is to improve accuracy on SMALL classes while preserving performance on MANY and MEDIUM classes. 6.2.2. E XPERIMENT SETUP 
+
+As the baseline, we adopt LIFT (Shi et al., 2024), which uses CLIP (Radford et al., 2021) V IT-B/16 as the backbone and achieves SOTA performance. We implement GeLDA on top of LIFT and set L=1 for the task adapter to match its architecture. In GeLDA, we condition the diffusion model on the CLIP text embedding obtained from the prompt “This is a picture of [label]”. For each label in the SMALL 
+
+classes, we generate 100 additional augmented samples and fine-tune LIFT using them along with the existing labeled samples. Additional details are in Appendix B. Among the compared methods, LiVT (Xu et al., 2023) and DeiT-LT (Rangwani et al., 2024) are trained from scratch, while BALLAD (Ma et al., 2021), VL-LTR (Tian et al., 2022), and LIFT (Shi et al., 2024) fine-tune CLIP on the target dataset. LDMLR (Han et al., 2024) also performs generative latent DA, but does not leverage FMs or semantic relationships across subdomains. In addition, we employ 7Semantics-Aware Generative Latent Data Augmentation for Learning in Low-Resource Domains 
+
+Table 3. Imbalanced image classification performance (%) on ImageNet-LT and Places-LT.                                                                                                                             
+
+> Method Aug. Space Overall MANY MEDIUM SMALL
+> Dataset: ImageNet-LT LiVT (Xu et al., 2023) –60.9 73.6 56.4 41.0 DeiT-LT (Rangwani et al., 2024) –59.1 66.6 58.3 40.0 BALLAD (Ma et al., 2021) –75.7 79.1 74.5 69.8 VL-LTR (Tian et al., 2022) –77.2 84.5 74.6 59.3 LCReg ∗(Liu et al., 2024) Z55.3 66.1 52.8 36.2 LDMLR ∗(Han et al., 2024) Z44.8 57.0 41.2 23.4 LIFT (Shi et al., 2024) –77.0 80.2 76.1 71.5 + TTE 78.3 81.2 77.4 73.4
+> Augmentation on top of LIFT
+> SD3 X76.8 80.5 76.5 67.6 + TTE 78.0 81.4 77.7 69.2 SD3 Qwen X76.8 80.4 76.4 68.0 + TTE 77.9 81.3 77.7 69.2 GeLDA (Ours) Z(0) 77.0 79.7 75.7 73.9 + TTE 78.2 80.8 77.1 74.7
+> Dataset: Places-LT LiVT (Xu et al., 2023) –40.8 48.1 40.6 27.5 BALLAD (Ma et al., 2021) –49.5 49.3 50.2 48.4 VL-LTR (Tian et al., 2022) –50.1 54.2 48.5 42.0 LIFT (Shi et al., 2024) –51.5 51.3 52.2 50.4 + TTE 52.2 51.7 53.1 50.9
+> Augmentation on top of LIFT
+> SD3 X50.9 51.8 52.1 46.3 + TTE 51.6 52.0 53.0 47.4 SD3 Qwen X50.8 51.5 52.5 45.6 + TTE 51.5 51.7 53.3 47.0 GeLDA (Ours) Z(0) 51.5 50.6 51.8 52.5
+> + TTE 52.1 51.4 52.6 52.4
+> *: Train ResNet from scratch as the backbone model.
+
+Stable Diffusion 3 (SD3) (Esser et al., 2024), a SOTA image generation model, for input-space DA. SD3 uses the same text prompt as GeLDA, and SD3-Q WEN uses Qwen (Yang et al., 2024) to generate diverse prompts per label (image examples in Appendix F). We apply the test-time ensem-bling (TTE) (Shi et al., 2024) technique to each method to improve robustness at test time. 6.2.3. R ESULTS 
+
+Classification of imbalanced image datasets (original benchmark setup): Tables 3 present the results of dif-ferent augmentation methods applied on top of the LIFT baseline model for ImageNet-LT and Places-LT. Using SD3 as an augmentation method degrades the performance of the SMALL class, suggesting its generated samples are not helpful and can further bias the classifier toward MANY and 
+
+MEDIUM classes. In contrast, GeLDA achieves new SOTA performance on the SMALL classes for both datasets (74.7 and 52.5%, respectively), improving tail accuracy while maintaining nearly the same performance for the MANY and 
+
+MEDIUM classes. 
+
+Zero-shot image classification: Since each SMALL class has at least five samples, we further evaluate GeLDA under more extreme long-tail conditions by randomly selecting 20 SMALL classes and simulating 5, 3, 1, and 0-shot train-ing samples per class, i.e., by discarding some samples. We repeat each experiment five times and report the aver-
+
+Table 4. Performance (%) on few- and zero-shot image classifica-tion results on ImageNet-LT and Places-LT                                                                                                                                                  
+
+> Method Aug. Space Overall Many Med Small 5-shot 3-shot 1-shot 0-shot
+> Dataset: ImageNet-LT LIFT –76.5 80.3 76.2 66.9 54.7 44.3 26.2 8.3 + TTE 77.8 81.3 77.6 68.7 56.3 47.4 26.7 10.2
+> Augmentation on top of LIFT
+> SD3 X76.6 80.5 76.5 66.1 57.2 55.2 54.8 41.4 + TTE 77.9 81.5 77.9 67.4 59.0 58.8 56.2 42.6 SD3 Qwen X76.6 80.3 76.5 66.3 54.3 56.2 51.4 42.5 +TTE 77.8 81.4 77.9 67.5 56.6 59.2 52.2 43.8 GeLDA (Ours) Z(0) 76.9 79.8 75.6 72.7 62.9 67.4 65.0 56.2 + TTE 78.1 80.9 77.1 73.9 65.2 69.7 65.9 57.5
+> Dataset: Places-LT LIFT –50.3 51.4 52.5 43.2 46.0 25.4 11.0 3.2 +TTE 51.0 52.0 53.4 43.7 46.7 26.3 11.5 3.4
+> Augmentation on top of LIFT
+> SD3 X50.4 51.6 52.4 43.7 44.8 36.0 36.4 27.6 +TTE 51.2 52.0 53.3 44.8 46.8 37.5 37.4 28.8 SD3 Qwen X50.3 51.3 52.7 42.8 42.3 34.8 34.2 26.3 +TTE 51.1 51.7 53.6 44.4 44.4 36.4 35.8 27.9 GeLDA (Ours) Z(0) 50.9 50.3 51.6 50.6 52.8 44.9 48.1 35.5
+> +TTE 51.7 51.3 52.6 50.2 52.6 45.1 46.7 33.4
+
+aged results in Tables 4. GeLDA significantly improves performance on fewer and zero-shot classes with more pro-nounced improvements as the number of original samples decreases. In the zero-shot case, for example, training only with GeLDA-synthesized samples improves accuracy by 47.3% and 32.1% points on ImageNet-LT and Places-LT, respectively. Additionally, GeLDA achieves the best overall performance across all settings, indicating its effectiveness under severe imbalance and when adding new categories to existing classifiers. We postulate that the label information, fed to the CLIP text encoder, plays a key role as it contains the semantics about the label through the FM’s pretraining, which LIFT might have forgotten during its fine-tuning. 
+
+7. Conclusion and Future Work 
+
+We introduced GeLDA, a semantics-aware generative la-tent data augmentation (DA) framework that addresses data scarcity using conditional diffusion models. By operating in a low-dimensional latent space, GeLDA was substan-tially more efficient than input-space DA. We introduced augmented label conditioning to provide semantic cues that help low-resource classes and subdomains connect to high-resource data. We also analyzed how different choices of latent space affect GeLDA. We demonstrated its effective-ness and SOTA performance on two practical yet challeng-ing tasks: zero-shot speech emotion recognition for low-resource languages and long-tailed image classification. While GeLDA is promising, several directions remain open. We applied it only to a lightweight task adapter. Although this ensures foundation-model-agnostic applicability, the la-tent spaces of the foundation model’s intermediate layers re-main underexplored. In addition, we focused on recognition tasks, leaving the opportunity open to extending GeLDA to sequence learning tasks, such as TTS and ASR. 8Semantics-Aware Generative Latent Data Augmentation for Learning in Low-Resource Domains 
+
+8. Broader Impact 
+
+The motivation of this work is to broaden the practical ac-cessibility of recent advances in deep learning. Although large foundation models have demonstrated strong perfor-mance across a wide range of tasks, they are often difficult to apply directly in data-scarce real-world settings, including low-resource language technologies, healthcare applications, and recognition of underrepresented (minority) classes. We focus on two representative challenges, zero-shot speech emotion recognition and highly imbalanced image classifica-tion, and demonstrate that the proposed GeLDA framework can be applied effectively and efficiently across various do-mains. By enabling more reliable learning under limited supervision and skewed data distributions, this approach has the potential to improve performance for languages, classes, and objects that are often underrepresented in real-world datasets and, consequently, in the models trained on those data. Eventually, we expect that the GeLDA method can im-prove the privacy-preservation and social bias in AI models by overcoming the inherent lack of labeled data issue. 
+
+References 
+
+Bae, J., Kuznetsova, A., Manocha, D., Hershey, J. R., Krist-jansson, T. T., et al. Generative data augmentation chal-lenge: Zero-shot speech synthesis for personalized speech enhancement. In Proc. of the IEEE International Con-ference on Acoustics, Speech, and Signal Processing (ICASSP) , pp. 1–5, 2025. Bae, J.-S., Lee, J. Y., Lee, J.-H., Mun, S., Kang, T., et al. Latent Filling: Latent space data augmentation for zero-shot speech synthesis. In Proc. of the IEEE International Conference on Acoustics, Speech, and Signal Processing (ICASSP) , pp. 11166–11170, 2024. Baevski, A., Zhou, Y., Mohamed, A., and Auli, M. wav2vec 2.0: A framework for self-supervised learning of speech representations. In Advances in Neural Information Pro-cessing Systems (NeurIPS) , 2020. Ban, S., Kong, H., and Kim, K. Data augmentation with diffusion for open-set semi-supervised learning. In Advances in Neural Information Processing Systems (NeurIPS) , 2024. Bo-Hao, S., Upadhyay, S. G., and Chi-Chun, L. Toward zero-shot speech emotion recognition using llms in the absence of target data. In Proc. of the IEEE International Conference on Acoustics, Speech, and Signal Processing (ICASSP) , pp. 1–5, 2025. Bommasani, R., Hudson, D. A., Adeli, E., Altman, R. B., Arora, S., et al. On the opportunities and risks of founda-tion models. CoRR , abs/2108.07258, 2021. Chen, S., GE, C., Tong, Z., Wang, J., Song, Y., et al. Adapt-Former: Adapting vision transformers for scalable visual recognition. In Advances in Neural Information Process-ing Systems (NeurIPS) , 2022a. Chen, S., Wang, C., Chen, Z., Wu, Y., Liu, S., et al. WavLM: Large-scale self-supervised pre-training for full stack speech processing. IEEE Journal of Selected Topics in Signal Processing , 16(6):1505–1518, 2022b. Cheung, T.-H. and Yeung, D.-Y. MODALS: Modality-agnostic automated data augmentation in the latent space. In Proc. of the International Conference on Learning Representations (ICLR) , 2021. Chu, P., Bian, X., Liu, S., and Ling, H. Feature space aug-mentation for long-tailed data. In Proc. of the European Conference on Computer Vision (ECCV) , volume 12374, pp. 694–710, 2020. Communication, S., Barrault, L., Chung, Y., Meglioli, M. C., Dale, D., et al. SeamlessM4T: Massively multilingual & multimodal machine translation. CoRR , abs/2308.11596, 2023. Devlin, J., Chang, M.-W., Lee, K., and Toutanova, K. BERT: Pre-training of deep bidirectional transformers for lan-guage understanding. In Proc. of the Conference of the North American Chapter of the Association for Computa-tional Linguistics (NAACL) , pp. 4171–4186, 2019. DeVries, T. and Taylor, G. W. Dataset augmentation in feature space. In Proc. of the International Conference on Learning Representations (ICLR) , 2017. Elizalde, B., Deshmukh, S., Ismail, M. A., and Wang, H. CLAP learning audio concepts from natural language su-pervision. In Proc. of the IEEE International Conference on Acoustics, Speech, and Signal Processing (ICASSP) ,pp. 1–5, 2023. Esser, P., Kulal, S., Blattmann, A., Entezari, R., M ¨uller, J., et al. Scaling rectified flow transformers for high-resolution image synthesis. In Proc. of the International Conference on Machine Learning (ICML) , 2024. Gao, P., Geng, S., Zhang, R., Ma, T., Fang, R., et al. CLIP-Adapter: Better vision-language models with feature adapters. International Journal of Computer Vision , 132 (2):581–595, 2024. Gong, Y., Khurana, S., Karlinsky, L., and Glass, J. R. Whisper-AT: Noise-robust automatic speech recogniz-ers are also strong general audio event taggers. In Proc. Interspeech , pp. 2798–2802, 2023. Goron, E., Asai, L., Rut, E., and Dinov, M. Improving domain generalization in speech emotion recognition with 9Semantics-Aware Generative Latent Data Augmentation for Learning in Low-Resource Domains 
+
+whisper. In Proc. of the IEEE International Conference on Acoustics, Speech, and Signal Processing (ICASSP) ,pp. 11631–11635, 2024. Han, P., Ye, C., Zhou, J., Zhang, J., Hong, J., et al. Latent-based diffusion model for long-tailed recognition. In 
+
+IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops (CVPRW) , pp. 2639–2648, 2024. Ho, J. and Salimans, T. Classifier-free diffusion guidance. In Advances in Neural Information Processing Systems (NeurIPS) , 2021. Hu, E. J., yelong shen, Wallis, P., Allen-Zhu, Z., Li, Y., et al. LoRA: Low-rank adaptation of large language models. In Proc. of the International Conference on Learning Representations (ICLR) , 2022. Huybrechts, G., Merritt, T., Comini, G., Perz, B., Shah, R., et al. Low-resource expressive text-to-speech using data augmentation. In Proc. of the IEEE International Conference on Acoustics, Speech, and Signal Processing (ICASSP) , pp. 6593–6597, 2021. Islam, K., Zaheer, M. Z., Mahmood, A., and Nandakumar, K. Diffusemix: Label-preserving data augmentation with diffusion models. In Proc. of the IEEE International Conference on Computer Vision and Pattern Recognition (CVPR) , pp. 27611–27620, 2024. Karras, T., Aittala, M., Aila, T., and Laine, S. Elucidating the design space of diffusion-based generative models. In Advances in Neural Information Processing Systems (NeurIPS) , 2022. Kumar, V., Glaude, H., de Lichy, C., and Campbell, W. A closer look at feature space data augmentation for few-shot intent classification. In Proceedings of the 2nd Work-shop on Deep Learning Approaches for Low-Resource NLP (DeepLo 2019) , pp. 1–10, 2019. Kuznetsova, A., Sivaraman, A., and Kim, M. The potential of neural speech synthesis-based data augmentation for personalized speech enhancement. In Proc. of the IEEE International Conference on Acoustics, Speech, and Sig-nal Processing (ICASSP) , pp. 1–5, 2023. Lin, T.-Y., Goyal, P., Girshick, R., He, K., and Doll ´ar, P. Focal loss for dense object detection. IEEE Transactions on Pattern Analysis and Machine Intelligence , 42(2):318– 327, 2020. Liu, B., Wang, X., Dixit, M., Kwitt, R., and Vasconcelos, N. Feature space transfer for data augmentation. In Proc. of the IEEE International Conference on Computer Vision and Pattern Recognition (CVPR) , pp. 9090–9098, 2018a. Liu, H., Chen, Z., Yuan, Y., Mei, X., Liu, X., et al. Au-dioLDM: Text-to-audio generation with latent diffusion models. In Proc. of the International Conference on Ma-chine Learning (ICML) , volume 202, pp. 21450–21474, 2023a. Liu, W., Wu, Z., Wang, Y., Ding, H., Liu, F., et al. LCReg: Long-tailed image classification with latent categories based recognition. Pattern Recogn. , 145(C), 2024. ISSN 0031-3203. Liu, X., Zou, Y., Kong, L., Diao, Z., Yan, J., et al. Data augmentation via latent space interpolation for image classification. In Proc. of the International Conference on Pattern Recognition (ICPR) , pp. 728–733, 2018b. Liu, Z., Miao, Z., Zhan, X., Wang, J., Gong, B., et al. Large-scale long-tailed recognition in an open world. In Proc. of the IEEE International Conference on Computer Vision and Pattern Recognition (CVPR) , pp. 2537–2546, 2019. Liu, Z., Tang, Z., Shi, X., Zhang, A., Li, M., et al. Learning multimodal data augmentation in feature space. In Proc. of the International Conference on Learning Representa-tions (ICLR) , 2023b. Lu, C., Zhou, Y., Bao, F., Chen, J., Li, C., et al. DPM-Solver++: Fast solver for guided sampling of diffusion probabilistic models. Machine Intelligence Research , 22 (4):730–751, 2025. ISSN 2731-5398. Ma, T., Geng, S., Wang, M., Shao, J., Lu, J., et al. A sim-ple long-tailed recognition baseline via vision-language model. CoRR , abs/2111.14745, 2021. Ma, Z., Chen, M., Zhang, H., Zheng, Z., Chen, W., et al. EmoBox: Multilingual multi-corpus speech emotion recognition toolkit and benchmark. In Proc. Interspeech ,pp. 1580–1584, 2024a. Ma, Z., Zheng, Z., Ye, J., Li, J., Gao, Z., et al. emotion2vec: Self-supervised pre-training for speech emotion represen-tation. In Findings of the Association for Computational Linguistics (ACL) , pp. 15747–15760, 2024b. Menon, A. K., Jayasumana, S., Rawat, A. S., Jain, H., Veit, A., et al. Long-tail learning via logit adjustment. In Proc. of the International Conference on Learning Representa-tions (ICLR) , 2021. Oquab, M., Darcet, T., Moutakanni, T., Vo, H. V., Szafraniec, M., et al. DINOv2: Learning robust visual features without supervision. Trans. Mach. Learn. Res. ,2024, 2024. Papyan, V., Han, X. Y., and Donoho, D. L. Prevalence of neural collapse during the terminal phase of deep learning training. Proc. of the National Academy of Sciences , 117 (40):24652–24663, 2020. 10 Semantics-Aware Generative Latent Data Augmentation for Learning in Low-Resource Domains 
+
+Park, D. S., Chan, W., Zhang, Y., Chiu, C.-C., Zoph, B., et al. SpecAugment: A simple data augmentation method for automatic speech recognition. In Proc. Interspeech ,pp. 2613–2617, 2019. Park, H. J., Agarwal, D., Chen, N., Sun, R., Partridge, K., et al. Utilizing TTS synthesized data for efficient develop-ment of keyword spotting model. CoRR , abs/2407.18879, 2024. Perez, L. and Wang, J. The effectiveness of data augmenta-tion in image classification using deep learning. CoRR ,abs/1712.04621, 2017. Qian, Q. and Hu, J. Online zero-shot classification with CLIP. In Proc. of the European Conference on Computer Vision (ECCV) , volume 15135, pp. 462–477, 2024. Radford, A., Kim, J. W., Hallacy, C., Ramesh, A., Goh, G., et al. Learning transferable visual models from natural language supervision. In Proc. of the International Con-ference on Machine Learning (ICML) , volume 139, pp. 8748–8763, 2021. Radford, A., Kim, J. W., Xu, T., Brockman, G., McLeavey, C., et al. Robust speech recognition via large-scale weak supervision. In Proc. of the International Conference on Machine Learning (ICML) , volume 202, pp. 28492– 28518, 2023. Rangamani, A., Lindegaard, M., Galanti, T., and Poggio, T. A. Feature learning in deep classifiers through inter-mediate neural collapse. In Proc. of the International Conference on Machine Learning (ICML) , volume 202, pp. 28729–28745, 2023. Rangwani, H., Mondal, P., Mishra, M., Asokan, A. R., and Babu, R. V. DeiT-LT: Distillation strikes back for vi-sion transformer training on long-tailed datasets. In Proc. of the IEEE International Conference on Computer Vi-sion and Pattern Recognition (CVPR) , pp. 23396–23406, 2024. Rombach, R., Blattmann, A., Lorenz, D., Esser, P., and Ommer, B. High-resolution image synthesis with latent diffusion models. In Proc. of the IEEE International Conference on Computer Vision and Pattern Recognition (CVPR) , pp. 10674–10685, 2022. Russakovsky, O., Deng, J., Su, H., Krause, J., Satheesh, S., et al. ImageNet large scale visual recognition challenge. 
+
+International Journal of Computer Vision , 115(3):211– 252, 2015. Sakurai, K., Ishii, T., Shimizu, R., Song, L., and Goto, M. LARE: Latent augmentation using regional embedding with vision-language model. Machine Learning with Applications , 20:100671, 2025. ISSN 2666-8270. Schuller, B., Steidl, S., and Batliner, A. The interspeech 2009 emotion challenge. In Proc. Interspeech , pp. 312– 315, 2009. Shi, J., Wei, T., Zhou, Z., Shao, J., Han, X., et al. Long-tail learning with foundation model: Heavy fine-tuning hurts. In Proc. of the International Conference on Machine Learning (ICML) , 2024. Shorten, C. and Khoshgoftaar, T. M. A survey on image data augmentation for deep learning. J. Big Data , 6:60, 2019. Song, E., Yamamoto, R., Kwon, O., Song, C., Hwang, M., et al. TTS-by-TTS 2: Data-selective augmentation for neural speech synthesis using ranking support vector ma-chine with variational autoencoder. In Proc. Interspeech ,pp. 1941–1945, 2022a. Song, H., Dong, L., Zhang, W., Liu, T., and Wei, F. CLIP models are few-shot learners: Empirical studies on VQA and visual entailment. In Proc. of the Annual Meeting of the Association for Computational Linguistics (ACL) , pp. 6088–6100, 2022b. Tan, J., Li, B., Lu, X., Yao, Y., Yu, F., et al. The Equalization Losses: Gradient-driven training for long-tailed object recognition. IEEE Transactions on Pattern Analysis and Machine Intelligence , 45(11):13876–13892, 2023. Terashima, R., Yamamoto, R., Song, E., Shirahata, Y., Yoon, H.-W., et al. Cross-speaker emotion transfer for low-resource text-to-speech using non-parallel voice conver-sion with pitch-shift data augmentation. In Proc. Inter-speech , pp. 3018–3022, 2022. Tian, C., Wang, W., Zhu, X., Dai, J., and Qiao, Y. VL-LTR: Learning class-wise visual-linguistic representation for long-tailed visual recognition. In Proc. of the European Conference on Computer Vision (ECCV) , pp. 73–91, 2022. ISBN 978-3-031-19805-2. Trabucco, B., Doherty, K., Gurinas, M., and Salakhutdinov, R. Effective data augmentation with diffusion models. In Proc. of the International Conference on Learning Representations (ICLR) , 2024. Trinh, V. A., Salami Kavaki, H., and Mandel, M. I. Im-portantaug: A data augmentation agent for speech. In 
+
+Proc. of the IEEE International Conference on Acoustics, Speech, and Signal Processing (ICASSP) , pp. 8592–8596, 2022. Xu, Z., Liu, R., Yang, S., Chai, Z., and Yuan, C. Learning imbalanced data with vision transformers. In Proc. of the IEEE International Conference on Computer Vision and Pattern Recognition (CVPR) , pp. 15793–15803, 2023. 11 Semantics-Aware Generative Latent Data Augmentation for Learning in Low-Resource Domains 
+
+Yang, A., Yang, B., Zhang, B., Hui, B., Zheng, B., et al. Qwen2.5 technical report. CoRR , abs/2412.15115, 2024. Yang, K. D., Hu, T., Chang, J. R., Koppula, H. S., and Tuzel, O. Text is all you need: Personalizing ASR models using controllable speech synthesis. In Proc. of the IEEE In-ternational Conference on Acoustics, Speech, and Signal Processing (ICASSP) , pp. 1–5, 2023. Yun, S., Han, D., Chun, S., Oh, S. J., Yoo, Y., et al. Cut-Mix: Regularization strategy to train strong classifiers with localizable features. In Proc. of the International Conference on Computer Vision (ICCV) , pp. 6022–6031, 2019. Zhang, H., Ciss ´e, M., Dauphin, Y. N., and Lopez-Paz, D. mixup: Beyond empirical risk minimization. In Proc. of the International Conference on Learning Representa-tions (ICLR) , 2018. 12 Semantics-Aware Generative Latent Data Augmentation for Learning in Low-Resource Domains 
+
+A. Multilingual Speech Emotion Dataset  
+
+> Table 5. Summary of multilingual speech emotion dataset in hours.
+
+Language Emotion Total Angry Disgust Fear Happy Neutral Sad Surprise 
+
+Amharic 0.21 0.00 0.29 0.24 0.27 0.25 0.00 1.27 Bangla 0.72 0.70 0.73 0.72 0.71 0.71 0.72 5.01 English 7.89 4.67 4.41 9.12 9.45 8.67 6.27 50.48 French 0.21 0.16 0.13 0.21 0.15 0.28 0.16 1.30 German 0.06 0.03 0.02 0.03 0.04 0.04 0.00 0.22 Greek 0.08 0.08 0.07 0.08 0.00 0.10 0.00 0.41 Italian 0.54 0.64 0.63 0.51 0.57 0.65 0.59 4.13 Mandarin 3.06 0.03 0.07 2.84 3.42 3.81 2.51 15.74 Persian 0.62 0.00 0.02 0.13 0.84 0.30 0.06 1.96 Polish 0.03 0.00 0.02 0.00 0.02 0.00 0.00 0.07 Russian 0.23 0.22 0.24 0.24 0.18 0.18 0.00 1.29 Spanish 0.02 0.02 0.01 0.02 0.01 0.02 0.00 0.11 Turkish 0.07 0.00 0.00 0.06 0.00 0.08 0.00 0.21 Urdu 0.04 0.00 0.00 0.04 0.04 0.04 0.00 0.17 Total 13.78 6.56 6.66 14.24 15.69 15.15 10.30 82.37 We collect a multilingual speech emotion dataset following EmoBox (Ma et al., 2024a), and its language and emotion distribution is summarized in Table 5, which exhibits a heavy but common imbalance issue across emotion labels and languages, e.g., DISGUST , FEAR , and SURPRISE are entirely missing in Turkish and Urdu datasets, more than 50 hours of English data vs. 0.07 hours of Polish data, etc. Such extreme sparsity and missing labels make multilingual SER particularly difficult. 
+
+B. Implementation Details 
+
+In this section, we described the detailed model architecture and training details of the GeLDA framework. 
+
+B.1. Model architecture details                       
+
+> Table 6. Detailed model architecture for the multilingual SER model.
+> Target Backbone foundation model latent space WavLM-large emotion2vec-base Whisper-large
+> Task adapter 1st linear layer output dim –512 2nd linear layer output dim –256 Last linear layer output dim –7Diffusion model 2D reshape size
+> Z(0) (32, 32) (28, 28) (36, 36)
+> Z(1) (24, 24)
+> Z(2) (16, 16) Timestep embedding dim –256 Emotion embedding dim –256 Final conditioning vector dimension –256
+
+Task Adapter Architecture: The task adapters for SER are composed of three linear layers applied to the temporally pooled representations from the FMs. Temporal pooling is performed via average pooling. The output dimensions of the first two layers are listed in Table 6. ReLU activations are applied after the first and second layers, and a softmax activation is used in the final layer. For imbalanced image classification, we apply GeLDA to LIFT (Shi et al., 2024), which employs 13 Semantics-Aware Generative Latent Data Augmentation for Learning in Low-Resource Domains              
+
+> Table 7. Detailed model architecture for imbalanced image classification.
+> Target Backbone foundation model latent space ViT-B/16
+> Task adapter Single linear layer output dim –1000 for ImageNet-LT and 365 for Places-LT Diffusion model 2D reshape size Z(0) (28, 28) Timestep embedding dim –256 Text embedding dim –256 Final conditioning vector dimension –256
+
+AdaptFormer (Chen et al., 2022a) and a single linear classifier as its adapter. The dimension of the linear layer is the same as the number of classification labels of each task. 
+
+Diffusion Model Architecture: We employ a Transformer-based diffusion model adapted from the IM -
+
+> AGE TRANSFORMER V
+
+2 architecture in the k-diffusion framework (Karras et al., 2022) 2. To bridge the gap between the 1D latent vectors generated by GeLDA and the 2D requirement of the original architecture, we first reshape the 1D vectors into 2D matrices. Detailed dimensions for this reshaping are provided in Tables 6 and 7. If the size of the 2D matrix is larger than that of the 1D vector, we pad the vector to match the matrix size. In our pilot study, we observed that using a 2D matrix as input performs better than using a 1D vector directly. The resulting matrices are then partitioned into non-overlapping 2 × 2 patches and embedded as a sequence of tokens. The backbone of the diffusion models features a two-stage hierarchical Transformer design: the first stage comprises two global self-attention blocks with a width of 256, while the second stage consists of four blocks with a width of 512. Each block integrates multi-head self-attention and feed-forward layers with residual connections, utilizing a dropout rate of 0.05. Please refer to the original code for further details. To condition the diffusion model during generation, we adopt a CFG approach (Ho & Salimans, 2021). We apply conditioning dropout with probability 0.1 during training. For SER, the conditioning signal is constructed by combining an emotion embedding (from a learnable lookup table), a language embedding, and a diffusion’s timestep embedding. We find that using a randomly sampled latent vector for language k, z(l) ∼ D (k), is more effective than using a fixed language embedding (Table 2). Finally, the emotion, language, and timestep embeddings are concatenated and passed through a linear projection layer to match the final conditioning dimension of 256. For the image classification task, we use text embeddings as conditioning signals by feeding the prompt template “This is a photo of a [label]” into a pretrained text encoder of CLIP. Text embedding is also concatenated with the timestep embedding and projected to 256 dimensions through a linear layer. During inference for both tasks, we employ the DPM++ SDE sampler (Lu et al., 2025) with a CFG scale of 1.2 and 20 sampling steps, chosen empirically. We observe that larger CFG scales or more sampling steps reduce the diversity of the generated latent vectors, which harms the effectiveness of DA. 
+
+B.2. Training details SER model: To train the SER model, we follow the training settings of EmoBox (Ma et al., 2024a). The backbone foundation models are kept frozen throughout training, and only the task adapter parameters are optimized. We use the Adam optimizer with β1 = 0 .9 and β2 = 0 .999 , a learning rate of 1 × 10 −3, and a batch size of 32. All models are trained for 100 epochs using a learning rate warm-up over the first 10 epochs. For language-specific fine-tuning, the task adapter is further trained for an additional 100 epochs under the same optimization settings. 
+
+Image Classification Model: All training settings follow the original LIFT framework (Shi et al., 2024). We adopt the logit-adjusted (LA) loss (Menon et al., 2021) and optimize the model using SGD with a batch size of 128, momentum of 0.9, and weight decay of 5 × 10 −4. In Stage 1 (generic model training), we train the LIFT model following the original setup for 10 epochs. In Stage 3 (fine-tuning), we further train the model for four additional epochs using GeLDA-generated and GT samples from the SMALL classes. During fine-tuning, we freeze all LIFT parameters except the final linear layer. We find this freezing technique avoids performance degradation on the MANY and MEDIUM classes, even though fine-tuning uses only SMALL -class samples. 
+
+> 2https://github.com/crowsonkb/k-diffusion
+
+14 Semantics-Aware Generative Latent Data Augmentation for Learning in Low-Resource Domains 
+
+Diffusion Model: We follow the training setup of the k-diffusion framework. Noise levels are sampled from a cosine-interpolated distribution, and loss weighting is based on a soft-min-SNR scheme. Optimization is performed using AdamW with a learning rate of 5 × 10 −4 and weight decay of 1 × 10 −4. An exponential moving average (EMA) of parameters is maintained using an inverse decay schedule with a maximum value of 0.9999. We trained the diffusion model for 400K iterations with a batch size of 64. 
+
+C. Efficiency comparison between GeLDA and input-space DA 
+
+Table 8. Efficiency comparison between input-space DA with generative models and GeLDA. NP refers to the number of parameters of the generative models. 
+
+Model Training time Training data Inference time NP Data size 
+
+Seamless M4T v2 - 4.5M hours 480 ms/sample 2.3 B 139.5 KB/sample Seamless Expressive - 29.8K hours 420 ms/sample 2.1 B Stable Diffusion 3 - - 3,990 ms/sample 2.2 B 1560.7 KB/sample GeLDA at Z(0) 4.8 hours ≈82.4 hours (for SER) 160 ms/sample 21.3 M 6.7 KB/sample 
+
+The efficiency comparison between the input-space DA and GeLDA is presented in Table 8. For the GeLDA, we employ the one from SER task, which uses the W HISPER -LARGE as the backbone and Z(0) as the target embedding space. Note that the average durations of speech utterances of the generated speech of S EAMLESS M4T and S EAMLESS EXPRESSIVE 
+
+models are approximately three seconds. The training and inference time are calculated with an NVIDIA L40S GPU with 46 GB of VRAM. GeLDA is vastly more efficient than input-space DA, requiring far fewer parameters and substantially less training data while enabling significantly faster inference. This efficiency makes GeLDA particularly well-suited for extremely low-resource settings. 
+
+D. Additional Results for Zero-Shot SER Experiments 
+
+D.1. Ablation Study on the Number of Augmented Samples 1000 2000 3000        
+
+> Augmented Samples
+> 0.35
+> 0.40
+> 0.45
+> 0.50
+> 0.55
+> 0.60
+> 0.65
+> UA (%)
+> 1000 2000 3000
+> Augmented Samples
+> 0.35
+> 0.40
+> 0.45
+> 0.50
+> 0.55
+> 0.60
+> 0.65
+> WA (%)
+> 1000 2000 3000
+> Augmented Samples
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> Macro-F1 (%)
+> GeLDA ( (0) )
+> GeLDA ( (1) )
+> GeLDA ( (2) )
+> Seamless M4T
+> Seamless Expressive
+> Pretrained
+
+Figure 4. GeLDA performance with varying numbers of augmented samples using W HISPER -LARGE as the backbone FM. 
+
+We vary the number of augmented samples and examine performance trends for W HISPER -LARGE backbone (Fig. 4). Augmentation in Z(0) improves performance as the number of augmented samples increases, suggesting that the generated samples are well aligned with the GT conditional distribution p(κ)(x|y) and thus improve overall performance. In contrast, for Z(1) and Z(2) , performance typically drops as the number of augmented samples increases. This indicates that the generated samples in these latent spaces are not well aligned with p(κ)(x|y), causing the model to overfit to the augmented-sample distribution. Moreover, the input-space DA methods (S EAMLESS M4T and S EAMLESS EXPRESSIVE ) degrade even more severely, highlighting the difficulty of applying input-space DA. 15 Semantics-Aware Generative Latent Data Augmentation for Learning in Low-Resource Domains 
+
+D.2. Visualization of the Augmented Latent Vectors          
+
+> (a) Z(0) (b) Z(1) (c) Z(2)
+> Figure 5. Examples of t-SNE plots of generated embeddings from GeLDA and GT embeddings from the test set for the SER task. From left to right, the plots correspond to the embedding spaces Z(0) ,Z(1) , and Z(2) . All results are shown for the Italian case, and the foundation model is W HISPER -LARGE .
+
+Fig. 5 illustrates the embedding-space distributions of the augmented latent vectors and the GT test embeddings for the Italian SER case. Since we simulate a zero-shot SER setting, the generative model used to produce augmented embeddings has not been exposed to any emotion classes other than NEUTRAL during training. Despite this constraint, the augmented embeddings are well aligned with the GT test embeddings across all three embedding spaces. This close overlap indicates that the proposed GeLDA framework is capable of generating high-quality latent representations even under zero-shot conditions. Among them, the augmented embeddings in Z(0) are observed to be the most overlapped with the GT embeddings, which aligns with our results in Table 1. Furthermore, a clear evolution of representation structure can be observed from Fig. 5a to 5c. In Z(0) , the embeddings form a small number of clusters, which likely encode non-emotional factors such as speaker identity or recording environment. As the embeddings propagate toward deeper layers, these task-irrelevant factors are progressively suppressed. In Z(2) , the embeddings exhibit more distinct emotion-oriented separation, suggesting that the classifier increasingly discards irrelevant information and focuses on emotion-discriminative features. 
+
+D.3. Per Language Breakdown of Zero-shot SER Experiments 
+
+In Table 9, we provide per-language results for the zero-shot SER setting summarized in Table 1. We use W HISPER -LARGE 
+
+as the backbone foundation model since it achieves the strongest overall performance among others. Across all languages except French, GeLDA consistently improves over the PRETRAINED baseline, demonstrating the effectiveness of our method and its broad applicability across diverse languages. For most languages, augmenting in Z(0) yields the best results; however, in a few cases, operating in alternative latent spaces leads to larger gains than Z(0) . We hypothesize that this reflects GeLDA’s reliance on transferring information from high-resource subdomains to augment low-resource ones, consequently, its gains may depend on the degree of structural alignment between subdomains in the chosen latent space. 16 Semantics-Aware Generative Latent Data Augmentation for Learning in Low-Resource Domains 
+
+Table 9. Per-language breakdown of zero-shot SER experiments using W HISPER -LARGE as the backbone FM. Note that we also report results for Amharic, Bangla, Persian, Polish, Russian, and Urdu, which are not included in the average results in Table 1. Greek and Turkish are not selected as target languages for zero-shot SER because their datasets do not include a NEUTRAL emotion category. 
+
+Model Pretrain Fine-tune Aug. Space Per emotion recall (%) UA (%) WA (%) Macro-F1 (%) UA w/o Neutral(%) Dataset Dataset Angry Disgust Fear Happy Neutral Sad Surprise 
+
+Language: Amharic Pretrained D\κ – – 79.61 – 58.27 41.60 72.56 24.50 – 55.31 55.79 57.81 51.00 Oracle D – – 98.00 – 92.67 97.33 95.33 93.33 – 95.46 95.45 95.44 95.33 
+
+D\κ ∪ D (κ) 
+
+> neu
+
+D(κ) 
+
+> neu
+
+∪ ¯D(κ)
+
+Z(0) 83.20 – 75.85 48.76 87.18 25.93 – 64.18 64.88 62.77 58.43 GeLDA (Ours) Z(1) 83.75 – 74.02 47.38 71.28 19.94 – 59.27 59.85 57.77 56.27 
+
+Z(2) 86.50 – 61.15 57.58 76.92 23.65 – 61.16 61.64 60.34 57.22 Language: Bangla Pretrained D\κ – – 86.83 3.67 41.67 29.17 48.00 86.00 41.67 48.14 48.14 44.39 48.17 Oracle D – – 76.00 60.33 73.00 77.67 90.00 78.00 75.67 75.81 75.81 75.79 73.44 
+
+D\κ ∪ D (κ) 
+
+> neu
+
+D(κ) 
+
+> neu
+
+∪ ¯D(κ)
+
+Z(0) 89.00 1.50 54.00 78.50 86.83 50.83 70.83 61.64 61.64 57.03 57.44 GeLDA (Ours) Z(1) 92.50 2.17 53.83 87.50 61.50 51.33 42.00 55.83 55.83 51.51 54.89 
+
+Z(2) 80.00 5.17 44.33 78.33 66.17 51.67 45.00 52.95 52.95 49.64 50.75 Language: French Pretrained D\κ – – 67.87 59.21 59.60 63.14 67.26 66.67 64.47 64.03 64.05 63.85 63.49 Oracle D – – 81.67 67.33 73.67 75.33 81.67 70.33 70.00 74.29 74.00 73.80 73.06 Seamless M4T D\κ ∪ D (κ) 
+
+> neu
+
+D(κ) 
+
+> neu
+
+∪ ¯D(κ) X 38.55 29.39 16.67 41.96 92.26 45.15 45.05 44.15 42.78 43.05 36.13 Seamless Expressive X 51.81 37.28 42.42 48.63 84.52 50.21 61.90 53.82 52.99 52.87 48.71 
+
+D\κ ∪ D (κ) 
+
+> neu
+
+D(κ) 
+
+> neu
+
+∪ ¯D(κ)
+
+Z(0) 68.27 56.58 60.10 57.25 77.98 37.13 64.10 60.20 59.58 59.24 57.24 GeLDA (Ours) Z(1) 68.67 61.84 41.41 61.18 78.57 56.96 67.03 62.24 62.19 62.12 59.52 
+
+Z(2) 73.49 52.19 53.03 60.00 72.02 58.23 68.13 62.44 62.50 62.45 60.85 Language: German Pretrained D\κ – – 97.92 44.32 74.04 70.09 89.77 89.74 – 77.65 81.23 77.78 75.22 Oracle D – – 99.00 73.00 86.00 93.33 97.67 97.33 – 91.10 92.73 91.79 89.73 Seamless M4T D\κ ∪ D (κ) 
+
+> neu
+
+D(κ) 
+
+> neu
+
+∪ ¯D(κ) X 77.13 23.48 22.19 70.94 100.00 66.90 – 60.11 65.06 58.34 52.13 Seamless Expressive X 77.42 34.09 47.88 56.75 95.69 79.03 – 65.14 67.31 67.56 59.03 
+
+D\κ ∪ D (κ) 
+
+> neu
+
+D(κ) 
+
+> neu
+
+∪ ¯D(κ)
+
+Z(0) 100.00 39.02 90.76 91.11 87.31 93.27 – 83.58 87.97 83.52 82.83 GeLDA (Ours) Z(1) 84.43 34.85 73.03 79.32 48.61 88.51 – 68.12 71.98 67.01 72.03 
+
+Z(2) 98.67 53.79 70.11 76.41 60.23 83.56 – 73.80 77.34 73.31 76.51 Language: Italian Pretrained D\κ – – 40.64 58.21 31.79 75.64 78.59 64.87 18.33 52.58 52.58 50.56 48.25 Oracle D – – 77.67 73.00 71.67 75.67 87.33 75.00 70.67 75.88 75.88 75.84 73.94 Seamless M4T D\κ ∪ D (κ) 
+
+> neu
+
+D(κ) 
+
+> neu
+
+∪ ¯D(κ) X 18.97 10.38 6.03 28.85 98.33 7.56 6.15 25.18 25.18 21.04 12.99 Seamless Expressive X 29.87 25.00 26.28 52.05 97.69 18.97 35.51 40.77 40.77 39.67 31.28 
+
+D\κ ∪ D (κ) 
+
+> neu
+
+D(κ) 
+
+> neu
+
+∪ ¯D(κ)
+
+Z(0) 64.10 55.38 56.41 65.26 85.00 44.62 50.90 60.24 60.24 59.72 56.11 GeLDA (Ours) Z(1) 56.79 62.31 47.82 59.49 72.31 45.26 42.44 55.20 55.20 54.79 52.35 
+
+Z(2) 48.46 60.64 40.90 57.56 89.87 46.41 34.62 54.07 54.07 53.13 48.10 Language: Persian Pretrained D\κ – – 58.40 – 76.19 78.91 42.06 77.04 19.05 58.61 53.81 45.64 61.92 Oracle D – – 94.67 – 57.00 88.00 91.67 80.00 69.67 80.22 89.17 79.10 77.87 
+
+D\κ ∪ D (κ) 
+
+> neu
+
+D(κ) 
+
+> neu
+
+∪ ¯D(κ)
+
+Z(0) 75.71 – 61.90 77.55 83.20 48.89 50.34 66.27 73.19 59.47 62.88 GeLDA (Ours) Z(1) 72.09 – 52.38 76.87 70.11 46.30 68.03 64.30 67.94 55.47 63.13 
+
+Z(2) 61.76 – 66.67 73.47 87.70 61.11 47.62 66.39 70.83 58.04 62.12 Language: Polish Pretrained D\κ – – 77.78 – 3.33 – 13.33 – – 31.48 31.48 29.80 40.56 Oracle D – – 89.00 – 35.33 – 51.33 – – 58.52 58.52 52.07 62.17 
+
+D\κ ∪ D (κ) 
+
+> neu
+
+D(κ) 
+
+> neu
+
+∪ ¯D(κ)
+
+Z(0) 74.44 – 20.00 – 57.78 – – 50.74 50.74 47.27 47.22 GeLDA (Ours) Z(1) 80.00 – 21.11 – 47.78 – – 49.63 49.63 45.72 50.56 
+
+Z(2) 85.56 – 18.89 – 57.78 – – 54.07 54.07 50.10 52.22 Language: Russian Pretrained D\κ – – 46.97 27.03 5.19 31.82 85.96 27.08 – 37.34 36.81 34.76 27.62 Oracle D – – 78.00 47.00 50.33 58.67 62.67 40.67 – 56.08 56.95 56.17 54.93 
+
+D\κ ∪ D (κ) 
+
+> neu
+
+D(κ) 
+
+> neu
+
+∪ ¯D(κ)
+
+Z(0) 68.94 20.72 11.85 50.76 80.70 18.75 – 41.95 42.64 38.18 34.20 GeLDA (Ours) Z(1) 81.82 19.82 20.00 51.52 51.75 27.08 – 42.00 43.06 39.75 40.05 
+
+Z(2) 62.12 18.02 5.19 34.85 76.32 23.96 – 36.74 36.81 33.03 28.83 Language: Spanish Pretrained D\κ – – 59.05 53.70 25.00 28.70 52.38 37.96 – 42.80 42.68 45.29 40.88 Oracle D – – 81.00 72.33 48.33 58.33 87.00 55.67 – 66.98 66.82 67.29 63.13 Seamless M4T D\κ ∪ D (κ) 
+
+> neu
+
+D(κ) 
+
+> neu
+
+∪ ¯D(κ) X 21.90 26.85 9.26 10.19 99.05 25.93 – 32.20 31.93 29.09 18.83 Seamless Expressive X 40.00 23.15 12.96 26.85 98.10 18.52 – 36.59 36.29 34.80 24.30 
+
+D\κ ∪ D (κ) 
+
+> neu
+
+D(κ) 
+
+> neu
+
+∪ ¯D(κ)
+
+Z(0) 69.52 53.70 32.41 42.59 60.00 43.52 – 50.29 50.16 50.84 48.35 GeLDA (Ours) Z(1) 67.62 54.63 13.89 49.07 48.57 49.07 – 47.14 47.04 46.57 46.86 
+
+Z(2) 61.90 57.41 25.93 43.52 71.43 34.26 – 49.08 48.91 48.87 44.60 Language: Urdu Pretrained D\κ – – 90.67 – – 60.00 37.33 33.33 – 55.33 55.33 55.72 61.33 Oracle D – – 96.00 – – 73.33 68.00 57.33 – 73.67 73.67 73.58 75.56 
+
+D\κ ∪ D (κ) 
+
+> neu
+
+D(κ) 
+
+> neu
+
+∪ ¯D(κ)
+
+Z(0) 72.00 – – 76.00 64.00 26.67 – 59.67 59.67 57.81 58.22 GeLDA (Ours) Z(1) 80.00 – – 68.00 44.00 42.67 – 58.67 58.67 57.61 63.56 
+
+Z(2) 85.33 – – 58.67 58.67 42.67 – 61.33 61.33 60.59 62.22 
+
+17 Semantics-Aware Generative Latent Data Augmentation for Learning in Low-Resource Domains 
+
+E. Experiments on Few-shot Speech Emotion Recognition 
+
+Table 10. Average test results for few-shot SER models on four languages (French, German, Spanish, and Italian). 
+
+FM Model Pretrain Fine-tune Aug. Space Per emotion recall (%) UA WA Macro-F1 UA w/o Dataset Dataset Angry Disgust Fear Happy Neutral Sad Surprise (%) (%) (%) Neutral (%) 
+
+WavLM-large Pretrained D – – 79.00 68.00 64.00 68.00 77.00 72.00 61.00 70.75 71.00 71.10 68.67 Fine-tuned D D(κ) – 80.76 69.20 63.76 66.53 78.37 73.25 62.91 71.53 71.76 71.67 69.40 Seamless M4T D D(κ) S ¯D(κ) X 77.58 68.09 59.43 65.43 79.51 70.48 61.90 69.70 69.86 69.54 67.15 Seamless Expressive 76.41 67.25 60.11 64.89 75.79 70.52 63.25 68.85 69.21 68.78 67.07 
+
+Z(0) 80.58 73.20 69.75 71.10 82.48 70.69 66.68 74.39 74.55 74.38 72.00 Latent Filling D D(κ) S ¯D(κ) Z(1) 81.77 67.22 67.06 67.18 80.24 70.69 63.48 72.00 72.13 72.09 69.57 
+
+Z(2) 80.30 68.77 64.51 69.13 78.31 73.04 61.54 71.80 71.98 71.96 69.55 
+
+Z(0) 82.54 74.85 70.30 73.53 84.44 74.43 66.73 76.34 76.27 76.31 73.73 GeLDA (Ours) D D(κ) S ¯D(κ) Z(1) 80.44 72.25 67.44 71.80 81.33 72.38 62.29 73.87 73.72 73.74 71.10 
+
+Z(2) 78.54 68.74 62.02 68.61 75.98 71.89 61.06 70.49 70.54 70.46 68.48 emotion2vec-base Pretrained D – – 66.00 57.00 50.00 49.00 70.00 65.00 49.00 58.84 59.03 58.87 56.00 Fine-tuned D D(κ) – 65.66 63.29 51.46 49.94 70.75 66.07 51.60 60.70 60.73 60.55 58.00 Seamless M4T D D(κ) S ¯D(κ) X 59.09 61.78 49.70 50.58 67.71 58.59 52.19 57.60 57.72 57.49 55.32 Seamless Expressive 63.57 60.86 51.98 47.42 73.14 68.91 52.30 60.50 60.41 60.18 57.51 
+
+Z(0) 68.45 61.60 55.66 53.61 75.43 73.41 54.26 64.30 64.37 64.19 61.17 Latent Filling D D(κ) S ¯D(κ) Z(1) 68.16 55.94 48.85 53.36 74.17 71.08 52.88 61.53 61.87 61.22 58.38 
+
+Z(2) 66.13 58.53 49.69 50.78 71.08 65.56 50.95 59.81 60.09 59.68 56.94 
+
+Z(0) 67.31 65.05 60.13 60.08 76.48 64.94 57.21 65.43 65.51 65.25 62.45 GeLDA (Ours) D D(κ) S ¯D(κ) Z(1) 64.25 63.17 54.48 52.97 71.58 66.76 52.66 61.82 61.43 61.54 59.05 
+
+Z(2) 63.38 56.70 47.11 51.04 68.52 64.97 49.16 58.11 58.25 57.87 55.39 Whisper-large Pretrained D – – 85.00 71.00 70.00 76.00 88.00 75.00 70.00 77.06 77.36 77.18 74.50 Fine-tuned D D(κ) – 86.23 74.75 69.50 76.80 90.00 76.58 70.82 78.56 78.68 78.51 75.78 Seamless M4T D D(κ) S ¯D(κ) X 82.01 73.23 63.46 76.47 87.43 76.20 70.27 76.14 76.44 75.90 73.61 Seamless Expressive 84.27 72.96 67.08 75.29 87.49 76.15 72.14 77.03 77.39 77.01 74.65 
+
+Z(0) 85.82 74.57 68.73 80.11 90.34 77.44 72.91 79.23 79.55 79.22 76.60 Latent Filling D D(κ) S ¯D(κ) Z(1) 85.12 72.52 72.72 78.72 89.08 73.85 72.90 78.46 78.72 78.46 75.97 
+
+Z(2) 85.07 72.79 69.41 76.51 89.00 74.85 71.25 77.61 77.84 77.61 74.98 
+
+Z(0) 85.74 75.25 74.38 80.20 92.19 75.40 71.22 80.07 80.26 79.93 77.03 GeLDA (Ours) D D(κ) S ¯D(κ) Z(1) 83.29 72.83 70.13 80.70 90.52 74.20 68.77 78.19 78.29 78.01 74.99 
+
+Z(2) 85.19 72.95 67.71 77.32 86.45 75.90 70.05 77.28 77.50 77.19 74.85 
+
+Table 11. Average test results for few-shot SER models across all 12 low-resource languages (Amharic, Bangla, French, German, Greek, Italian, Persian, Polish, Russian, Spanish, Turkish, and Urdu). 
+
+FM Model Pretrain Fine-tune Aug. Space Per emotion recall (%) UA WA Macro-F1 UA w/o Dataset Dataset Angry Disgust Fear Happy Neutral Sad Surprise (%) (%) (%) Neutral (%) 
+
+WavLM-large Pretrained D – – 83.00 65.00 64.00 75.00 72.00 73.00 65.00 72.37 73.28 72.20 70.83 Fine-tuned D D(κ) – 83.92 65.47 64.93 75.11 73.80 74.35 66.32 73.47 74.39 73.04 71.68 
+
+Z(0) 85.22 70.78 65.76 78.05 77.03 75.55 68.29 76.08 77.40 75.64 73.94 Latent Filling D D(κ) S ¯D(κ) Z(1) 83.52 66.59 66.50 74.63 76.76 73.90 68.89 74.19 74.91 73.56 72.34 
+
+Z(2) 83.76 65.77 64.81 75.35 73.19 73.89 66.31 73.26 74.14 72.79 71.65 
+
+Z(0) 85.21 69.04 71.29 79.55 77.80 78.72 71.29 77.55 77.93 76.48 75.85 GeLDA (Ours) D D(κ) S ¯D(κ) Z(1) 83.25 68.39 68.70 78.92 74.93 76.16 69.96 75.88 76.00 74.62 74.23 
+
+Z(2) 82.93 64.42 65.84 73.69 71.41 73.86 65.28 72.45 72.87 71.33 71.00 emotion2vec-base Pretrained D – – 72.00 51.00 52.00 55.00 68.00 61.00 50.00 60.63 61.98 60.80 56.83 Fine-tuned D D(κ) – 74.13 55.49 53.89 57.07 68.76 63.52 52.04 62.84 64.10 62.70 59.36 
+
+Z(0) 75.47 57.28 55.82 61.89 73.51 69.59 57.61 66.79 68.05 66.57 62.94 Latent Filling D D(κ) S ¯D(κ) Z(1) 74.24 50.81 51.93 56.52 72.87 67.66 56.12 63.62 64.85 63.14 59.55 
+
+Z(2) 73.69 52.25 52.42 56.70 68.82 63.00 51.59 62.10 63.43 61.94 58.27 
+
+Z(0) 74.20 59.42 60.71 66.60 72.82 66.97 60.42 67.75 68.25 66.79 64.72 GeLDA (Ours) D D(κ) S ¯D(κ) Z(1) 71.29 55.78 58.23 61.34 69.55 66.30 57.37 65.01 65.26 63.95 61.72 
+
+Z(2) 70.90 50.79 49.97 58.53 66.84 61.74 52.02 60.82 61.71 60.14 57.32 Whisper-large Pretrained D – – 88.00 66.00 68.00 79.00 81.00 75.00 72.00 76.93 77.84 76.46 74.67 Fine-tuned D D(κ) – 88.30 69.03 66.96 79.12 80.87 76.22 71.84 77.29 78.29 76.75 75.25 
+
+Z(0) 88.87 69.29 64.72 81.20 83.04 76.54 73.57 78.27 79.51 77.65 75.70 Latent Filling D D(κ) S ¯D(κ) Z(1) 88.26 68.38 69.17 80.10 80.86 74.32 72.89 77.54 78.57 76.94 75.52 
+
+Z(2) 88.18 67.01 68.28 79.28 80.62 75.76 72.31 77.25 78.16 76.61 75.14 
+
+Z(0) 88.65 71.74 72.81 82.71 83.69 78.90 72.26 80.23 80.74 79.27 77.84 GeLDA (Ours) D D(κ) S ¯D(κ) Z(1) 85.86 67.83 72.90 82.28 81.54 76.42 71.97 78.45 78.80 77.20 76.21 
+
+Z(2) 88.12 67.56 66.85 78.81 79.78 75.39 72.61 76.96 77.76 76.09 74.89 
+
+The EmoBox dataset (Ma et al., 2024a), denoted as D, is a low-resource and highly imbalanced multilingual dataset: English and Mandarin contain most of the data, while the remaining languages have substantially less. For example, English and Mandarin provide 50.48 and 15.74 hours of speech, whereas the Polish and Spanish subsets contain only 0.07 and 0.11 hours. This imbalance makes building SER models for low-resource languages challenging even under D. We refer to building a language-specific SER model for a low-resource language κ using the full dataset D as few-shot SER , and we evaluate GeLDA alongside comparison models. In the few-shot setting, we augment the dataset to 500 samples per emotion and report results in two setups: (i) four selected target languages (French, German, Italian, and Spanish), as in Sec. 6.1, and (ii) 12 target languages covering all low-resource languages in the dataset. 
+
+Comparison Models: For the baselines, the P RETRAINED model is trained on the full dataset D, and the F INE -TUNED 
+
+model is further fine-tuned on the target low-resource dataset D(κ), yielding a language-κ-specific SER model. We also 18 Semantics-Aware Generative Latent Data Augmentation for Learning in Low-Resource Domains 
+
+include L ATENT FILLING (Bae et al., 2024), which applies statistical latent-space DA techniques (interpolation and noise injection) to speech. Note that this approach cannot be applied to the zero-shot SER experiments in Sec. 6.1, since interpolation between emotions in the low-resource language κ is not possible in a zero-shot setting. 
+
+Results: The average results of few-shot SER experiments on four selected languages and on all 12 low-resource languages are presented in Tables 10 and 11. Additionally, per language breakdown results are in Table 12 and 13. In this few-shot setup, the F INE -TUNED model consistently improves upon the P RETRAINED model. However, the input-space generative DA methods (S EAMLESS M4T and S EAMLESS EXPRESSIVE ) degrade performance compared to both P RETRAINED and FINE -TUNED . L ATENT FILLING improves performance overall, demonstrating the benefit of performing DA in latent space. GeLDA achieves the best performance across all backbone FMs, indicating the strong generalization of our method. Specifically, averaged over the 12 languages, GeLDA improves UA by 4.08%, 4.91%, and 2.94% for W AV LM-LARGE ,
+
+EMOTION 2VEC -BASE , and W HISPER -LARGE , respectively. Overall, these results show that GeLDA is effective for building SER models for low-resource target languages in highly imbalanced real-world settings, highlighting its broader impact on practical SER applications. 
+
+E.1. Per Language Breakdown of Few-shot SER Experiments 
+
+Table 12. Per language breakdown of few-shot SER experiments with W HISPER -LARGE as a backbone FM. 
+
+Model Pretrain Fine-tune Aug. Space Per emotion recall (%) UA (%) WA (%) Macro-F1 (%) Dataset Dataset Angry Disgust Fear Happy Neutral Sad Surprise 
+
+Language: Amharic Pretrained D – – 98.00 – 93.00 97.00 95.00 93.00 – 95.46 95.45 95.44 Fine-tuned D D(κ) – 98.35 – 95.54 97.25 96.41 95.44 – 96.60 96.59 96.57 
+
+D D(κ) S ¯D(κ)
+
+Z(0) 98.62 – 95.01 97.80 97.18 94.02 – 96.53 96.54 96.51 Latent Filling Z(1) 98.35 – 94.75 98.90 96.67 93.73 – 96.48 96.48 96.46 
+
+Z(2) 97.80 – 93.18 97.80 96.92 94.30 – 96.00 95.99 95.97 
+
+D D(κ) S ¯D(κ)
+
+Z(0) 98.90 – 95.01 99.17 96.67 95.16 – 96.98 96.97 96.96 GeLDA (Ours) Z(1) 98.35 – 94.23 98.35 96.67 94.02 – 96.32 96.32 96.30 
+
+Z(2) 98.62 – 93.18 97.80 94.87 95.16 – 95.92 95.89 95.88 Language: Bangla Pretrained D – – 76.00 60.00 73.00 78.00 90.00 78.00 76.00 75.81 75.81 75.79 Fine-tuned D D(κ) – 76.83 60.00 72.17 77.83 89.50 76.50 75.67 75.50 75.50 75.44 
+
+D D(κ) S ¯D(κ)
+
+Z(0) 73.33 63.67 63.17 75.50 87.83 77.67 75.67 73.84 73.84 74.08 Latent Filling Z(1) 78.33 59.17 71.83 78.67 91.33 76.67 74.33 75.76 75.76 75.68 
+
+Z(2) 76.00 60.00 71.83 76.67 89.83 78.50 75.33 75.45 75.45 75.46 
+
+D D(κ) S ¯D(κ)
+
+Z(0) 79.83 61.50 73.50 80.67 90.83 77.00 73.83 76.74 76.74 76.66 GeLDA (Ours) Z(1) 76.33 58.83 72.67 79.17 89.33 78.00 74.83 75.60 75.60 75.55 
+
+Z(2) 75.67 61.17 72.50 75.83 89.00 76.50 75.50 75.17 75.17 75.18 Language: French Pretrained D – – 82.00 67.00 74.00 75.00 82.00 70.00 70.00 74.29 74.00 73.80 Fine-tuned D D(κ) – 83.13 71.05 71.21 74.12 85.71 71.31 69.96 75.21 74.81 74.57 Seamless M4T D D(κ) S ¯D(κ) X 73.09 69.30 62.12 76.47 80.36 72.15 73.63 72.45 72.45 72.16 Seamless Expressive X 81.53 65.79 66.16 71.76 79.17 73.00 73.26 72.95 72.95 72.66 
+
+D D(κ) S ¯D(κ)
+
+Z(0) 83.94 73.68 66.16 73.73 86.31 69.62 73.26 75.24 75.00 74.64 Latent Filling Z(1) 79.52 71.49 73.74 72.94 84.52 68.35 76.19 75.25 74.94 74.74 
+
+Z(2) 81.53 67.98 71.21 74.51 84.52 70.89 70.70 74.48 74.13 73.90 
+
+D D(κ) S ¯D(κ)
+
+Z(0) 85.54 72.37 70.20 72.55 90.48 70.04 71.79 76.14 75.62 75.33 GeLDA (Ours) Z(1) 76.31 66.23 66.67 72.55 91.67 65.40 69.60 72.63 71.95 71.73 
+
+Z(2) 81.12 68.86 68.18 72.55 81.55 68.78 69.60 72.95 72.70 72.40 Language: German Pretrained D – – 99.00 73.00 86.00 93.00 98.00 97.00 – 91.10 92.73 91.79 Fine-tuned D D(κ) – 98.96 80.30 88.54 95.56 97.78 100.00 – 93.52 94.56 93.91 Seamless M4T D D(κ) S ¯D(κ) X 97.62 73.11 76.27 90.77 95.83 100.00 – 88.93 90.26 88.66 Seamless Expressive X 98.96 76.14 88.20 85.98 95.56 97.44 – 90.38 91.98 91.17 
+
+D D(κ) S ¯D(κ)
+
+Z(0) 100.00 76.14 85.97 97.78 97.78 100.00 – 92.94 94.56 93.60 Latent Filling Z(1) 98.96 76.14 87.73 95.56 97.78 100.00 – 92.69 94.16 93.25 
+
+Z(2) 98.96 76.14 85.97 95.56 97.78 97.44 – 91.97 93.42 92.58 
+
+D D(κ) S ¯D(κ)
+
+Z(0) 100.00 80.30 97.78 97.78 100.00 100.00 – 95.98 97.38 96.26 GeLDA (Ours) Z(1) 97.62 80.30 93.46 95.56 100.00 100.00 – 94.49 95.69 94.84 
+
+Z(2) 98.96 79.17 88.20 97.78 95.69 100.00 – 93.30 94.56 93.77 Language: Greek Pretrained D – – 90.00 72.00 91.00 85.00 – 88.00 – 85.23 85.23 85.33 Fine-tuned D D(κ) – 90.00 75.56 90.00 80.46 – 88.89 – 84.98 85.01 85.07 
+
+D D(κ) S ¯D(κ)
+
+Z(0) 93.33 74.44 90.00 85.06 – 85.56 – 85.68 85.68 85.61 Latent Filling Z(1) 90.00 74.44 95.56 78.16 – 88.89 – 85.41 85.46 85.47 
+
+Z(2) 90.00 71.11 93.33 83.91 – 87.78 – 85.22 85.23 85.18 
+
+D D(κ) S ¯D(κ)
+
+Z(0) 91.11 81.11 92.22 88.51 – 92.22 – 89.03 89.04 89.04 GeLDA (Ours) Z(1) 83.33 77.78 97.78 90.80 – 88.89 – 87.72 87.70 87.63 
+
+Z(2) 90.00 72.22 90.00 87.36 – 84.44 – 84.81 84.79 84.84 
+
+19 Semantics-Aware Generative Latent Data Augmentation for Learning in Low-Resource Domains 
+
+Table 13. Per language breakdown of few-shot SER experiments with W HISPER -LARGE as a backbone FM. 
+
+Model Pretrain Fine-tune Aug. Space Per emotion recall (%) UA (%) WA (%) Macro-F1 (%) Dataset Dataset Angry Disgust Fear Happy Neutral Sad Surprise 
+
+Language: Italian Pretrained D – – 78.00 73.00 72.00 76.00 87.00 75.00 71.00 75.88 75.88 75.84 Fine-tuned D D(κ) – 78.08 74.49 71.03 76.41 87.95 75.77 71.67 76.48 76.48 76.45 Seamless M4T D D(κ) S ¯D(κ) X 79.23 75.51 75.64 74.74 87.82 71.54 66.92 75.91 75.91 75.84 Seamless Expressive X 77.56 73.97 72.31 73.97 86.67 73.97 71.03 75.64 75.64 75.62 
+
+D D(κ) S ¯D(κ)
+
+Z(0) 79.36 73.46 73.72 74.87 88.72 77.18 72.56 77.13 77.13 77.08 Latent Filling Z(1) 78.21 71.15 73.85 76.03 86.41 73.33 69.62 75.51 75.51 75.48 
+
+Z(2) 76.92 72.95 72.31 74.87 87.05 75.51 71.79 75.92 75.92 75.90 
+
+D D(κ) S ¯D(κ)
+
+Z(0) 80.26 73.33 73.97 77.31 87.82 76.92 70.64 77.18 77.18 77.14 GeLDA (Ours) Z(1) 77.31 72.56 70.38 76.92 85.64 73.97 67.95 74.96 74.96 74.94 
+
+Z(2) 77.82 71.54 70.00 73.21 84.74 73.72 70.51 74.51 74.51 74.48 Language: Persian Pretrained D – – 95.00 – 57.00 88.00 92.00 80.00 70.00 80.22 89.17 79.10 Fine-tuned D D(κ) – 94.32 – 47.62 86.39 92.06 78.52 70.07 78.16 88.79 77.55 
+
+D D(κ) S ¯D(κ)
+
+Z(0) 94.96 – 33.33 87.76 92.99 80.37 72.79 77.03 89.74 77.43 Latent Filling Z(1) 94.57 – 47.62 90.48 92.20 82.59 71.43 79.81 89.83 78.96 
+
+Z(2) 94.70 – 57.14 87.07 91.80 79.26 71.43 80.24 89.17 78.72 
+
+D D(κ) S ¯D(κ)
+
+Z(0) 94.44 – 76.19 89.12 89.81 82.22 72.79 84.10 89.17 79.06 GeLDA (Ours) Z(1) 92.51 – 85.71 88.44 88.49 75.19 75.51 84.31 87.33 76.52 
+
+Z(2) 93.15 – 57.14 85.03 89.15 78.15 74.83 79.58 87.61 75.86 Language: Polish Pretrained D – – 89.00 – 35.00 – 51.00 – – 58.52 58.52 52.07 Fine-tuned D D(κ) – 88.89 – 34.44 – 51.11 – – 58.15 58.15 51.80 
+
+D D(κ) S ¯D(κ)
+
+Z(0) 93.33 – 34.44 – 54.44 – – 60.74 60.74 53.56 Latent Filling Z(1) 92.22 – 33.33 – 55.56 – – 60.37 60.37 54.24 
+
+Z(2) 90.00 – 35.56 – 51.11 – – 58.89 58.89 52.46 
+
+D D(κ) S ¯D(κ)
+
+Z(0) 91.11 – 34.44 – 55.56 – – 60.37 60.37 53.76 GeLDA (Ours) Z(1) 87.78 – 38.89 – 44.44 – – 57.04 57.04 50.51 
+
+Z(2) 94.44 – 32.22 – 54.44 – – 60.37 60.37 54.14 Language: Russian Pretrained D – – 78.00 47.00 50.00 59.00 63.00 41.00 – 56.08 56.95 56.17 Fine-tuned D D(κ) – 77.27 48.65 51.85 56.82 59.65 40.62 – 55.81 56.66 55.88 
+
+D D(κ) S ¯D(κ)
+
+Z(0) 78.03 48.65 56.30 59.09 57.89 38.54 – 56.42 57.50 56.03 Latent Filling Z(1) 76.52 54.95 57.78 55.30 57.89 31.25 – 55.62 56.81 55.42 
+
+Z(2) 79.55 46.85 54.07 58.33 60.53 42.71 – 57.01 57.92 56.89 
+
+D D(κ) S ¯D(κ)
+
+Z(0) 74.24 58.56 59.26 58.33 57.89 58.33 – 61.10 61.39 61.20 GeLDA (Ours) Z(1) 71.21 46.85 59.26 62.88 57.02 45.83 – 57.17 58.06 57.22 
+
+Z(2) 76.52 47.75 52.59 52.27 57.89 41.67 – 54.78 55.56 54.54 Language: Spanish Pretrained D – – 81.00 72.00 48.00 58.00 87.00 56.00 – 66.98 66.82 67.29 Fine-tuned D D(κ) – 84.76 73.15 47.22 61.11 88.57 59.26 – 69.01 68.85 69.10 Seamless M4T D D(κ) S ¯D(κ) X 78.10 75.00 39.81 63.89 85.71 61.11 – 67.27 67.13 66.93 Seamless Expressive X 79.05 75.93 41.67 69.44 88.57 60.19 – 69.14 69.00 68.58 
+
+D D(κ) S ¯D(κ)
+
+Z(0) 80.00 75.00 49.07 74.07 88.57 62.96 – 71.61 71.50 71.57 Latent Filling Z(1) 83.81 71.30 55.56 70.37 87.62 53.70 – 70.39 70.25 70.36 
+
+Z(2) 82.86 74.07 48.15 61.11 86.67 55.56 – 68.07 67.91 68.08 
+
+D D(κ) S ¯D(κ)
+
+Z(0) 77.14 75.00 55.56 73.15 90.48 54.63 – 70.99 70.87 71.00 GeLDA (Ours) Z(1) 81.90 72.22 50.00 77.78 84.76 57.41 – 70.68 70.56 70.53 
+
+Z(2) 82.86 72.22 44.44 65.74 83.81 61.11 – 68.36 68.22 68.10 Language: Turkish Pretrained D – – 91.00 – – 91.00 – 88.00 – 89.96 89.90 91.36 Fine-tuned D D(κ) – 91.74 – – 91.01 – 89.44 – 90.73 90.71 91.65 
+
+D D(κ) S ¯D(κ)
+
+Z(0) 94.21 – – 95.51 – 93.33 – 94.35 94.24 94.22 Latent Filling Z(1) 93.94 – – 91.39 – 90.28 – 91.87 91.92 92.53 
+
+Z(2) 92.56 – – 90.26 – 91.39 – 91.40 91.51 92.10 
+
+D D(κ) S ¯D(κ)
+
+Z(0) 93.94 – – 93.26 – 93.33 – 93.51 93.53 93.92 GeLDA (Ours) Z(1) 90.36 – – 93.26 – 93.89 – 92.50 92.42 92.74 
+
+Z(2) 90.91 – – 91.39 – 91.11 – 91.13 91.11 91.55 Language: Urdu Pretrained D – – 96.00 – – 73.00 68.00 57.00 – 73.67 73.67 73.58 Fine-tuned D D(κ) – 97.33 – – 73.33 60.00 62.67 – 73.33 73.33 73.07 
+
+D D(κ) S ¯D(κ)
+
+Z(0) 97.33 – – 72.00 78.67 62.67 – 77.67 77.67 77.47 Latent Filling Z(1) 94.67 – – 73.33 58.67 58.67 – 71.33 71.33 70.65 
+
+Z(2) 97.33 – – 72.00 60.00 60.00 – 72.33 72.33 72.07 
+
+D D(κ) S ¯D(κ)
+
+Z(0) 97.33 – – 80.00 77.33 68.00 – 80.67 80.67 80.91 GeLDA (Ours) Z(1) 97.33 – – 69.33 77.33 68.00 – 78.00 78.00 77.87 
+
+Z(2) 97.33 – – 68.00 66.67 58.67 – 72.67 72.67 72.32 
+
+20 Semantics-Aware Generative Latent Data Augmentation for Learning in Low-Resource Domains 
+
+F. Input-Space Image Generation 
+
+Listing 1. Prompt template used for text prompt generation. 
+
+You are an expert prompt engineer for Stable Diffusion. Given an image label, generate 100 diverse, high-quality prompts. Each prompt must be visually descriptive and vary in art style, camera angle, lighting, mood, era, medium, and environment. Avoid repeating prompt structures. All prompts must be written in English. Image label: {label_name} 
+
+Listing 2. Prompt examples of image label ”white stork.” 
+
+A serene white stork standing on a sunlit marshland at sunrise. An ancient white stork perched gracefully on a crumbling Roman ruin. A detailed oil painting of a white stork against a vivid sunset sky. A white stork soaring through a dense forest canopy with golden leaves. A surreal scene of a white stork flying over a futuristic city skyline. 
+
+Figure 6. Examples of images generated from Stable Diffusion 3 with generated text prompts of “A photo of a white stork”. 
+
+Figure 7. Examples of images generated from Stable Diffusion 3 with generated text prompts from Qwen2.5 with a label of “white stork” in Listing 2. 
+
+To generate a diverse set of images for each image label, we first construct a collection of text prompts that span a wide range of visual styles and attributes. Specifically, we use the Qwen 2.5 (Yang et al., 2024) large language model to generate 100 distinct text prompts per image label. These prompts are designed for input to the Stable Diffusion 3 image generation model (Esser et al., 2024). The prompt provided to Qwen 2.5 instructs the model to generate visually descriptive text prompts that vary across multiple dimensions, including art style, camera angle, lighting, mood, historical era, medium, and environment, while avoiding repetitive structures. The exact prompt template used for text prompt generation is shown in Listing 1. Representative examples of the generated prompts are provided in Listing 2, and the corresponding generated images are shown in Fig. 7. Compared to the images in Fig. 6, which are generated from a simple prompt (“A photo of a white stork”), the Qwen 2.5-generated prompts produce substantially more diverse images. This increased diversity is expected to be beneficial for training more robust image classifiers. 21

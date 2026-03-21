@@ -1,0 +1,599 @@
+Title: TopoCL: Topological Contrastive Learning for Medical Imaging
+
+URL Source: https://arxiv.org/pdf/2603.14647v1
+
+Published Time: Tue, 17 Mar 2026 05:21:18 GMT
+
+Number of Pages: 10
+
+Markdown Content:
+# TopoCL: Topological Contrastive Learning for Medical Imaging 
+
+## Guangyu Meng 1 Pengfei Gu 2* Peixian Liang 1
+
+## John P. Lalor 1,3 Erin Wolf Chambers 1* Danny Z. Chen 1*
+
+> 1
+
+## Dept. of Computer Science and Engineering, University of Notre Dame 
+
+> 2
+
+## The University of Texas Rio Grande Valley 
+
+> 3
+
+## Dept. of IT, Analytics, and Operations, University of Notre Dame 
+
+{gmeng, pliang, john.lalor, echambe2, dchen }@nd.edu, pengfei.gu01@utrgv.edu 
+
+## Abstract 
+
+Contrastive learning (CL) has become a powerful approach for learning representations from unlabeled images. How-ever, existing CL methods focus predominantly on visual ap-pearance features while neglecting topological character-istics (e.g., connectivity patterns, boundary configurations, cavity formations) that provide valuable cues for medical image analysis. To address this limitation, we propose a new topological CL framework (TopoCL) that explicitly ex-ploits topological structures during contrastive learning for medical imaging. Specifically, we first introduce topology-aware augmentations that control topological perturbations using a relative bottleneck distance between persistence di-agrams, preserving medically relevant topological proper-ties while enabling controlled structural variations. We then design a Hierarchical Topology Encoder that captures topo-logical features through self-attention and cross-attention mechanisms. Finally, we develop an adaptive mixture-of-experts (MoE) module to dynamically integrate visual and topological representations. TopoCL can be seamlessly in-tegrated with existing CL methods. We evaluate TopoCL on five representative CL methods (SimCLR, MoCo-v3, BYOL, DINO, and Barlow Twins) and five diverse medical im-age classification datasets. The experimental results show that TopoCL achieves consistent improvements: an aver-age gain of +3.26% in linear probe classification accuracy with strong statistical significance, verifying its effective-ness. Code is publicly available. 
+
+## 1. Introduction 
+
+Medical image annotation is a resource-intensive process that requires specialized domain expertise, making it sig-nificantly more costly and time-consuming than labeling 
+
+> *Corresponding authors. This research was supported in part by NSF Grants CCF-2444309 and CCF-2523787, AHA award 26AIREA1574568.
+
+Figure 1. Visualization of failure cases corrected by TopoCL on ISIC2019 [39]. Two dermatofibroma (DF) cases are misclassi-fied by the baseline MoCo-v3 [9] as actinic keratosis (AK, top) and melanocytic nevi (NV, bottom). MoCo-v3+TopoCL correctly classifies both as DF by capturing characteristic topological fea-tures: circular-to-oval boundary patterns with uniform internal connectivity (top) and radial pigmentation structures with a consis-tent boundary configuration despite hair overlay (bottom). Grad-CAM [35] heatmaps show that TopoCL focuses on lesion bound-aries and internal structural patterns, while the baseline exhibits scattered attention on peripheral or irrelevant regions. 
+
+natural images [4, 22, 27, 33]. As a result, medical im-age datasets often suffer from severe label scarcity and sub-stantial inter-observer variability [22, 33]. These labeling challenges fundamentally constrain supervised learning ap-proaches, limiting model generalization and clinical appli-cability [3, 46]. Contrastive learning (CL) has emerged as a powerful approach to address these annotation limitations, enabling models to learn rich visual representations from abundant unlabeled data before fine-tuning for downstream tasks with minimal labeled samples [5, 8, 21, 37]. The core principle of CL is to apply data augmenta-tions to create multiple views of each image, encode these views through deep neural networks, and learn representa-tions that maximize agreement between different views of 1
+
+> arXiv:2603.14647v1 [cs.CV] 15 Mar 2026
+
+the same image [8, 21]. Representative CL methods in-clude SimCLR [8], MoCo-v3 [9], BYOL [17], DINO [5], and Barlow Twins [44], which employ learning objectives based on contrastive losses, momentum encoders, predic-tive learning, self-distillation, and redundancy reduction. These methods achieve impressive performance by captur-ing local appearance features such as textures, intensities, and color patterns. However, they fundamentally operate on pixel-level semantics and do not explicitly encode topologi-cal patterns (e.g., connectivity, holes, and boundary config-urations), thus neglecting structural information useful for medical image analysis. As Fig. 1 shows, this limitation can lead to misclassifications of lesion types that differ pri-marily in boundary patterns, connectivity structures, or cav-ity formations but are “similar” in visual appearance. Such topological differences, captured by persistent homology, may be diagnostically critical but are largely overlooked by visual-only contrastive learning methods. To address this gap, we propose TopoCL , a new gen-eral topological contrastive learning framework for medi-cal images that augments standard contrastive learning with explicit topology preservation. Since standard CL augmen-tations provide no guarantee on structural preservation, we first introduce topology-aware augmentations that quantify and control topological perturbations using relative bottle-neck distance computed on regions of interest. We then de-sign a Hierarchical Topology Encoder that processes topo-logical features across different dimensions ( H0: connected components; H1: holes) through self-attention and cross-attention mechanisms to capture inter-dimensional struc-tural relationships. Both the visual and topological encoders are pretrained independently using identical contrastive ob-jectives. Finally, we employ an adaptive Mixture-of-Experts (MoE) fusion module to dynamically integrate their repre-sentations through five complementary experts (visual-only, topology-only, concatenation, gated blending, and cross-attention) using learned per-sample gating, producing the final topology-aware representations. Our main contributions are as follows: (1) Topology-aware augmentation design: Our new systematic method for designing augmentations explicitly quantifies and con-trols topological perturbations. Using relative bottleneck distance on regions of interest, we produce weak and strong topological augmentations that preserve diagnostically rele-vant structures while providing sufficient topological diver-sity for contrastive learning. (2) TopoCL framework: We propose a new topology-enhanced CL framework with a Hi-erarchical Topology Encoder and an adaptive MoE fusion module for integrating topological priors into contrastive learning. (3) Comprehensive validation: We demon-strate consistent average accuracy improvements of +3.26% across five CL methods and five medical image classifica-tion benchmarks, with strong statistical significance (86% of comparisons with p < 0.05 and 80% with p < 0.001 ). Our code is publicly available at https://github. com/gm3g11/TopoCL .
+
+## 2. Related Work 
+
+Contrastive Learning in Medical Imaging. CL has be-come a powerful paradigm for learning visual representa-tions from unlabeled images by maximizing the agreement between augmented views of the same instance [37]. Rep-resentative CL methods include SimCLR [8] with InfoNCE loss, MoCo-v3 [9] with momentum encoders, BYOL [17] with online-target asymmetry, Barlow Twins [44] with re-dundancy reduction, and DINO [5] with self-distillation. Despite their different loss formulations, these methods share the same fundamental principle of learning by com-paring multiple views of the same input, and have been suc-cessfully applied to medical imaging [3, 40]. However, existing CL methods fundamentally learn vi-sual appearance features from local pixel neighborhoods, overlooking global structural properties critical for medi-cal image analysis. Their augmentation strategies (random cropping, color jittering, Gaussian blurring, etc.) were de-signed for visual appearances and do not characterize topo-logical structures. Our work addresses these limitations by augmenting CL with explicit topological feature learning and topology-aware augmentations, providing a general en-hancement scheme applicable to any CL method. 
+
+Topological Data Analysis for Medical Images. 
+
+Appearance-driven CL methods can overlook geometric properties useful for medical image analysis [19, 20, 30], such as tissue components, glandular lumens, and lesion boundaries [14, 24]. Persistent homology (PH) [13] quantifies topology by tracking the births and deaths of connected components ( H0) and loops ( H1), summarizing them in persistence diagrams (PDs) with stability guaran-tees [7, 11]. A topological feature in an image I based on a filtration function is characterized by its birth time b
+
+and death time d, forming PD (I) = {(bi, d i)}. The bot-tleneck distance dB (PD 1, PD 2) = inf γ sup p ∥p − γ(p)∥∞
+
+measures dissimilarity between two PDs via an optimal matching γ [11]. We employ cubical PH [42], extracting topological signatures from the pixel intensities of images. Previous work applied PH to medical imaging for tex-ture analysis [38], segmentation [1, 10, 18], tumor grad-ing [24, 31], and supervised classification with architectures like PersLay [6] and PHG-Net [30]. These methods pre-dominantly use topology as auxiliary losses or in labeled settings. Unlike these methods, our work integrates PH into contrastive self-supervised learning, introducing a Hi-erarchical Topology Encoder with cross-attention to capture relationships between H0 and H1 and designing topology-aware augmentations that control structural perturbations. 
+
+Feature Fusion Strategies. Effective integration of hetero-2Original                 
+
+> Image (x)
+> Topo -Strong
+> Aug
+> H-Topo.
+> Encoder
+> (Pretrained)
+> Vis.
+> Encoder
+> (Pretrained)
+> f, f ∈ℝ 256
+> Vis.
+> Proj
+> (3 -layer
+> MLP)
+> Topo.
+> Proj
+> (3 -layer
+> MLP)
+> TopoCL MoE
+> Vis. -
+> Topo.
+> Embed
+> (f w/s ,tw/s )
+> tw, t s
+> ∈ℝ 256
+> Expert 2
+> Topo. -Only
+> Expert 4
+> Gated
+> Expert 1
+> Vis. -Only
+> Multi -
+> Gating
+> (3 -layer
+> MLP)
+> Weighted
+> Sum
+> ∑(gate w/s ×
+> expert w/s )
+> Proj Head
+> (3 -layer
+> MLP)
+> gate w, gate s∈ℝ 5
+> Expert 5
+> Cross -Attn
+> Expert 3
+> Concat
+> (a) Topological Contrastive Learning
+> Topo -Weak
+> Aug
+> Self -Attn
+> h1h1
+> Self -Attn
+> h0h0
+> Cross -Attn. h 0’h1’
+> PH Encoder
+> hcross ∈ℝ 144x384
+> h0’∈
+> ℝ48x384
+> h1∈ℝ 96x384
+> h0∈ℝ 48x384
+> hpool ∈ℝ 6x384
+> Proj Head (3 -layer MLP)
+> Max & Mean Pooling
+> h1’∈
+> ℝ96x384
+> (b) Structure of H -Topo. Encoder
+> PD
+> PD
+> xtopo
+> xtopo
+> xtopo
+> xtopo
+> Contrastive
+> 𝓛 oss (z w, z s)
+> zw, z s∈ℝ 256
+> hw,h s∈ℝ 512
+> t∈ℝ 256
+> PD (H 0,H 1)
+> w
+> s
+> s
+> s
+> w
+> w
+
+Figure 2. An overview of our TopoCL framework. (a) Topological Contrastive Learning : Given an input image x, we generate two views with topology-weak ( xw
+
+> topo
+
+) and topology-strong ( xs
+
+> topo
+
+) augmentations, and compute their persistence diagrams topo w and topo s. The visual encoder processes xw
+
+> topo
+
+, xs 
+
+> topo
+
+while the topology encoder processes topo w , topo s, with projection heads producing visual features f w , f s
+
+and topological features tw , ts. The TopoCL MoE module fuses these features through five experts (the colors distinguish the fusion strategies: Vis-Only, Topo-Only, Concat, Gated, and Cross-Attn) with learned gating weights, producing fused representations hw , hs. A projection head maps these to the final representations zw , zs, optimized via contrastive loss. (b) The structure of H-Topo. Encoder : It uses hierarchical self- and cross-attention to capture topological features from PDs with both H0 and H1 homology dimensions. 
+
+geneous features is critical for representation learning [26, 45]. Common strategies include concatenation [29], bilin-ear pooling [16], cross-attention [41], gated fusion [2], and Transformer-based fusion [28]. However, these fixed strate-gies assume that one approach is optimal for all inputs. Mixture-of-Experts (MoE) methods [15, 36] provide a framework for adaptive computation by routing inputs to specialized sub-networks. While successful in language models and Vision Transformers [34], to the best of our knowledge, MoE has not been explored for fusing visual and topological features. Our work introduces the first MoE architecture for visual-topological feature fusion. 
+
+## 3. Method 
+
+Fig. 2 illustrates our TopoCL framework. Our approach enhances standard CL by incorporating topological fea-tures: We independently pretrain the visual and topology encoders, and then jointly fine-tune them with adaptive MoE fusion. Specifically, we present an overview of the framework in Section 3.1, the topology-aware augmenta-tions in Section 3.2, hierarchical topology encoder in Sec-tion 3.3, and MoE fusion module in Section 3.4. 
+
+3.1. Overview 
+
+Given unlabeled medical images, D = {xi}Ni=1 , and a base CL method M (e.g., SimCLR, MoCo-v3, BYOL), TopoCL enhances M by incorporating topological features to learn effective representations. We adopt a pretraining-then-fusion strategy: We independently pretrain visual encoder 
+
+fv and topology encoder ft, both using contrastive objec-tive LM but with different augmentations. For visual pre-training, we apply standard augmentations (random crop, color jitter, Gaussian blur) to generate xw 
+
+> vis
+
+and xs 
+
+> vis
+
+(super-scripts w and s indicate weak and strong views). For topol-ogy pretraining and joint fine-tuning, we apply topology-aware augmentations (Section 3.2) to generate xw 
+
+> topo
+
+and 
+
+xs
+
+> topo
+
+. Independent pretraining ensures that each encoder learns feature-specific representations without interference, while joint fine-tuning aligns feature spaces for fusion. 
+
+Visual Encoder Pretraining. We generate xw 
+
+> vis
+
+and xs
+
+> vis
+
+,and optimize the encoder parameters θv through a 3-layer MLP projection head gv :
+
+θ∗ 
+
+> v
+
+= arg min 
+
+> θv
+
+Ex∼D [LM(gv (fv (xw
+
+> vis
+
+)) , g v (fv (xs
+
+> vis
+
+)))] .
+
+Topology Encoder Pretraining. We generate xw
+
+> topo
+
+and xs 
+
+> topo
+
+and compute their PDs via persistent homology: topo w = PD (xw
+
+> topo
+
+) and topo s = PD (xs
+
+> topo
+
+). We optimize the encoder parameters θt through a 3-layer MLP projec-tion head gt:
+
+θ∗ 
+
+> t
+
+= arg min 
+
+> θt
+
+Ex∼D [LM(gt(ft(topo w)) , g t(ft(topo s)))] .
+
+Joint Fine-tuning. After pretraining, we integrate both encoders via an adaptive MoE module (TopoCL MoE in Fig. 2(a)) and jointly fine-tune all parameters, including the pretrained encoders fv and ft. We project both encoder out-puts to a shared 256-dimensional embedding space through separate 3-layer MLP projection heads, yielding visual fea-tures f w/s and topological features tw/s . These features are then fused through the MoE module and optimized using the contrastive loss LM.
+
+3.2. Topology-Aware Augmentations 
+
+Existing CL methods [8, 9, 17] use standard visual augmen-tation strategies designed to preserve visual appearances but do not explicitly control their effects on topological struc-tures. However, topological features such as lesion bound-aries and tissue connectivity are critical for medical im-age analysis [24, 25, 31], and visual-only augmentations can inadvertently alter these medically-relevant structures. To address this lack of topological control, we introduce topology-weak and topology-strong augmentations, which 3Table 1. Topology-aware augmentation categories. All topological effects (except homeomorphism) are parameter-dependent.               
+
+> Category Operations Topological Effect
+> Homeomorphism Flips, rotations Topology-preserving ( drel
+> B≈0)Boundary perturb. Gaussian noise Perturb boundary structures Smoothing Gaussian blur Merge/separate features Intensity Contrast, brightness Shift feature prominence Morphological Dilation, erosion Modify connectivity and holes
+
+maintain structural similarity for positive pairs while pro-viding sufficient topological diversity for CL methods. Designing such topology-aware augmentations involves three challenges. (1) We need to define a quantitative measure for topological changes after augmentations. (2) We need to identify which augmentation operations and their parameter settings produce controllable topological changes. (3) We need to establish optimal measure ranges for topology-weak versus topology-strong augmentations that balance topological similarity with sufficient diversity for effective TopoCL training. For the first challenge, we define a relative bottleneck distance to quantify topological changes: 
+
+drel  
+
+> B
+
+(A, x ) = dB (PD (x), PD (A(x))) 
+
+span (PD (x)) ,
+
+where PD (x) denotes the persistence diagram of image x,
+
+A is an augmentation operator, A(x) is the augmented ver-sion of image x, dB is the bottleneck distance between PDs, and span (PD (x)) = max (b,d )∈PD (x) |d − b| provides nor-malization to enable comparison across images with differ-ent topological scales, where (b, d ) denotes the birth and death times of topological features. We compute drel  
+
+> B
+
+sep-arately for the H0 and H1 homology dimensions, and take the maximum as the overall topological change. Our drel 
+
+> B
+
+measure is grounded in the stability theorem [11], which guarantees that augmentations with bounded intensity pro-duce bounded changes in PDs. To apply this measure effectively, we consider where to compute PDs. Computing drel  
+
+> B
+
+on full medical images can include background noise and artifacts that obscure relevant topological changes. Thus, we compute PDs on regions of interest (ROIs) rather than on the full images. We ex-tract ROIs using the Segment Anything Model (SAM) [23], which automatically identifies foreground regions contain-ing relevant structures. Consistent with previous obser-vations [10, 31], we find that persistent topological fea-tures concentrate within ROIs. This ROI-focused approach ensures that drel  
+
+> B
+
+captures diagnostically relevant structural changes while filtering out background artifacts. For the second challenge, we identify which opera-tions and parameter settings produce controllable topolog-ical changes. However, exhaustive testing across all pos-sible operations is infeasible. Thus, we categorize oper-ations based on their mechanisms and topological effects, and determine representative operations within each cate-gory. We identify five categories (Table 1): homeomor-phisms (flips, rotations) preserve topology by reorienting pixel grids; boundary perturbations (Gaussian noise) al-ter sublevel set boundaries, potentially merging or split-ting components; smoothing (Gaussian blur) merges nearby features or eliminates small structures; intensity transforms (contrast, brightness) shift filtration thresholds; morpholog-ical operations (dilation, erosion) directly modify pixel con-nectivity, adding or removing connections. We systematically vary each operation’s intensity and measure drel  
+
+> B
+
+across configurations, confirming positive cor-relation between intensity and drel  
+
+> B
+
+. For example, increasing Gaussian noise can cause boundaries to fragment or merge, substantially increasing drel  
+
+> B
+
+. We extend this to 2-3 opera-tion combinations, identifying intensity ranges with varying topological changes. For the third challenge, having determined how opera-tions affect topology with drel  
+
+> B
+
+, we identify optimal intensity ranges for topology-weak vs topology-strong augmenta-tions. We consider various weak-strong range pairs by train-ing TopoCL and measuring downstream linear probe perfor-mance (e.g., weak: 0-10%, strong: 10-20%; weak: 5-15%, strong: 15-25%). With systematic evaluations, we find that topology-weak augmentations should use operation intensi-ties producing drel  
+
+> B
+
+of 5-15%, and topology-strong augmen-tations should use intensities giving drel  
+
+> B
+
+of 15-25%. This yields optimal performance across the datasets. Complete ablation results are given in Supplementary Material. During training, we randomly select an operation com-bination and sample each operation’s intensity from val-idated ranges corresponding to the desired augmentation type: topology-weak augmentations use ranges producing 
+
+drel  
+
+> B
+
+of 5-15%, while topology-strong augmentations use 15-25%. For example, on ISIC2019, applying Flip with Gaus-sian noise σ ∈ [0 .05 , 0.15] and contrast in [0.1, 0.2] pro-duces topology-weak augmentations. When this combina-tion is selected, we sample noise and contrast from these ranges without computing drel  
+
+> B
+
+at training time. 
+
+3.3. Hierarchical Topology Encoder 
+
+Having designed topology-aware augmentations, we con-sider how to encode PDs into learnable representations for contrastive learning. PDs are unordered sets of birth-death pairs, presenting a permutation invariance challenge similar to point cloud processing [32]. Moreover, persistent ho-mology (PH) produces two types of features with distinct geometric semantics: H0 captures connected components while H1 captures holes; H0 and H1 exhibit geometric de-pendencies (e.g., holes are always bounded by connected components). We design a hierarchical topology encoder (H-Topo. Encoder) that addresses permutation invariance while respecting such structural distinctions and geomet-4ric relationships. Fig. 2(b) shows our H-Topo. Encoder architecture. Given a PD containing H0 and H1 features, we encode point sets through a PH Encoder, apply self-attention within each homology dimension, model inter-dimensional relationships via bidirectional cross-attention, aggregate features with max and mean pooling, and project to the final representation t ∈ R256 .To process PDs, we adopt a PointNet-like network [32], called the PH Encoder. Since PDs have variable sizes, we select the top-k most persistent features ( kH0 = 48 , kH1 =96 ), which capture nearly all significant topological struc-tures across our benchmarks. We represent each selected birth-death pair as pi = ( bi, d i), where i ∈ { 1, . . . , 144 }
+
+indexes the sequence of H0 and H1 features. To enable the encoder to distinguish between homology dimensions, we augment each pair with one-hot encoding: en i = [1 , 0] for the first 48 points ( H0) and en i = [0 , 1] for the remain-ing 96 points ( H1), giving ˜pi = [pi; en i] ∈ R4. The PH Encoder processes all 144 ˜pi independently through four fully-connected layers (4 →64 →128 →256 →384). We then separate the encoded features into h0 ∈ R48 ×384 and 
+
+h1 ∈ R96 ×384 for the two homology dimensions. Given the embeddings h0 and h1 from the PH Encoder, we effectively learn topological representations that cap-ture structural patterns. Medical image analysis commonly relies on two key characteristics. (1) Certain anatomical regions are more medically significant than others. For example, in tissue analysis, tumor regions are more diag-nostically relevant than background tissues [27]. This re-quires our model to distinguish the importance of topologi-cal features within each homology dimension (e.g., H0 fea-tures representing tumor regions vs background tissues). (2) Structural relationships among different types of anatom-ical features provide critical diagnostic information. For example, glandular lumens occurring within tumor regions indicate malignancy, while similar lumens within healthy tissues are benign [31]. Thus, our model should capture geometric dependencies between H0 features (e.g., repre-senting tumor regions or healthy tissues) and H1 features (e.g., representing glandular lumens). We address both requirements through hierarchical attention mechanisms: self-attention within each dimension distinguishes feature importance, and cross-attention between dimensions cap-tures geometric dependencies. Specifically, as shown in Fig. 2(b), we first apply self-attention within each homology dimension with weighted residual connections: h′ 
+
+> 0
+
+= h0 + λ0 · SelfAttn (h0), h′ 
+
+> 1
+
+=
+
+h1 + λ1 · SelfAttn (h1), where λ0 = λ1 = 0 .5 balance learned attention with the original features. Bidirectional cross-attention then models geometric relationships: h↔ 
+
+> 0
+
+=
+
+CrossAttn (h′
+
+> 0
+
+, h′
+
+> 1
+
+), h↔ 
+
+> 1
+
+= CrossAttn (h′
+
+> 1
+
+, h′
+
+> 0
+
+), where H0
+
+features serve as query and H1 as key and value in h↔ 
+
+> 0
+
+,and vice versa in h↔ 
+
+> 1
+
+, modeling topological dependencies                   
+
+> Table 2. Dataset statistics for the five medical image datasets.
+> Dataset Modality Classes Train / Test
+> PathMNIST Colon Pathology 989,996 / 7,180 OCTMNIST Retinal OCT 497,477 / 1,000 OrganSMNIST Abdominal CT (Sagittal) 11 13,940 / 8,829 ISIC2019 Skin Lesion Dermoscopy 825,331 / 8,238 Kvasir GI Endoscopy 83,200 / 800
+
+such as hole containment within components. We concate-nate the cross-attention outputs as hcross = [ h↔ 
+
+> 0
+
+; h↔ 
+
+> 1
+
+] ∈
+
+R144 ×384 , where [ ·;·] denotes concatenation (Cross-Attn in Fig. 2(b)). Both self-attention and cross-attention use 4-head multi-head attention. We aggregate features from self-attention ( h′
+
+> 0
+
+, h′
+
+> 1
+
+) and cross-attention ( hcross ) using max and mean pooling. Max pooling captures the most salient topological structures, while mean pooling preserves global distributional infor-mation. Applying both pooling operations to each of these three feature sets yields six pooled vectors of 384 dimen-sions each, denoted as hpool ∈ R6×384 (Max & Mean Pool-ing in Fig. 2(b)). A projection head (a three-layer MLP: 2304 →768 →512 →256) then maps the flattened hpool to the final representation t ∈ R256 (Proj Head in Fig. 2(b)). During pretraining, the H-Topo. Encoder is trained with the contrastive loss LM.
+
+3.4. Mixture-of-Experts Fusion 
+
+After independently pretraining the visual and topology en-coders (Section 3.1), we jointly fine-tune them with a fusion module using contrastive learning. Existing fusion strate-gies include concatenation [29], gated fusion [2], cross-attention [41], etc., each assuming that a single strategy is optimal for all samples. However, medical images often exhibit substantial heterogeneity: texture-dominated sam-ples (e.g., in dermoscopy images, pigmentation patterns are diagnostic) may benefit more from visual features, while structure-dominated samples (e.g., in histopathology, glan-dular connectivity is critical) require stronger topological signals [27]. Such diversities motivate the use of a Mixture-of-Experts (MoE) approach [36], which combines multiple fusion strategies rather than committing to a single strategy. We design five fusion experts covering diverse paradigms (vision-only, topology-only, concatenation, gated blending, and cross-modal interaction), enabling the model to learn sample-specific expert weights. Fig. 2(a) illustrates the joint fine-tuning workflow with MoE fusion. Given an input image x, we apply topology-aware augmentations (Section 3.2) to generate two views 
+
+xw 
+
+> topo
+
+and xs
+
+> topo
+
+, and compute their PDs topo w = PD (xw
+
+> topo
+
+)
+
+and topo s = PD (xs
+
+> topo
+
+). The two pretrained encoders fv and 
+
+ft process the augmented images and PDs, respectively. We project both encoder outputs to a shared 256-dimensional embedding space through separate 3-layer MLP projection heads, yielding visual features f w, f s and topological fea-5Table 3. Performance comparison across five medical image datasets. The results show mean ± standard deviation over five independent runs. Statistical significance is assessed via paired t-tests: ∗∗∗ : p < 0.001 , ∗∗ : p < 0.01 , ∗: p < 0.05 . † indicates performance decrease. The Avg. columns report dataset-averaged metric values. 
+
+Path OrganS OCT ISIC Kvasir Avg. Method ACC AUC ACC AUC ACC AUC ACC AUC ACC AUC ACC AUC SimCLR [8] 92 .57 ±0.31 99 .12 ±0.11 77 .12 ±0.26 96 .41 ±0.26 69 .41 ±0.56 91 .83 ±0.43 66 .04 ±2.29 88 .01 ±1.11 74 .33 ±1.28 95 .89 ±0.76 75 .89 ±0.51 94 .25 ±0.11 
+
++TopoCL 93 .21 ∗±0.14 99 .28 ±0.05 78 .62 ∗∗∗ ±0.06 96 .75 ∗±0.33 73 .10 ∗∗∗ ±0.21 93 .41 ∗∗ ±0.26 71 .62 ∗∗ ±0.21 89 .82 ∗∗ ±0.77 78 .61 ∗∗ ±0.41 97 .11 ∗±0.32 79 .03 ∗∗∗ ±0.10 95 .27 ∗∗∗ ±0.15 
+
+MoCo-v3 [9] 93 .13 ±0.42 99 .07 ±0.09 78 .02 ±0.34 99 .57 ±0.31 80 .02 ±0.34 96 .01 ±0.04 74 .98 ±2.01 92 .86 ±1.12 88 .42 ±2.01 97 .37 ±2.01 82 .91 ±0.66 96 .98 ±0.60 
+
++TopoCL 94 .55 ∗∗ ±0.20 99 .24 ∗∗ ±0.09 80 .58 ∗∗∗ ±0.09 98 .75 †±0.21 82 .09 ∗∗∗ ±0.26 97 .09 ∗∗∗ ±0.13 78 .44 ∗±0.83 93 .26 ±0.97 91 .17 ∗±0.83 98 .81 ±0.46 85 .37 ∗∗∗ ±0.11 97 .43 ±0.27 
+
+BYOL [17] 93 .42 ±0.09 99 .31 ±0.14 76 .41 ±0.19 97 .33 ±0.08 76 .02 ±0.26 95 .89 ±0.25 73 .82 ±3.19 90 .75 ±0.79 85 .67 ±0.98 96 .91 ±0.13 81 .07 ±0.49 96 .04 ±0.20 
+
++TopoCL 94 .89 ∗∗∗ ±0.19 99 .41 ±0.06 79 .53 ∗∗∗ ±0.12 98 .03 ∗∗ ±0.21 79 .13 ∗∗∗ ±0.24 96 .18 ∗±0.16 77 .18 ±0.62 91 .52 ±0.46 88 .83 ∗∗ ±0.88 97 .55 ∗±0.48 83 .91 ∗∗∗ ±0.14 96 .54 ∗±0.20 
+
+DINO [5] 91 .92 ±0.15 98 .99 ±0.18 71 .11 ±0.31 95 .39 ±0.08 61 .21 ±0.33 91 .27 ±0.16 63 .24 ±2.45 85 .28 ±0.89 71 .42 ±1.86 96 .99 ±0.27 71 .78 ±0.50 93 .58 ±0.19 
+
++TopoCL 94 .57 ∗∗∗ ±0.08 99 .38 ∗∗ ±0.05 77 .21 ∗∗∗ ±0.17 96 .96 ∗∗∗ ±0.13 65 .03 ∗∗∗ ±0.19 93 .87 ∗∗∗ ±0.15 67 .08 ∗±0.17 88 .38 ∗∗ ±0.59 77 .99 ∗∗ ±1.27 98 .31 ∗∗ ±0.25 76 .38 ∗∗∗ ±0.30 95 .38 ∗∗∗ ±0.17 
+
+Barlow [44] 93 .09 ±0.11 99 .41 ±0.06 76 .76 ±0.26 98 .13 ±0.09 78 .08 ±0.49 96 .91 ±0.15 62 .70 ±1.41 87 .11 ±0.26 73 .41 ±1.29 97 .57 ±0.22 76 .81 ±0.37 95 .83 ±0.08 
+
++TopoCL 94 .91 ∗∗∗ ±0.05 99 .52 ±0.04 79 .69 ∗∗∗ ±0.09 98 .75 ∗∗∗ ±0.11 80 .51 ∗∗∗ ±0.28 97 .28 ∗±0.18 67 .22 ∗∗ ±0.23 89 .02 ∗∗ ±0.45 78 .08 ∗∗ ±1.08 98 .13 ∗±0.41 80 .08 ∗∗∗ ±0.20 96 .54 ∗∗∗ ±0.08 
+
+tures tw, ts (Vis.-Topo. Embed in Fig. 2(a)). A multi-gating network processes the concatenated features [f ; t] to com-pute sample-specific weights, gate w, gate s ∈ R5. In par-allel, the five fusion experts process the features based on their respective strategies (detailed below). The expert out-puts are combined through weighted summation using the gate weights (Weighted Sum in Fig. 2(a)), and a projection head produces the final embeddings zw, zs ∈ R256 .To enable this sample-adaptive fusion, we design five expert networks with distinct fusion strategies. For clar-ity, we describe the operations for a single view; the same approach applies to both views. All experts have ac-cess to both projected visual features f and topological features t (corresponding to f w, tw or f s, ts), but pro-cess them with their own strategies. Expert 1 , Vis.-Only (e1), and Expert 2 , Topo.-Only ( e2), process single fea-ture types: e1 = MLP (f ), e2 = MLP (t), allowing the model to rely solely on visual or topological information. 
+
+Expert 3 , Concat ( e3), processes concatenated features: 
+
+e3 = MLP ([ f ; t]) , capturing additive interactions. Ex-pert 4 , Gated Blending ( e4), learns sample-specific blend-ing: g = σ(MLP ([ f ; t])) , e4 = MLP (g ⊙ f + (1 −
+
+g) ⊙ t), where σ is sigmoid and ⊙ denotes element-wise multiplication. Expert 5 , Cross-Attn ( e5), applies bidi-rectional cross-attention with residual connections: f ′ =
+
+f + CrossAttn (Q = f , KV = t), t′ = t + CrossAttn (Q =
+
+t, KV = f ), e5 = MLP ([ f ′; t′]) , where Q denotes query and KV denotes key-value pairs in the attention mech-anism. All experts use 3-layer MLPs and output 512-dimensional representations ei ∈ R512 .These expert outputs are combined with a gating mechanism. A multi-gating network (a 3-layer MLP: 512 →256 →128 →5) takes concatenated features [f ; t]
+
+as input and produces normalized weights: gate =
+
+softmax (Multi-Gating ([ f ; t])) ∈ R5. The fused represen-tation is obtained via weighted sum: h = P5
+
+i=1 gate i · ei ∈
+
+R512 , which a projection head then maps to z ∈ R256 
+
+(Proj Head in Fig. 2(a)). During joint fine-tuning, both views produce embeddings zw, zs, optimized using the con-trastive objective in Section 3.1. During inference, given a single image, we extract its ROIs, compute the PD with-out augmentations, process the image through fv and the PD through ft respectively, and fuse the projected features through the gating mechanism and experts to produce the final representation for downstream tasks. 
+
+## 4. Experiments 
+
+Datasets. We evaluate on five medical image classifica-tion datasets covering diverse modalities and anatomical regions (Table 2): PathMNIST, OCTMNIST, OrganSM-NIST, ISIC2019, and Kvasir. All images are preprocessed to 224 × 224 following MedMNIST v2 protocols [43]. 
+
+Baseline Methods. We integrate TopoCL with five rep-resentative CL methods: SimCLR [8], MoCo-v3 [9], BYOL [17], DINO [5], and Barlow Twins [44]. All meth-ods use ResNet-50 as the visual encoder backbone and are trained for 150 epochs. 
+
+Evaluation Protocol. Following standard self-supervised evaluation [5, 8], we assess representation quality via lin-ear probing: a linear classifier is trained on frozen encoder features for 100 epochs and evaluated on the test set. We report accuracy (ACC) and macro-averaged AUC, averaged over five runs with statistical significance via paired t-tests. 
+
+Implementation Details. We apply SAM-ViT-H [23] to extract ROIs and compute PDs with GUDHI [12], retain-ing top-48 H0 and top-96 H1 features. The Hierarchical Topology Encoder uses 4-head attention with dimension 384. Models are trained on H100 GPUs with batch size 256, AdamW optimizer (learning rate 3 × 10 −4), and co-sine annealing. Full details are in Supplementary Material. 
+
+4.1. Main Results 
+
+Table 3 presents comprehensive results on integrating our TopoCL with five CL methods and five medical image 6Table 4. Ablation of topology-aware augmentation configurations using MoCo-v3+TopoCL. ACC results (%) are reported.                   
+
+> Configuration OrganS ISIC Kvasir
+> TopoCL (weak+strong) 75.51 ±1.56 72.92 ±2.32 84.63 ±1.85
+> TopoCL (full image) 76.34 ±1.46 74.35 ±1.58 87.41 ±1.88
+> TopoCL (topo-weak+topo-weak) 78.98 ±0.37 76.39 ±0.55 90.01 ±0.28
+> TopoCL (topo-strong+topo-strong) 78.02 ±0.68 75.99 ±1.02 89.64 ±0.91
+> TopoCL (topo-weak+topo-strong) 80.58 ±0.99 78.44 ±0.83 91.17 ±0.43
+
+datasets. Averaged across all datasets, TopoCL consis-tently improves the baseline performance, with ACC gains ranging from +2.46% to +4.60% and AUC gains from +0.45% to +1.80%, giving overall average improvements of +3.26% ACC and +0.90% AUC. Statistical analysis via paired t-tests shows strong statistical significance: 86% (43/50) of individual dataset-metric comparisons and 90% (9/10) of dataset-averaged metrics achieve statistical signif-icance (p <0.05), with 80% of the averaged metrics reaching p<0.001. Importantly, observe that TopoCL benefits all five CL methods, with every baseline showing positive average improvements in both ACC and AUC. TopoCL yields particularly strong results with DINO, achieving the largest average gains (+4.60% ACC, +1.80% AUC) with statistical significance across all ten dataset-metric combinations. Dataset-wise, OCT and Kvasir show substantial improvements (average gains of +3.02% and +4.29% ACC, respectively), with beneficial structural pat-terns from topological features. ISIC exhibits higher vari-ance due to skin lesion heterogeneity, yielding some mod-erate improvements despite consistent positive trends. One notable exception occurs with MoCo-v3 on Or-ganSMNIST, where AUC decreases from 99.57% to 98.75% (p =0.023) despite a considerable ACC improve-ment (+2.56%, p <0.001). This suggests a trade-off in the near-saturated situations (baseline AUC >99.5%), where topological features help optimize classification perfor-mance at the expense of ranking confidence. Nevertheless, these results validate that TopoCL provides robust and sta-tistically significant improvements across diverse CL meth-ods and medical imaging modalities. 
+
+4.2. Topology-Aware Augmentation Design Choices 
+
+We evaluate topology-aware augmentation design choices using MoCo-v3+TopoCL on three datasets. We com-pare five configurations: (a) weak+strong : standard vi-sual weak/strong augmentations (as in the baseline MoCo-v3); (b) full image : topology-aware weak/strong augmen-tations with PDs computed on the entire images instead of SAM-extracted ROIs; (c) topo-weak+topo-weak and (d) 
+
+topo-strong+topo-strong : symmetric topology-aware aug-mentation pairs (both views use the same augmentation strength) on SAM-extracted ROIs; (e) topo-weak+topo-strong : mixed topology-aware augmentation pairs (differ-ent augmentation strengths) on SAM-extracted ROIs. 
+
+Table 5. Ablation with SimCLR+TopoCL on three datasets. We evaluate: (1) pretraining strategies (rows 1-3); (2) hierarchical topology encoder components (rows 4-6); (3) MoE expert choices (rows 7-11). ACCs (%) averaged over five runs are reported.                                        
+
+> Configuration Path OrganS OCT
+> w/o pretraining 68 .98 ±1.43 50 .61 ±0.87 48 .72 ±1.77
+> w/o vis. pretrain 81 .53 ±0.98 64 .72 ±1.21 66 .98 ±0.83
+> w/o topo. pretrain 87 .64 ±0.92 72 .56 ±1.11 69 .37 ±0.89
+> w/o hier. attn 86 .51 ±0.93 72 .85 ±0.76 67 .62 ±1.03
+> w/o self-attn 91 .24 ±0.85 76 .03 ±0.56 70 .28 ±0.66
+> w/o cross-attn 87 .59 ±0.85 74 .66 ±0.71 69 .38 ±0.57
+> w/o vis-only expert 92 .59 ±0.43 77 .47 ±0.51 71 .85 ±0.34
+> w/o topo-only expert 93 .01 ±0.18 78 .15 ±0.11 72 .53 ±0.25
+> w/o concat expert 92 .88 ±0.58 78 .05 ±0.43 72 .68 ±0.41
+> w/o gated expert 92 .05 ±0.56 76 .89 ±0.47 71 .63 ±0.66
+> w/o cross-attn expert 91 .75 ±0.48 76 .03 ±0.56 70 .95 ±0.48
+> Full model 93 .21 ±0.14 78 .62 ±0.06 73 .10 ±0.21
+
+In Table 4, we observe: (1) Replacing standard visual augmentations with topology-aware augmentations yields substantial gains; the mixed topo-weak+topo-strong pair-ing achieves the best results across the datasets. This supports our premise that explicitly controlling topological perturbations preserves semantically meaningful structures. (2) Computing PDs on SAM-extracted ROIs outperforms computing them on full images, indicating that focusing topology measurements on relevant anatomy (rather than background) enables more precise topological control. (3) Symmetric topology-aware pairs ( topo-weak+topo-weak 
+
+or topo-strong+topo-strong ) improve over standard visual augmentations, but the mixed pairing provides the most in-formative contrast, likely because it exposes the encoder to controlled yet complementary topology variations. 
+
+4.3. Ablation Studies 
+
+To validate the effect of each design component, we con-duct systematic ablations with SimCLR+TopoCL on three datasets (Table 5). We evaluate the pretraining strategies, topology encoder architecture, and MoE expert choices. 
+
+Pretraining Strategies. Visual and topological pretrain-ing are both essential; their removal causes severe degrada-tion (68.98% vs 93.21% on PathMNIST). Visual pretraining has a much larger impact (performance drops to 81.53%) than topological pretraining (87.64%), confirming that vi-sual features provide primary representations and topologi-cal features offer complementary structural information. 
+
+Topology Encoder Architecture. The hierarchical design is critical; its complete removal drops the performance by 6.70% on PathMNIST. Cross-attention (87.59%) is more important than self-attention (91.24%), as it captures rela-tionships between connected components ( H0) and holes (H1), validating our hierarchical integration strategy. 
+
+MoE Expert Effects. All five experts contribute to the performance, with fusion-based experts being most effec-tive: Cross-attention expert (1.73% average drop when re-7Vis 
+
+> Topo
+> Conc
+> Gate
+> Attn
+> 0.0
+> 0.2
+> 0.4
+> Weight  Path
+> Vis
+> Topo
+> Conc
+> Gate
+> Attn
+> OCT
+> Vis
+> Topo
+> Conc
+> Gate
+> Attn
+> OrganS
+> Vis
+> Topo
+> Conc
+> Gate
+> Attn
+> ISIC
+> Vis
+> Topo
+> Conc
+> Gate
+> Attn
+> Kvasir
+
+Figure 3. Expert gating analysis for TopoCL integrated with BYOL on five datasets. Error bars show standard deviation across test samples. Five experts: visual-only (Vis), topology-only (Topo), concatenation (Conc), gated blending (Gate), and cross-attention (Attn). Table 6. Computational cost comparison on ISIC2019.                                                    
+
+> Method Train (h) Params (M) FLOPs (G) Tput. Overhead
+> SimCLR 1.58 24.89 4.11 668 -+TopoCL 1.84 31.08 6.11 574 +16% BYOL 1.72 53.28 2.88 614 -+TopoCL 1.96 60.48 4.58 539 +14% DINO 1.79 45.16 5.23 590 -+TopoCL 1.99 51.00 7.03 531 +11% Barlow 1.28 24.89 4.57 825 -+TopoCL 1.51 31.08 6.54 700 +18% MoCo-v3 1.72 52.89 3.09 614 -+TopoCL 1.83 59.73 5.33 577 +6%
+
+Table 7. Training and inference cost breakdown for Sim-CLR+TopoCL on ISIC2019.                      
+
+> Component Training Inference Time (h) %Params (M) FLOPs (G)
+> Visual Encoder 1.06 57.61 24.03 4.11 Topo Encoder 0.35 19.02 3.83 1.99 MoE+Proj 0.43 23.37 3.23 0.01
+> Total 1.84 100.0 31.08 6.11
+
+moved), gated expert (1.45%), visual-only expert (1.01%), concat expert (0.44%), and topology-only expert (0.41%). The finding of fusion experts outweighing feature-specific experts validates our MoE design, in which topological information is effectively leveraged when adaptively inte-grated with visual features rather than used in isolation. 
+
+4.4. Computational Cost Analysis 
+
+Table 6 analyzes the computational overhead of TopoCL with the five CL methods. Integrating topology-aware aug-mentation and MoE fusion adds modest overhead: Training time increases by 6-18%, depending on the method (13% average), with SimCLR+TopoCL completing 150 epochs in 1.84 hours on H100. The parameter count increases by 6.5M on average (17%), while FLOPs increase by ∼2GFLOPs (51% average increase). The throughput reduc-tion averages 12%, which is acceptable for medical imaging applications where training is typically conducted once. Table 7 provides cost breakdown for SimCLR+TopoCL. The Visual Encoder (24.03M parameters) refers to the ResNet-50 backbone shared with the baseline SimCLR. The baseline’s parameter count of 24.89M in Table 6 includes an additional 0.86M projection head, which TopoCL replaces with the Topo Encoder (3.83M) and MoE+Proj (3.23M) modules. The visual encoder dominates both training time (57.61%) and inference cost (67% of FLOPs), while the topology encoder contributes 19% of training time and 33% of inference FLOPs. For deployment, topology features can be precomputed offline (0.64 h for ISIC2019), reducing inference overhead to primarily the MoE+Proj component and making TopoCL practical for clinical applications. 
+
+4.5. Expert Gating Analysis 
+
+Fig. 3 reveals dataset-specific gating patterns for BYOL. PathMNIST strongly prefers topology-only and cross-attention experts, indicating histopathology benefits from both standalone topological features and their integration with visual features. OCTMNIST and OrganSMNIST ex-hibit balanced gating, indicating retinal OCT and abdominal CT structures require diverse fusion strategies. ISIC2019 demonstrates the strongest topology-only preference, likely because skin lesion boundaries encoded by PH are particu-larly discriminative. Kvasir shows balanced weights with a slight emphasis on concatenation and visual-only experts. The topology-only expert receives varying importance across the datasets (high on ISIC2019, lower on the oth-ers), demonstrating adaptive determination of when stan-dalone topological features are most valuable vs when inte-gration through fusion experts is preferred. While Table 3 shows that topological features improve all methods, this analysis reveals that an optimized fusion strategy is dataset-dependent. The multi-gating network learns these pref-erences without supervision, validating TopoCL’s adaptive design. Similar patterns for other CL methods (see Supple-mentary Material) demonstrate broad generalization. 
+
+## 5. Conclusions 
+
+In this paper, we introduced TopoCL, a new general topo-logical contrastive learning framework for medical imaging that augments standard contrastive learning with explicit topological preservation. Our method combines topology-aware augmentations calibrated via relative bottleneck dis-tance of persistence diagrams, a Hierarchical Topology En-coder that captures both H0 and H1 topological features, and an adaptive Mixture-of-Experts module that fuses vi-sual and topological representations. Extensive experiments on five medical image benchmarks using five representative CL baselines (SimCLR, MoCo-v3, BYOL, DINO, and Bar-low Twins) showed that TopoCL improves the average ac-curacy by +3.26% with strong statistical significance, con-firming that topological cues provide complementary and robust supervisory signals. 8References 
+
+[1] Diego Adame, Jose A Nunez, Fabian Vazquez, Nayeli Gur-rola, Huimin Li, Haoteng Tang, Bin Fu, and Pengfei Gu. Topo-VM-UNetV2: Encoding topology into vision Mamba UNet for polyp segmentation. In Proceedings of the IEEE 38th International Symposium on Computer-Based Medical Systems , pages 258–263, 2025. [2] John Arevalo, Thamar Solorio, Manuel Montes-y G´ omez, and Fabio A Gonz´ alez. Gated multimodal units for infor-mation fusion. arXiv preprint arXiv:1702.01992 , 2017. [3] Shekoofeh Azizi, Basil Mustafa, Fiona Ryan, Zachary Beaver, Jan Freyberg, Jonathan Deaton, Aaron Loh, Alan Karthikesalingam, Simon Kornblith, Ting Chen, Vivek Natarajan, and Mohammad Norouzi. Big self-supervised models advance medical image classification. In Proceed-ings of the IEEE/CVF International Conference on Com-puter Vision , pages 3478–3488, 2021. [4] Gabriele Campanella, Matthew G Hanna, Luke Geneslaw, Allen Miraflor, Vitor Werneck Krauss Silva, Klaus J Busam, Edi Brogi, Victor E Reuter, David S Klimstra, and Thomas J Fuchs. Clinical-grade computational pathology using weakly supervised deep learning on whole slide images. Nature Medicine , 25(8):1301–1309, 2019. [5] Mathilde Caron, Hugo Touvron, Ishan Misra, Herv´ e J´ egou, Julien Mairal, Piotr Bojanowski, and Armand Joulin. Emerg-ing properties in self-supervised Vision Transformers. In 
+
+Proceedings of the IEEE/CVF International Conference on Computer Vision , pages 9650–9660, 2021. [6] Mathieu Carri` ere, Fr´ ed´ eric Chazal, Yuichi Ike, Th´ eo La-combe, Martin Royer, and Yuhei Umeda. PersLay: A neural network layer for persistence diagrams and new graph topo-logical signatures. In Proceedings of the International Con-ference on Artificial Intelligence and Statistics , pages 2786– 2796, 2020. [7] Erin W Chambers and Guangyu Meng. A stable and the-oretically grounded Gromov-Wasserstein distance for Reeb graph comparison using persistence images. arXiv preprint arXiv:2507.01171 , 2025. [8] Ting Chen, Simon Kornblith, Mohammad Norouzi, and Ge-offrey Hinton. A simple framework for contrastive learning of visual representations. In Proceedings of the International Conference on Machine Learning , pages 1597–1607, 2020. [9] Xinlei Chen, Saining Xie, and Kaiming He. An empirical study of training self-supervised Vision Transformers. In 
+
+Proceedings of the IEEE/CVF International Conference on Computer Vision , pages 9640–9649, 2021. [10] James R Clough, Nicholas Byrne, Ilkay Oksuz, Veronika A Zimmer, Julia A Schnabel, and Andrew P King. A topolog-ical loss function for deep-learning based image segmenta-tion using persistent homology. IEEE Transactions on Pat-tern Analysis and Machine Intelligence , 44(12):8766–8778, 2020. [11] David Cohen-Steiner, Herbert Edelsbrunner, and John Harer. Stability of persistence diagrams. In Proceedings of the 21st Annual Symposium on Computational Geometry , pages 263– 271, 2005. [12] Pawel Dlotko. Cubical complex. In GUDHI User and Refer-ence Manual . GUDHI Editorial Board, 3.11.0 edition, 2025. [13] Herbert Edelsbrunner and John Harer. Computational Topol-ogy: An Introduction . American Mathematical Society, 2010. [14] Christopher W Elston and Ian O Ellis. Pathological prognos-tic factors in breast cancer. I. the value of histological grade in breast cancer: Experience from a large study with long-term follow-up. Histopathology , 19(5):403–410, 1991. [15] William Fedus, Barret Zoph, and Noam Shazeer. Switch Transformers: Scaling to trillion parameter models with sim-ple and efficient sparsity. Journal of Machine Learning Re-search , 23(120):1–39, 2022. [16] Yang Gao, Oscar Beijbom, Ning Zhang, and Trevor Darrell. Compact bilinear pooling. In Proceedings of the IEEE Con-ference on Computer Vision and Pattern Recognition , pages 317–326, 2016. [17] Jean-Bastien Grill, Florian Strub, Florent Altch´ e, Corentin Tallec, Pierre H Richemond, Elena Buchatskaya, Carl Do-ersch, Bernardo Avila Pires, Zhaohan Daniel Guo, Moham-mad Gheshlaghi Azar, et al. Bootstrap Your Own Latent: A new approach to self-supervised learning. In Proceedings of the Conference on Neural Information Processing Systems ,pages 21271–21284, 2020. [18] Pengfei Gu, Huimin Li, Yejia Zhang, Chaoli Wang, and Danny Z Chen. Self pre-training with topology-and spatiality-aware masked autoencoders for 3D medical im-age segmentation. In Proceedings of the IEEE Interna-tional Conference on Bioinformatics and Biomedicine , pages 3608–3613, 2025. [19] Pengfei Gu, Hongxiao Wang, Yejia Zhang, Huimin Li, Chaoli Wang, and Danny Z Chen. TopoImages: Incorporat-ing local topology encoding into deep learning models for medical image classification. In Proceedings of the 33rd ACM International Conference on Multimedia , pages 1938– 1947, 2025. [20] Pengfei Gu, Huimin Li, Haoteng Tang, Dongkuan Xu, Erik Enriquez, DongChul Kim, Bin Fu, and Danny Z Chen. Inte-grating multi-scale and multi-filtration topological features for medical image classification. In Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision , pages 8660–8669, 2026. [21] Kaiming He, Haoqi Fan, Yuxin Wu, Saining Xie, and Ross Girshick. Momentum contrast for unsupervised visual rep-resentation learning. In Proceedings of the IEEE/CVF Com-puter Vision and Pattern Recognition , pages 9729–9738, 2020. [22] Jeremy Irvin, Pranav Rajpurkar, Michael Ko, Yifan Yu, Sil-viana Ciurea-Ilcus, Chris Chute, Henrik Marklund, Behzad Haghgoo, Robyn Ball, Katie Shpanskaya, et al. CheXpert: A large chest radiograph dataset with uncertainty labels and expert comparison. In Proceedings of the AAAI Conference on Artificial Intelligence , pages 590–597, 2019. [23] Alexander Kirillov, Eric Mintun, Nikhila Ravi, Hanzi Mao, Chloe Rolland, Laura Gustafson, Tete Xiao, Spencer White-head, Alexander C Berg, Wan-Yen Lo, et al. Segment any-thing. In Proceedings of the IEEE/CVF International Con-ference on Computer Vision , pages 4015–4026, 2023. 
+
+9[24] Peter Lawson, Andrew B Sholl, J Quincy Brown, Brit-tany Terese Fasy, and Carola Wenk. Persistent homol-ogy for the quantitative evaluation of architectural features in prostate cancer histology. Scientific Reports , 9(1):1–12, 2019. [25] Peixian Liang, Yifan Ding, Yizhe Zhang, Jianxu Chen, Hao Zheng, Hongxiao Wang, Yejia Zhang, Guangyu Meng, Tim Weninger, Michael Niemier, X. Sharon Hu, and Danny Z Chen. Cell instance segmentation: The devil is in the bound-aries. IEEE Transactions on Medical Imaging , pages 1–1, 2025. [26] Paul Pu Liang, Amir Zadeh, and Louis-Philippe Morency. Foundations & trends in multimodal machine learning: Prin-ciples, challenges, and open questions. ACM Computing Sur-veys , 56(10):1–42, 2024. [27] Geert Litjens, Thijs Kooi, Babak Ehteshami Bejnordi, Ar-naud Arindra Adiyoso Setio, Francesco Ciompi, Mohsen Ghafoorian, Jeroen Awm Van Der Laak, Bram Van Gin-neken, and Clara I S´ anchez. A survey on deep learning in medical image analysis. Medical Image Analysis , 42:60–88, 2017. [28] Jiasen Lu, Dhruv Batra, Devi Parikh, and Stefan Lee. ViL-BERT: Pretraining task-agnostic visiolinguistic representa-tions for vision-and-language tasks. Advances in Neural In-formation Processing Systems , 32, 2019. [29] Jiquan Ngiam, Aditya Khosla, Mingyu Kim, Juhan Nam, Honglak Lee, Andrew Y Ng, et al. Multimodal deep learn-ing. In Proceedings of the International Conference on Ma-chine Learning , pages 689–696, 2011. [30] Yaopeng Peng, Hongxiao Wang, Milan Sonka, and Danny Z Chen. PHG-Net: Persistent homology guided medical im-age classification. In Proceedings of the IEEE/CVF Win-ter Conference on Applications of Computer Vision , pages 7583–7592, 2024. [31] Talha Qaiser, Yee-Wah Tsang, Daiki Taniyama, Naoya Sakamoto, Kazuaki Nakane, David Epstein, and Nasir Ra-jpoot. Fast and accurate tumor segmentation of histology images using persistent homology and deep convolutional features. Medical Image Analysis , 55:1–14, 2019. [32] Charles R Qi, Hao Su, Kaichun Mo, and Leonidas J Guibas. PointNet: Deep learning on point sets for 3D classification and segmentation. In Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition , pages 652–660, 2017. [33] Pranav Rajpurkar, Jeremy Irvin, Kaylie Zhu, Brandon Yang, Hershel Mehta, Tony Duan, Daisy Ding, Aarti Bagul, Curtis Langlotz, Katie Shpanskaya, et al. CheXNet: Radiologist-level pneumonia detection on chest X-rays with deep learn-ing. arXiv preprint arXiv:1711.05225 , 2017. [34] Carlos Riquelme, Joan Puigcerver, Basil Mustafa, Maxim Neumann, Rodolphe Jenatton, Andr´ e Susano Pinto, Daniel Keysers, and Neil Houlsby. Scaling vision with sparse mix-ture of experts. Advances in Neural Information Processing Systems , 34:8583–8595, 2021. [35] Ramprasaath R Selvaraju, Michael Cogswell, Abhishek Das, Ramakrishna Vedantam, Devi Parikh, and Dhruv Batra. Grad-CAM: Visual explanations from deep networks via gradient-based localization. In Proceedings of the IEEE In-ternational Conference on Computer Vision , pages 618–626, 2017. [36] Noam Shazeer, Azalia Mirhoseini, Krzysztof Maziarz, Andy Davis, Quoc Le, Geoffrey Hinton, and Jeff Dean. Outra-geously large neural networks: The sparsely-gated mixture-of-experts layer. arXiv preprint arXiv:1701.06538 , 2017. [37] Saeed Shurrab and Rehab Duwairi. Self-supervised learn-ing methods and applications in medical imaging analysis: A survey. PeerJ Computer Science , 8:e1045, 2022. [38] Yashbir Singh, Colleen M Farrelly, Quincy A Hathaway, Tim Leiner, Jaidip M Jagtap, Gunnar E Carlsson, and Bradley J Erickson. Topological data analysis in medical imaging: Current state of the art. Insights into Imaging , 14(1):58, 2023. [39] Philipp Tschandl, Cliff Rosendahl, and Harald Kittler. The HAM10000 dataset, a large collection of multi-source der-matoscopic images of common pigmented skin lesions. Sci-entific Data , 5:180161, 2018. [40] Tao Tu, Shekoofeh Azizi, Danny Driess, Mike Schaeker-mann, Mohamed Amin, Pi-Chuan Chang, Andrew Carroll, Charles Lau, Ryutaro Tanno, Ira Ktena, et al. Towards gen-eralist biomedical AI. NEJM AI , 1(3):AIoa2300138, 2024. [41] Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszko-reit, Llion Jones, Aidan N Gomez, Łukasz Kaiser, and Illia Polosukhin. Attention is all you need. Advances in Neural Information Processing Systems , 30, 2017. [42] Hubert Wagner, Chao Chen, and Erald Vuc ¸ini. Efficient com-putation of persistent homology for cubical data. In Proceed-ings of the Topological Methods in Data Analysis and Vi-sualization II: Theory, Algorithms, and Applications , pages 91–106. Springer, 2011. [43] Jiancheng Yang, Rui Shi, Donglai Wei, Zequan Liu, Lin Zhao, Bilian Ke, Hanspeter Pfister, and Bingbing Ni. MedM-NIST v2-a large-scale lightweight benchmark for 2D and 3D biomedical image classification. Scientific Data , 10(1):41, 2023. [44] Jure Zbontar, Li Jing, Ishan Misra, Yann LeCun, and St´ ephane Deny. Barlow Twins: Self-supervised learning via redundancy reduction. In Proceedings of the Inter-national Conference on Machine Learning , pages 12310– 12320, 2021. [45] Chao Zhang, Zichao Yang, Xiaodong He, and Li Deng. Mul-timodal intelligence: Representation learning, information fusion, and applications. IEEE Journal of Selected Topics in Signal Processing , 14(3):478–493, 2020. [46] Sheng Zhou, Hongjia Xu, Zhuonan Zheng, Jiawei Chen, Zhao Li, Jiajun Bu, Jia Wu, Xin Wang, Wenwu Zhu, and Martin Ester. A comprehensive survey on deep clustering: Taxonomy, challenges, and future directions. ACM Comput-ing Surveys , 57(3):1–38, 2024. 
+
+10

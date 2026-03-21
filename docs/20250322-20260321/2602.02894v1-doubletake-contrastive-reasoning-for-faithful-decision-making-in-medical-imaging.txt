@@ -1,0 +1,397 @@
+Title: DoubleTake: Contrastive Reasoning for Faithful Decision-Making in Medical Imaging
+
+URL Source: https://arxiv.org/pdf/2602.02894v1
+
+Published Time: Wed, 04 Feb 2026 01:20:59 GMT
+
+Number of Pages: 13
+
+Markdown Content:
+# DoubleTake: Contrastive Reasoning for Faithful Decision-Making in Medical Imaging 
+
+Daivik Patel * 1 Shrenik Patel * 1 
+
+# Abstract 
+
+Accurate decision-making in medical imaging re-quires reasoning over subtle visual differences between confusable conditions, yet most exist-ing approaches rely on nearest-neighbor retrieval that returns redundant evidence and reinforces a single hypothesis. We introduce a contrastive, document-aware reference selection frame-work that constructs compact evidence sets op-timized for discrimination rather than similarity by explicitly balancing visual relevance, embed-ding diversity, and source-level provenance using ROCO embeddings and metadata. While ROCO provides large-scale image–caption pairs, it does not specify how references should be selected for contrastive reasoning, and naive retrieval fre-quently yields near-duplicate figures from the same document. To address this gap, we release a 
+
+reproducible reference selection protocol and curated reference bank that enable a systematic study of contrastive retrieval in medical image reasoning. Building on these contrastive evidence sets, we propose Counterfactual-Contrastive Inference (CCI) , a confidence-aware reasoning framework that performs structured pairwise vi-sual comparisons and aggregates evidence using margin-based decision rules with faithful absten-tion. On the MediConfusion benchmark, our ap-proach achieves state-of-the-art performance ,improving set-level accuracy by more than 15% 
+
+relative to prior methods while substantially re-ducing confusion and maintaining high condi-tional accuracy. 
+
+# 1. Introduction 
+
+Medical image decision-making is often framed as a recog-nition problem, yet many of the most consequential errors 
+
+> *
+
+Equal contribution 1Rutgers University. Correspondence to: Daivik Patel <daivik.d.patel@rutgers.edu >, Shrenik Patel 
+
+<shrenik.patel@rutgers.edu >.
+
+Preprint. February 4, 2026. 
+
+arise after recognition has already succeeded (Topol, 2019). In clinical practice, failures frequently occur not because a finding is missed, but because two plausible diagnoses are confused. These errors emerge in regimes where images share global structure, modality, and anatomical context, and differ only in subtle, localized visual cues. In such set-tings, the core challenge is not identifying what is present, but determining which of several visually similar hypotheses is better supported by the evidence. Benchmarks such as MediConfusion are designed to isolate this challenge (Sepehri et al., 2024). Rather than evaluat-ing images independently, MediConfusion organizes data into pairs of visually confusable images that require differ-ent answers. This structure exposes a class of failures that conventional metrics often obscure. A model may achieve strong image-level accuracy while repeatedly assigning the same prediction to both images in a pair. From a clini-cal perspective, such behavior is unacceptable: confusing look-alike conditions is precisely the error that decision sup-port systems are meant to avoid. Set-level accuracy, which requires both images in a confusion pair to be classified correctly, therefore provides a more stringent and clinically aligned measure of discriminative competence. Recent advances in vision-language modeling suggest that performance in medical imaging is increasingly limited by reasoning under ambiguity rather than coarse recognition. In confusion-heavy regimes, systems often collapse toward a single answer due to shortcut correlations or dominant priors, yielding high confusion rates despite reasonable marginal accuracy. Retrieval augmentation has emerged as a common strategy for improving medical image reasoning, motivated by the intuition that relevant examples can provide useful context (Lewis et al., 2020). In practice, retrieval is almost uni-versally implemented through nearest-neighbor search in an embedding space, selecting the most similar images to the query. While effective for recall-oriented tasks, this approach is poorly suited to discriminative decision mak-ing, where evidence diversity is as important as relevance (Carbonell & Goldstein, 1998). Nearest-neighbor retrieval optimizes for similarity rather than contrast, and frequently returns near-duplicate images that share diagnosis, visual 1
+
+> arXiv:2602.02894v1 [cs.CV] 2 Feb 2026 DoubleTake: Contrastive Reasoning for Faithful Decision-Making in Medical Imaging
+
+structure, and even document provenance. In medical cor-pora derived from the literature, this redundancy is exacer-bated by multiple figures from the same article depicting the same condition. Rather than clarifying decision boundaries, such evidence reinforces a single hypothesis and suppresses alternatives, increasing decisiveness without increasing cor-rectness. Addressing this misalignment requires rethinking retrieval not as a similarity operation, but as a process of evidence construction tailored to discrimination. The main contributions of this work are as follows. 
+
+(1) We propose a contrastive, document-aware reference selection framework that constructs compact evidence sets optimized for discrimination rather than similarity by ex-plicitly balancing visual relevance, embedding diversity, and source-level provenance. To support reproducibility and sys-tematic evaluation, we release a triad selection protocol and curated reference bank derived from ROCO, enabling controlled study of contrastive retrieval in medical image reasoning. 
+
+(2) Building on these contrastive evidence sets, we in-troduce Counterfactual-Contrastive Inference (CCI) , a 
+
+confidence-aware reasoning framework that aggregates structured pairwise visual comparisons using margin-based decision rules with faithful abstention. We further introduce a pair-level adjudication mechanism to resolve ambiguity in confusion-pair settings without imposing artificial label constraints. Together, these components achieve state-of-the-art performance on MediConfusion , substantially im-proving set-level accuracy while reducing confusion rates. 
+
+# 2. Related Work 
+
+2.1. Medical Visual Question Answering Benchmarks 
+
+Medical visual question answering (VQA) has been stud-ied through a range of benchmarks, including ImageCLEF VQA-Med (Hasan et al., 2018; Ben Abacha et al., 2019), PathVQA (He et al., 2020), and knowledge-enhanced datasets such as SLAKE (Liu et al., 2021). 
+
+2.2. Retrieval for Medical Image Reasoning 
+
+Retrieval augmentation is commonly used in medical image reasoning to provide contextual exemplars when decisions hinge on subtle visual cues. Most existing systems imple-ment retrieval via similarity search in an embedding space, returning the top-k nearest neighbors of a query image, sometimes augmented with captions or metadata. While ef-fective for recall-oriented tasks, this similarity-first objective is poorly aligned with confusion-style benchmarks such as MediConfusion, where the goal is to discriminate between visually similar conditions rather than retrieve more of the same. This misalignment is amplified in literature-derived cor-pora, where figures are often templated and multiple near-duplicate panels originate from the same document. As a result, naive top-k retrieval frequently returns redundant, provenance-collapsed evidence that reinforces a single hy-pothesis instead of exposing alternatives. Our work ad-dresses this gap by framing retrieval as evidence construc-tion for discrimination , with explicit controls for diversity and document provenance. 
+
+2.3. Contrastive Reasoning at Inference Time 
+
+The term contrastive is typically used to describe repre-sentation learning objectives for medical vision–language alignment, for example via CLIP-style pretraining and med-ical variants such as MedCLIP (Wang et al., 2022). More recent unified medical CLIP-style models include UniMed-CLIP (Khattak et al., 2024). These approaches improve representation quality, including in zero-shot settings (Tiu & et al., 2022; Jang et al., 2022), but they do not by them-selves specify how retrieved evidence should be selected for discriminative decision making. Our framing is orthogonal: we do not introduce a new con-trastive training objective. Instead, we construct contrastive evidence sets at inference time , forcing the model to com-pare the query against carefully selected alternatives that probe decision boundaries. This perspective complements recent instruction-tuned and few-shot medical multimodal systems (Zhang et al., 2023; Moor et al., 2023) as well as earlier vision–language baselines (Li et al., 2019; Vaswani et al., 2017). 
+
+2.4. Reliability via Abstention + Evidence Aggregation 
+
+Selective prediction and abstention are well-established tools for improving reliability in high-stakes settings, allow-ing models to defer decisions when evidence is insufficient (Geifman & El-Yaniv, 2017; Angelopoulos & Bates, 2021). In medical imaging, this is particularly important because multiple visually plausible hypotheses often coexist. Confusion-pair benchmarks such as MediConfusion make this challenge explicit by evaluating whether models can distinguish look-alike conditions rather than merely achieve high marginal accuracy. In this setting, decisions arise from multiple structured visual comparisons whose confidence and consistency may vary and can be miscalibrated (Guo et al., 2017), and naive aggregation can collapse to identical predictions across a pair. We address these failure modes with confidence-aware aggregation and faithful abstention. 2DoubleTake: Contrastive Reasoning for Faithful Decision-Making in Medical Imaging  
+
+> Figure 1. Overview of the proposed framework. Given a query image, a contrastive triad of reference images is retrieved from an external medical image bank. Structured pairwise comparisons are aggregated by Counterfactual-Contrastive Inference (CCI) using confidence-aware voting, margin-based decisions, and adjudication for ambiguous cases.
+
+# 3. Method 
+
+3.1. System Overview 
+
+We present a two-stage inference framework for discrimina-tive medical image decision making. Given a query image 
+
+x and a binary multiple-choice question with two candi-date answer options Y = {A, B } (where A and B denote the two answer strings provided by the benchmark for that question), the system outputs a prediction ˆy ∈ { A, B, ⊥} ,where ⊥ denotes abstention. The framework combines 
+
+contrastive, document-aware reference selection , which constructs compact evidence sets optimized for discrimina-tion, with Counterfactual-Contrastive Inference (CCI) ,which aggregates structured visual comparisons into a reli-able decision. For a given query image x, the reference selection com-ponent retrieves a fixed triad of reference images R(x) = 
+
+{r1, r 2, r 3} from a large external medical image bank. Each reference induces a counterfactual comparison that probes how the decision would change relative to a plausible al-ternative, producing a grounded vote with an associated confidence. CCI filters unreliable signals, aggregates evi-dence using a margin-based rule, and invokes adjudication only when evidence is ambiguous. In datasets organized into visually confusable pairs, a final pair-level adjudica-tor resolves ambiguous outcomes. Figure 1 provides an overview of the full pipeline. 
+
+3.2. Contrastive, Document-Aware Reference Selection 
+
+Effective discrimination requires evidence that is not only relevant to the query, but also diverse and non-redundant. Standard nearest-neighbor retrieval optimizes for similarity and frequently returns near-duplicate images, often origi-nating from the same document, which reinforces a single hypothesis and obscures subtle distinctions. We therefore design reference selection explicitly as evidence construc-tion for discrimination .
+
+Reference bank and representations. We construct a refer-ence bank derived from ROCO that provides a large, redun-dant universe of medical images with document provenance (Pelka et al., 2018). Formally, let 
+
+B = {(rj , c j , d j , m j )}Nj=1 
+
+denote the reference bank, where rj is an image, cj its caption, dj a document identifier (e.g., PMC article ID), and 
+
+mj its imaging modality. All images are embedded using a frozen encoder ϕ(·) (CLIP ViT-B/32) (Radford et al., 2021; Dosovitskiy et al., 2020). For a query image x, cosine similarity is defined as 
+
+s(x, r ) = ⟨ϕ(x), ϕ (r)⟩∥ϕ(x)∥∥ ϕ(r)∥ .
+
+Because ROCO contains many visually redundant figures, we apply near-duplicate suppression. A candidate r is re-moved if there exists a previously retained image r′ such that 
+
+s(r, r ′) > τ dup , τdup = 0 .99 .
+
+3DoubleTake: Contrastive Reasoning for Faithful Decision-Making in Medical Imaging 
+
+This prevents trivial duplicates from dominating the re-trieved set. 
+
+Candidate pool and rank bands. Let C(x) denote the can-didate pool after modality gating and deduplication (defined below). We rank all r ∈ C (x) in descending order of simi-larity s(x, r ) and write C[a,b ](x) for the subset of candidates whose similarity rank lies in [a, b ] (1-indexed, inclusive). When selecting r2 and r3, we additionally exclude any al-ready selected references and, whenever possible, enforce distinct document IDs. 
+
+Triad retrieval policy. We retrieve exactly three references per query. This fixed budget encourages diversity and sta-bilizes downstream inference. The three references play complementary roles. The anchor reference provides a stable visual baseline and is selected as the most similar non-duplicate candidate, 
+
+r1 = arg max  
+
+> r∈C (x)
+
+s(x, r ),
+
+where C(x) denotes the candidate pool after deduplication and gating. This reference typically aligns with the query in modality and anatomy. The hard negative induces discriminative contrast. From a mid-similarity band of candidates (ranks 20–200), we select the image that is maximally distinct from the anchor in embedding space, 
+
+r2 = arg min 
+
+> r∈C [20 ,200] (x)
+
+D ˜ϕ(r), ˜ϕ(r1)
+
+E
+
+, ˜ϕ(r) = ϕ(r)
+
+∥ϕ(r)∥ .
+
+This ensures that the reference remains relevant to the query while forcing comparison along subtle, discriminative di-mensions rather than shared structure. The boundary probe tests decision robustness against broader but still plausible alternatives. It is drawn from a wider similarity band (ranks 200–1000) and scored by combining relevance to the query, dissimilarity to the an-chor, and lightweight semantic plausibility derived from metadata: 
+
+score( r; x, r 1) =  κ(cr ; x) + 1  s(x, r )  1 − s(r, r 1),
+
+where κ(cr ; x) ∈ N0 is the raw lexical overlap count be-tween the caption cr and the question text associated with x
+
+(after lowercasing and stopword removal), i.e., the number of shared tokens. In practice, overlap thresholds (e.g., 0, 1–2, and ≥ 3 shared tokens) may be used to stage candidate selection, but the scoring signal itself is the overlap count. The boundary probe is selected as 
+
+r3 = arg max  
+
+> r∈C [200 ,1000] (x)
+
+score( r; x, r 1).
+
+Together, the triad approximates a compact evidence set that maximizes relevance while penalizing redundancy under provenance and modality constraints. 
+
+Document awareness and modality gating. To reduce re-dundancy from a single source, we prefer references drawn from different documents whenever feasible (i.e., enforcing 
+
+dri̸ = drj for i̸ = j when possible). We also apply modal-ity gating via keyword matching over the question text and answer options to estimate a modality ˆm(x) (e.g., “CT”, “MRI”, “X-ray”, “ultrasound”), and restrict candidates to those whose captions mention the same modality: 
+
+C(x) = {r ∈ B | cr contains keywords for ˆm(x)}.
+
+If no modality keyword is detected in the question/options text (or if caption keywords are missing), we skip modal-ity filtering and fall back to the full deduplicated candidate set. This keeps comparisons focused on clinically mean-ingful distinctions while avoiding brittleness from metadata sparsity. 
+
+Fallbacks. If enforcing distinct document IDs is infeasible within a rank band, we relax the document constraint while keeping modality gating. If a rank band becomes empty after filtering (e.g., due to deduplication), we expand to the nearest available ranks within the same modality until a valid reference is found. 
+
+Use of captions and release. Captions and metadata are used solely for reference selection and are never shown to the vision-language model during inference, eliminating text leakage. We release the triad selection protocol and curated ROCO reference bank to enable reproducible study of contrastive retrieval in medical imaging. 
+
+3.3. Counterfactual-Contrastive Inference 
+
+Given a contrastive triad R(x), CCI aggregates pairwise visual comparisons into a reliable prediction. Each compari-son acts as a counterfactual probe, asking how the decision would change relative to a specific alternative. Rather than treating all comparisons equally, CCI explicitly models con-fidence, decisiveness, and ambiguity. 
+
+Structured pairwise visual comparison. For each refer-ence ri, a vision-language model fθ compares the query x
+
+against ri in a structured manner, producing 
+
+oi = ( vi, α i, e i),
+
+where vi ∈ { A, B, ⊥} is the predicted answer, αi ∈ [0 , 100] 
+
+is a self-reported confidence score elicited from fθ using a fixed prompt template (shared across all methods) that requests an integer confidence in [0 , 100] for the selected option, and ei is a structured evidence record containing the query’s modality and anatomy, concrete visual findings, and explicit differences relative to the reference. We treat 
+
+αi as a relative weighting signal for aggregation (not as a calibrated probability). 
+
+Voting over available comparisons. Some comparisons abstain (or fail to yield a valid vote). We therefore define 4DoubleTake: Contrastive Reasoning for Faithful Decision-Making in Medical Imaging 
+
+I(x) as the set of comparison indices that produce a non-abstaining vote, 
+
+I(x) = {i | vi ∈ { A, B }, α i ≥ p}
+
+and discard all other comparisons. 
+
+Confidence-weighted aggregation and margin rule. Let 
+
+WA = X
+
+> i∈I (x)
+
+αi 1[vi = A], WB = X
+
+> i∈I (x)
+
+αi 1[vi = B]
+
+denote confidence-weighted evidence for each answer. De-fine total evidence mass W = WA + WB and decisiveness margin M = |WA − WB |. CCI returns 
+
+ˆy(x) = 
+
+
+
+⊥, W < t, 
+
+arg max y∈{ A,B } Wy , W ≥ t and M ≥ m, 
+
+Adj text ({ei}3
+
+> i=1
+
+), W ≥ t and M < m. 
+
+This rule ensures that predictions are made only when suffi-cient and decisive evidence is available. 
+
+Interpretation. Let zi ∈ { +1 , −1} encode votes for A and 
+
+B, respectively, and define a signed score 
+
+S(x) = X
+
+> i∈I (x)
+
+αizi.
+
+CCI can be viewed as a confidence-weighted margin classi-fier with a reject option, where sign( S(x)) determines the label and |S(x)| determines decisiveness. 
+
+Text adjudicator. When the margin is small despite suffi-cient evidence mass, a text-only adjudicator operates on the structured evidence records {ei} to resolve contradictions or abstain if inconsistency persists. 
+
+Pair-level adjudicator for confusion pairs. Because Medi-Confusion consists of visually similar image pairs requiring different answers, independent inference may yield identical predictions. We trigger a pair-level adjudicator when both images receive the same prediction or when either image is ambiguous. Ambiguity is detected via the soft posterior 
+
+pA(x) = WA
+
+WA + WB
+
+,
+
+with adjudication triggered when pA(x) − 12 < δ .The adjudicator takes as input the two images, the shared question and answer options (A, B ), and the two sets of structured evidence records {e(1)  
+
+> i
+
+}3 
+
+> i=1
+
+and {e(2)  
+
+> i
+
+}3
+
+> i=1
+
+, and outputs refined predictions (˜ y(1) , ˜y(2) ) ∈ { A, B, ⊥} 2. The adjudicator is permitted to abstain, and we do not enforce that the two predictions must differ. 
+
+Faithful abstention. When evidence is insufficient or unre-solved after adjudication, the system abstains. We therefore report both coverage, 
+
+Cov = Pr[ˆ y̸ = ⊥],
+
+and conditional accuracy, 
+
+Acc cond = Pr[ˆ y = y | ˆy̸ = ⊥],
+
+to characterize reliability under selective prediction. In high-stakes medical decision making, abstention is preferable to confident but incorrect predictions on confusable cases. 
+
+# 4. Experiments 
+
+4.1. Dataset and Task: MediConfusion 
+
+We evaluate our approach on the MediConfusion benchmark, which is designed to probe discriminative reasoning under visual confusability (Sepehri et al., 2024). MediConfusion consists of 176 confusion pairs (352 images total) spanning 9 medical imaging categories, including cerebral, vascular, musculoskeletal, pulmonary, and cardiac imaging. Each pair comprises two visually similar images that share a common clinical question but require different correct answers. The task is formulated as binary classification for each im-age, with two candidate answers provided per question. Cru-cially, evaluation is performed both at the image level and at the pair level. An image is considered correct if its pre-dicted answer matches the ground truth. A confusion pair is considered correct only if both images in the pair are clas-sified correctly. This set-level criterion penalizes models that collapse to the same prediction across visually con-fusable images, directly reflecting the benchmarks goal of measuring discriminative competence. 
+
+4.2. Evaluation Metrics 
+
+We follow the official MediConfusion evaluation protocol and report the core metrics used throughout the benchmark. Our primary metric is set-level accuracy , which measures the fraction of confusion pairs for which both images are predicted correctly and directly captures discriminative per-formance under visual confusability. For completeness, we report individual image accuracy ,which provides context for marginal per-image performance, and the confusion rate , defined as the fraction of confusion pairs for which the model assigns the same prediction to both images. For methods that support abstention, we report the abstention rate . Together, these metrics characterize both discriminative correctness and the extent to which mod-els avoid unreliable decisions in ambiguous cases. 
+
+4.3. Baselines 
+
+We compare our method against a set of baselines and con-trolled variants designed to isolate the effects of contrastive retrieval, confidence-aware aggregation, and adjudication. All methods share the same underlying vision–language model, prompt templates, and inference settings; they differ 5DoubleTake: Contrastive Reasoning for Faithful Decision-Making in Medical Imaging                                                  
+
+> Table 1. Main results on MediConfusion. We report set-level accuracy (primary), individual image accuracy, confusion rate (percent of pairs receiving the same prediction), and abstention rate. “CCI” denotes our full inference framework applied on top of the same base vision–language model. Overall, CCI substantially improves the clinically aligned set-level metric while reducing confusion. METHOD BASE MODEL SET ACC . (%) INDIV .ACC . (%) CONFUSION (%) ABSTAIN (%) DIRECT (SINGLE -SHOT )GPT-4 O18.75 56.25 75.00 –
+> CCI ( OURS )GPT-4 O27.84 55.11 49.43 4.83 DIRECT (SINGLE -SHOT )GPT-O121.69 57.95 72.99 –
+> CCI ( OURS )GPT-O132.95 59.94 42.61 4.26 DIRECT (SINGLE -SHOT )GEMINI 2.0 P RO 29.55 61.93 67.05 –
+> CCI ( OURS )GEMINI 2.0 P RO 43.75 64.20 36.93 3.69 RANDOM GUESSING –25.00 50.00 50.00 –
+
+only in retrieval strategy or decision logic. Our primary method, CCI , uses the full pipeline described in Section 3, including contrastive triad retrieval, confidence-filtered aggregation, text-level adjudication, and pair-level adjudication. To evaluate the role of retrieval, we include a single-shot baseline that performs direct inference on the query im-age without any retrieved references. This baseline isolates the contribution of external visual evidence. We also in-clude a top-k nearest-neighbor baseline , which augments inference with the three most similar reference images un-der cosine similarity (implemented with standard similarity search tooling (Johnson et al., 2019)), without enforcing contrastive structure or document awareness. To analyze the structure of the contrastive triad, we eval-uate three ablated variants that remove one reference at a time: triad minus Ref1 (no anchor), triad minus Ref2 (no hard negative), and triad minus Ref3 (no boundary probe). These variants test whether each component contributes dis-tinct discriminative signal beyond similarity-based retrieval. Finally, we consider inference-level ablations. No pair adjudicator disables joint reasoning over confusion pairs, isolating its effect on same-answer failures. When space permits, we additionally report a no text adjudicator vari-ant, which removes the low-margin fallback mechanism and relies solely on confidence-weighted aggregation. 
+
+4.4. Implementation Details 
+
+Our reference bank is constructed from ROCO, with all images embedded using CLIP ViT-B/32. Near-duplicate filtering is applied using a cosine similarity threshold of 
+
+τdup = 0 .99 . We also experimented with a biomedical CLIP-style encoder (BioMedCLIP (Zhang et al., 2025)) for embedding and retrieval, but CLIP ViT-B/32 performed better. We report the BioMedCLIP results in Appendix A (Table 5). Contrastive reference selection follows the fixed similarity rank bands defined in Section 3, with the fallback rules described there. Unless otherwise stated, all experiments use the same de-fault CCI thresholds for confidence filtering, margin-based aggregation, and total evidence mass. These thresholds are held constant across methods and varied only in controlled sensitivity analyses. All methods use identical prompt templates and structured comparison formats. The exact prompts (pairwise comparison, text adjudicator, and pair-level adjudicator) can be found in Appendix B. 
+
+# 5. Results 
+
+5.1. Main Results on MediConfusion 
+
+Table 1 shows that Counterfactual-Contrastive Inference (CCI) substantially improves discriminative performance under visual confusability across all evaluated base models. In particular, CCI raises set-level accuracy from 18–30% under direct single-shot inference to 43.75% , corresponding to absolute gains of 13–25 percentage points depending on the backbone. These gains indicate a shift in what limits performance on confusion-heavy benchmarks: not visual recognition, but the ability to reason counterfactually be-tween competing, visually plausible hypotheses. Because set-level accuracy requires both images in a con-fusion pair to be classified correctly, these gains reflect a reduction in same-answer collapse rather than marginal improvements on isolated images. This interpretation is reinforced by the confusion rate. Direct inference assigns identical predictions to both images in 58–75% of confusion pairs, whereas CCI reduces this rate to 36.93% , represent-ing a relative reduction of approximately 30–40%. The decrease indicates improved separation between visually similar conditions rather than increased conservatism. Individual image accuracy improves more modestly, rising to 64.2% . This pattern is expected: CCI is designed to target boundary cases where marginal accuracy alone can be misleading. Importantly, gains are achieved with a low abstention rate (3.69%), indicating that improved set-level 6DoubleTake: Contrastive Reasoning for Faithful Decision-Making in Medical Imaging 
+
+Table 2. Results by medical category on MediConfusion using Gemini 2.0 Pro. We report set-level and individual accuracies (%). Cerebral Vascular Head & Neck Spinal Musculoskeletal Cardiac Gastroint. Pulmonary Nuclear Med. Model Set Indiv. Set Indiv. Set Indiv. Set Indiv. Set Indiv. Set Indiv. Set Indiv. Set Indiv. Set Indiv. Gemini 2.0 Pro (single-shot) 29.11 64.56 39.73 68.49 19.40 58.21 23.53 58.86 40.48 66.67 26.92 61.54 25.58 60.47 30.00 50.00 42.86 71.43                   
+
+> CCI (ours) 45.95 66.22 47.22 63.89 40.00 55.00 46.15 71.15 42.86 71.43 34.62 59.62 45.45 63.64 63.64 72.73 57.14 71.43
+
+performance is not driven by aggressive deferral. Overall, these results show that CCI improves performance primarily by resolving confusion pairsthe dominant failure mode exposed by MediConfusionrather than by inflating marginal accuracy, suggesting that inference-time evidence construction is central to reliable decision making under visual ambiguity. 
+
+5.2. Results by Medical Category 
+
+Table 2 reports performance by medical category using Gem-ini 2.0 Pro. Improvements in set-level accuracy are observed across all nine categories, with the largest gains occurring in domains characterized by subtle morphological distinctions. Categories with dense decision boundaries and frequent look-alike findings benefit most, consistent with CCI target-ing ambiguity rather than coarse pathology recognition. In particular, Cerebral, Spinal, and Pulmonary imaging ex-hibit gains of 15–25 percentage points in set-level accuracy. These categories often require distinguishing fine-grained structural or signal differences between plausible alterna-tives, aligning closely with the strengths of contrastive evi-dence construction. Strong gains are also observed in Nu-clear Medicine, reflecting the effectiveness of boundary-probing references in smaller but challenging subsets. Performance improvements are more modest in Cardiac imaging, which exhibits higher intrinsic ambiguity. Notably, CCI maintains individual accuracy in this regime without increasing confusion, indicating that gains are not driven by overconfident heuristics. Together, these results indicate that CCIs gains arise sys-tematically in regimes where discrimination, rather than detection, is the primary challenge. 
+
+5.3. Ablation Study: Retrieval Design 
+
+Table 3. Retrieval and inference ablations on MediConfusion using Gemini 2.0 Pro. We report set-level accuracy (primary), individual accuracy, confusion rate, and abstention rate.                                  
+
+> Ablation Set acc. (%) Indiv. acc. (%) Conf. (%) Abst. (%)
+> CCI (full) 43.75 64.20 36.93 3.69 No Ref2 (hard neg.) 31.82 51.14 42.05 3.41 No Ref3 (boundary probe) 32.39 52.56 40.34 3.98 Top-konly 30.68 51.42 30.11 3.12 No retrieval 0.00 0.00 0.00 100.00 No pair adjudicator 27.84 59.94 63.64 1.99 No text adjudicator 40.34 63.07 38.07 5.40
+
+We next examine whether performance gains arise from contrastive structure or simply from additional contextual information. Table 3 reports retrieval ablations that modify or remove components of the contrastive reference triad while holding inference fixed. Removing either contrastive reference substantially de-grades discriminative performance. Excluding the hard negative reduces set-level accuracy by nearly 12 percentage points and increases confusion, indicating that similarity alone is insufficient to expose discriminative cues near deci-sion boundaries. Removing the boundary probe produces a comparable drop, suggesting that probing broader but plausible alternatives plays a complementary role. A top-k nearest-neighbor baseline performs similarly poorly despite using the same number of references, underscoring that similarity-based retrievaleven with strong encoders and multiple referencesreinforces dominant hypotheses rather than exposing discriminative alternatives, whereas con-trastive structure is necessary to break confusion collapse. Without retrieval, the system abstains on nearly all examples and fails to resolve confusion pairs, confirming that external visual evidence is essential in this benchmark regime. These findings suggest that naive retrieval does not merely fail to help in confusion-heavy regimes, but can actively obscure the evidence required for discrimination. 
+
+5.4. Ablation Study: Inference and Adjudication 
+
+Even with contrastive evidence, inference-time structure is critical. Table 3 isolates the effect of CCIs adjudication mechanisms while holding retrieval fixed. Contrastive re-trieval alone improves context, but does not prevent collapse when decisions are made independently. Disabling the pair-level adjudicator leads to a sharp drop in set-level accuracy (43.75 →27.84) and a pronounced in-crease in confusion (36.93 →63.64). Without joint reasoning over confusion pairs, independent per-image inference fre-quently collapses toward identical predictions. Removing the text adjudicator produces a smaller but con-sistent degradation, indicating that explicit reconciliation of structured visual evidence improves decisions in low-margin cases where confidence-weighted aggregation alone remains ambiguous. These results demonstrate that CCIs gains arise from the interaction between contrastive evidence construction and 7DoubleTake: Contrastive Reasoning for Faithful Decision-Making in Medical Imaging                                                                        
+
+> Table 4. Sensitivity analysis for CCI decision thresholds. Each block sweeps one parameter while holding the others fixed at default values ( m=30 ,t=50 ). Setting Set Acc. Indiv. Acc. Conf. Abstain
+> Sweep A: Pairwise confidence threshold p(m=30 ,t=50 )
+> p=0 43.75 64.20 36.93 3.69
+> p=40 40.34 61.93 41.48 4.55
+> p=60 40.34 62.78 40.91 3.98
+> p=70 41.48 63.35 38.07 2.27
+> Sweep B: Margin threshold m(p=50 ,t=50 )
+> m=10 39.20 64.77 38.64 4.26
+> m=20 41.48 63.92 40.91 3.69
+> m=30 43.75 64.20 36.93 3.69
+> m=40 39.20 61.36 41.48 4.55
+> m=50 40.34 61.93 41.48 5.11
+> Sweep C: Total confidence threshold t(p=50 ,m=30 )
+> t=10 39.20 62.78 42.61 3.13
+> t=30 42.05 63.92 39.77 4.55
+> t=50 43.75 64.20 36.93 3.69
+> t=70 40.91 62.22 38.07 5.97
+> t=90 36.93 59.94 37.50 8.52
+
+reliability-aware inference, rather than from either compo-nent in isolation. 
+
+5.5. Sensitivity to Abstention and Aggregation Thresholds 
+
+We finally assess sensitivity to CCIs decision thresholds by sweeping one parameter at a time while holding the oth-ers fixed (Table 4). Performance peaks near the default configuration and degrades gradually under reasonable per-turbations, indicating a stable operating regime rather than brittle tuning. Increasing thresholds smoothly shifts the system toward abstention, while overly permissive settings increase con-fusion, reflecting expected reliability–coverage trade-offs. The absence of abrupt performance collapse supports the use of fixed thresholds across experiments and suggests that CCI operates robustly across a range of reasonable set-tings. This further supports interpreting the observed gains as structural rather than the result of hyperparameter tuning. 
+
+# 6. Discussion and Conclusion 
+
+Why Contrastive Evidence and CCI Work. Our results suggest that failures on confusion-heavy medical imaging tasks arise less from insufficient visual representations and more from how evidence is constructed and aggregated at inference time. Similarity-based retrieval is fundamentally misaligned with discriminative decision making: by opti-mizing for proximity in embedding space, nearest-neighbor methods preferentially return redundant, same-diagnosis evidence that reinforces a dominant hypothesis. This behav-ior increases decisiveness without improving correctness and amplifies the confusion errors that MediConfusion is designed to expose. In contrast, our reference selection framework treats re-trieval as evidence construction for discrimination . By ex-plicitly balancing relevance, diversity, and document prove-nance, the contrastive triad surfaces alternatives that probe decision boundaries rather than collapsing them. Counterfactual-Contrastive Inference (CCI) complements this evidence by enforcing reliability during aggregation. Confidence-filtered voting reduces noise from uncertain comparisons, margin-based decisions prevent brittle ties from being overinterpreted, and selective abstention prior-itizes faithfulness over forced predictions. The pair-level adjudicator further aligns inference with the structure of confusion-pair evaluation, preventing collapse toward iden-tical predictions when independent reasoning is insufficient. Crucially, improvements arise from the interaction between contrastive evidence construction and confidence-aware in-ference, not from either component in isolation. 
+
+Limitations. Our approach has several limitations. Perfor-mance depends on the diversity and representativeness of the external reference bank, which may limit effectiveness for rare conditions or underrepresented modalities. Confi-dence scores are used as internal consistency signals rather than calibrated probabilities and should not be interpreted as measures of clinical certainty. Pair-level adjudication lever-ages the confusion-pair structure of MediConfusion, which may not be available in all settings. Finally, our results are benchmark-based and do not imply clinical readiness. We also note the increased computational cost of multiple pairwise comparisons, which trades efficiency for reliability. 
+
+Conclusion. We introduce a unified framework for dis-criminative medical image decision making that combines 
+
+contrastive, document-aware reference construction with 
+
+confidence-aware counterfactual inference . By shifting retrieval from similarity to discrimination and enforcing re-liability during aggregation, our approach achieves state-of-the-art set-level accuracy on MediConfusion, substantially reduces confusion errors, and maintains faithful abstention. We release our reference selection protocol and reference bank to enable reproducible study of contrastive retrieval. More broadly, our findings highlight the importance of con-structing and reasoning over contrastive evidence for reli-able medical AI in ambiguous settings. 8DoubleTake: Contrastive Reasoning for Faithful Decision-Making in Medical Imaging 
+
+# Impact Statement 
+
+This work presents a methodological contribution to ma-chine learning for reliable decision making under visual ambiguity, motivated by challenges in medical imaging where visually similar conditions must be carefully distin-guished. By emphasizing contrastive evidence construction, confidence-aware aggregation, and faithful abstention, the proposed approach aims to reduce confusion errors and discourage overconfident predictions in ambiguous cases. While these ideas may inform the design of future deci-sion support systems, this work is evaluated exclusively on benchmark data and does not claim clinical readiness. Any real-world use would require extensive validation, appropri-ate human oversight, and consideration of domain-specific risks. We do not foresee immediate negative societal con-sequences arising from this research when used within its intended research context. 
+
+# References 
+
+Angelopoulos, A. and Bates, S. A gentle introduction to con-formal prediction and distribution-free uncertainty quan-tification. Foundations and Trends in Machine Learning ,2021. Ben Abacha, A., Hasan, S. A., Datla, V., Liu, J., and Demner-Fushman, D. Overview of the vqa-med 2019 task. In CLEF Working Notes , 2019. Carbonell, J. and Goldstein, J. The use of mmr, diversity-based reranking for reordering documents. In SIGIR ,1998. Dosovitskiy, A., Beyer, L., Kolesnikov, A., and et al. An image is worth 16x16 words: Transformers for image recognition at scale. In ICLR , 2020. Geifman, Y. and El-Yaniv, R. Selective classification for deep neural networks. In NeurIPS , 2017. Guo, C., Pleiss, G., Sun, Y., and Weinberger, K. On calibra-tion of modern neural networks. In ICML , 2017. Hasan, S. A., Ling, Y., Farri, O., Liu, J., M ¨uller, H., and Lungren, M. P. Overview of the imageclef 2018 med-ical domain visual question answering task. In Work-ing Notes of CLEF 2018 (Conference and Labs of the Evaluation Forum) . CEUR-WS.org, 2018. URL http: //ceur-ws.org/Vol-2125/paper_212.pdf .He, Y., Zhang, G., Li, Y., and Li, Q. Pathvqa: 30000+ questions for medical visual question answering. arXiv preprint arXiv:2003.10286 , 2020. Jang, J., Kyung, D., Kim, S. H., and et al. Significantly improving zero-shot x-ray pathology classification via fine-tuning pre-trained image-text encoders. In arXiv preprint arXiv:2212.07050 , 2022. Johnson, J., Douze, M., and J ´egou, H. Billion-scale simi-larity search with gpus. IEEE Transactions on Big Data ,2019. Khattak, M. U., Kunhimon, S., Naseer, M., and et al. Unimed-clip: Towards a unified image-text pretraining paradigm for diverse medical imaging modalities. arXiv preprint arXiv:2412.10372 , 2024. Lewis, P., Perez, E., Piktus, A., Petroni, F., Karpukhin, V., Goyal, N., K ¨uttler, H., Lewis, M., Yih, W., Rockt ¨aschel, T., Riedel, S., and Kiela, D. Retrieval-augmented gen-eration for knowledge-intensive nlp tasks. In Advances in Neural Information Processing Systems , volume 33, 2020. Li, L. H., Yatskar, M., Yin, D., Hsieh, C.-J., and Chang, K.-W. Visualbert: A simple and performant baseline for vision and language. In Proceedings of the 2019 Confer-ence of the North American Chapter of the Association for Computational Linguistics (NAACL-HLT) , pp. 322– 333, 2019. Liu, B., Zhan, L.-M., Xu, L., Ma, L., Yang, Y., and Wu, X.-M. Slake: A semantically-labeled knowledge-enhanced dataset for medical visual question answering. In Pro-ceedings of the 2021 IEEE 18th International Symposium on Biomedical Imaging (ISBI) , pp. 1650–1654. IEEE, 2021. Moor, M., Huang, Q., Wu, S., and et al. Med-flamingo: a multimodal medical few-shot learner. arXiv preprint arXiv:2307.15189 , 2023. Pelka, O., Koitka, S., and Rckert, D. Radiology objects in context (roco): a multimodal image dataset. MICCAI Workshops (LABELS) , 2018. Radford, A., Kim, J. W., Hallacy, C., and et al. Learning transferable visual models from natural language supervi-sion. In ICML , 2021. Sepehri, M. S., Fabian, Z., Soltanolkotabi, M., and Soltanolkotabi, M. Mediconfusion: Can you trust your ai radiologist? probing the reliability of multi-modal medical foundation models, 2024. URL https: //arxiv.org/abs/2409.15477 . Accessed via arXiv:2409.15477. Tiu, E. and et al. Expert-level zero-shot learning for chest x-ray diagnosis. Nat. Biomed. Eng. , 2022. Topol, E. High-performance medicine: the convergence of human and artificial intelligence. Nature Medicine , 2019. 9DoubleTake: Contrastive Reasoning for Faithful Decision-Making in Medical Imaging 
+
+Vaswani, A., Shazeer, N., Parmar, N., and et al. Attention is all you need. In NeurIPS , 2017. Wang, Z., Wu, Z., Agarwal, D., and Sun, J. Medclip: Con-trastive learning from unpaired medical images and text. 
+
+arXiv preprint arXiv:2210.10163 , 2022. Zhang, S., Xu, Y., Usuyama, N., and et al. Biomedclip: a multimodal biomedical foundation model pretrained from fifteen million scientific image-text pairs, 2025. Zhang, X., Wu, C., Zhao, Z., and et al. Pmc-vqa: Visual instruction tuning for medical visual question answering. 
+
+arXiv preprint arXiv:2305.10415 , 2023. 10 DoubleTake: Contrastive Reasoning for Faithful Decision-Making in Medical Imaging 
+
+# Appendix of DoubleTake 
+
+# A. Additional Results: BioMedCLIP Embeddings 
+
+Table 5. Gemini 2.0 Pro results for CCI under different retrieval embedding backbones. We report set-level accuracy (primary), individual image accuracy, confusion rate, and abstention rate. CCI VARIANT SET ACC . (%) INDIV . ACC . (%) CONFUSION (%) ABSTAIN (%) CLIP V IT-B/32 RETRIEVAL 43.75 64.20 36.93 3.69 BIO MED CLIP RETRIEVAL 39.77 66.48 51.70 1.14 
+
+Table 5 reports Gemini 2.0 Pro performance for CCI when swapping the retrieval embedding backbone from CLIP ViT-B/32 to BioMedCLIP (Zhang et al., 2025), while keeping the downstream inference procedure fixed. Using CLIP ViT-B/32 retrieval yields 43.75% set accuracy (64.20% individual accuracy, 36.93% confusion, 3.69% abstention), whereas BioMedCLIP retrieval yields 39.77% set accuracy (66.48% individual accuracy, 51.70% confusion, 1.14% abstention). Although BioMedCLIP slightly improves individual accuracy, it substantially increases confusion between paired images and reduces set-level accuracy, suggesting that its domain-specialized representations favor local similarity over discriminative diversity. In contrast, CLIP ViT-B/32 produces more diverse reference sets that better support contrastive comparisons, resulting in lower confusion and higher set accuracy. Since CCI explicitly relies on reference diversity to resolve visually confusable cases, we therefore adopt CLIP ViT-B/32 as the default retrieval backbone in all experiments. 
+
+# B. Prompts and Adjudicators 
+
+B.1. Pairwise Visual Comparison Prompt ( pairwise discriminate )
+
+pairwise discriminate 
+
+You are comparing two medical images to answer a question about the QUERY image. Question: {q} Answer choices: A: {a} B: {b} Image roles: Image 1 is the QUERY image (this is the image you must answer for). Image 2 is the REFERENCE image (for comparison only). Step 0 Modality and anatomy In one line, identify the imaging modality and the primary anatomy shown in the QUERY image. Step 1 QUERY findings List exactly 3 concrete, observable visual findings in the QUERY image. These must be specific medical findings (for example: focal opacity, fracture line, airfluid level, organ enlargement). Do not describe the reference image. Do not mention image quality, brightness, orientation, or artifacts. Step 2 Differences versus REFERENCE List 2 to 4 visual differences between the QUERY and REFERENCE images that are relevant to distinguishing answer A versus B. Step 3 Decision for QUERY Based only on the QUERY image, decide whether A, B, or abstain (-). If you cannot determine A vs B from the QUERY image with confidence >= 60, output Answer: -
+
+11 DoubleTake: Contrastive Reasoning for Faithful Decision-Making in Medical Imaging 
+
+Step 4 Confidence and Key Evidence Provide your confidence level (0-100) and the single most important piece of visual evidence that supports your answer. Key evidence must name a specific visual feature in the QUERY image, not a conclusion. Output format (follow exactly): Modality and Anatomy: <one line> QUERY Findings: <finding 1> <finding 2> <finding 3> Differences vs REFERENCE: <difference 1> <difference 2> <difference 3> (optional) <difference 4> (optional) Answer: <A or B or -> Confidence: <0-100> Key evidence: <specific visual feature in QUERY, not a conclusion> Rules: Base the final answer only on the QUERY image. Use the REFERENCE image only to identify discriminative visual features. Do not reference captions, metadata, or prior cases. Do not add explanations beyond the required fields. Abstain (-) if evidence is insufficient or confidence is below 60. 
+
+B.2. Aggregation Prompt ( aggregate decision )
+
+aggregate decision 
+
+You have made {n} pairwise comparisons for a medical image question. Question: {q} A: {a} B: {b} Your pairwise comparison votes: {votes} Based on the consistency of your comparisons, provide your final answer. If the votes are inconsistent and average confidence is low, output Final Answer: -Output format: Final Answer: <A or B or -> 
+
+12 DoubleTake: Contrastive Reasoning for Faithful Decision-Making in Medical Imaging 
+
+B.3. Pair-level Adjudicator Prompt ( pair adjudicator )
+
+pair adjudicator 
+
+You are analyzing TWO medical images for the same clinical question. Question: {q} A: {a} B: {b} Image 1: {meta1} Image 2: {meta2} Both images were independently predicted as: {pred} Your task: Evaluate each image primarily on its own visual evidence to determine the most appropriate answer. You may consider visual differences between the two images only to assess whether the same decision should reasonably apply to both images. IMPORTANT GUIDELINES: - Each image should be judged on its own merits. - There is NO requirement that the two images have different answers. - There is NO requirement that the two images have the same answer. - Use cross-image comparison only if it reveals a clear, clinically meaningful distinction. - If evidence is ambiguous or insufficient for either image, abstain (-). - Abstention is a valid and preferred outcome when confidence is low. - Base all decisions strictly on visual evidence. Provide: 1. Brief visual assessment of each image (key findings only). 2. Whether any observed differences justify different answers. 3. A final answer for each image. Output format (follow exactly): Visual assessment Image 1: <key visual features> Visual assessment Image 2: <key visual features> Do observed differences justify different answers? <Yes or No> Final Answer Image1: <A or B or -> Final Answer Image2: <A or B or -> Rules: - Do not rely on captions, metadata, or prior cases. - Do not force disagreement between images. - Do not guess; abstain (-) if uncertain. 
+
+13

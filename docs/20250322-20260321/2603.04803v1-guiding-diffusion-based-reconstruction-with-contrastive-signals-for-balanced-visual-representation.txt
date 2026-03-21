@@ -1,0 +1,2638 @@
+Title: Guiding Diffusion-based Reconstruction with Contrastive Signals for Balanced Visual Representation
+
+URL Source: https://arxiv.org/pdf/2603.04803v1
+
+Published Time: Fri, 06 Mar 2026 01:30:09 GMT
+
+Number of Pages: 23
+
+Markdown Content:
+# Guiding Diffusion-based Reconstruction with Contrastive Signals for Balanced Visual Representation 
+
+## Boyu Han 1,2 Qianqian Xu 1,* Shilong Bao 2 Zhiyong Yang 2
+
+## Ruochen Cui 3,4 Xilin Zhao 5 Qingming Huang 2,1,* 1 State Key Laboratory of AI Safety, Institute of Computing Technology, CAS  
+
+> 2
+
+## School of Computer Science and Tech., University of Chinese Academy of Sciences  
+
+> 3
+
+## Institute of Information Engineering, CAS  
+
+> 4
+
+## School of Cyber Security, University of Chinese Academy of Sciences  
+
+> 5
+
+## School of Computer Science and Technology, Beijing Institute of Technology 
+
+{hanboyu23z, xuqianqian }@ict.ac.cn {baoshilong,yangzhiyong21,qmhuang }@ucas.ac.cn cuiruochen25@mails.ucas.ac.cn 1120230539@bit.edu.cn 
+
+## Abstract 
+
+The limited understanding capacity of the visual encoder in Contrastive Language-Image Pre-training (CLIP) has be-come a key bottleneck for downstream performance. This capacity includes both Discriminative Ability (D-Ability), which reflects class separability, and Detail Perceptual Ability (P-Ability), which focuses on fine-grained visual cues. Recent solutions use diffusion models to enhance rep-resentations by conditioning image reconstruction on CLIP visual tokens. We argue that such paradigms may com-promise D-Ability and therefore fail to effectively address CLIP’s representation limitations. To address this, we in-tegrate contrastive signals into diffusion-based reconstruc-tion to pursue more comprehensive visual representations. We begin with a straightforward design that augments the diffusion process with contrastive learning on input images. However, empirical results show that the naive combination suffers from gradient conflict and yields suboptimal perfor-mance. To balance the optimization, we introduce the Dif-fusion Contrastive Reconstruction (DCR) , which unifies the learning objective. The key idea is to inject contrastive signals derived from each reconstructed image, rather than from the original input, into the diffusion process. Our the-oretical analysis shows that the DCR loss can jointly opti-mize D-Ability and P-Ability. Extensive experiments across various benchmarks and multi-modal large language mod-els validate the effectiveness of our method. The code is available at https://github.com/boyuh/DCR.       
+
+> *Corresponding authors. Input Image
+> Anchor A
+> Feature Embedding Reconstructed Image
+> Negative -Positive +
+> (b)
+> (a)+(b) (c)
+> (d) Performance Overview
+> (a) Contrastive Learning
+> MSE Loss
+> AA
+> A
+> Pull
+> -
+> +
+> AA
+> +
+> -
+> Push
+> Vision
+> Encoder
+> Diffusion
+> Denoiser
+> -
+> +
+> AA
+> +
+> -
+> Pull Push
+> +
+> A
+> -
+> (b) Reconstructive Learning
+> (c) DCR (Ours)
+> Naive
+
+Figure 1. (a) Contrastive learning for D-Ability . (b) Reconstruc-tive learning for P-Ability . (c) Our Diffusion Contrastive Recon-struction (DCR) for harmonizing D-Ability and P-Ability . (d) Performance overview of DCR and other methods on the OpenAI CLIP ViT-L@224 backbone. 
+
+## 1. Introduction 
+
+Contrastive Language-Image Pre-training (CLIP) [65] is widely used as a frozen module to provide visual represen-tations for various downstream tasks [93, 96, 103]. How-ever, its self-supervised text-image alignment is relatively coarse, which limits the model’s understanding capabil-ity and has become a major bottleneck to broader deploy-ment [31, 80]. The CLIP’s understanding capacity has two complemen-tary aspects [30, 60]. The first is Discriminative Abil-ity (D-Ability) , which requires the model to separate cat-egories with clear boundaries, keeping samples from the 
+
+> arXiv:2603.04803v1 [cs.CV] 5 Mar 2026
+
+same class close while pushing different classes apart [38, 65]. It is crucial for recognition [21, 54, 79, 84, 89, 97], retrieval [50, 56, 96], and open-vocabulary transfer [27, 47, 78, 93, 104]. The second is Detail Perceptual Ability (P-Ability) , which preserves information about color, direc-tion, quantity, and structure [75]. It supports multimodal question answering [28], instruction following [49], and vision-centric reasoning [36, 74]. Traditional methods fine-tune the vision encoder to learn better representations under CLIP feature supervision. As shown in Fig. 1(a), they often rely on various forms of con-trastive learning [8, 51, 81, 104]. With the rise of diffusion models [24, 98], recent studies turn to generative feedback for stronger enhancement [43, 57, 76, 77]. As shown in Fig. 1(b), the diffusion model takes CLIP visual features as conditions and reconstructs the image. When the recon-structed image matches the original, the visual representa-tion has captured all the information present in the input. This process builds the reconstruction loss Lrec through a 
+
+Mean-Square Error (MSE) objective, thereby improving P-Ability . However, due to the lack of class supervision, it brings little gain or may even harm D-Ability , as shown in Fig. 1(d). A natural question arises: Can we achieve a representation that balances discriminative ability and de-tailed perceptual ability? 
+
+Motivated by the fact that contrastive learning increases class separability, we propose a straightforward variant that adds a contrastive loss Lcon on top of the reconstruction ob-jective to strengthen D-Ability . However, this naive design does not achieve a good balance in practice, as shown in Fig. 1(d). The challenge lies in the fact that the two ob-jectives focus on different aspects: one targets CLIP fea-ture separability, while the other relies on image-level re-construction consistency. This mismatch causes the easier objective to dominate the other. We examine the behavior of the contrastive loss Lcon and the reconstruction loss Lrec 
+
+during training and find that a gradient conflict indeed exists between them. Fig. 2(c) shows that their gradient directions often diverge, and the conflict grows over time. As a result, 
+
+Lcon gradually dominates while Lrec stalls, which leads to unstable convergence, as illustrated in Fig. 2(a)(b). A more detailed analysis is provided in Sec. 4.1. We address this challenge with a new framework called 
+
+Diffusion Contrastive Reconstruction (DCR) . The key im-provement is to replace image-level consistency with contrastive supervision on the reconstructed images , as shown in Fig. 1(c). Specifically, for each image, the an-chor is the reconstruction from its own visual features. The positive is the reconstruction conditioned on its augmented view, and the negatives are reconstructions conditioned on features from other images in the mini-batch. A contrastive loss is then applied to these samples, with the diffusion model remaining frozen. This design leads to a single opti-          
+
+> (a) Contrastive loss Lcon .(b) Reconstruction loss Lrec .<0 86.3%
+> >0 13.7%
+> (c) Cosine similarity between gradient gcon and grec .
+> Figure 2. Training results of linearly combining contrastive learn-ing and reconstructive learning (Naive Method) on the OpenAI CLIP ViT-L@224 backbone. The contrastive loss Lcon dominates the gradients, and most training steps exhibit gradient conflicts.
+
+mization objective and naturally avoids gradient conflicts. We further provide a theoretical analysis under a mild as-sumption and show that our method can satisfy contrastive constraints (Thm. 1) and reconstruction consistency (Thm. 2) at the same time. Finally, comprehensive empirical stud-ies consistently speak to the efficacy of our method. Our main contributions are summarized as follows: • This paper rethinks diffusion-based reconstruction meth-ods and reveals that they improve the P-Ability of visual representations, while D-Ability shows little gain or may even degrade. • We find that directly adding contrastive learning to sup-plement D-Ability leads to gradient conflicts. Therefore, this paper proposes the DCR loss, which uses a single objective to avoid gradient conflict, achieving a balance between D-Ability and P-Ability .• Our theoretical analysis and extensive experiments across 
+
+6 CLIP backbones and diverse vision benchmarks demon-strate the effectiveness of our method in enhancing visual representations. 
+
+## 2. Related Work 
+
+Vision Encoders. Vision encoders serve as the visual back-bone of MLLMs [26, 48, 49, 82], transforming raw images into high-level feature representations. Among various ar-chitectures [4, 62, 65, 70], CLIP [65] is one of the most widely adopted models. It also provides transferable repre-sentations for a wide range of tasks, including detection [1, 19, 29, 55, 58, 71, 90–92, 100], segmentation [18, 44, 85, 88, 102], video understanding [2, 46, 72, 86], and genera-tion [12, 14, 15, 20, 34, 35, 39, 40, 59, 63, 64, 66]. Recent studies focus on enhancing CLIP’s understanding capabil-ity to improve downstream performance. Some primarily strengthen its discriminative ability [16, 81, 104], while oth-ers improve its detail perceptual ability [43, 57, 75–77]. However, an ideal visual encoder should achieve a balance between both aspects. To bridge this gap, this paper aims to develop an enhanced CLIP vision encoder with balanced understanding abilities, providing a stronger foundation for MLLMs. 
+
+Generative Models for Representation Learning. Gener-ative modeling has recently become a powerful paradigm for improving visual representations. Early studies [37, 69, 73] use generative models as data augmenters to ex-pand training data and boost generalization. More re-cent works [43, 57, 76, 77] add self-supervised reconstruc-tion objectives to diffusion frameworks, enabling models to learn richer spatial details and fine-grained semantics. Among them, DIVA [77] introduces diffusion-based visual feedback conditioned on CLIP embeddings, which refines internal representations through generative reconstruction. GenHancer [57] extends this reconstruction process to dis-crete latent spaces, while un 2CLIP [43] resolves the mis-match between CLIP’s pretrained feature space and gener-ative model latents. However, these methods often overem-phasize fine-grained reconstruction while neglecting dis-criminative learning, leading to suboptimal representations. Moreover, GenHancer and un 2CLIP abandon existing pre-trained generative models and retrain specialized ones from scratch, incurring substantial computational costs. In con-trast, our work simultaneously strengthens discriminative ability and detail perceptual ability, producing a more effec-tive CLIP representation. Furthermore, we directly lever-age existing pretrained generative models as the foundation, dramatically reducing training overhead. 
+
+Vision-understanding Benchmarks. The benchmarks can be broadly divided into two camps. The first focuses on assessing discriminative ability. It is typically eval-uated through zero-shot clustering tasks [11, 83] on di-verse datasets such as ImageNet [10], Caltech-101 [13], and DTD [7]. These benchmarks measure a model’s gen-eralization across domains and assess how well visual encoders preserve transferable recognition ability without task-specific fine-tuning. The second group emphasizes de-tail perceptual ability. MMVP [75] introduces a challeng-ing benchmark with nine visual patterns, CV-Bench [74] extends evaluation to spatial relations, counting, and 3D understanding, and NaturalBench [36] adds natural adver-sarial examples to assess perceptual robustness. Together, these benchmarks provide a comprehensive evaluation of the visual representation’s overall understanding ability. 
+
+## 3. Preliminaries 
+
+Notation. Let ϵθ denote the generative model, fϕ denote the CLIP visual encoder, and hω denote the projection mod-ule that maps CLIP features into the generative space. The training dataset is defined as D = {xi ∈ RH×W ×3}ni=1 ,where H and W denote the image height and width. A
+
+variational autoencoder (VAE) encodes each image x into a latent ˜x. We denote the visual feature as z = fϕ(x),the condition as c = hω (z), and the predicted noise as 
+
+ˆϵθ = ϵθ (˜ xt, c, t ) at diffusion step t, with the ground-truth noise ϵgt  
+
+> t
+
+. For clarity, we include a table of symbol defini-tions in the Appendix. 
+
+3.1. Diffusion Models 
+
+Diffusion models [23] generate data by learning to reverse a gradual noising process. In the forward process, clean sam-ples are progressively corrupted with Gaussian noise over T
+
+steps until they become nearly random noise. The reverse process trains a denoising network to predict and remove noise step by step, reconstructing data from noise. The de-noising process is formulated as 
+
+pθ (xt−1|xt) = N (xt−1; μθ (xt, t ), σ 2 
+
+> t
+
+I), (1) where μθ (xt, t ) = 1√αt (xt − βt√1− ¯αt
+
+ϵθ (xt, t )) is param-eterized by the noise prediction network ϵθ (xt, t ), βt =1 − αt, and σ2 
+
+> t
+
+is typically chosen as either σ2 
+
+> t
+
+= βt or 
+
+σ2 
+
+> t
+
+= 1− ¯αt−1  
+
+> 1−¯αt
+
+βt.Stable Diffusion [66] extends this framework to condi-tional generation by adding additional information c into the denoising process. The conditional reverse step is ex-pressed as 
+
+pθ (xt−1|xt, c ) = N (xt−1; μθ (xt, c, t ), σ 2 
+
+> t
+
+I). (2) By operating in a latent space through an autoencoder, Sta-ble Diffusion achieves efficient and high-quality text-to-image synthesis, establishing diffusion models as a foun-dation of modern generative modeling. 
+
+3.2. The Task of Visual Representation Learning 
+
+Visual representation learning aims to learn an encoder 
+
+fϕ : X → Z that maps an image x into a visual repre-sentation z. The goal is to obtain a representation with rich understanding capacity, typically characterized by two key properties: strong Discriminative Ability (D-Ability) and 
+
+Detail Perceptual Ability (P-Ability) [30, 60]. 
+
+Property 1 (D-Ability): Discriminative ability de-scribes a model’s ability to accurately and robustly distin-guish between different visual categories. A representa-tion with strong discriminative power can effectively sep-arate distinct classes in the feature space, keeping samples from the same class tightly clustered while pushing sam-ples from different classes farther apart [38, 65]. Math-ematically, for a mini-batch with class set Y and feature set Zy = {zi|yi = y}, we define the class center as 
+
+μy = 1 
+
+> |Z y|
+
+P 
+
+> z∈Z y
+
+z. It is formulated as 
+
+min Sinner , max Sinter , (3) Augmentor 
+
+> ...
+
+A
+
++
+
+-
+
+-
+
+Pull 
+
+Push 
+
+... 
+
+Reconstruction 
+
+... 
+
+> Original
+> Original
+> Condition Prediction
+
+𝒙 𝒕 𝒙 𝒕 "𝟏 
+
+G
+
+A Anchor Sample 
+
+G Ground Truth 
+
++ Positive Sample 
+
+- Negative Sample  
+
+> Contrastive
+> Learning
+> Visual Encoder Projector
+> Stage -1
+> Stage -2
+
+Denoiser 
+
+𝒙 𝒕 𝒙 𝒕 "𝟏 
+
+Visual Encoder 
+
+Projector 
+
+Condition 
+
+𝒙 𝟎 
+
+Noise 𝝐 𝒕 
+
+> [CLS]
+> Token
+> Patch
+> Token
+
+z
+
+↓
+
+↓ ↑ ↓  
+
+> D-Ability P-Ability
+> Thm. 1 Thm. 2
+> Theoretical
+> Results
+> Denoising
+> Images
+
+Figure 3. An overview of Diffusion Contrastive Reconstruction (DCR). An image is encoded by CLIP and projected into the diffusion condition space. Predicted noises from original, augmented, and negative samples form a contrastive triplet in the reconstruction image space. Training proceeds in two stages: projector alignment and encoder enhancement. 
+
+Sinner = 1
+
+|Y| 
+
+X
+
+> y∈Y
+
+1
+
+|Z y |
+
+X
+
+> z∈Z y
+
+|z − μy |22, (4) 
+
+Sinter = 1
+
+|Y| (|Y| − 1) 
+
+X 
+
+> y,y ′∈Y ,y ̸=y′
+
+|μy − μy′ |22. (5) 
+
+Property 2 (P-Ability): Detail perceptual ability re-flects the model’s capacity to capture fine-grained visual details, enabling a comprehensive understanding of object attributes, spatial relations, and subtle semantic cues within an image. Following previous studies [43, 57, 76, 77], this perception is usually evaluated through reconstruction con-sistency. When a diffusion model can accurately reconstruct the original image from its learned representation, the rep-resentation is considered sufficiently rich. It is formulated as 
+
+min Et
+
+h
+
+∥ϵθ (xt, h ω (fϕ(x)) , t ) − ϵgt  
+
+> t
+
+∥22
+
+i
+
+, (6) where t denotes the diffusion timestep, fϕ denotes the CLIP visual encoder, and hω denotes the projector. 
+
+## 4. Methodology 
+
+In this section, we first propose a naive optimization method that aims to pursue the two properties in Sec. 3.2. Due to gradient conflicts, we further introduce a joint optimiza-tion approach called Diffusion Contrastive Reconstruction (DCR) . A brief overview is provided in Fig. 3. DCR en-hances CLIP’s visual representations through a pretrained conditional diffusion model with contrastive signals. We also provide a theoretical analysis showing how DCR jointly strengthens and balances the D-Ability and P-Ability of the learned representations. 
+
+4.1. A Naive Optimization Method 
+
+How to improve D-Ability? Mainstream approaches com-monly use a contrastive loss that pulls same-class fea-tures closer and pushes different-class features apart [65]. Specifically, for a mini-batch B with cosine similarity 
+
+sim( zi, zj ) = z⊤   
+
+> izj
+> ∥zi∥ ∥ zj∥
+
+, temperature τ > 0, and the pos-itive set P(i) = {j ∈ B \ { i} | yj = yi}, a InfoNCE-style loss [61] is 
+
+Lcon = 1
+
+|B| 
+
+X
+
+> i∈B
+
+− log 
+
+P 
+
+> j∈P (i)
+
+exp  sim( zi, zj )/τ P 
+
+> k∈B\{ i}
+
+exp  sim( zi, zk)/τ  ,
+
+(7) which decreases Sinner and increases Sinter in Eq. (3). 
+
+How to improve P-Ability? The objective is typically re-alized by enforcing consistency between the reconstructed image and the original one [77], namely 
+
+Lrec = Et
+
+h
+
+ϵθ
+
+ xt, h ω (fϕ(x)) , t  − ϵgt 
+
+> t
+> 22
+
+i
+
+, (8) which is exactly Eq. (6). To obtain richer understanding representations without altering architectures or data pipelines, we consider a naive method that combines the two losses described above: 
+
+Ljoint = λcon Lcon + λrec Lrec , (9) where λcon and λrec are hyperparameters that balance the two objectives. 
+
+Limitation . Although this approach appears promising, we find in practice that it leads to a suboptimal solution, as shown in Fig. 1(d). As suggested in multi-task optimiza-tion [45, 67, 94], we suspect that learning competition may occur. The contrastive objective encourages class separa-tion, while the reconstruction objective maintains image-level consistency. The mismatch between these two objec-tives causes the easier one to dominate the other. These conflicting forces often lead to oscillation or degeneration during training, resulting in unstable convergence or even feature collapse. Specifically, let z denote the shared visual representa-tion. At training step t, the update rule for z is: 
+
+zt+1 = zt−η∇zLjoint = zt−η (λcon ∇zLcon + λrec ∇zLrec ) ,
+
+(10) where η is the learning rate. Denoting gcon = ∇zLcon and 
+
+grec = ∇zLrec , the overall optimization direction depends on the geometric relation between these two gradients. If their directions are inconsistent, the optimization will ex-hibit competition between the two objectives. 
+
+Gradient consistency and conflict. To quantify this in-teraction, we define the cosine similarity between the two gradient directions: 
+
+cos( gcon , grec ) = g⊤
+
+> con
+
+grec 
+
+∥gcon ∥2∥grec ∥2
+
+. (11) When cos( gcon , grec ) > 0, the two objectives cooperate and reinforce each other. However, when cos( gcon , grec ) < 0,they conflict, leading to destructive interference in the gra-dient updates. We conduct experiments on OpenAI CLIP ViT-L/14@224 [65] and optimize the model using the joint loss 
+
+Ljoint . As shown in Fig. 2(a)(b), Lcon dominates the op-timization process, while Lrec is suppressed and fails to converge. Fig. 2(c) further shows that during train-ing, 86 .3% of the steps have a negative cosine similarity 
+
+cos( gcon , grec ) between the gradients of the two losses, in-dicating that gradient conflict is pervasive throughout the process . Moreover, as training progresses, this value becomes almost entirely negative, suggesting that gradient conflicts intensify in the later stages of optimization. 
+
+Remark 1. The above analysis reveals that naive weighted summation cannot effectively reconcile the conflicting learning objectives. Therefore, we argue that the problem should be addressed at its root by optimizing a single objec-tive. 
+
+4.2. Diffusion Contrastive Reconstruction 
+
+We propose a new optimization framework, named Diffu-sion Contrastive Reconstruction (DCR) , that jointly opti-mizes the two optimization objectives (Eq. (3) and Eq. (6)) within a unified formulation. With this single loss, the gra-dient conflict is naturally resolved. 
+
+(1) Standard Diffusion-based Reconstruction. As shown on the right side of Fig. 3, for an image x, we sample a timestep t, obtain the forward noised latent ˜xt,and condition the denoiser with the image-driven embed-ding c = hω (fϕ(˜ x)) . The denoiser ϵθ predicts the noise 
+
+ˆϵθ = ϵθ (xt, c, t ) (abbreviated as ˆϵ), which determines the next latent xt−1.
+
+(2) Injecting Contrastive Signals. We construct a con-trastive triplet in the denoising images, as illustrated on the left side of Fig. 3. Given an image x, the anchor is the predicted noise when the image itself provides the condi-tion, i.e. , ˆϵ = ϵθ (xt, h ω (fϕ(˜ x)) , t ). We then apply an augmentation x+ = a(x) (e.g. , random crop or color jit-ter [5, 6]), compute c+ = hω (fϕ(˜ x+)) , and define the posi-tive as the noise predicted under this augmented condition, 
+
+ˆϵ+ = ϵθ (xt, c +, t ). All other images xj (j̸ = i) within the same mini-batch serve as negatives . For each xj we set cj = hω (fϕ(˜ x j )) and obtain ˆϵj 
+
+> −
+
+= ϵθ (xt, c j , t ). Ad-ditionally, we include the ground-truth diffusion noise ϵgt 
+
+> t
+
+(abbreviated as ϵgt ) as an auxiliary target to provide richer supervision. 
+
+(3) DCR Loss. Let d(u, v ) = exp(sim( u, v )/τ ), where 
+
+sim( u, v ) = ⟨u,v ⟩|u|,|v| denote cosine similarity and τ > 0 atemperature. Define set P = {ˆϵ+, ϵgt }, set N = {ˆϵk
+
+> −
+
+}N −1 
+
+> k=1
+
+,and set C = P ∪ N . Then the loss is 
+
+Ldcr = − 12
+
+X
+
+> p∈P
+
+log d(ˆ ϵ, p )
+
+P 
+
+> c∈C
+
+d(ˆ ϵ, c ) . (12) Intuitively, the core of diffusion models lies in predicting noise. Performing contrastive learning on the predicting noise allows the model to sense fine-grained differences in the original visual representations used as conditions. This helps the vision encoder capture detailed information and enhance its discriminative ability, ultimately achieving a natural balance between D-Ability and P-Ability .
+
+Training Protocol. During training, the generative model 
+
+ϵθ remains frozen. As shown in Fig. 3, we use a two-stage schedule to transfer diffusion knowledge into the vision en-coder gradually. • Stage-1 (projector alignment). We freeze the visual en-coder fϕ and train only the projector hω . This stage learns a conditional mapping that aligns the visual guidance with the text guidance in the original diffusion model, ensuring that the frozen denoiser can correctly interpret the image-based conditions. • Stage-2 (encoder enhancement). We then freeze the projector hω and train the visual encoder fϕ. Since hω has been aligned to the denoiser in Stage-1, gradients from Eq. (12) now directly refine the feature structure produced Table 1. Performance of Detail Perceptual Ability (P-Ability) on the MMVP-VLM benchmark. Results of baseline methods are taken from [43, 57, 77]. Our method outperforms across multiple CLIP backbones and exhibits robustness across various visual patterns. The visual patterns are symbolized as: ☼: Orientation and Direction, Û: Presence of Specific Features, L: State and Condition, : Quantity and Count, ,: Positional and Relational Context, h: Color and Appearance, Ô: Structural and Physical Characteristics, k: Texts, :Viewpoint and Perspective. 
+
+CLIP Backbone Resol. #Params Method ☼ Û L  , h Ô k  Avg 
+
+OpenAI ViT-L-14 224 427.6M Original 13.3 13.3 20.0 20.0 13.3 53.3 20.0 6.7 13.3 19.2 DIVA 13.3 20.0 40.0 6.7 20.0 53.3 46.7 20.0 13.3 25.9 GenHancer 13.3 33.3 33.3 20.0 6.7 73.3 46.7 20.0 40.0 31.8 un 2CLIP 0.0 33.3 46.7 26.7 13.3 80.0 40.0 20.0 33.3 32.6 Ours 13.3 33.3 33.3 26.7 6.7 73.3 46.7 20.0 46.7 33.3 
+
+OpenAI ViT-L-14 336 427.9M Original 0.0 20.0 40.0 20.0 6.7 20.0 33.3 6.7 33.3 20.0 DIVA 26.7 20.0 33.3 13.3 13.3 46.7 26.7 6.7 40.0 25.2 GenHancer 6.7 20.0 33.3 20.0 6.7 73.3 53.3 26.7 26.7 29.6 un 2CLIP 6.7 33.3 46.7 13.3 13.3 80.0 40.0 20.0 20.0 30.4 Ours 13.3 26.7 33.3 20.0 6.7 73.3 46.7 33.3 26.7 31.1 
+
+MetaCLIP ViT-L-14 224 427.6M Original 13.3 6.7 66.7 6.7 33.3 46.7 20.0 6.7 13.3 23.7 DIVA 6.7 6.7 60.0 0.0 26.7 66.7 20.0 20.0 40.0 27.4 GenHancer 13.3 20.0 53.3 13.3 26.7 80.0 33.3 13.3 33.3 31.8 un 2CLIP - - - - - - - - - -Ours 20.0 20.0 53.3 13.3 26.7 80.0 33.3 13.3 33.3 32.6 
+
+MetaCLIP ViT-H-14 224 986.1M Original 6.7 13.3 60.0 13.3 6.7 53.3 26.7 13.3 33.3 25.2 DIVA 13.3 20.0 53.3 33.3 13.3 66.7 33.3 13.3 40.0 31.8 GenHancer 20.0 20.0 66.7 26.7 26.7 66.7 33.3 20.0 53.3 37.0 un 2CLIP - - - - - - - - - -Ours 20.0 20.0 66.7 26.7 26.7 66.7 33.3 26.7 53.3 37.8 
+
+SigLIP ViT-SO-14 224 877.4M Original 26.7 20.0 53.3 40.0 20.0 66.7 40.0 20.0 53.3 37.8 DIVA 13.3 26.7 60.0 46.7 13.3 73.3 53.3 26.7 53.3 40.7 GenHancer 20.0 20.0 66.7 60.0 20.0 86.7 40.0 13.0 53.3 42.2 un 2CLIP - - - - - - - - - -Ours 13.3 26.7 73.3 60.0 20.0 80.0 40.0 20.0 53.3 43.0 
+
+SigLIP ViT-SO-14 384 878.0M Original 20.0 26.7 60.0 33.3 13.3 66.7 33.3 26.7 53.3 37.0 DIVA 26.7 33.3 53.3 26.7 13.3 80.0 40.0 26.7 46.7 38.5 GenHancer 26.7 20.0 66.7 33.3 13.3 86.7 40.0 26.7 46.7 40.0 un 2CLIP 20.0 20.0 60.0 46.7 26.7 73.3 40.0 26.7 60.0 41.5 Ours 26.7 33.3 60.0 33.3 26.7 80.0 40.0 33.3 46.7 42.2 
+
+by fϕ. Features from the same class are guided to pro-duce conditions that yield similar predicted noises, while features from different classes are guided to produce con-ditions with dissimilar predicted noises. After this stage, we obtain a CLIP visual encoder with richer visual repre-sentations. 
+
+4.3. Theoretical Statements 
+
+Taking a step further, we conduct a theoretical analysis. The results show that the DCR loss is designed to satisfy the two objectives discussed in Sec. 3.2. We present these insights in the following two theorems. Due to space limitations, we provide a concise version here, and the proofs are deferred to the Appendix. 
+
+Theorem 1. Fix a diffusion step t and define T (z) =
+
+ϵθ
+
+ xt, h ω (z), t . Under a mild assumption, the intra-class scatter and inter-class scatter in the feature space (Sinner , S inter ) can be bounded by those in the noise space (S(ϵ)
+
+> inner
+
+(t), S (ϵ)
+
+> inter
+
+(t)) as 
+
+Sinner ≤ 1
+
+m2 S(ϵ)
+
+> inner
+
+(t), (13) 
+
+Sinter ≥ κS (ϵ)
+
+> inter
+
+(t) − ηS (ϵ)
+
+> inner
+
+(t), (14) 
+
+where m, κ, and η are positive constants depending on the Lipschitz continuity of T (·).
+
+Theorem 2. If negatives in the mini-batch are well sepa-rated from the anchor (i.e., sim(ˆ ϵ, ˆϵj
+
+> −
+
+) ≪ sim(ˆ ϵ, ϵgt ) for all j̸ = i), and predicted-noise norms are bounded away from 0 and ∞, then the DCR loss reduces to a scaled re-construction loss up to an additive constant: 
+
+Ldcr = λ ϵθ (xt, h ω (fϕ(˜ x)) , t ) − ϵgt  
+
+> t
+> 22
+
++ c, (15) 
+
+where λ > 0, and c is a constant. 
+
+Remark 2. According to Theorem 1, as Ldcr decreases, we obtain Sinner ↓ and Sinter ↑ in the CLIP feature space, which fulfills the discriminative objective in Eq. (3). According to Theorem 2, minimizing Ldcr becomes equivalent to mini-mizing the detail perceptual objective in Eq. (6). 
+
+## 5. Experiments 
+
+In this section, we describe some details of the experiments and present our results. Due to space limitations, please Table 2. Performance of Discriminative Ability (D-Ability) on 6 standard zero-shot clustering benchmarks. Our method achieves better class separability. O-1, M-1, and S-1 separately represent OpenAI CLIP ViT-L@224, MetaCLIP ViT-L@224, and SigLIP ViT-SO@224.                                                                                                                                                                                                                                                                                                                            
+
+> Backbone Method MNIST [33] CIFAR-10 [32] Eurosat [22] Caltech-101 [13] DTD [7] ImageNet-1K [10] Avg
+> NMI ACC ARI NMI ACC ARI NMI ACC ARI NMI ACC ARI NMI ACC ARI NMI ACC ARI NMI ACC ARI O-1 Original 0.63 0.63 0.50 0.82 0.82 0.76 0.71 0.72 0.61 0.78 0.53 0.35 0.55 0.45 0.30 0.79 0.53 0.41 0.71 0.61 0.49 DIVA 0.66 0.60 0.49 0.81 0.82 0.75 0.70 0.72 0.61 0.78 0.52 0.34 0.51 0.41 0.26 0.79 0.52 0.40 0.71 0.60 0.48 GenHancer 0.69 0.73 0.60 0.58 0.65 0.49 0.61 0.67 0.56 0.81 0.54 0.38 0.56 0.45 0.31 0.64 0.26 0.14 0.65 0.55 0.41 un 2CLIP 0.67 0.70 0.53 0.81 0.82 0.74 0.64 0.75 0.60 0.80 0.55 0.41 0.55 0.46 0.31 0.73 0.41 0.28 0.70 0.62 0.48 Ours 0.73 0.74 0.62 0.89 0.86 0.80 0.68 0.73 0.61 0.83 0.57 0.43 0.58 0.48 0.33 0.84 0.66 0.45 0.76 0.67 0.54
+> M-1 Original 0.59 0.62 0.47 0.79 0.73 0.67 0.59 0.56 0.46 0.79 0.52 0.40 0.56 0.51 0.36 0.81 0.56 0.44 0.69 0.58 0.47 DIVA 0.60 0.65 0.49 0.77 0.79 0.72 0.65 0.75 0.56 0.80 0.56 0.39 0.60 0.52 0.36 0.81 0.56 0.44 0.71 0.64 0.49 GenHancer 0.76 0.73 0.77 0.70 0.70 0.60 0.62 0.72 0.65 0.81 0.55 0.41 0.59 0.49 0.34 0.64 0.27 0.15 0.69 0.58 0.49 Ours 0.78 0.79 0.68 0.80 0.82 0.76 0.72 0.77 0.67 0.82 0.57 0.42 0.60 0.54 0.37 0.84 0.69 0.45 0.76 0.70 0.56
+> S-1 Original 0.68 0.74 0.56 0.94 0.97 0.95 0.64 0.69 0.55 0.89 0.61 0.43 0.66 0.55 0.40 0.85 0.63 0.52 0.78 0.70 0.57 DIVA 0.63 0.61 0.46 0.94 0.98 0.95 0.66 0.73 0.57 0.90 0.66 0.48 0.66 0.55 0.41 0.85 0.63 0.52 0.77 0.69 0.57 GenHancer 0.80 0.78 0.70 0.72 0.69 0.61 0.65 0.70 0.57 0.88 0.64 0.48 0.62 0.55 0.42 0.77 0.48 0.35 0.74 0.64 0.52 Ours 0.85 0.89 0.78 0.95 0.98 0.95 0.76 0.81 0.69 0.89 0.66 0.48 0.67 0.59 0.44 0.88 0.65 0.55 0.83 0.76 0.65 Original CLIP Ours
+> eagle from side view
+> eagle from front view
+> Image Text Image
+> snowman with black hat
+> snowman with silver hat
+> Text
+
+Figure 4. Qualitative results of P-Ability on the MMVP-VLM benchmark. The predictions from the original CLIP and our im-proved version are indicated by red and green arrows, respectively. The improved CLIP effectively addresses the original model’s lim-itations in capturing fine-grained visual details. 
+
+refer to the Appendix for an extended version. 
+
+5.1. Experimental Setups 
+
+Implementation Details. We perform all experiments on an NVIDIA-A100 80GB GPU. In the main experiments, Stable Diffusion v2.1 [66] serves as the diffusion backbone, and a simple two-layer MLP is used as the projector. Fol-lowing [57], we discard all patch tokens and retain only the 
+
+[CLS] token as the conditional input. The training is con-ducted on the CC3M [68] dataset. We adopt the Adam with Weight Decay (AdamW) [52] optimizer with a weight decay of 0.01 . The initial learning rates are set to 1 × 10 −4 and 
+
+1 × 10 −5 for Stage-1 and Stage-2, respectively. In Stage-2, we fine-tune LoRA [25] with a rank of 16 applied to the vision encoder. The batch size is fixed at 16 for all experi-ments, and the total number of training steps is 4600 .
+
+Competitors. Our method enhances visual representation through diffusion-based reconstruction. We compare it with three state-of-the-art methods: DIVA [77], GenHancer [57], and un 2CLIP [43]. Among them, GenHancer and un 2CLIP retrain their own generative models, whereas our method is built on top of the pretrained Stable Diffusion. 
+
+Evaluation Protocol. Following [57, 77], we enhance 6
+
+CLIP backbones: OpenAI CLIP ViT-L@224/@336 [65], MetaCLIP ViT-L/H@224 [87], and SigLIP ViT-SO@224/@384 [95]. To evaluate the P-Ability , we use MMVP-VLM [75]. To evaluate the D-Ability , we perform 
+
+(a) Original CLIP (b) DIVA (c) Ours 
+
+Figure 5. Qualitative results of D-Ability on the MNIST bench-mark by using the t-SNE method. The improved CLIP achieves better class separability. 
+
+zero-shot clustering on 6 datasets [7, 10, 13, 22, 32, 33] and adopt Normalized Mutual Information (NMI) , Ac-curacy (ACC) , and Adjusted Rand Index (ARI) to assess performance. We also train MLLMs with our enhanced CLIP encoders using the official LLaVA-1.5 [49] recipe. We then evaluate these MLLMs on the same bench-marks [17, 36, 41, 53, 74, 75] as [57]. 
+
+5.2. Overall Performance 
+
+Performance of P-Ability. Our method is evaluated on the MMVP-VLM benchmark, which comprehensively measures visual detail perception from 9 fine-grained as-pects. As shown in Tab. 1, our method achieves consis-tent improvements across 6 representative CLIP backbones. Specifically, it surpasses the original model by 14 .1% on the OpenAI CLIP ViT-L@224 backbone and 8.9% on the MetaCLIP ViT-L@224 backbone. Our approach achieves the best performance even when compared with GenHancer and un 2CLIP, which employ dedicated generative models during training. We further provide qualitative results in Fig. 4, demonstrating that our enhanced CLIP serves as a plug-and-play module to improve the fine-grained percep-tion, such as color and perspective. 
+
+Performance of D-Ability. We assess class separability by zero-shot clustering on 6 standard datasets. As shown in Tab. 2, our method delivers consistent gains over all backbones and baselines. It achieves the best average NMI/ACC/ARI, with the strongest result on SigLIP ViT-Table 3. Performance of MLLMs (LLaVA-1.5 [49]) on various benchmarks. The champion and the runner-up are highlighted in bold and underline. Results on NaturalBench follow the setting in [57], which differs from that used in un 2CLIP [43], leading to the missing entries.                                                                               
+
+> LLM CLIP Vision-Centric Benchmarks Conventional MLLM Benchmarks MMVP-MLLM [75] NaturalBench [36] CV-Bench 2D [74] CV-Bench 3D [74] POPE [41] SciQA-IMG [53] Hallusion Avg. [17] Acc Q-Acc I-Acc G-Acc ADE20K COCO rand pop adv Vicuna-7B Original 24.7 76.4 53.6 56.4 17.6 49.6 60.9 58.7 87.3 86.1 84.2 66.8 27.6 DIVA 31.3 75.3 51.7 56.1 22.3 51.3 63.4 60.2 87.9 87.0 84.6 66.3 28.6
+> GenHancer 30.7 77.3 55.6 59.1 24.4 52.9 63.6 63.2 88.1 86.7 84.6 66.5 28.4 un 2CLIP 31.3 ----53.9 65.1 61.2 88.0 87.4 85.4 68.4 28.4 Ours 31.3 78.6 57.8 61.2 25.3 54.1 65.5 63.5 88.0 87.4 85.8 67.5 28.6
+
+Table 4. Ablation studies in terms of P-Ability and D-Ability .                        
+
+> (a) Naive Method
+> Method MMVP Clustering
+> ACC NMI ACC ARI Naive 22.96 0.72 0.65 0.50 Ours 33.30 0.76 0.67 0.54
+> (b) Different Training Protocol
+> Method MMVP Clustering
+> ACC NMI ACC ARI End-to-End 25.93 0.73 0.65 0.51 Two-Stage 33.30 0.76 0.67 0.54
+
+SO@224 (avg. 0.83 /0.76 /0.65 ). The improvements are pronounced on fine-grained or texture-biased sets such as Caltech-101 and DTD, while remaining robust on general-purpose sets like CIFAR-10 and ImageNet-1K. Further-more, we provide t-SNE visualizations on the MNIST dataset using the OpenAI CLIP ViT-L@224 backbone, as shown in Fig. 5. The results demonstrate that our enhanced CLIP exhibits stronger class separability. 
+
+5.3. Multimodal Large Language Model Evaluation 
+
+We further examine whether the enhanced visual represen-tations learned by our method can be effectively transferred to Multimodal Large Language Models (MLLMs) . Specif-ically, we substitute the original CLIP vision encoder in the LLaVA-1.5 [49] framework with our improved CLIP while keeping all training configurations unchanged to en-sure a fair comparison. The evaluation is performed on a se-ries of vision-centric and general multimodal benchmarks, covering both vision-centric and general tasks. As shown in Tab. 3, the integration of our enhanced CLIP substan-tially boosts MLLM performance, particularly in bench-marks that require detailed visual understanding. These re-sults demonstrate that improving the granularity of visual representations not only benefits standalone vision mod-els but also strengthens the visual grounding and reasoning ability of multimodal systems. 
+
+5.4. Ablation Studies 
+
+We perform several ablation studies to test the effectiveness of different modules and hyperparameters. All experiments are conducted on the OpenAI CLIP ViT-L@224. 
+
+Results on the Naive Method. Tab. 4a compares our DCR with the naive linear weighting method. The results show that the naive method improves the D-Ability to some ex-tent, but suffers from poor P-Ability (only 22 .96% ) due to gradient conflicts. In contrast, our method employs a uni-ACC ACC NMI ARI 
+
+> Zero -shot Clustering MMVP -VLM
+
+Figure 6. Ablation study on different diffusion model structures. 
+
+fied loss function to eliminate these conflicts and achieves better results in both aspects. This demonstrates the effec-tiveness of our proposed DCR framework. 
+
+Results on Different Diffusion Model Structures. Fig. 6 presents the performance of our method using different Sta-ble Diffusion (SD) backbones, including SD-1.4, SD-1.5, SD-2.1, and SD-XL. We observe a consistent trend that stronger diffusion models generally achieve better results in both D-Ability and P-Ability metrics. SD-2.1 attains the best overall performance. It is worth noting that although SD-XL is trained on larger and higher-quality data, it adopts a dual-encoder architecture for conditioning. When re-placed with a single image-based embedding as the condi-tion, its potential cannot be fully utilized, leading to a drop in final performance. 
+
+Results on Different Training Protocol. Tab. 4b compares two training protocols: end-to-end and two-stage optimiza-tion. The two-stage protocol consistently outperforms the end-to-end scheme across all metrics. This suggests that pretraining the projector helps improve the reconstruction quality of the diffusion model, thereby facilitating better CLIP enhancement. 
+
+## 6. Conclusion 
+
+This paper presents Diffusion Contrastive Reconstruction (DCR) , a general optimization framework that guides diffusion-based reconstruction with contrastive signals to balance discriminative and detail perceptual abilities. DCR effectively removes gradient conflicts and achieves consis-tent improvements in both aspects. Theoretical analysis and empirical results demonstrate that DCR not only enhances CLIP visual representations but also strengthens the visual reasoning capability of multimodal large language models. Acknowledgments 
+
+This work was supported in part by National Natural Science Foundation of China: 62525212, U23B2051, 62236008, 62441232, 62521007, U21B2038, 62502496 and 62576332, in part by Youth Innovation Promotion As-sociation CAS, in part by the Strategic Priority Research Program of the Chinese Academy of Sciences, Grant No. XDB0680201, and in part by the project ZR2025ZD01 sup-ported by Shandong Provincial Natural Science Founda-tion, in part by the China Postdoctoral Science Founda-tion (CPSF) under Grant 2025M771492, and in part by the Postdoctoral Fellowship Program of CPSF under Grant GZB20240729. 
+
+## References 
+
+[1] Shilong Bao, Qianqian Xu, Feiran Li, Boyu Han, Zhiyong Yang, Xiaochun Cao, and Qingming Huang. Towards size-invariant salient object detection: A generic evaluation and optimization approach. TPAMI , 48(2):1115–1132, 2025. 2 [2] Digbalay Bose, Rajat Hebbar, Krishna Somandepalli, Haoyang Zhang, Yin Cui, Kree Cole-McLaughlin, Huisheng Wang, and Shrikanth Narayanan. Movieclip: Vi-sual scene recognition in movies. In WACV , pages 2083– 2092, 2023. 2 [3] Holger Caesar, Jasper Uijlings, and Vittorio Ferrari. Coco-stuff: Thing and stuff classes in context. In CVPR , pages 1209–1218, 2018. 8 [4] Mathilde Caron, Hugo Touvron, Ishan Misra, Herv´ e J´ egou, Julien Mairal, Piotr Bojanowski, and Armand Joulin. Emerging properties in self-supervised vision transformers. In ICCV , pages 9650–9660, 2021. 2 [5] Ting Chen, Simon Kornblith, Mohammad Norouzi, and Ge-offrey Hinton. A simple framework for contrastive learn-ing of visual representations. In ICML , pages 1597–1607, 2020. 5 [6] Xinlei Chen, Haoqi Fan, Ross Girshick, and Kaiming He. Improved baselines with momentum contrastive learning. 
+
+arXiv preprint arXiv:2003.04297 , 2020. 5 [7] Mircea Cimpoi, Subhransu Maji, Iasonas Kokkinos, Sammy Mohamed, and Andrea Vedaldi. Describing tex-tures in the wild. In CVPR , pages 3606–3613, 2014. 3, 7, 8[8] Siran Dai, Qianqian Xu, Peisong Wen, Yang Liu, and Qing-ming Huang. Exploring structural degradation in dense rep-resentations for self-supervised learning. In NeurIPS , 2025. 2[9] Guy C David. Bi-lipschitz pieces between manifolds. Re-vista Mathematica Iberoamericana , 32(1), 2016. 2 [10] Jia Deng, Wei Dong, Richard Socher, Li-Jia Li, Kai Li, and Li Fei-Fei. Imagenet: A large-scale hierarchical im-age database. In CVPR , pages 248–255, 2009. 3, 7, 8 [11] Shijie Deng, Jie Wen, Chengliang Liu, Ke Yan, Gehui Xu, and Yong Xu. Projective incomplete multi-view clustering. 
+
+TNNLS , 35(8):10539–10551, 2023. 3 [12] Patrick Esser, Sumith Kulal, Andreas Blattmann, Rahim Entezari, Jonas M¨ uller, Harry Saini, Yam Levi, Dominik Lorenz, Axel Sauer, Frederic Boesel, et al. Scaling rectified flow transformers for high-resolution image synthesis. In 
+
+ICML , pages 12606–12633, 2024. 2 [13] Li Fei-Fei, Rob Fergus, and Pietro Perona. Learning gener-ative visual models from few training examples: An incre-mental bayesian approach tested on 101 object categories. In CVPR workshop , pages 178–178, 2004. 3, 7, 8 [14] Bingjie Gao, Xinyu Gao, Xiaoxue Wu, Yujie Zhou, Yu Qiao, Li Niu, Xinyuan Chen, and Yaohui Wang. The devil is in the prompts: Retrieval-augmented prompt optimiza-tion for text-to-video generation. In CVPR , pages 3173– 3183, 2025. 2 [15] Bingjie Gao, Qianli Ma, Xiaoxue Wu, Shuai Yang, Guanzhou Lan, Haonan Zhao, Jiaxuan Chen, Qingyang Liu, Yu Qiao, Xinyuan Chen, et al. Rapo++: Cross-stage prompt optimization for text-to-video generation via data alignment and test-time scaling. arXiv preprint arXiv:2510.20206 , 2025. 2 [16] Shizhan Gong, LEI Haoyu, Qi Dou, and Farzan Farnia. Boosting the visual interpretability of clip via adversarial fine-tuning. In ICLR , 2025. 2 [17] Tianrui Guan, Fuxiao Liu, Xiyang Wu, Ruiqi Xian, Zongxia Li, Xiaoyu Liu, Xijun Wang, Lichang Chen, Furong Huang, Yaser Yacoob, et al. Hallusionbench: an advanced diagnostic suite for entangled language halluci-nation and visual illusion in large vision-language models. In CVPR , pages 14375–14385, 2024. 7, 8, 9 [18] Boyu Han, Qianqian Xu, Zhiyong Yang, Shilong Bao, Peisong Wen, Yangbangyan Jiang, and Qingming Huang. Aucseg: Auc-oriented pixel-level long-tail semantic seg-mentation. In NeurIPS , pages 126863–126907, 2024. 2 [19] Boyu Han, Qianqian Xu, Shilong Bao, Zhiyong Yang, Sicong Li, and Qingming Huang. Dual-stage reweighted moe for long-tailed egocentric mistake detection. arXiv preprint arXiv:2509.12990 , 2025. 2 [20] Boyu Han, Qianqian Xu, Shilong Bao, Zhiyong Yang, Kan-gli Zi, and Qingming Huang. Lightfair: Towards an ef-ficient alternative for fair t2i diffusion via debiasing pre-trained text encoders. In NeurIPS , 2025. 2 [21] Yushan Han, Hui Zhang, Honglei Zhang, Jing Wang, and Yidong Li. Codts: Enhancing sparsely supervised collabo-rative perception with a dual teacher-student framework. In 
+
+AAAI , pages 3366–3373, 2025. 2 [22] Patrick Helber, Benjamin Bischke, Andreas Dengel, and Damian Borth. Eurosat: A novel dataset and deep learn-ing benchmark for land use and land cover classification. 
+
+JSTARS , 12(7):2217–2226, 2019. 7, 8 [23] Jonathan Ho, Ajay Jain, and Pieter Abbeel. Denoising dif-fusion probabilistic models. In NeurIPS , pages 6840–6851, 2020. 3 [24] Feng Hong, Jiangchao Yao, Yifei Shen, Dongsheng Li, Ya Zhang, and Yanfeng Wang. Improving diffusion models for class-imbalanced training data via capacity manipulation. In ICLR , 2026. 2 [25] Edward J Hu, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang, Weizhu Chen, et al. Lora: Low-rank adaptation of large language models. In ICLR , 2022. 7[26] Cong Hua, Qianqian Xu, Shilong Bao, Zhiyong Yang, and Qingming Huang. Reconboost: Boosting can achieve modality reconcilement. In ICML , pages 19573–19597, 2024. 2 [27] Cong Hua, Qianqian Xu, Zhiyong Yang, Zitai Wang, Shi-long Bao, and Qingming Huang. Openworldauc: Towards unified evaluation and optimization for open-world prompt tuning. In ICML , 2025. 2 [28] Drew A Hudson and Christopher D Manning. Gqa: A new dataset for real-world visual reasoning and compositional question answering. In CVPR , pages 6700–6709, 2019. 2 [29] Dahun Kim, Anelia Angelova, and Weicheng Kuo. Region-aware pretraining for open-vocabulary object detection with vision transformers. In CVPR , pages 11144–11154, 2023. 2[30] Saehoon Kim, Sungwoong Kim, and Juho Lee. Hy-brid generative-contrastive representation learning. arXiv preprint arXiv:2106.06162 , 2021. 1, 3 [31] Seoyeon Kim, Minguk Kang, Dongwon Kim, Jaesik Park, and Suha Kwak. Extending clip’s image-text alignment to referring image segmentation. In ACL , pages 4611–4628, 2024. 1 [32] A Krizhevsky. Learning multiple layers of features from tiny images. Master’s thesis, University of Tront , 2009. 7, 8[33] Yann LeCun, L´ eon Bottou, Yoshua Bengio, and Patrick Haffner. Gradient-based learning applied to document recognition. Proceedings of the IEEE , 86(11):2278–2324, 2002. 7, 8 [34] Zhiying Leng, Shun-Cheng Wu, Mahdi Saleh, Antonio Montanaro, Hao Yu, Yin Wang, Nassir Navab, Xiaohui Liang, and Federico Tombari. Dynamic hyperbolic atten-tion network for fine hand-object reconstruction. In ICCV ,pages 14894–14904, 2023. 2 [35] Zhiying Leng, Tolga Birdal, Xiaohui Liang, and Federico Tombari. Hypersdfusion: Bridging hierarchical structures in language and geometry for enhanced 3d text2shape gen-eration. In CVPR , pages 19691–19700, 2024. 2 [36] Baiqi Li, Zhiqiu Lin, Wenxuan Peng, Jean de Dieu Nyandwi, Daniel Jiang, Zixian Ma, Simran Khanuja, Ran-jay Krishna, Graham Neubig, and Deva Ramanan. Natural-bench: Evaluating vision-language models on natural ad-versarial samples. In NeurIPS , pages 17044–17068, 2024. 2, 3, 7, 8 [37] Bohan Li, Xiao Xu, Xinghao Wang, Yutai Hou, Yunlong Feng, Feng Wang, Xuanliang Zhang, Qingfu Zhu, and Wanxiang Che. Semantic-guided generative image aug-mentation method with diffusion models for image classifi-cation. In AAAI , pages 3018–3027, 2024. 3 [38] Cheng Li and Bingyu Wang. Fisher linear discriminant analysis. CCIS Northeastern University , 6, 2014. 2, 3 [39] Feiran Li, Qianqian Xu, Shilong Bao, Boyu Han, Zhiy-ong Yang, and Qingming Huang. Hybrid generative fusion for efficient and privacy-preserving face recognition dataset generation. In ICCV workshop , pages 495–501, 2025. 2 [40] Feiran Li, Qianqian Xu, Shilong Bao, Zhiyong Yang, Xi-aochun Cao, and Qingming Huang. One image is worth a thousand words: A usability preservable text-image collab-orative erasing framework. In ICML , 2025. 2 [41] Yifan Li, Yifan Du, Kun Zhou, Jinpeng Wang, Wayne Xin Zhao, and Ji-Rong Wen. Evaluating object hallucination in large vision-language models. In EMNLP , pages 292–305, 2023. 7, 8, 9 [42] Yunfan Li, Peng Hu, Dezhong Peng, Jiancheng Lv, Jianping Fan, and Xi Peng. Image clustering with external guidance. In ICML , pages 27890–27902, 2024. 8 [43] Yinqi Li, Jiahe Zhao, Hong Chang, Ruibing Hou, Shiguang Shan, and Xilin Chen. un2clip: Improving clip’s visual detail capturing ability via inverting unclip. In NeurIPS ,2025. 2, 3, 4, 6, 7, 8 [44] Feng Liang, Bichen Wu, Xiaoliang Dai, Kunpeng Li, Yinan Zhao, Hang Zhang, Peizhao Zhang, Peter Vajda, and Diana Marculescu. Open-vocabulary semantic segmentation with mask-adapted clip. In CVPR , pages 7061–7070, 2023. 2 [45] Xi Lin, Hui-Ling Zhen, Zhenhua Li, Qing-Fu Zhang, and Sam Kwong. Pareto multi-task learning. In NeurIPS , 2019. 5[46] Ziyi Lin, Shijie Geng, Renrui Zhang, Peng Gao, Gerard De Melo, Xiaogang Wang, Jifeng Dai, Yu Qiao, and Hong-sheng Li. Frozen clip models are efficient video learners. In ECCV , pages 388–404, 2022. 2 [47] Chengliang Liu, Jie Wen, Yong Xu, Bob Zhang, Liqiang Nie, and Min Zhang. Reliable representation learning for incomplete multi-view missing multi-label classification. 
+
+TPAMI , 2025. 2 [48] Haotian Liu, Chunyuan Li, Qingyang Wu, and Yong Jae Lee. Visual instruction tuning. In NeurIPS , pages 34892– 34916, 2023. 2 [49] Haotian Liu, Chunyuan Li, Yuheng Li, and Yong Jae Lee. Improved baselines with visual instruction tuning. In 
+
+CVPR , pages 26296–26306, 2024. 2, 7, 8 [50] Yang Liu, Qianqian Xu, Peisong Wen, Siran Dai, and Qing-ming Huang. Not all pairs are equal: Hierarchical learning for average-precision-oriented video retrieval. In ACM MM ,pages 3828–3837, 2024. 2 [51] Yang Liu, Qianqian Xu, Peisong Wen, Siran Dai, and Qing-ming Huang. When the future becomes the past: Taming temporal correspondence for self-supervised video repre-sentation learning. In CVPR , pages 24033–24044, 2025. 2[52] Ilya Loshchilov and Frank Hutter. Fixing weight decay reg-ularization in adam. In ICLR , 2018. 7 [53] Pan Lu, Swaroop Mishra, Tanglin Xia, Liang Qiu, Kai-Wei Chang, Song-Chun Zhu, Oyvind Tafjord, Peter Clark, and Ashwin Kalyan. Learn to explain: Multimodal reason-ing via thought chains for science question answering. In 
+
+NeurIPS , pages 2507–2521, 2022. 7, 8, 9 [54] Zhiguang Lu, Qianqian Xu, Shilong Bao, Zhiyong Yang, and Qingming Huang. Bidirectional logits tree: Pursuing granularity reconcilement in fine-grained classification. In 
+
+AAAI , pages 19189–19197, 2025. 2 [55] Jiaan Luo, Feng Hong, Qiang Hu, Xiaofeng Cao, Feng Liu, and Jiangchao Yao. Long-tailed recognition with model re-balancing. In NeurIPS , 2025. 2 [56] Ziyang Luo, Pu Zhao, Can Xu, Xiubo Geng, Tao Shen, Chongyang Tao, Jing Ma, Qingwei Lin, and Daxin Jiang. Lexlip: Lexicon-bottlenecked language-image pre-training for large-scale image-text sparse retrieval. In ICCV , pages 11206–11217, 2023. 2 [57] Shijie Ma, Yuying Ge, Teng Wang, Yuxin Guo, Yixiao Ge, and Ying Shan. Genhancer: Imperfect generative models are secretly strong vision-centric enhancers. In ICCV , 2025. 2, 3, 4, 6, 7, 8, 9 [58] Norman Mu, Alexander Kirillov, David Wagner, and Sain-ing Xie. Slip: Self-supervision meets language-image pre-training. In ECCV , pages 529–544, 2022. 2 [59] Alexander Quinn Nichol, Prafulla Dhariwal, Aditya Ramesh, Pranav Shyam, Pamela Mishkin, Bob Mcgrew, Ilya Sutskever, and Mark Chen. Glide: Towards photore-alistic image generation and editing with text-guided diffu-sion models. In ICML , pages 16784–16804, 2022. 2 [60] Kento Nozawa and Issei Sato. Evaluation methods for rep-resentation learning: A survey. In IJCAI , pages 5556–5563, 2022. 1, 3 [61] Aaron van den Oord, Yazhe Li, and Oriol Vinyals. Repre-sentation learning with contrastive predictive coding. arXiv preprint arXiv:1807.03748 , 2018. 4 [62] Maxime Oquab, Timoth´ ee Darcet, Th´ eo Moutakanni, Huy Vo, Marc Szafraniec, Vasil Khalidov, Pierre Fernandez, Daniel Haziza, Francisco Massa, Alaaeldin El-Nouby, et al. Dinov2: Learning robust visual features without supervi-sion. TMLR , pages 1–31, 2024. 2 [63] Dustin Podell, Zion English, Kyle Lacey, Andreas Blattmann, Tim Dockhorn, Jonas M¨ uller, Joe Penna, and Robin Rombach. Sdxl: Improving latent diffusion models for high-resolution image synthesis. In ICLR , 2024. 2 [64] Shixi Qin, Zhiyong Yang, Shilong Bao, Shi Wang, Qian-qian Xu, and Qingming Huang. Mixbridge: Heteroge-neous image-to-image backdoor attack through mixture of schr¨ odinger bridges. In ICML , 2025. 2 [65] Alec Radford, Jong Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh, Sandhini Agarwal, Girish Sastry, Amanda Askell, Pamela Mishkin, Jack Clark, et al. Learn-ing transferable visual models from natural language super-vision. In ICML , pages 8748–8763, 2021. 1, 2, 3, 4, 5, 7, 8[66] Robin Rombach, Andreas Blattmann, Dominik Lorenz, Patrick Esser, and Bj¨ orn Ommer. High-resolution image synthesis with latent diffusion models. In CVPR , pages 10684–10695, 2022. 2, 3, 7 [67] Ozan Sener and Vladlen Koltun. Multi-task learning as multi-objective optimization. In NeurIPS , 2018. 5 [68] Piyush Sharma, Nan Ding, Sebastian Goodman, and Radu Soricut. Conceptual captions: A cleaned, hypernymed, im-age alt-text dataset for automatic image captioning. In ACL ,pages 2556–2565, 2018. 7 [69] Jordan Shipard, Arnold Wiliem, Kien Nguyen Thanh, Wei Xiang, and Clinton Fookes. Diversity is definitely needed: Improving model-agnostic zero-shot classification via sta-ble diffusion. In CVPR , pages 769–778, 2023. 3 [70] Oriane Sim´ eoni, Huy V Vo, Maximilian Seitzer, Federico Baldassarre, Maxime Oquab, Cijo Jose, Vasil Khalidov, Marc Szafraniec, Seungeun Yi, Micha¨ el Ramamonjisoa, et al. Dinov3. arXiv preprint arXiv:2508.10104 , 2025. 2 [71] Sanjay Subramanian, William Merrill, Trevor Darrell, Matt Gardner, Sameer Singh, and Anna Rohrbach. Reclip: A strong zero-shot baseline for referring expression compre-hension. In ACL , pages 5198–5215, 2022. 2 [72] Mingkang Tang, Zhanyu Wang, Zhenhua Liu, Fengyun Rao, Dian Li, and Xiu Li. Clip4caption: Clip for video caption. In ACMMM , pages 4858–4862, 2021. 2 [73] Yonglong Tian, Lijie Fan, Phillip Isola, Huiwen Chang, and Dilip Krishnan. Stablerep: Synthetic images from text-to-image models make strong visual representation learners. In NeurIPS , pages 48382–48402, 2023. 3 [74] Peter Tong, Ellis Brown, Penghao Wu, Sanghyun Woo, Adithya Jairam Vedagiri IYER, Sai Charitha Akula, Shusheng Yang, Jihan Yang, Manoj Middepogu, Ziteng Wang, et al. Cambrian-1: A fully open, vision-centric ex-ploration of multimodal llms. In NeurIPS , pages 87310– 87356, 2024. 2, 3, 7, 8 [75] Shengbang Tong, Zhuang Liu, Yuexiang Zhai, Yi Ma, Yann LeCun, and Saining Xie. Eyes wide shut? exploring the visual shortcomings of multimodal llms. In CVPR , pages 9568–9578, 2024. 2, 3, 7, 8 [76] Haochen Wang, Anlin Zheng, Yucheng Zhao, Tiancai Wang, Zheng Ge, Xiangyu Zhang, and Zhaoxiang Zhang. Reconstructive visual instruction tuning. In ICLR , 2025. 2, 3, 4 [77] Wenxuan Wang, Quan Sun, Fan Zhang, Yepeng Tang, Jing Liu, and Xinlong Wang. Diffusion feedback helps clip see better. In ICLR , 2025. 2, 3, 4, 6, 7, 8 [78] Zitai Wang, Qianqian Xu, Zhiyong Yang, Yuan He, Xi-aochun Cao, and Qingming Huang. Openauc: Towards auc-oriented open-set recognition. In NeurIPS , pages 25033– 25045, 2022. 2 [79] Zitai Wang, Qianqian Xu, Zhiyong Yang, Yuan He, Xi-aochun Cao, and Qingming Huang. A unified generaliza-tion analysis of re-weighting and logit-adjustment for im-balanced learning. In NeurIPS , pages 48417–48430, 2023. 2[80] Ziteng Wang, Siqi Yang, Limeng Qiao, and Lin Ma. Vitrix-clipin: Enhancing fine-grained visual understanding in clip via instruction-editing data and long captions. In NeurIPS ,2025. 1 [81] Yixuan Wei, Han Hu, Zhenda Xie, Ze Liu, Zheng Zhang, Yue Cao, Jianmin Bao, Dong Chen, and Baining Guo. Improving clip fine-tuning performance. In ICCV , pages 5439–5449, 2023. 2 [82] Yake Wei, Yu Miao, Dongzhan Zhou, and Di Hu. Moka: Multimodal low-rank adaptation for mllms. In NeurIPS ,2025. 2 [83] Jie Wen, Gehui Xu, Zhanyan Tang, Wei Wang, Lunke Fei, and Yong Xu. Graph regularized and feature aware matrix factorization for robust incomplete multi-view clustering. 
+
+TCSVT , 34(5):3728–3741, 2023. 3 [84] Jie Wen, Jiang Long, Xiaohuan Lu, Chengliang Liu, Xi-aozhao Fang, and Yong Xu. Partial multiview incomplete multilabel learning via uncertainty-driven reliable dynamic fusion. TPAMI , 2025. 2 [85] Jinheng Xie, Xianxu Hou, Kai Ye, and Linlin Shen. Clims: Cross language image matching for weakly supervised se-mantic segmentation. In CVPR , pages 4483–4492, 2022. 2[86] Hu Xu, Gargi Ghosh, Po-Yao Huang, Dmytro Okhonko, Armen Aghajanyan, Florian Metze, Luke Zettlemoyer, and Christoph Feichtenhofer. Videoclip: Contrastive pre-training for zero-shot video-text understanding. In EMNLP ,pages 6787–6800, 2021. 2 [87] Hu Xu, Saining Xie, Xiaoqing Tan, Po-Yao Huang, Russell Howes, Vasu Sharma, Shang-Wen Li, Gargi Ghosh, Luke Zettlemoyer, and Christoph Feichtenhofer. Demystifying clip data. In ICLR , 2024. 7 [88] Mengde Xu, Zheng Zhang, Fangyun Wei, Yutong Lin, Yue Cao, Han Hu, and Xiang Bai. A simple baseline for open-vocabulary semantic segmentation with pre-trained vision-language model. In ECCV , pages 736–753, 2022. 2 [89] Shuanglin Yan, Neng Dong, Liyan Zhang, and Jinhui Tang. Clip-driven fine-grained text-image person re-identification. TIP , 32:6032–6046, 2023. 2 [90] Zhiyong Yang, Qianqian Xu, Shilong Bao, Peisong Wen, Yuan He, Xiaochun Cao, and Qingming Huang. Auc-oriented domain adaptation: From theory to algorithm. 
+
+TPAMI , 2023. 2 [91] Zhiyong Yang, Qianqian Xu, Zitai Wang, Sicong Li, Boyu Han, Shilong Bao, Xiaochun Cao, and Qingming Huang. Harnessing hierarchical label distribution variations in test agnostic long-tail recognition. In ICML , pages 56624– 56664, 2024. [92] Zhiyong Yang, Qianqian Xu, Li Sicong, Zitai Wang, Xi-aochun Cao, and Qingming Huang. Dirmixe: Harnessing test agnostic long-tail recognition with hierarchical label variations. TPAMI , 2026. 2 [93] Hantao Yao, Rui Zhang, and Changsheng Xu. Tcp: Textual-based class-aware prompt tuning for visual-language model. In CVPR , pages 23438–23448, 2024. 1, 2 [94] Tianhe Yu, Saurabh Kumar, Abhishek Gupta, Sergey Levine, Karol Hausman, and Chelsea Finn. Gradient surgery for multi-task learning. In NeurIPS , pages 5824– 5836, 2020. 5 [95] Xiaohua Zhai, Basil Mustafa, Alexander Kolesnikov, and Lucas Beyer. Sigmoid loss for language image pre-training. In ICCV , pages 11975–11986, 2023. 7 [96] Feifei Zhang, Sijia Qu, Fan Shi, and Changsheng Xu. Over-coming the pitfalls of vision-language model for image-text retrieval. In ACMMM , pages 2350–2359, 2024. 1, 2 [97] Honglei Zhang, Zhiwei Li, Haoxuan Li, Xin Zhou, Jie Zhang, and Yidong Li. Transfr: Transferable federated rec-ommendation with adapter tuning on pre-trained language models. arXiv preprint arXiv:2402.01124 , 2024. 2 [98] Tianjiao Zhang, Huangjie Zheng, Jiangchao Yao, Xi-angfeng Wang, Mingyuan Zhou, Ya Zhang, and Yanfeng Wang. Long-tailed diffusion models with oriented calibra-tion. In ICLR , 2024. 2 [99] Yuli Zhang, Huaiyu Wu, and Lei Cheng. Some new defor-mation formulas about variance and covariance. In ICMIC ,pages 987–992, 2012. 2 [100] Yiwu Zhong, Jianwei Yang, Pengchuan Zhang, Chunyuan Li, Noel Codella, Liunian Harold Li, Luowei Zhou, Xiyang Dai, Lu Yuan, Yin Li, et al. Regionclip: Region-based language-image pretraining. In CVPR , pages 16793–16803, 2022. 2 [101] Bolei Zhou, Hang Zhao, Xavier Puig, Sanja Fidler, Adela Barriuso, and Antonio Torralba. Scene parsing through ade20k dataset. In CVPR , pages 633–641, 2017. 8 [102] Chong Zhou, Chen Change Loy, and Bo Dai. Extract free dense labels from clip. In ECCV , pages 696–712, 2022. 2 [103] Kaiyang Zhou, Jingkang Yang, Chen Change Loy, and Zi-wei Liu. Conditional prompt learning for vision-language models. In CVPR , pages 16816–16825, 2022. 1 [104] Kaiyang Zhou, Jingkang Yang, Chen Change Loy, and Zi-wei Liu. Learning to prompt for vision-language models. 
+
+IJCV , 130(9):2337–2348, 2022. 2 Guiding Diffusion-based Reconstruction with Contrastive Signals for Balanced Visual Representation 
+
+# Supplementary Material 
+
+# Contents 
+
+A. Symbol Definitions 1B. Algorithm of DCR 1C. Proof of Theorem 1 2D. Proof of Theorem 2 5E. Additional Experimental Settings 7
+
+E.1. CLIP Backbones . . . . . . . . . . . . . . . 7E.2. Competitors . . . . . . . . . . . . . . . . . . 7E.3. Evaluation Protocol for P-Ability . . . . . . 8E.4. Evaluation Protocol for D-Ability . . . . . . 8E.5. Evaluation Protocol for MLLMs . . . . . . . 8
+
+F. Additional Experimental Results 9
+
+F.1. Expanded Version of Quantitative Results . . 9F.2. Expanded Version of Qualitative Results . . 9F.3. Computational Costs . . . . . . . . . . . . . 9
+
+G. Future Works 9
+
+## A. Symbol Definitions 
+
+In this section, Table 5 includes a summary of key notations and descriptions in this work. 
+
+Table 5. A summary of key notations and descriptions in this work.                                                          
+
+> Notations Descriptions
+> x∈RH×W×3Input image.
+> D={xi}ni=1 Training dataset.
+> ˜xVAE latent of image x.
+> t∈ { 1, . . . , T }Diffusion timestep.
+> xtNoisy latent at diffusion step t.
+> ϵθDiffusion noise prediction network.
+> fϕCLIP visual encoder.
+> zVisual feature extracted by CLIP encoder, shorthand for z=fϕ(x).
+> hωProjection module that maps CLIP features to diffusion condition space.
+> cCondition used for diffusion denoising, shorthand for c=hω(z).
+> ˆϵθPredicted noise, shorthand for ˆϵθ=ϵθ(˜ xt, c, t ).
+> ϵgt
+> tGround-truth diffusion noise at step t.
+> ˆϵ+/ˆϵ−Predicted noise of positive/negative sample.
+> PPositive set, shorthand for P={ˆϵ+,ϵgt }.
+> NNegative set, shorthand for N={ˆϵk
+> −}N−1
+> k=1 .
+> CSet C=P∪N.
+> sim( u, v )Cosine similarity sim( u, v ) = ⟨u,v ⟩|u|,|v|.
+
+## B. Algorithm of DCR 
+
+For clarity, we provide the pseudocode of our Diffusion Contrastive Reconstruction (DCR) training procedure in Algorithm 1. 
+
+Algorithm 1: DCR Algorithm. 
+
+Input: Dataset D = {xi}; CLIP vision encoder fϕ;projector hω ; frozen diffusion model ϵθ ; VAE encoder 
+
+Enc ; diffusion steps T ; batch size Nb; temperature τ ;Stage-1 epochs E1; Stage-2 epochs E2;
+
+Output: Enhanced CLIP encoder fϕ;
+
+1: ▷ Stage-1: Projector Alignment 
+
+2: for epoch = 1 to E1 do 
+
+3: Sample mini-batch {xi}Nb
+
+i=1 from D;
+
+4: for i = 1 to Nb do 
+
+5: Sample timestep t ∼ Unif(1 , T ) and noise 
+
+ϵgt 
+
+t ∼ N (0 , I );
+
+6: ˜xi ← Enc( xi);
+
+7: xt ← √¯αt ˜xi + √1 − ¯αt ϵgt 
+
+t ;
+
+8: ˆϵi ← ϵθ (xt, h ω (fϕ(xi)) , t );
+
+9: x+
+
+i ← a(xi);
+
+10: ˆϵ+,i ← ϵθ (xt, h ω (fϕ(x+
+
+i )) , t );
+
+11: Ni ← ∅ ;
+
+12: for j = 1 to Nb, j̸ = i do 
+
+13: ˆϵj
+
+−,i ← ϵθ (xt, h ω (fϕ(xj )) , t );
+
+14: Ni ← Ni ∪ { ˆϵj
+
+−,i };
+
+15: end for 
+
+16: Pi ← { ˆϵ+,i , ϵgt 
+
+t };
+
+17: Ci ← Pi ∪ Ni;
+
+18: Li ← − 12
+
+X
+
+p∈Pi
+
+log exp(sim(ˆ ϵi, p )/τ )
+
+P
+
+c∈Ci exp(sim(ˆ ϵi, c )/τ ) ;
+
+19: end for 
+
+20: Ldcr ← 1
+
+Nb
+
+PNb
+
+i=1 Li;
+
+21: Update projector parameters ω;
+
+22: end for 
+
+23: ▷ Stage-2: Encoder Enhancement 
+
+24: for epoch = 1 to E2 do 
+
+25: Sample mini-batch {xi}Nb
+
+i=1 and repeat the same steps to compute Pi, Ni, and Li;
+
+26: Ldcr ← 1
+
+Nb
+
+PNb
+
+i=1 Li;
+
+27: Update CLIP vision encoder fϕ;
+
+28: end for 
+
+29: return fϕ;C. Proof of Theorem 1 
+
+Definition 1 (Bi-Lipschitz Mapping [9]) . Let T : X → Y 
+
+be a mapping between two metric spaces (X , ∥ · ∥ X ) and 
+
+(Y, ∥ · ∥ Y ). We say that T is bi-Lipschitz on a subset M ⊆ X if there exist constants 0 < m ≤ L < ∞ such that, for all z1, z 2 ∈ M ,
+
+m∥z1 −z2∥X ≤ T (z1)−T (z2) Y ≤ L∥z1 −z2∥X . (16) In particular, a bi-Lipschitz map preserves pairwise dis-tances up to constant factors and is injective on M.
+
+Assumption 1. Fix a diffusion step t and define T (z) = 
+
+ϵθ
+
+ xt, h ω (z), t . According to Definition 1, we assume that T (z) satisfies the bi-Lipschitz property. 
+
+Lemma 1 (Equivalent Variance Identity [99]) . Let 
+
+e1, . . . , e n ∈ Rd be arbitrary vectors and denote their mean by ¯e = 1
+
+> n
+
+Pni=1 ei. Then the empirical variance can be written as the average of all pairwise squared distances: 
+
+> n
+
+X
+
+> i=1
+
+∥ei − ¯e∥22 = 12n
+
+> n
+
+X
+
+> i=1
+> n
+
+X
+
+> j=1
+
+∥ei − ej ∥22. (17) 
+
+Proof. For the left-hand side , using ¯e = 1
+
+> n
+
+Pnk=1 ek, we have: 
+
+> n
+
+X
+
+> i=1
+
+∥ei − ¯e∥22 =
+
+> n
+
+X
+
+> i=1
+
+⟨ei − ¯e, e i − ¯e⟩
+
+=
+
+> n
+
+X
+
+> i=1
+
+ ∥ei∥22 + ∥¯e∥22 − 2⟨ei, ¯e⟩
+
+=
+
+> n
+
+X
+
+> i=1
+
+∥ei∥22 + n∥¯e∥22 − 2
+
+* nX
+
+> i=1
+
+ei, ¯e
+
++
+
+.
+
+(18) Since Pni=1 ei = n¯e, it follows that 
+
+* nX
+
+> i=1
+
+ei, ¯e
+
++
+
+= ⟨n¯e, ¯e⟩ = n∥¯e∥22. (19) Therefore, 
+
+> n
+
+X
+
+> i=1
+
+∥ei − ¯e∥22 =
+
+> n
+
+X
+
+> i=1
+
+∥ei∥22 − n∥¯e∥22. (20) 
+
+For the right-hand side , using ∥ei − ej ∥22 = ∥ei∥22 +
+
+∥ej ∥22 − 2⟨ei, e j ⟩, we obtain 
+
+> n
+
+X
+
+> i=1
+> n
+
+X
+
+> j=1
+
+∥ei − ej ∥22
+
+= X
+
+> i,j
+
+∥ei∥22 + X
+
+> i,j
+
+∥ej ∥22 − 2 X
+
+> i,j
+
+⟨ei, e j ⟩
+
+=n
+
+> n
+
+X
+
+> i=1
+
+∥ei∥22 + n
+
+> n
+
+X
+
+> j=1
+
+∥ej ∥22 − 2
+
+* nX
+
+> i=1
+
+ei,
+
+> n
+
+X
+
+> j=1
+
+ej
+
++
+
+=2 n
+
+> n
+
+X
+
+> i=1
+
+∥ei∥22 − 2
+
+> n
+
+X
+
+> i=1
+
+ei
+
+> 22
+
+.
+
+(21) Again using Pni=1 ei = n¯e, we obtain 
+
+> n
+
+X
+
+> i=1
+
+ei
+
+> 22
+
+= ∥n¯e∥22 = n2∥¯e∥22, (22) so 
+
+> n
+
+X
+
+> i=1
+> n
+
+X
+
+> j=1
+
+∥ei − ej ∥22 = 2 n
+
+> n
+
+X
+
+> i=1
+
+∥ei∥22 − 2n2∥¯e∥22. (23) Dividing Eq. (23) by 2n yields 
+
+12n
+
+> n
+
+X
+
+> i=1
+> n
+
+X
+
+> j=1
+
+∥ei − ej ∥22 =
+
+> n
+
+X
+
+> i=1
+
+∥ei∥22 − n∥¯e∥22. (24) Therefore, by combining Eq. (20) and Eq. (24), we can obtain: 
+
+> n
+
+X
+
+> i=1
+
+∥ei − ¯e∥22 = 12n
+
+> n
+
+X
+
+> i=1
+> n
+
+X
+
+> j=1
+
+∥ei − ej ∥22. (25) This completed the proof. 
+
+Restate of Theorem 1. Fix a diffusion step t and define 
+
+T (z) = ϵθ
+
+ xt, h ω (z), t . Under a mild assumption, the intra-class scatter and inter-class scatter in the feature space (Sinner , S inter ) can be bounded by those in the noise space (S(ϵ)
+
+> inner
+
+(t), S (ϵ)
+
+> inter
+
+(t)) as 
+
+Sinner ≤ 1
+
+m2 S(ϵ)
+
+> inner
+
+(t),Sinter ≥ κS (ϵ)
+
+> inter
+
+(t) − ηS (ϵ)
+
+> inner
+
+(t),
+
+where m, κ, and η are positive constants depending on the Lipschitz continuity of T (·).
+
+Proof. We proceed in three steps. Throughout, fix a diffu-sion step t and a mini-batch with class set Y.For class y ∈ Y , let the feature set be Zy = {zi}ny
+
+> i=1
+
+with zi = fϕ(xi) and the noise set be Ey,t = {ˆϵi}ny 
+
+> i=1
+
+with ˆϵi = ϵθ (xt, h ω (zi), t ). Denote the class means by μy =
+
+> 1
+> ny
+
+Pny 
+
+> i=1
+
+zi and νy,t = 1
+
+> ny
+
+Pny 
+
+> i=1
+
+ˆϵi. As shown in Eq. (4) and Eq. (5) in the main text, we define the intra-/inter-class scatters in the CLIP feature space by 
+
+Sinner = 1
+
+|Y| 
+
+X
+
+> y∈Y
+
+1
+
+nyny
+
+X
+
+> i=1
+
+∥zi − μy ∥22, (26) 
+
+Sinter = 1
+
+|Y| (|Y| − 1) 
+
+X 
+
+> y,y ′∈Y
+> y̸=y′
+
+∥μy − μy′ ∥22. (27) Similarly, we define the intra-/inter-class scatters in the dif-fusion noise space by 
+
+S(ϵ)
+
+> inner
+
+(t) = 1
+
+|Y| 
+
+X
+
+> y∈Y
+
+1
+
+nyny
+
+X
+
+> i=1
+
+∥ˆϵi − νy,t ∥22, (28) 
+
+S(ϵ)
+
+> inter
+
+(t) = 1
+
+|Y| (|Y| − 1) 
+
+X 
+
+> y,y ′∈Y
+> y̸=y′
+
+∥νy,t − νy′,t ∥22. (29) 
+
+Step 1: Minimizing LDCR improves noise-space geome-try. 
+
+Recall the DCR loss 
+
+LDCR = − 12
+
+X
+
+> p∈P
+
+log d(ˆ ϵ, p )
+
+P 
+
+> c∈C
+
+d(ˆ ϵ, c ) ,
+
+where ˆϵ = ϵθ (xt, h ω (z), t ) is the anchor, ˆϵ+ is the positive sample, ϵgt is the ground-truth, and N = {ˆϵ(j) 
+
+> −
+
+} are nega-tives from other images in the mini-batch. P = {ˆϵ+, ϵgt  
+
+> t
+
+},
+
+C = P ∪ N . d(u, v ) = exp(sim( u, v )/τ ) with sim the cosine similarity and τ > 0. Let 
+
+p(q | ˆϵ) = exp(sim(ˆ ϵ, q )/τ )
+
+P 
+
+> c∈C
+
+exp(sim(ˆ ϵ, c )/τ ) . (30) Differentiating the loss with respect to the similarity term gives the following gradient expression: 
+
+∂LDCR 
+
+∂ sim(ˆ ϵ, q ) =
+
+(
+
+− 12τ
+
+ 1 − 2p(q | ˆϵ), q ∈ P,  
+
+> 1
+> τ
+
+p(q | ˆϵ), q ∈ N. (31) Thus, gradient descent on LDCR increases the anchor’s cosine similarity with the two positives ( ˆϵ+ and ϵgt ) and 
+
+decreases it with all negatives. Since 
+
+sim( u, v ) = ⟨¯u, ¯v⟩, where ¯u = u
+
+∥u∥ , ¯v = v
+
+∥v∥ , (32) we have 
+
+∥¯u−¯v∥22 = ∥¯u∥22+∥¯v∥22−2⟨¯u, ¯v⟩ = 2(1 −sim(¯ u, ¯v)) . (33) Therefore, minimizing LDCR is equivalent to 
+
+min  
+
+> ϕ,ω
+
+ˆϵ − ˆϵ+ 
+
+> 22
+
++ ˆϵ − ϵgt 
+
+> 22
+
+, (34) 
+
+max  
+
+> ϕ,ω
+
+ˆϵ − ˆϵ(j)
+
+> −
+> 22
+
+, ∀j. (35) Then, we pass from pairwise distances to scatter. Specif-ically, for each class y ∈ Y , the key component in Eq. (28), 
+
+1
+
+nyny
+
+X
+
+> i=1
+
+∥ˆϵi − νy,t ∥22 (36) is, by Lemma 1, exactly the average of all pairwise squared distances ∥ˆϵi −ˆϵj ∥22 within that class (up to the constant fac-tor 1/(2 n2 
+
+> y
+
+)). Minimizing the pairwise distances between the anchor and its positive/ground-truth terms in Eq. (34) therefore decreases the average intra-class pairwise dis-tance, and thus decreases 1
+
+> ny
+
+Pny 
+
+> i=1
+
+∥ˆϵi − νy,t ∥22 for each 
+
+y. Averaging over all classes yields 
+
+min  
+
+> ϕ,ω
+
+S(ϵ)
+
+> inner
+
+(t). (37) In contrast, the negative terms {ˆϵ(j) 
+
+> −
+
+} are drawn from other images in the mini-batch, which typically belong to different classes. Maximizing the anchor–negative dis-tances ∥ˆϵ − ˆϵ(j) 
+
+> −
+
+∥22 increases the average pairwise distances between samples of different classes. This increase, when propagated to the distances between the corresponding class means {νy,t }y∈Y , leads to an increase of the inter-class scatter S(ϵ)
+
+> inter
+
+(t):
+
+max  
+
+> ϕ,ω
+
+S(ϵ)
+
+> inter
+
+(t). (38) Combining Eq. (37) and Eq. (38), we conclude that min-imizing LDCR improves the geometry in the noise space by decreasing intra-class scatter and increasing inter-class scatter. 
+
+Step 2: Bounding feature-space intra-class scatter. 
+
+Fix a class y ∈ Y , and write its feature set as Zy =
+
+{zi}ny 
+
+> i=1
+
+and its noise set as Ey,t = {ˆϵi}ny 
+
+> i=1
+
+with ˆϵi =
+
+T (zi).By Lemma 1, the intra-class variance in the feature space can be written as 
+
+1
+
+nyny
+
+X
+
+> i=1
+
+∥zi − μy ∥22 = 12n2
+
+> yny
+
+X
+
+> i=1
+> ny
+
+X
+
+> j=1
+
+∥zi − zj ∥22. (39) Similarly, the intra-class variance in the noise space is 
+
+1
+
+nyny
+
+X
+
+> i=1
+
+∥ˆϵi − νy,t ∥22 = 12n2
+
+> yny
+
+X
+
+> i=1
+> ny
+
+X
+
+> j=1
+
+∥ˆϵi − ˆϵj ∥22. (40) By Assumption 1, there exists m > 0 such that, for all 
+
+z1, z2 ∈ M ,
+
+m∥z1 − z2∥ ≤ ∥ T (z1) − T (z2)∥. (41) Equivalently, 
+
+∥z1 − z2∥ ≤ 1
+
+m ∥T (z1) − T (z2)∥. (42) Applying this inequality to each pair (zi, zj ) gives 
+
+∥zi−zj ∥2 ≤ 1
+
+m2 ∥T (zi)−T (zj )∥2 = 1
+
+m2 ∥ˆϵi−ˆϵj ∥2. (43) Substituting Eq. (43) into Eq. (39) and comparing with Eq. (40), we obtain 
+
+1
+
+nyny
+
+X
+
+> i=1
+
+∥zi − μy ∥22 ≤ 12n2
+
+> yny
+
+X
+
+> i,j =1
+
+1
+
+m2 ∥ˆϵi − ˆϵj ∥22
+
+= 1
+
+m2 · 1
+
+nyny
+
+X
+
+> i=1
+
+∥ˆϵi − νy,t ∥22.
+
+(44) Averaging over all classes y ∈ Y yields 
+
+Sinner = 1
+
+|Y| 
+
+X
+
+> y∈Y
+
+1
+
+nyny
+
+X
+
+> i=1
+
+∥zi − μy ∥22
+
+≤ 1
+
+m2 · 1
+
+|Y| 
+
+X
+
+> y∈Y
+
+1
+
+nyny
+
+X
+
+> i=1
+
+∥ˆϵi − νy,t ∥22
+
+= 1
+
+m2 S(ϵ)
+
+> inner
+
+(t),
+
+(45) which proves the first inequality in Theorem 1. 
+
+Step 3: Bounding feature-space inter-class scatter. 
+
+By Assumption 1, there exists L > 0 such that, for all 
+
+z1, z2 ∈ M ,
+
+∥T (z1) − T (z2)∥ ≤ L∥z1 − z2∥. (46) Equivalently, 
+
+∥z1 − z2∥ ≥ 1
+
+L ∥T (z1) − T (z2)∥. (47) Fix two distinct classes y, y ′ ∈ Y . Applying Eq. (47) with z1 = μy , z2 = μy′ yields 
+
+∥μy − μy′ ∥ ≥ 1
+
+L ∥T (μy ) − T (μy′ )∥. (48) We next relate T (μy ) to νy,t . We have 
+
+νy,t = 1
+
+nyny
+
+X
+
+> i=1
+
+ˆϵi = 1
+
+nyny
+
+X
+
+> i=1
+
+T (zi). (49) Then 
+
+∥T (μy ) − νy,t ∥2 = T (μy ) − 1
+
+nyny
+
+X
+
+> i=1
+
+T (zi)
+
+> 2
+
+= 1
+
+nyny
+
+X
+
+> i=1
+
+ T (μy ) − T (zi)
+
+> 2
+
+≤ 1
+
+nyny
+
+X
+
+> i=1
+
+∥T (μy ) − T (zi)∥2
+
+≤ Lnyny
+
+X
+
+> i=1
+
+∥μy − zi∥2,
+
+(50) where we used the triangle inequality and then the Lipschitz property of T . By the Cauchy-Schwarz inequality, 
+
+> ny
+
+X
+
+> i=1
+
+∥μy − zi∥2 ≤ √ny
+
+> ny
+
+X
+
+> i=1
+
+∥μy − zi∥22
+
+!1/2
+
+. (51) Hence, 
+
+∥T (μy ) − νy,t ∥2 ≤ L
+
+√ny
+
+> ny
+
+X
+
+> i=1
+
+∥μy − zi∥22
+
+!1/2
+
+. (52) Similarly, for class y′, we have: 
+
+∥T (μy′ ) − νy′,t ∥2 ≤ L
+
+√ny′
+
+> ny′
+
+X
+
+> i=1
+
+∥μy′ − zi∥22
+
+!1/2
+
+. (53) Using the triangle inequality, we get 
+
+∥T (μy ) − T (μy′ )∥2
+
+≥∥ νy,t − νy′,t ∥2 − ∥ T (μy ) − νy,t ∥2
+
+− ∥ T (μy′ ) − νy′,t ∥2.
+
+(54) Combining this with Eqs. (52) and (53), we obtain 
+
+∥T (μy ) − T (μy′ )∥2
+
+≥∥ νy,t − νy′,t ∥2 − L
+
+√ny
+
+> ny
+
+X
+
+> i=1
+
+∥μy − zi∥22
+
+!1/2
+
+− L
+
+√ny′
+
+> ny′
+
+X
+
+> i=1
+
+∥μy′ − zi∥22
+
+!1/2
+
+.
+
+(55) Substituting Eq. (55) into Eq. (48), we obtain 
+
+∥μy − μy′ ∥2 ≥ 1
+
+L ∥νy,t − νy′,t ∥2
+
+− 1
+
+√ny
+
+> ny
+
+X
+
+> i=1
+
+∥μy − zi∥22
+
+!1/2
+
+− 1
+
+√ny′
+
+> ny′
+
+X
+
+> i=1
+
+∥μy′ − zi∥22
+
+!1/2
+
+.
+
+(56) Squaring both sides and using the inequality (a − b −
+
+c)2 ≥ 12 a2 − 2( b2 + c2) for any a, b, c ∈ R, we obtain 
+
+∥μy − μy′ ∥22 ≥ 12L2 ∥νy,t − νy′,t ∥22
+
+− 2 1
+
+nyny
+
+X
+
+> i=1
+
+∥μy − zi∥22
+
+!
+
+− 2 1
+
+ny′
+
+> ny′
+
+X
+
+> i=1
+
+∥μy′ − zi∥22
+
+!
+
+.
+
+(57) Averaging the above inequality over all ordered pairs 
+
+(y, y ′) with y̸ = y′, and recalling the definition of Sinter 
+
+and S(ϵ)
+
+> inter
+
+(t), we obtain 
+
+Sinter = 1
+
+|Y| (|Y| − 1) 
+
+X 
+
+> y,y ′∈Y
+> y̸=y′
+
+∥μy − μy′ ∥22
+
+≥ 1
+
+|Y| (|Y| − 1) 
+
+X 
+
+> y,y ′∈Y
+> y̸=y′
+
+ 12L2 ∥νy,t − νy′,t ∥22 − 2By,y ′
+
+
+
+= 12L2 S(ϵ)
+
+> inter
+
+(t) − 2
+
+|Y| (|Y| − 1) 
+
+X 
+
+> y,y ′∈Y
+> y̸=y′
+
+By,y ′ ,
+
+(58) where By,y ′ = 1
+
+> ny
+
+P 
+
+> i∈Iy
+
+∥μy − zi∥22 + 1
+
+> ny′
+
+P 
+
+> i∈Iy′
+
+∥μy′ −
+
+zi∥22.For the second term, note that for each fixed y, the quan-tity Ay = 1
+
+> ny
+
+P 
+
+> i∈Iy
+
+∥μy − zi∥22 appears exactly (|Y| − 1) 
+
+times as the first index and (|Y| − 1) times as the second index when summing over all ordered pairs (y, y ′) with 
+
+y̸ = y′. Hence 
+
+X 
+
+> y,y ′∈Y
+> y̸=y′
+
+(Ay + Ay′ ) = 2( |Y| − 1) X
+
+> y∈Y
+
+Ay . (59) Therefore, 
+
+2
+
+|Y| (|Y| − 1) 
+
+X 
+
+> y,y ′∈Y
+> y̸=y′
+
+(Ay + Ay′ )= 2
+
+|Y| (|Y| − 1) 2( |Y| − 1) X
+
+> y∈Y
+
+Ay
+
+= 4
+
+|Y| 
+
+X
+
+> y∈Y
+
+Ay
+
+=4 Sinner .
+
+(60) Substituting this back, we obtain the explicit bound 
+
+Sinter ≥ 12L2 S(ϵ)
+
+> inter
+
+(t) − 4Sinner . (61) Finally, using the bound from Step 2, Sinner ≤ 
+
+> 1
+> m2
+
+S(ϵ)
+
+> inner
+
+(t), we arrive at 
+
+Sinter ≥ 12L2 S(ϵ)
+
+> inter
+
+(t) − 4
+
+m2 S(ϵ)
+
+> inner
+
+(t). (62) Thus, we have: 
+
+Sinter ≥ κS (ϵ)
+
+> inter
+
+(t) − ηS (ϵ)
+
+> inner
+
+(t), (63) where κ = 12L2 and η = 4 
+
+> m2
+
+. It proves the second inequality in Theorem 1. This completed the proof. 
+
+## D. Proof of Theorem 2 
+
+Restate of Theorem 2. If negatives in the mini-batch are well separated from the anchor ( i.e. , sim(ˆ ϵ, ˆϵj
+
+> −
+
+) ≪
+
+sim(ˆ ϵ, ϵgt ) for all j̸ = i), and predicted-noise norms are bounded away from 0 and ∞, then the DCR loss reduces to a scaled reconstruction loss up to an additive constant: 
+
+Ldcr = λ ϵθ (xt, h ω (fϕ(˜ x)) , t ) − ϵgt  
+
+> t
+> 22
+
++ c, 
+
+where λ > 0, and c is a constant. 
+
+Proof. We consider a single anchor sample and drop the sample index for brevity. Recall that the anchor is ˆϵ = ϵθ (xt, h ω (fϕ(˜ x)) , t ), the two positives are ˆϵ+ and ϵgt , and N = {ˆϵj
+
+> −
+
+}j denotes the set of negatives in the mini-batch. Let P = {ˆϵ+, ϵgt },
+
+C = P ∪ N , and sim( u, v ) = ⟨u,v ⟩∥u∥2 ∥v∥2 , d(u, v ) =exp  sim( u, v )/τ , with τ > 0 the temperature. The DCR loss for this anchor is 
+
+LDCR = − 12
+
+X
+
+> p∈P
+
+log d(ˆ ϵ, p )
+
+P 
+
+> c∈C
+
+d(ˆ ϵ, c ) . (64) Denote u = sim(ˆ ϵ, ϵgt ), v = sim(ˆ ϵ, ˆϵ+), and write 
+
+Zpos = X
+
+> p∈P
+
+exp  sim(ˆ ϵ, p )/τ  = eu/τ + ev/τ , (65) 
+
+Zneg = X
+
+> j
+
+exp  sim(ˆ ϵ, ˆϵj
+
+> −
+
+)/τ . (66) Then we can expand 
+
+LDCR = − 12
+
+X
+
+> p∈P
+
+ sim(ˆ ϵ, p )
+
+τ − log  Zpos + Zneg 
+
+
+
+= − 12τ (u + v) + log  Zpos + Zneg 
+
+.
+
+(67) Using the notation in Eq. (67), we now show that LDCR 
+
+is (up to scaling and an additive constant) equivalent to the reconstruction loss. First, by the assumption that negatives are well separated from the anchor, there exist constants ∆ > 0 and B ∈ N
+
+such that for all anchors in the mini-batch, 
+
+sim(ˆ ϵ, ˆϵj
+
+> −
+
+) ≤ u − ∆, ∀j, |N | ≤ B, (68) where u = sim(ˆ ϵ, ϵgt ). Hence 
+
+Zneg = X
+
+> j
+
+exp  sim(ˆ ϵ, ˆϵj
+
+> −
+
+)/τ  ≤ B exp  (u − ∆) /τ .
+
+(69) Since Zpos ≥ eu/τ , we get 
+
+Zneg 
+
+Zpos 
+
+≤ Be −∆/τ = δ, (70) where δ > 0 is a constant independent of the trainable pa-rameters. Therefore 
+
+log  Zpos + Zneg 
+
+
+
+= log 
+
+
+
+Zpos 
+
+ 1 + Zneg /Z pos 
+
+
+
+= log Zpos + log  1 + Zneg /Z pos 
+
+,
+
+(71) and, using 0 ≤ Zneg /Z pos ≤ δ,
+
+0 ≤ log  1 + Zneg /Z pos 
+
+ ≤ log(1 + δ) = Cneg . (72) Thus, from Eq. (67), 
+
+LDCR = − 12τ (u + v) + log Zpos + ∆ neg , (73) where 0 ≤ ∆neg ≤ Cneg . It remains to analyze the positive part: 
+
+ℓpos (u, v ) = − 12τ (u + v) + log  eu/τ + ev/τ , (74) since 
+
+LDCR = ℓpos (u, v ) + ∆ neg . (75) Next, we express u and v in terms of squared Euclidean distances. Define the normalized vectors 
+
+ˆe = ˆϵ
+
+∥ˆϵ∥2
+
+, g = ϵgt 
+
+∥ϵgt ∥2
+
+, p = ˆϵ+
+
+∥ˆϵ+∥2
+
+. (76) Then u = ⟨ˆe, g ⟩ and v = ⟨ˆe, p ⟩. For unit vectors a, b we have 
+
+∥a − b∥22 = 2(1 − ⟨ a, b ⟩), (77) so, defining 
+
+d2 
+
+> gt
+
+= ∥ˆe − g∥22, d2+ = ∥ˆe − p∥22, (78) we obtain 
+
+u = 1 − 12 d2
+
+> gt
+
+, v = 1 − 12 d2+. (79) Substituting into ℓpos gives 
+
+ℓpos = 14τ
+
+ d2
+
+> gt
+
++d2+
+
++log 
+
+
+
+e−d2  
+
+> gt /(2 τ)
+
++ e−d2+/(2 τ )
+
+. (80) Since ˆe, g, p are unit vectors, both squared distances are bounded: 
+
+0 ≤ d2 
+
+> gt
+
+≤ 4, 0 ≤ d2+ ≤ 4. (81) The logarithmic term in Eq. (80) satisfies a bound. Let 
+
+a = − d2
+
+> gt
+
+2τ , b = − d2+
+
+2τ , (82) so that 
+
+log 
+
+
+
+e−d2  
+
+> gt /(2 τ)
+
++ e−d2+/(2 τ )
+
+= log( ea + eb). (83) For any real a, b , we have 
+
+max {a, b } ≤ log( ea + eb) ≤ max {a, b } + log 2 . (84) Using 0 ≤ d2
+
+> gt
+
+, d 2+ ≤ 4 and τ > 0, we obtain constants 
+
+Cmin , C max ∈ R depending only on τ such that 
+
+Cmin ≤ log 
+
+
+
+e−d2  
+
+> gt /(2 τ)
+
++ e−d2+/(2 τ )
+
+≤ Cmax (85) for all possible d2
+
+> gt
+
+, d 2+. Moreover, the term 14τ d2+ in Eq. (80) is also bounded using Eq. (81), so it can be absorbed into the constants. Consequently, there exist finite constants 
+
+˜Cmin , ˜Cmax (depending only on τ ) such that 
+
+14τ d2 
+
+> gt
+
++ ˜Cmin ≤ ℓpos ≤ 14τ d2 
+
+> gt
+
++ ˜Cmax . (86) We now relate d2 
+
+> gt
+
+to the true reconstruction error ∥ˆϵ −
+
+ϵgt ∥22. For any nonzero vectors u, v , the law of cosines gives 
+
+∥u − v∥22 = ∥u∥22 + ∥v∥22 − 2∥u∥2∥v∥2 sim( u, v ). (87) With u = ˆ ϵ, v = ϵgt and sim( u, v ) = ⟨ˆe, g ⟩ = 1 − d2
+
+> gt
+
+/2,we obtain 
+
+ˆϵ − ϵgt  
+
+> 22
+
+= ∥ˆϵ∥22 + ∥ϵgt ∥22 − 2∥ˆϵ∥2∥ϵgt ∥2 1 − d2
+
+> gt
+
+2
+
+!
+
+=  ∥ˆϵ∥2 − ∥ ϵgt ∥2
+
+2 + ∥ˆϵ∥2∥ϵgt ∥2 d2
+
+> gt
+
+.
+
+(88) By assumption, predicted-noise norms are bounded away from 0 and ∞. Thus, there exist constants 0 < α ≤
+
+β < ∞ such that 
+
+α ≤ ∥ ˆϵ∥2, ∥ϵgt ∥2 ≤ β for all anchors. (89) Using Eq. (88) and the fact that  ∥ˆϵ∥2 − ∥ ϵgt ∥2
+
+2 ≥ 0,we have 
+
+ˆϵ − ϵgt  
+
+> 22
+
+≥ ∥ ˆϵ∥2∥ϵgt ∥2 d2 
+
+> gt
+
+≥ α2d2
+
+> gt
+
+. (90) On the other hand, using ∥ˆϵ∥22 + ∥ϵgt ∥22 ≤ 2β2 and 
+
+∥ˆϵ∥2∥ϵgt ∥2 ≤ β2, we obtain 
+
+ˆϵ − ϵgt  
+
+> 22
+
+≤ 2β2 + β2d2
+
+> gt
+
+. (91) Rearranging these inequalities yields 
+
+1
+
+β2
+
+
+
+ˆϵ − ϵgt  
+
+> 22
+
+− 2β2
+
+≤ d2 
+
+> gt
+
+≤ 1
+
+α2 ˆϵ − ϵgt 
+
+> 22
+
+. (92) Combining Eq. (86) and Eq. (92), we get affine bounds on ℓpos in terms of the reconstruction error. For the lower bound, 
+
+ℓpos ≥ 14τ d2 
+
+> gt
+
++ ˜Cmin 
+
+≥ 14τ β 2
+
+
+
+ˆϵ − ϵgt  
+
+> 22
+
+− 2β2
+
++ ˜Cmin 
+
+= 14τ β 2 ˆϵ − ϵgt  
+
+> 22
+
++
+
+
+
+˜Cmin − 12τ
+
+
+
+.
+
+(93) For the upper bound, 
+
+ℓpos ≤ 14τ d2 
+
+> gt
+
++ ˜Cmax 
+
+≤ 14τ α 2 ˆϵ − ϵgt  
+
+> 22
+
++ ˜Cmax .
+
+(94) Define 
+
+λmin = 14τ β 2 , λmax = 14τ α 2 , (95) and constants 
+
+cmin = ˜Cmin − 12τ , cmax = ˜Cmax . (96) Then 
+
+λmin ˆϵ − ϵgt  
+
+> 22
+
++ cmin ≤ ℓpos ≤ λmax ˆϵ − ϵgt  
+
+> 22
+
++ cmax .
+
+(97) Finally, recalling Eq. (75) and the bound 0 ≤ ∆neg ≤
+
+Cneg , we conclude that 
+
+λmin ˆϵ−ϵgt 
+
+> 22
+
++cmin ≤ L DCR ≤ λmax ˆϵ−ϵgt 
+
+> 22
+
++cmax +Cneg .
+
+(98) Thus, LDCR is sandwiched between two affine functions of the reconstruction loss ϵθ (xt, h ω (fϕ(˜ x)) , t )−ϵgt  
+
+> t
+> 22
+
+with strictly positive slopes. In other words, minimizing LDCR 
+
+is equivalent (up to a positive scaling factor and an additive constant) to minimizing the standard reconstruction loss. We can summarize this equivalence in the form 
+
+LDCR = λ ϵθ (xt, h ω (fϕ(˜ x)) , t ) − ϵgt  
+
+> t
+> 22
+
++ c, (99) for some λ ∈ [λmin , λ max ] and constant c.This completed the proof. 
+
+## E. Additional Experimental Settings 
+
+In this section, we make a supplementation to Sec 5.1. 
+
+E.1. CLIP Backbones 
+
+Here, we provide a detailed summary of the 6 types of CLIP backbones used in our experiments. They fall into 3 cate-gories: • OpenAI CLIP ViT-L@224 and OpenAI CLIP ViT-L@336 [65] establish the canonical formulation of con-trastive language-image pretraining, defining the fea-ture space that later CLIP variants build upon. Their large-scale but noisy training data gives them strong open-world generalization, while their ability to perceive fine-grained visual details remains limited. The 336-resolution variant uniquely extends CLIP’s receptive field without altering the architecture, making it a standard choice for studying high-resolution alignment. • MetaCLIP ViT-L@224 and MetaCLIP ViT-H@224 [87] distinguishes itself by reconstructing ahigh-quality, well-aligned training corpus using a prin-cipled filtering pipeline rather than relying on raw web data. This dataset-centric redesign leads to representa-tions that are more stable, less noisy, and better calibrated than those of OpenAI CLIP. The ViT-H model further pushes scaling laws within the CLIP paradigm. • SigLIP ViT-SO@224 and SigLIP ViT-SO@384 [95] departs from the classic softmax contrastive loss by in-troducing a sigmoid-based objective, fundamentally al-tering how positive and negative pairs influence train-ing. This probabilistic formulation enables more fine-grained pairwise alignment and reduces overconfidence artifacts commonly observed in CLIP-like models. Its higher-resolution variant leverages the smoother objec-tive to maintain stable training. 
+
+E.2. Competitors 
+
+Here we give a more detailed summary of the competitors mentioned in the experiments. • Original CLIP [65, 87, 95] is the baseline vision en-coder pretrained on large-scale image–text pairs. It pro-vides generalization across diverse recognition and re-trieval tasks. However, it lacks mechanisms for recon-structive feedback, which limits its ability to understand fine-grained visuals. • DIVA [77] introduces diffusion-based visual feedback to refine CLIP features. It performs reconstruction condi-tioned on CLIP vision embeddings, enabling the model to recover more detailed visual information. • GenHancer [57] systematically investigates how gener-ative models can enhance CLIP by refining conditioning design, denoising strategies, and generation paradigms. It shows that using global conditions and lightweight de-noisers leads to more stable reconstruction-based repre-sentation learning. In addition, it extends the reconstruc-tion process to discrete latent spaces. • un 2CLIP [43] builds on the unCLIP framework by in-verting the generative process so that the visual encoder can better capture fine-grained image details while re-maining aligned with CLIP’s original embedding space. 
+
+E.3. Evaluation Protocol for P-Ability 
+
+Datasets. Following [43, 57, 77], we use MMVP-VLM [75] to evaluate the P-Ability . It is a benchmark designed to evaluate fine-grained visual perception by test-ing VLMs on a wide range of visual patterns. It con-tains human-designed symbols, shapes, transformations, and composites that isolate specific perceptual abilities such as symmetry, color matching, and geometric relations. The dataset includes tens of thousands of diverse pattern–label pairs, providing a controlled environment for assessing de-tailed visual understanding. 
+
+Evaluation metrics. Following [75], we report Accuracy (ACC) as the evaluation metric. ACC measures the propor-tion of samples for which the model correctly recognizes the underlying visual pattern, serving as a direct indicator of fine-grained visual perception. 
+
+E.4. Evaluation Protocol for D-Ability 
+
+Datasets. Following [65], we perform zero-shot clustering on 6 standard datasets [7, 10, 13, 22, 32, 33] to evaluate the 
+
+D-Ability .• MNIST [33] is a handwritten digit recognition dataset containing grayscale images of digits 0-9. Each image is centered and normalized to 28 × 28 pixels, making it a standard benchmark for evaluating basic visual represen-tations. It provides 60000 training and 10000 test sam-ples. • CIFAR-10 [32] is a natural image dataset designed for general object classification across 10 categories. The im-ages are low-resolution 32 × 32 color images that intro-duce significant appearance variation despite their small size. The dataset includes 50000 training and 10000 test images. • Eurosat [22] is a satellite image dataset for land-use and land-cover classification, containing 10 classes such as agricultural areas, forests, and urban regions. Derived from Sentinel-2 satellite imagery, it includes 21600 train-ing and 5400 test images, offering rich spatial and spectral diversity. • Caltech-101 [13] designed for general object classifica-tion, includes 101 object categories and a background class, featuring around 7650 training and 3300 test im-ages. The images, collected at Caltech, present significant variation in scale, orientation, and lighting conditions. • Describable Textures Dataset (DTD) [7] focuses on texture classification, featuring 47 texture categories de-scribed using human-interpretable attributes. It offers 
+
+3760 training and 1880 test images, providing a unique challenge in recognizing visually distinctive patterns from natural and artificial sources. • ImageNet-1K [10] is a large-scale benchmark for visual recognition, covering 1000 object categories spanning an-imals, scenes, and man-made objects. The images ex-hibit substantial diversity in viewpoint, background, reso-lution, and object appearance, making it a core testbed for evaluating high-capacity visual models. It contains about 
+
+1.28 million training images and 50 thousand validation images. 
+
+Evaluation metrics. Following [42], we adopt 3 widely-used metrics to evaluate the clustering performance. • Normalized Mutual Information (NMI) measures the mutual dependence between predicted clusters and ground-truth labels, normalized to [0 , 1] . Higher values indicate better alignment between the clustering structure and the true class partition. • Accuracy (ACC) evaluates the best-matched assignment between predicted clusters and ground-truth classes. It computes the fraction of correctly assigned samples after optimal label permutation using the Hungarian algorithm. • Adjusted Rand Index (ARI) quantifies the similarity be-tween two partitions by counting pairwise agreements, adjusted for random chance. An ARI of 0 corresponds to random clustering, while higher values indicate more consistent partitioning. 
+
+E.5. Evaluation Protocol for MLLMs 
+
+Following [43, 57, 75], we evaluate MLLMs using two complementary groups of benchmarks: Vision-Centric Benchmarks , which focus on fine-grained visual percep-tion and scene understanding, and Conventional MLLM Benchmarks , which measure robustness, hallucination re-sistance, and multimodal reasoning. Together, they provide a comprehensive view of an MLLM’s visual competence, reliability, and general multimodal capability. 
+
+Vision-Centric Benchmarks. We evaluate on 4 datasets: • MMVP-MLLM [75] evaluates the model’s fine-grained visual perception by testing its ability to identify struc-tured visual patterns. We report classification accuracy (ACC). • NaturalBench [36] examines multimodal reasoning across natural images using four metrics: overall accu-racy (Acc), question-type accuracy (Q-Acc), instance-level accuracy (I-Acc), and group-level accuracy (G-Acc). • CV-Bench 2D [74] measures perception quality on 2D dense prediction tasks. We report the accuracy (ACC) of ADE20K [101] and COCO [3]. • CV-Bench 3D [74] assesses 3D spatial understanding through structured 3D reasoning queries. We report over-all accuracy (ACC). 
+
+Conventional MLLM Benchmarks. We evaluate on 3
+
+datasets: • POPE [41] evaluates object hallucination robustness un-der three settings, including random (rand), popularity-based (pop), and adversarial (adv). Higher scores indicate stronger resistance to hallucination. • SciQA-IMG [53] assesses scientific visual question an-swering involving diagrams, plots, and structured visual cues. We report accuracy (ACC). • Hallusion [17] measures multimodal robustness by test-ing whether the model avoids visually induced false in-ferences. We report the average accuracy across all query types. 
+
+## F. Additional Experimental Results 
+
+F.1. Expanded Version of Quantitative Results 
+
+Here, we present an expanded version of the quantitative results. Tab. 6 evaluates the improved CLIP models on the two classical tasks, zero-shot image classification and zero-shot text and image retrieval. The competitor focuses only on fine-grained reconstruction, which neglects discriminative ability and leads to performance drops. In contrast, our method preserves and further improves discriminative abil-ity, demonstrating its effectiveness. 
+
+Table 6. Performance on zero-shot classification and retrieval.                                 
+
+> Method Classification Retrieval-Image@5 Retrieval-Text@5 MNIST C10 Eur C101 DTD IN-1K Flickr30k COCO Flickr30k COCO Original 76.4 95.6 60.1 86.6 55.4 75.5 87.2 61.1 97.4 79.2 Genhancer 69.7 73.7 58.5 71.5 48.4 73.8 81.6 51.1 87.3 61.4 Ours 76.5 95.6 60.3 86.7 55.4 75.6 87.3 61.1 97.3 79.3
+
+Tab. 7 reports the results under different ratios of lo-cal tokens ( [CLS] + n% local tokens). We find that us-ing too many local tokens leads to performance degrada-tion. This may be because excessive local tokens pro-vide overly strong local cues, making the reconstruction task too easy and thus weakening the supervision signal. This phenomenon is consistent with the findings in Gen-Hancer [57] and further supports the common behavior of reconstruction-based enhancement methods. 
+
+Table 7. Results under different ratios of local tokens ( [CLS] +
+
+n% local tokens). 
+
+Ratio MMVP-VLM Clustering 
+
+ACC NMI ACC ARI 0% 33.30 0.76 0.67 0.54 
+
+10% 31.85 0.76 0.63 0.53 50% 23.70 0.73 0.60 0.46 80% 21.48 0.69 0.57 0.44 100% 20.74 0.65 0.55 0.42 
+
+F.2. Expanded Version of Qualitative Results 
+
+Here, we present an expanded version of the qualitative re-sults. Fig. 7 presents some qualitative examples from the MMVP-VLM benchmark. The results show that our method enhances fine-grained visual perception, leading to improved P-Ability .Fig. 8 shows several qualitative examples on the vision-centric benchmarks from MLLMs. The results demonstrate that our enhanced CLIP can be seamlessly integrated into MLLMs to improve their visual capabilities. 
+
+F.3. Computational Costs 
+
+Tab. 8 reports the computational costs of our method. Across different CLIP backbones, the training cost of DCR remains stable and mainly scales with the backbone size and input resolution. Models with similar parame-ter counts, such as OpenAI CLIP ViT-L@224, OpenAI CLIP ViT-L@336, and MetaCLIP ViT-L@224, exhibit al-most identical training times, indicating that DCR intro-duces minimal overhead beyond the backbone’s forward passes. Larger or higher-resolution models, including Meta-CLIP ViT-H@224 and SigLIP ViT-SO@384, incur pre-dictable increases in training time and GPU memory usage, yet the overall computation remains well within a practical range for NVIDIA-A100 80GB GPU. These results show that DCR is computationally lightweight and can be seam-lessly applied to a wide range of CLIP architectures without requiring specialized optimization. 
+
+Table 8. Training costs of our DCR.                    
+
+> CLIP Backbone Training #Params Training Time Training GPU Memory
+> OpenAI CLIP ViT-L@224 350.5M 7.7h 53544M OpenAI CLIP ViT-L@336 350.5M 7.6h 60472M MetaCLIP ViT-L@224 350.5M 7.7h 60472M MetaCLIP ViT-H@224 360.0M 9.2h 76430M SigLIP ViT-SO@224 358.5M 8.0h 66798M SigLIP ViT-SO@384 358.5M 9.7h 78792M
+
+## G. Future Works 
+
+In the future, we plan to extend our diffusion contrastive reconstruction beyond diffusion models to VAR-based gen-erators, enabling a broader family of generative priors to contribute fine-grained visual supervision. In paral-lel, we aim to investigate how our framework can be ap-plied to strengthen visual encoders from diverse architec-tures, thereby providing a unified and adaptable enhance-ment strategy for a wide range of vision systems. Moreover, we believe that a systematic study of reconstruction-based methods is essential for uncovering the underlying princi-ples of representation enhancement and for establishing rig-orous theoretical guarantees. Original CLIP Ours 
+
+Image 
+
+a car facing front 
+
+a car facing back 
+
+Text 
+
+Original CLIP Ours 
+
+Image 
+
+a bird flapping upward 
+
+a bird flapping downward 
+
+Text 
+
+Original CLIP Ours 
+
+Image 
+
+snowman with clothes 
+
+snowman without clothes 
+
+Text 
+
+Original CLIP Ours 
+
+Image 
+
+decorations on the egg 
+
+no decorations on the egg 
+
+Text 
+
+Original CLIP Ours 
+
+Image 
+
+buildings during sunset 
+
+buildings during the day 
+
+Text 
+
+Original CLIP Ours 
+
+Image 
+
+violin in still 
+
+violin being played 
+
+Text 
+
+Original CLIP Ours 
+
+Image 
+
+animal with 8 legs 
+
+animal with 6 legs 
+
+Text 
+
+Original CLIP Ours 
+
+Image 
+
+4 eggs 
+
+2 eggs 
+
+Text 
+
+Original CLIP Ours 
+
+Image 
+
+dark blue sky 
+
+light blue sky 
+
+Text 
+
+Original CLIP Ours 
+
+Image 
+
+different colors of grapes 
+
+only one color of grape 
+
+Text 
+
+Original CLIP Ours 
+
+Image 
+
+uneven road surface 
+
+smooth road surface 
+
+Text 
+
+Original CLIP Ours 
+
+Image 
+
+a cake with a slice missing 
+
+a slice of cake 
+
+Text 
+
+Original CLIP Ours 
+
+Image 
+
+a glass of drink 
+
+a jar of drink 
+
+Text 
+
+Original CLIP Ours 
+
+Image 
+
+letter "Q" in it 
+
+letter "X" in it 
+
+Text 
+
+Original CLIP Ours 
+
+Image 
+
+"UGA" 
+
+"SUGAR" 
+
+Text 
+
+Original CLIP Ours 
+
+Image 
+
+wine glass from 
+
+bottom -up view 
+
+wine glass from 
+
+top -down view 
+
+Text 
+
+Original CLIP Ours 
+
+Image 
+
+close -up view of corn 
+
+top view of corn 
+
+Text 
+
+Original CLIP Ours 
+
+Image 
+
+a long shot of 
+
+the elephant 
+
+a close -up shot of 
+
+the elephant 
+
+Text Figure 7. Expanded version of qualitative results on the MMVP-VLM benchmark. The predictions from the original CLIP and our improved version are indicated by red and green arrows, respectively. The improved CLIP effectively addresses the original model’s limitations in capturing fine-grained visual details. Question: Do you see this flower from the top or the side? 
+
+(a) Top (b) Side 
+
+Ours (a) (b) 
+
+Original (b) (b) 
+
+Question: Are there any fruits or vegetables in the heart -
+
+shaped part of the picture? 
+
+(a) Yes (b) No 
+
+Ours (a) (b) 
+
+Original (a) (a) (a) MMVP-MLLM. Question1: Is there a yellow line painted on the road near 
+
+the fire hydrant? 
+
+Question2: Is there a square trimmed boxwood hedge 
+
+behind the fire hydrant? 
+
+Ours 
+
+Original Yes 
+
+No 
+
+Yes 
+
+Yes 
+
+Q1 Q2 
+
+Question1: Does the cardboard box have a number 3 above 
+
+an equals sign? 
+
+Question2: Are there two pieces of clear tape visible around 
+
+the arrow? 
+
+Ours 
+
+Original Yes 
+
+Yes 
+
+Yes 
+
+No 
+
+Q1 Q2 
+
+(b) NaturalBench. 
+
+Figure 8. Expanded version of qualitative results on the MLLM benchmarks.

@@ -1,0 +1,4170 @@
+Title: Learning Half-Spaces from Perturbed Contrastive Examples
+
+URL Source: https://arxiv.org/pdf/2602.02080v1
+
+Published Time: Tue, 03 Feb 2026 04:00:35 GMT
+
+Number of Pages: 19
+
+Markdown Content:
+# Learning Half-Spaces from Perturbed Contrastive Examples 
+
+Aryan Alavi Razavi Ravari * 1 Farnam Mansouri * 2 3 Yuxin Chen 4 Valentio Iverson 2 Adish Singla 1
+
+Sandra Zilles 5 6 
+
+## Abstract 
+
+We study learning under a two-step contrastive example oracle, as introduced by Mansouri et al. (2025), where each queried (or sampled) labeled example is paired with an additional contrastive example of opposite label. While Mansouri et al. assume an idealized setting, where the contrastive example is at minimum distance of the originally queried/sampled point, we introduce and analyze a mechanism, parameterized by a non-decreasing noise function f , under which this ideal con-trastive example is perturbed. The amount of perturbation is controlled by f (d), where d is the distance of the queried/sampled point to the deci-sion boundary. Intuitively, this results in higher-quality contrastive examples for points closer to the decision boundary. We study this model in two settings: (i) when the maximum perturbation magnitude is fixed, and (ii) when it is stochastic. For one-dimensional thresholds and for half-spaces under the uniform distribution on abounded domain, we characterize active and pas-sive contrastive sample complexity in dependence on the function f . We show that, under certain conditions on f , the presence of contrastive ex-amples speeds up learning in terms of asymptotic query complexity and asymptotic expected query complexity. 
+
+> *
+
+Equal contribution 1Max Planck Institute for Software Systems, Saarbruecken, Germany 2David R. Cheriton School of Computer Science, University of Waterloo, Waterloo, ON, Canada 3Vector Institute, Toronto, ON, Canada 4Department of Computer Science, University of Chicago, Chicago, IL, USA 5Department of Computer Science, University of Regina, Regina, SK, Canada 6Alberta Machine Intelligence Institute (Amii), Edmonton, AB, Canada. Correspondence to: Far-nam Mansouri <f5mansou@uwaterloo.ca>, Sandra Zilles <san-dra.zilles@uregina.ca>. 
+
+Preprint. February 3, 2026. 
+
+## 1. Introduction 
+
+Contrastive information—in the form of two similar data points of opposite class—is valuable in the context of learn-ing, in various ways. Firstly, pairing a labeled example 
+
+(x, ℓ (x)) with a highly similar point x′ of opposite label can provide the learner with information on the location of the decision boundary and thus greatly speed up learn-ing, as has been demonstrated in a multitude of application settings such as recommender systems (Tan et al., 2021), reinforcement learning (Huber et al., 2023), NLP (Wang et al., 2024; Margatina et al., 2021), learning formal lan-guages (Tirnauca, 2009), or program synthesis (Abate et al., 2018). Secondly, contrastive information can explain the predictions of a machine-learned classifier: If such classifier predicts label ℓ(x) for datum x, then a datum x′ similar to 
+
+x, but of opposite label, suggests that the features in which 
+
+x and x′ differ are crucial for the prediction of the label for x (Jiang et al., 2024). Thirdly, in causal inference and decision-making problems, contrastive examples are used in the form of counterfactuals, by deriving highly valuable information from simulating “what-if” situations that con-trast with actual observed situations (Aguilera-Ventura et al., 2025). Hence, recently the learning theory community has begun to develop and analyze formal models of learning from contrastive examples. In this context, researchers typically chose a very specific learning setting or hypothesis class (Alon et al., 2023; Wang et al., 2021; Poulis & Dasgupta, 2017; Dasgupta & Sabato, 2020; Wang et al., 2021), or stud-ied the effect of specific model or environment aspects in learning, such as the choice of loss function or the provi-sion of negative examples (Ash et al., 2022; HaoChen et al., 2021). Most relevant to our work is a more generic recent model proposed by Mansouri et al. (2025), in which an active learner queries the label for a data point x, and is in addition provided with a contrastive example right on the decision boundary, namely the closest point x′ to x that has a label opposite from ℓ(x).1 Crucial is that the learner knows the 
+
+> 1
+
+Technically, in Rk , it may happen that there is no closest x′
+
+of opposite label. In that case, the contrastive data point x′ will be the limit of a Cauchy sequence of points whose label differs from 
+
+1
+
+> arXiv:2602.02080v1 [cs.LG] 2 Feb 2026 Noisy Models For Contrastive Learning
+
+rule by which contrastive examples are chosen. Mansouri et al. showed that this setting makes the learner very powerful, with sample complexity drastically shrinking; for example, only a single query is needed in order to learn a linear half-space. This suggests that Mansouri et al.’s model may, in some cases, trivialize learning. Moreover, in practice it is often unrealistic to assume that an oracle can provide the learner with exactly the closest point 
+
+x′ to x that has a label opposite from ℓ(x). Thus the dras-tic improvements in query complexity, due to contrastive examples, may not be attainable in practice either. We there-fore propose to study variants of Mansouri et al.’s model, where the contrastive example presented to the learner is a perturbed version of the “ideal” one from the original model. Specifically, we assume that the amount of possible perturbation of the contrastive example for a point x may increase with the distance r of x from the decision bound-ary. The relationship between r and the permissible amount of perturbation is governed by a function f , by which we parameterize our model. Intuitively, the closer x is to the de-cision boundary, the higher the “quality” of the contrastive example for x. We study two mechanisms based on this idea, a probabilistic one and a non-probabilistic one. While Mansouri et al. (2025) considered only active learners, which always select the data point x for which both a label and a contrastive example will be provided, we study both active and passive settings. Given a concept class C, measures of interest in our study are (a) the number of data points required so that the probability of inferring an ε-approximation of the target concept in C is at least 1 − δ, in dependence on (ε, δ ) ∈ (0 , 1] 2, and (b) the number of data points required so that the expected value of the error between the conjecture and the target concept in C
+
+is at most ε, in dependence on ε ∈ (0 , 1] .Since linear half-spaces are popular objects of study in com-putational learning theory, and many real-world machine learning solutions are based on linear classifiers, we focus our analysis exclusively on classes of (i) one-sided thresh-old functions in R, and (ii) linear half-spaces (over a unit ball in Rk, both with and without homogeneity assump-tion). Our results complement a rich literature on learning half-spaces without contrastive examples; in particular we compare our results to those from studies on learning half-spaces with membership queries (Dasgupta et al., 2005; Balcan et al., 2007; Balcan & Long, 2013; Hopkins et al., 2020; Diakonikolas et al., 2024) We demonstrate that our models of perturbed contrastive examples often (but not always) yield remarkable improvements (in terms of the measures mentioned above) compared to learning without contrastive examples. The improvements here depend on   
+
+> ℓ(x), even if this results in ℓ(x′) = ℓ(x).
+
+the choice of the function f that determines the permissible amount of perturbation of the “ideal” contrastive examples. At the same time, our models do not trivialize learning of half-spaces (by contrast with Mansouri et al.’s idealized model, which allows for learning half-spaces with just a single contrastive example). Thus, our proposed approach makes a significant step towards practically relevant models of learning from contrastive examples. 
+
+## 2. Preliminaries 
+
+Let (X , d ) be a metric space with bounded diameter 
+
+sup x,x ′ d(x, x ′) and let U[X ] be the uniform distribution over X . In this paper, we assume that d is the Euclidean distance. Further, let ℓ ⊆ X be a labeling rule. For any 
+
+C ⊆ X we define the error of C w.r.t. ℓ as err( C, ℓ ) := Pr x∼U [X ][ℓ(x)̸ = C(x)] . Here, we implicitly identify a sub-set of X (i.e., a concept) with its binary indicator function. This paper extends the model for learning with contrastive examples that was proposed by (Mansouri et al., 2025). In said model, a learner trying to identify a labeling rule ℓ has access to a two-step oracle. The first step corresponds to an oracle providing a labeled training data point (x, ℓ (x)) 
+
+(this case is called passive learning ) or providing the label 
+
+ℓ(x) for a data point x ∈ X of the learner’s choice ( active learning ); the resulting data point provided in this step is called the primary example . The second step provides the learner with a contrastive example (x′, ℓ (x′)) to the previously selected primary example (x, ℓ (x)) . This step is governed by a selection mechanism CE that describes how the contrastive examples are chosen; we define various such mechanisms below. The learner thus collects a sequence of pairs of (labeled) examples [( xi, ℓ (xi)) , (x′
+
+> i
+
+, ℓ (x′
+
+> i
+
+))] for 1 ≤ i ≤ m, where for all i, (xi, ℓ (xi)) is a primary example, and (x′
+
+> i
+
+, ℓ (x′
+
+> i
+
+)) is the corresponding contrastive example. Using both primary and contrastive examples, the target of the learner is to output a concept C ⊆ X that minimizes err( C, ℓ ).
+
+Primary Example Collection. We analyze two well-studied settings for collecting primary examples (the first step of the oracle). (i) Passive learning: The instances xi
+
+of primary examples are sampled i.i.d. from U[X ]. In this setting the sequence of pairs of examples gathered by the learner is simply an unordered set S of pairs of examples. (ii) Active learning: For each i ∈ [m], the learner chooses an xi ∈ X , for which the primary oracle then provides the label ℓ(xi). The choice of xi may depend on the sequence of previously seen example pairs [(( xj , ℓ (xj )) , (x′ 
+
+> j
+
+, ℓ (x′ 
+
+> j
+
+))] ,
+
+1 ≤ j < i , i.e., the learner is adaptive. 
+
+Contrastive example collection. We study three different options for the mechanism by which contrastive examples 2Noisy Models For Contrastive Learning 
+
+are selected by the oracle. The first one, proposed in the literature, describes an “idealized” setting with an often unrealistically strong oracle; we then propose two variations using a weaker oracle. 1. Minimum Distance Model (MDM) The minimum distance mechanism, denoted by CE d
+
+> min
+
+, was intro-duced by (Mansouri et al., 2025). Given a primary example (x, ℓ (x)) ∈ X × { 0, 1}, the oracle returns any contrastive example (x′, ℓ (x′)) for which x′ belongs to 
+
+CE d
+
+> min
+
+(x) := arg min {d(x, x ′) | x′ ∈ X ,x′ = lim  
+
+> k→∞
+
+x′ 
+
+> k
+
+for a Cauchy sequence 
+
+(x′
+
+> k
+
+)k with ℓ(x′
+
+> k
+
+)̸ = ℓ(x) for all k} .
+
+2. Deterministic Approximate Minimum Distance Model (Deterministic AMDM) We introduce an ap-proximate version CE d,f  
+
+> app
+
+of CE d
+
+> min
+
+, parameterized by a non-decreasing function f : R+ → R+. Here, the oracle returns a perturbed version of the contrastive example selected by the CE d 
+
+> min
+
+mechanism, where the perturbation is dependent on the distance of the primary example x to the decision boundary of ℓ. In addition, we impose the constraint that the label ℓ(x′) of the contrastive example be different from ℓ(x). Intuitively, the closer x is to the decision boundary, the higher the quality of the contrastive example (x′, ℓ (x′)) , in the sense that x′ is not very far from an “ideal” example in 
+
+CE d
+
+> min
+
+(x).More formally, given a primary example (x, ℓ (x)) ,the oracle chooses as its contrastive example any 
+
+(x′, ℓ (x′)) where x′ is in 
+
+CE d,f 
+
+> app
+
+(x) := {x′ ∈ X | d(x′, x d
+
+> min
+
+) ≤ f (d(x, x d
+
+> min
+
+)) 
+
+for some xd 
+
+> min
+
+∈ CE d
+
+> min
+
+(x),
+
+and ℓ(x′)̸ = ℓ(x)}
+
+3. Probabilistic Approximate Minimum Distance Model (Probabilistic AMDM) The CE d,f  
+
+> app
+
+mecha-nism makes no assumption about how the contrastive example is chosen from the set CE d,f 
+
+> app
+
+(x), enforcing an adversarial analysis in our study below. By contrast, we define a probabilistic version CE d,f  
+
+> prop
+
+of CE d,f 
+
+> app
+
+,again parameterized by a non-decreasing function 
+
+f : R+ → R+. Formally, for any x ∈ X , let Dx be a distribution over points in X whose labels differ from 
+
+ℓ(x), such that Ex′∼D x [d(x′, x d
+
+> min
+
+)] ≤ f (d(x, x d
+
+> min
+
+)) 
+
+for some xd 
+
+> min
+
+∈ CE d
+
+> min
+
+. In the CE d,f  
+
+> prop
+
+mechanism, the oracle independently samples x′ from Dx, and pro-vides the contrastive example (x′, ℓ (x′)) for (x, ℓ (x)) .For all settings, we assume realizability, i.e., the learner outputs hypotheses from a concept class C over X , such that 
+
+ℓ ∈ C . In the following, we formally define various sample complexity measures that we aim to study. 
+
+Definition 2.1. Let C be a concept class over X and let 
+
+CE refer to a mechanism for selecting contrastive examples. Let A be a passive (resp. active) learning algorithm. The 
+
+contrastive sample complexity of A on C with respect to 
+
+CE , denoted by MPr [C, CE , A], is the function that maps any (ε, δ ) ∈ (0 , 1] 2 to the minimal m∗ ∈ N such that, for every ℓ ∈ C and every m ≥ m∗, we have 
+
+Pr err  CA,m , ℓ  > ε  < δ , 
+
+where CA,m is the final hypothesis output by A after interacting with the two-step oracle for m steps. The passive (resp. active) contrastive sample complexity of C
+
+with respect to CE , denoted by MPr ,passive [C, CE] (resp. 
+
+MPr ,active [C, CE] ), is defined by 
+
+MPr ,passive [C, CE]( ε, δ ) := inf   
+
+> Apassive
+
+MPr [C, CE , A]( ε, δ ),
+
+MPr ,active [C, CE]( ε, δ ) := inf   
+
+> Aactive
+
+MPr [C, CE , A]( ε, δ ).2
+
+Definition 2.2. Let C be a concept class over X and let 
+
+CE refer to a mechanism for selecting contrastive examples. Let A be a passive (resp. active) learning algorithm. The 
+
+expected contrastive sample complexity of A on C with respect to CE , denoted by Mexp [C, CE , A], is the function that maps any ε ∈ (0 , 1] to the minimal m∗ ∈ N such that, for every ℓ ∈ C and every m ≥ m∗, we have 
+
+Eerr  CA,m , ℓ  ≤ ε. 
+
+where CA,m is the final hypothesis output by A after inter-acting with the two-step oracle for m steps. The passive (resp. active) expected contrastive sample complexity of C
+
+with respect to CE , denoted by Mexp ,passive [C, CE] (resp. 
+
+Mexp ,active [C, CE] ), is defined by 
+
+Mexp ,passive [C, CE]( ε) := inf   
+
+> Apassive
+
+Mexp [C, CE , A]( ε),
+
+Mexp ,active [C, CE]( ε) := inf   
+
+> Aactive
+
+Mexp [C, CE , A]( ε).
+
+In this work, we study three concept classes. Let B(x, r ) := 
+
+{z ∈ Rk : ∥z − x∥ ≤ r} denote the (closed) Euclidean ball of radius r centered at x.(a) One-dimensional threshold functions over X = [0 , 1] :
+
+Cthresh := { 1{x ≤ θ} | θ ∈ [0 , 1] } .
+
+(b) Homogeneous half-spaces over X = B(0k, 12 ), where 
+
+0k is the all-zero vector in Rk:
+
+CHHS :=  1{⟨ ω, x⟩ ≥ 0} ω ∈ Rk .
+
+> 2
+
+For active learning with deterministic learning algorithms, and 
+
+CE ∈ { CE d
+
+> min
+
+, CE d,f 
+
+> app
+
+}, the dependency on δ can be dropped, since there is no stochasticity in the learning process. We choose to ignore this, for consistency of presentation. 
+
+3Noisy Models For Contrastive Learning 
+
+(c) Half-spaces over X = B(0k, 12 ):
+
+CHS :=  1{⟨ ω, x⟩ ≥ b} ω ∈ Rk, b ∈ R .
+
+All of the results in this paper are stated for a general choice of noise function f . However, Table 1 provides an overview of our active learning sample-complexity bounds for two representative choices of f (polynomial f and exponential 
+
+f ). Detailed calculations for these specific choices are de-ferred to Appendix A. Also, due to space constraints, details of all the proofs (except for the proof of Theorem 3.4) are deferred to the Appendix. Further, Table 2 also summarizes our passive learning bounds for a general choice of f .
+
+Further Notation. Given any measurable V ⊆ Rk, we denote by VOL( V ) the volume of V . For a vector x ∈ Rk
+
+and a halfspace C(z) := 1{⟨ ω, z⟩ ≤ b}, where ω ∈ Rk and 
+
+b ∈ R, define dist( x, C ) := |⟨ ω, x⟩− b|∥ω∥ to be the distance between x and the boundary hyperplane of C. Moreover, for a function f : R+ → R+ and parameters u, b ≥ 0, let 
+
+τf (u → b) := min n ≥ 0 f (n)(u) ≤ b ,
+
+where f (n) denotes the n-fold composition of f with it-self, with the convention that f (0) (u) := u. Intuitively, 
+
+τf (u → b) is the number of times one must iterate the con-traction f to reduce it from u to b. If no n with f (n)(u) ≤ b
+
+exists, we define τf (u → b) := ∞.
+
+## 3. Deterministic Approximate Minimum Distance Model 
+
+3.1. Active Contrastive Sample Complexity 
+
+In this subsection, we study the active contrastive sample complexity with respect to the deterministic AMDM. We begin by analyzing threshold functions. Under membership queries, if at time t the version space for the target threshold is an interval of length r, an active learner can always query the midpoint of this interval to shrink the version space to an interval of length r/ 2. In the following Theorem, we show that under the deterministic AMDM, each query can shrink the version space to an interval of length at most 
+
+˜f (r), where ˜f is defined in Equation (1). 
+
+Theorem 3.1. Let f : R≥0 → R≥0 be a non-decreasing and invertible function 3. Define ˜f : R≥0 → R≥0 by 
+
+˜f (r) := f ◦ (f + I)−1  r
+
+> 2
+
+ , (1) 
+
+where I denotes the identity function. Then 
+
+MPr ,active 
+
+h
+
+Cthresh , CE d,f 
+
+> app
+
+i
+
+(ε, δ ) = τ ˜f (1 → 2ε) .
+
+> 3
+
+Invertibility assumptions are made only for ease of presenta-tion. Without invertibility, all proofs continue to hold by replacing every h−1(r) for any function h with inf {x ≥ 0 : h(x) ≥ r}.
+
+Before moving to the analysis of (homogeneous) half-spaces we need to introduce a critical lemma. 
+
+Lemma 3.2. Let X = B 0k, 12
+
+, x ∈ X , ω ∈ Rk, and 
+
+b ∈ R. Consider the half-space C∗(z) := 1{⟨ ω, z⟩ ≥ b}.
+
+Let xproj := x− ⟨ω, x⟩− b 
+
+> ∥ω∥2
+
+ω denote the orthogonal projection of x onto the boundary hyperplane of C∗. Let x′ ∈ X be any point such that C∗(x′)̸ = C∗(x). Then (i) The angle ∠(x′, x, xproj ) is at most 
+
+min 
+
+
+
+tan −1
+
+ ∥x′ − xproj ∥∥x − xproj ∥
+
+
+
+, cos −1
+
+ ∥x − xproj ∥∥x − x′∥
+
+ 
+
+.
+
+(ii) Let C be the half-space whose boundary hyperplane is perpendicular to x′ − x and passes through x′, and such that C(x) = C∗(x). Then 
+
+err( C, C ∗) ≤ 2k ∥x′ − xproj ∥∥x − xproj ∥ .
+
+(iii) Suppose b = 0 . Let C0 be a homogeneous half-space whose boundary hyperplane is perpendicular to x′ − x
+
+such that C0(x) = C∗(x). Then 
+
+err( C0, C ∗) ≤ ∥x′ − xproj ∥
+
+π ∥x − xproj ∥ .
+
+Figure 1 illustrates Lemma 3.2(ii). Statements (i) and (iii) can be illustrated analogously. Let x be a point at distance 
+
+r from a target half-space. Lemma 3.2 shows that, given x
+
+and its contrastive example from the deterministic AMDM oracle, a learner can find a concept with error at most (i)   
+
+> f(r)
+> πr
+
+if the target classifier is homogeneous, and (ii) 2k f (r)
+
+> r
+
+otherwise. Thus, to obtain a concept with small error, it suffices to find a point that is close to the target concept. In particular, for homogeneous half-spaces, any point suffi-ciently close to the center has this property. In the following corollary, we show that this makes active contrastive learn-ing of homogeneous half-spaces trivial even with respect to the more general probabilistic AMDM. 
+
+Corollary 3.3. Let f : R≥0 → R≥0 be a non-decreasing function such that f (x) ≤ x1+ c where c > 0. Then 
+
+MPr ,active 
+
+h
+
+CHHS , CE d,f 
+
+> app
+
+i
+
+(ε, δ ) = 
+
+MPr ,active 
+
+h
+
+CHHS , CE d,f 
+
+> prop
+
+i
+
+(ε, δ ) = 1 .
+
+The proof of the following theorem shows that for non-homogeneous half-spaces, one can find a point close to the decision boundary by first querying 0, and then repeatedly querying the contrastive example of the previous query. 
+
+Theorem 3.4. Let f : R≥0 → R≥0 be a non-decreasing function such that f (x) ≤ x1+ c where c > 0. Then 
+
+MPr ,active 
+
+h
+
+CHS , CE d,f 
+
+> app
+
+i
+
+(ε, δ ) ≤ τf
+
+ 12 → ε′
+
+
+
+,
+
+4Noisy Models For Contrastive Learning 
+
+Table 1. Summary of our sample complexity bounds for contrastive active learning results with respect to CE d,f  
+
+> app
+
+and CE d,f 
+
+> prop
+
+. Results are stated for (A) 1D-thresholds, (B) homogeneous half-spaces, and (C) half-spaces, and for two representative classes of noise functions f .
+
+(a) Active contrastive sample complexity with respect to CE d,f 
+
+> app
+
+. We additionally compare to membership query complexity and to the minimum distance model (corresponding to f (r) = 0 ). The membership query bounds are due to existing results (Balcan & Long, 2013; Hopkins et al., 2020). 
+
+Non-contrastive Active Contrastive Queries 
+
+Membership Query r1+ c′ 
+
+> 4
+
+≤ f (r) ≤ r1+ c 
+
+> 4
+
+f (r) = e−1/r  
+
+> 4
+
+f (r) = 0 
+
+(A) 1D-Thresholds Θ(log 1 
+
+> ε
+
+) Θ(log log 1 
+
+> ε
+
+) Θ(log ∗ 1 
+
+> ε
+
+) 1(B) Homogeneous Half-spaces Θ( k log 1 
+
+> ε
+
+) 1 1 1(C) Half-spaces Ω
+
+  1
+
+> ε
+
+ k−1
+
+> k+1
+
+ Ω(log log 1 
+
+> ε
+
+− log k) Ω(log ∗ 1 
+
+> ε
+
+− log ∗ k) 1
+
+O(log log 1 
+
+> ε
+
++ log k) O(log ∗ 1 
+
+> ε
+
++ log ∗ k)
+
+(b) Overview of our active learning results with respect to CE d,f 
+
+> prop
+
+. We report three quantities: (i) the active contrastive sample complexity 
+
+MPr ,active , (ii) the active expected contrastive sample complexity Mexp ,active , and (iii) the expected sample requirement for accuracy ε
+
+of algorithm Nactive (defined formally in Section 4.2).  
+
+> r1+ c′
+> 4
+
+≤ f (r) ≤ r1+ c 
+
+> 4
+
+f (r) = e−1/r 
+
+> 4
+
+(A) 1D-Thresholds 
+
+MPr ,active 
+
+Ω
+
+
+
+log log 1 
+
+> ε
+
++
+
+q
+
+log 1
+
+> δ
+
+
+
+Ω  log ∗ 1 
+
+> ε
+
++ log log 1
+
+> δ
+
+
+
+O  log log 1 
+
+> ε
+
++ log 1
+
+> δ
+
+ O  log ∗ 1 
+
+> ε
+
++ log 1
+
+> δ
+
+
+
+Mexp ,active Θ
+
+q 
+
+log 1
+
+> ε
+
+
+
+Θ  log log 1
+
+> ε
+
+
+
+Nactive O  log log 1
+
+> ε
+
+ O  log ∗ 1
+
+> ε
+
+
+
+(B) Homogeneous Half-spaces MPr ,active 1 1(C) Half-spaces MPr ,active 
+
+Ω  log log 1 
+
+> ε
+
+− log k Ω  log ∗ 1 
+
+> ε
+
+− log ∗ k
+
+O  log log 1 
+
+> ε
+
++ log k + log 1
+
+> δ
+
+ O  log ∗ 1 
+
+> ε
+
++ log ∗ k + log 1
+
+> δ
+
+
+
+Nactive O  log log 1 
+
+> ε
+
++ log k O  log ∗ 1 
+
+> ε
+
++ log ∗ k
+
+Table 2. Summary of our passive contrastive learning results. We report (i) the passive contrastive sample complexity MPr ,passive with respect to CE d,f  
+
+> app
+
+and (ii) the passive expected contrastive sample complexity Mexp ,passive with respect to CE d,f 
+
+> prop
+
+. Here g is defined by 
+
+g(x) = f (x) 
+
+> x
+
+.
+
+MPr ,passive (C, CE d,f 
+
+> app
+
+) Mexp ,passive (C, CE d,f 
+
+> prop
+
+)
+
+(A) 1D-Thresholds O
+
+ log(1 /δ )min( f −1(ε),ε )
+
+
+
+Ω
+
+ log(1 /δ )min( f −1(2 ε),ε )
+
+ O
+
+ log(1 /ε )min( f −1(ε/ 2) ,ε/ 2) 
+
+
+
+Ω
+
+ 1min( f −1(4 ε),2ε)
+
+
+
+(B) Homogeneous Half-spaces O
+
+ log(1 /δ )
+
+> g−1(πε )
+
+
+
+O
+
+ log(1 /ε )
+
+> g−1(πε/ 2)
+
+
+
+where ε′ =   ε
+
+> 2k
+
+ 1 
+
+> c
+
+.Proof. Denote m = τf
+
+  12 → ε′ . Suppose at time t = 1 ,the learner queries x1 = 0k and for t ≥ 2 the learner queries 
+
+xt = x′
+
+> t−1
+
+. For each time t, let xproj  
+
+> t
+
+be the projection of xt
+
+on ℓ. By definition 
+
+dist( xt, ℓ ) ≤ ∥ xt − xproj  
+
+> t−1
+
+∥ ≤ f (∥xt−1 − xproj  
+
+> t−1
+
+∥)= f (dist( xt−1,ℓ )) .
+
+Therefore, after m queries, we have dist( xm, ℓ ) ≤ ε′. Sup-pose the learner returns the half-space C corresponding to the hyperplane perpendicular to x′ 
+
+> m
+
+− xm at x′
+
+> m
+
+. Due to Lemma 3.2 (ii) we have 
+
+err( C, ℓ ) ≤ 2kf (ε′)
+
+ε′ ≤ 2kε′c = ε. 
+
+This completes the proof. Observe that the active contrastive sample complexity of half-spaces can be easily bounded from below by the active contrastive sample complexity of thresholds. 
+
+Theorem 3.5. For any non-decreasing function f : R≥0 →
+
+R≥0, we have 
+
+MPr ,active [CHS , CE d,f 
+
+> app
+
+] ( ε, δ )
+
+≥ M Pr ,active [Cthresh , CE d,f 
+
+> app
+
+]  2kε, δ  .
+
+3.2. Passive Contrastive Sample Complexity 
+
+This subsection focuses on the passive contrastive sample complexity of one-dimensional threshold functions and ho-mogeneous half-spaces with respect to the deterministic AMDM. 5Noisy Models For Contrastive Learning Sample Space X
+
+Boundary of C∗
+
+x
+
+xproj x′
+
+(a) Maximum Angle Case Sample Space X
+
+Boundary of C∗
+
+Boundary of C′
+
+Boundary of C
+
+x
+
+xproj 
+
+x′
+
+(b) General Case 
+
+Figure 1. Geometric interpretation of Lemma 3.2. Given a primary point x ∈ X , its contrastive example x′, and a target half-space C∗,Panel (1a) illustrates the configuration maximizing the angle ∠(x′, x, xproj ). Panel (1b) depicts the hyperplane C induced by the pair 
+
+(x, x′) in Lemma 3.2(ii) in the general case, along with the auxiliary half-space C′ that is parallel to C∗ and passes through x′. The half-space C′ is used to decompose err( C, C ∗); further details are deferred to Appendix B. 
+
+Again we begin with threshold functions. The key intuition is that it suffices to identify a point very close to the target threshold (here the learner uses the largest positive example). If this point has distance r to the target threshold, then by the deterministic AMDM its contrastive example lies within distance at most f (r). Thus, once r is small, a single contrastive example brings the learner even closer, yielding improved sample complexity. 
+
+Theorem 3.6. For any non-decreasing and invertible func-tion f : R≥0 → R≥0, and for all δ ∈ (0 , 1] and ε ≤
+
+min 
+
+ f ( 14 )2 , 14
+
+
+
+, we have 
+
+MPr ,passive 
+
+h
+
+Cthresh , CE d,f 
+
+> app
+
+i
+
+(ε, δ ) ∈ O
+
+ log(1 /δ )min( f −1(ε), ε )
+
+
+
+,
+
+MPr ,passive 
+
+h
+
+Cthresh , CE d,f 
+
+> app
+
+i
+
+(ε, δ ) ∈ Ω
+
+ log(1 /δ )min ( f −1(2 ε) , ε )
+
+
+
+.
+
+The core idea behind the threshold analysis also applies to linear separators in general: if the learner can find a point in the sample that is close to the target decision boundary (here, it chooses the example in the data set with the smallest distance to its contrastive example), then its contrastive ex-ample provides enough geometric information to construct a hypothesis with bounded error via Lemma 3.2, both for homogeneous and non-homogeneous half-spaces. However, due to the 2k factor in the error bound of Lemma 3.2(ii) for non-homogeneous half-spaces, this ap-proach yields passive learning guarantees (in contrast to active learning) that scale exponentially with the dimen-sion k. This is undesirable, since standard passive learning bounds for half-spaces typically depend only linearly on k.Fortunately, Lemma 3.2(iii) allows us to circumvent this issue for homogeneous half-spaces. In fact, our analysis for homogeneous half-spaces is completely dimension-free. 
+
+Theorem 3.7. Let f : R≥0 → R≥0 be such that f (x) ≤ x2
+
+and g(x) := f (x) 
+
+> x
+
+is non-decreasing and invertible. Then 
+
+MPr ,passive 
+
+h
+
+CHHS , CE d,f 
+
+> app
+
+i
+
+(ε, δ ) ∈ O
+
+ log(1 /δ )
+
+g−1 (πε )
+
+
+
+.
+
+## 4. Probabilistic Approximate Minimum Distance Model 
+
+4.1. Active Expected Sample Complexity 
+
+Next, we study the active expected contrastive sample com-plexity of one-dimensional threshold functions with respect to the probabilistic AMDM. As can be seen from Table 1b, in this case for both representative choices of the noise func-tion f , the probabilistic AMDM exhibits a noticeable de-crease in sample complexity compared to the deterministic AMDM, even for the class of threshold functions. Neverthe-less, both attain a non-trivial sample complexity improve-ment over membership queries alone. Crucially, our analysis requires g(x) := f (x) 
+
+> x
+
+to be non-decreasing and convex. Therefore, in the following lemma we first state a basic property of convex functions. 
+
+Lemma 4.1. Let Z be a random variable supported on 
+
+[a, b ]. Then for any convex function f : R → R we have 
+
+E[f (Z)] ≤ E[Z] − ab − a f (b) + b − E[Z]
+
+b − a f (a).
+
+The key idea of our analysis is as follows. Suppose that at some time t the active learner has a version space of size 6Noisy Models For Contrastive Learning 
+
+rt. We show that by querying the midpoint of the version space and one of its endpoints, and using their contrastive examples, the learner obtains a new version space of size 
+
+rt+1 ∈ [0 , r t/2] , where E[rt+1 ] ≤ f (rt/2) . Lemma 4.1 then allows us to bound the expected size of the final version space. 
+
+Theorem 4.2. Let f : R≥0 → R≥0 be such that f (x) ≤ x
+
+and g(x) := f (x) 
+
+> x
+
+is non-decreasing and convex. Then 
+
+Mexp ,active 
+
+h
+
+Cthresh , CE d,f 
+
+> prop
+
+i
+
+(ε) ≤
+
+min 
+
+n ≥ 0 2−⌊ n/ 2⌋− 1
+
+> ⌊n/ 2⌋
+
+Y
+
+> i=1
+
+g(2 −i) ≤ ε
+
+ .
+
+A key observation is that in Lemma 4.1, the upper bound is achieved in the extreme case where the random variable Z
+
+has only two atoms, at a and b. This suggests an adversarial strategy for lower bounds: at each time step, choose the distribution of contrastive examples to be supported on two atoms, one at the target concept and the other at an endpoint of the current version space. With this key idea, we obtain a lower bound on the expected sample complexity of active learning for thresholds with respect to CE d,f 
+
+> prop
+
+.
+
+Theorem 4.3. Let f : R≥0 → R≥0 be a non-decreasing function. Denote g(x) := min 
+
+ f (x) 
+
+> x
+
+, 1
+
+
+
+. Then 
+
+Mexp ,active 
+
+h
+
+Cthresh , CE d,f 
+
+> prop
+
+i
+
+(ε) ≥
+
+min 
+
+(
+
+n ≥ 0 2−(2 n+1) 
+
+> n
+
+Y
+
+> i=1
+
+g(4 −i) ≤ ε
+
+)
+
+.
+
+The above theorem also implies a lower bound for the active contrastive sample complexity. 
+
+Corollary 4.4. Let f : R≥0 → R≥0 be a non-decreasing function. Denote g(x) := min 
+
+ f (x) 
+
+> x
+
+, 1
+
+
+
+. Then 
+
+MPr ,active 
+
+h
+
+Cthresh , CE d,f 
+
+> prop
+
+i
+
+(ε, δ ) ≥
+
+min min 
+
+(
+
+n ≥ 0
+
+> n
+
+Y
+
+> i=1
+
+g(4 −i) ≤ δ
+
+)
+
+, log 2(1 /ε ) − 12
+
+!
+
+.
+
+4.2. Expected Sample Requirement for Accuracy ε
+
+In the previous subsection, we observed a significant drop-off in the active expected contrastive sample complexity from the deterministic to the probabilistic AMDM, even for threshold functions. In this subsection, instead of bounding the expected error, we focus on the expected number of samples a learner requires in order to guarantee error at most ε—a quantity, which we call the expected sample requirement for accuracy ε. Interestingly, for this quantity in contrast with the previous subsection, we are able to derive bounds for both thresholds and half-spaces, and these bounds are similar to those we obtained in Section 3.1 under the deterministic model, even in the probabilistic setting. 
+
+Definition 4.5. Let C be a concept class over X , let CE 
+
+refer to a mechanism for selecting contrastive examples and let ε ∈ (0 , 1] . Let A be an active learning algorithm. For every ℓ ∈ C , let NA,ℓ,ε be the random variable repre-senting the minimal m ∈ N, such that err( CA,ℓ,m , ℓ ) ≤ ε.Here CA,ℓ,m is the final hypothesis output by A after inter-acting with the two-step oracle for m steps. Then define 
+
+N (C, CE , A, ε ) := sup ℓ∈C E[NA,ℓ,ε ] to be the expected sample requirement of A for achieving accuracy ε on C
+
+with respect to CE . Also, define 
+
+Nactive (C, CE , ε ) = inf   
+
+> active algorithm A
+
+N (C, CE , A, ε ) .
+
+We begin by analyzing threshold functions. Learning pro-ceeds in several sub-phases. In each sub-phase, suppose the current version space is an interval of size r. The learner repeatedly queries both endpoints of the interval until their contrastive examples are less than 4f (r) apart. We then show that each sub-phase takes constant time in expectation. The key idea is to repeat a procedure until a benchmark is met; we refer to this procedure as verification .
+
+Theorem 4.6. Let f : R≥0 → R≥0 be a non-decreasing function. Then, for every ε ∈ (0 , 1] ,
+
+Nactive 
+
+
+
+Cthresh , CE d,f 
+
+> prop
+
+, ε 
+
+
+
+≤ 4τ4f (1 → 2ε) .
+
+The above theorem also immediately implies an upper bound for the active contrastive sample complexity. 
+
+Corollary 4.7. For any non-decreasing function f : R≥0 →
+
+R≥0, we have 
+
+MPr ,active 
+
+h
+
+Cthresh , CE d,f 
+
+> prop
+
+i
+
+(ε, δ )
+
+≤ 8τ4f (1 → 2ε) + 16 ln 
+
+ 1
+
+δ
+
+
+
+.
+
+We now proceed to analyzing half-spaces. The core idea is similar to the threshold case: learning is again done in several sub-phases, and in each sub-phase the learner per-forms a verification process. The main difference is that verification is more intricate for half-spaces. Lemma 4.8 explicitly describes this verification procedure. 
+
+Lemma 4.8. Suppose X = B(0k, 12 ) and let ℓ ∈ C HS ,
+
+x ∈ X . Let f : R≥0 → R≥0 be a non-decreasing func-tion such that f (a) ≤ a 
+
+> 4
+
+. Denote r = dist( x, ℓ ). Then there is a learner that, in expectation, with 4 queries from 
+
+CE d,f  
+
+> prob
+
+finds a z∗ such that (i) dist( z∗, ℓ ) ≤ r, and (ii) with probability at least 1/2 we have dist( z∗, ℓ ) ≤ 3f (2 r).
+
+7Noisy Models For Contrastive Learning 
+
+Theorem 4.9. Let f : R≥0 → R≥0 be a non-decreasing function such that f (x) ≤ x1+ c 
+
+> 4
+
+. Then, for every ε ∈ (0 , 1] ,
+
+Nactive 
+
+
+
+CHS , CE d,f 
+
+> prop
+
+, ε 
+
+
+
+≤ 8τ ˜f
+
+ 12 → ε′
+
+
+
++ 8 ,
+
+where ˜f (x) = 3 f (2 x) and ε′ =   ε
+
+> 2k−1
+
+ 1 
+
+> c
+
+.Remark 4.10 . For half-spaces in contrast with threshold functions, the learner would not be able to verify when the error of its hypothesis is less than ε.The above theorem also implies an upper bound for the active contrastive sample complexity. 
+
+Corollary 4.11. Let f : R≥0 → R≥0 be a non-decreasing function such that f (x) ≤ x1+ c 
+
+> 4
+
+. Then 
+
+MPr ,active 
+
+h
+
+CHS , CE d,f 
+
+> prop
+
+i
+
+(ε, δ )
+
+≤ 32 τ ˜f
+
+ 12 → ε′
+
+
+
++ 136 log 2
+
+3
+
+δ ,
+
+where ˜f (x) = 3 f (2 x) and ε′ =   ε
+
+> 2k−1
+
+ 1 
+
+> c
+
+.
+
+An interesting phenomenon can be observed in Table 1. For the noise functions f introduced, we observe a drop-off in the active expected sample complexity when comparing 
+
+CE d,f  
+
+> prop
+
+to CE d,f 
+
+> app
+
+, even for threshold functions. Never-theless, for both C ∈ {C thresh , CHS }, the expected sample requirement for accuracy ε, Nactive (C, CE d,f 
+
+> prop
+
+, ε ), remains of the same order as 
+
+MPr ,active 
+
+h
+
+C, CE d,f 
+
+> app
+
+i
+
+(ε, 1) = Mexp ,active 
+
+h
+
+C, CE d,f 
+
+> app
+
+i
+
+(ε).
+
+Intuitively, this suggests that while with a small number of examples the learner is likely to achieve small error, there remains a non-negligible probability that the error is very large; equivalently, for a fixed sample size, the error distribution is highly skewed. 
+
+4.3. Passive Expected Contrastive Sample Complexity 
+
+Finally, we analyze the passive expected contrastive sam-ple complexity of one-dimensional threshold functions and homogeneous half-spaces with respect to the probabilistic AMDM. First, consider learning of threshold functions. We use Lemma 4.12 (stated below) to convert the high-probability guarantees from Theorem 3.6 for passive contrastive learn-ing under CE d,f  
+
+> app
+
+into bounds in expectation. Next, observe that the algorithm in Theorem 3.6 relies on only a single contrastive example. Therefore, it achieves the same ex-pected error under the probabilistic AMDM as under the deterministic one. 
+
+Lemma 4.12. Let Z be a random variable such that Z ∈
+
+[0 , γ ] and Pr[ Z > ε ] ≤ δ. Then E[Z] < γδ + ε(1 − δ).
+
+Theorem 4.13. Let f : R≥0 → R≥0 be non-decreasing and invertible , δ ∈ (0 , 1] , and ε < min 
+
+ f ( 14 )4 , 18
+
+
+
+. Then 
+
+Mexp ,passive 
+
+h
+
+Cthresh , CE d,f 
+
+> prop
+
+i
+
+(ε, δ ) ∈ O
+
+ log(1 /ε )min( f −1(ε/ 2) , ε )
+
+
+
+,
+
+Mexp ,passive 
+
+h
+
+Cthresh , CE d,f 
+
+> prop
+
+i
+
+(ε, δ ) ∈ Ω
+
+ 1min( f −1(4 ε), ε )
+
+
+
+.
+
+For homogeneous half-spaces, we first show that the error of the same algorithm introduced in Theorem 3.7 for passive contrastive learning with respect to CE d,f  
+
+> app
+
+can be bounded by a quantity that depends only on the point xi∗ closest to the boundary ℓ and its contrastive example. This allows us to bound the algorithm’s expected error, and in particular implies that the algorithm attains the same expected error un-der the probabilistic AMDM as under the deterministic one. Finally, we use Lemma 4.12 to convert the high-probability analysis from Theorem 3.7 into bounds in expectation. 
+
+Theorem 4.14. Let CHHS = {1{⟨ ω, x⟩ ≥ 0} | ω ∈ Rk} for 
+
+X = B(0k, 12 ) be the class of homogeneous half-spaces. Let 
+
+f : R≥0 → R≥0 be such that f (x) ≤ x2 and g(x) := f (x)
+
+> x
+
+is non-decreasing and invertible. Then 
+
+Mexp ,passive 
+
+h
+
+CHHS , CE d,f 
+
+> prop
+
+i
+
+(ε) ∈ O log(1 /ε )
+
+g−1   πε 
+
+> 2
+
+!
+
+.
+
+## 5. Conclusion 
+
+We studied learning from contrastive examples under the minimum distance paradigm, moving beyond the idealized setting in which the learner always receives an exact closest contrastive point. We introduced and analyzed two per-turbed variants of this model, namely the deterministic ap-proximate minimum distance mechanism and its probabilis-tic counterpart. While learning under the exact minimum distance model can be trivial for the concept classes we study, these perturbations render the problem non-trivial and lead to a richer sample-complexity landscape. Despite the added difficulty, both noisy mechanisms still yield substantial improvements over membership query learning. For thresholds, homogeneous half-spaces, and general half-spaces, we established upper and lower bounds showing that contrastive feedback can significantly reduce the number of queries required to learn an accurate classifier. Beyond these quantitative bounds, our analysis also reveals a qualitative separation between two performance notions in the probabilistic model. Specifically, we observed that the expected number of samples required to guarantee error at most ε can differ markedly from the number of samples sufficient to achieve expected error at most ε. This indicates that under probabilistic perturbations, the error after a fixed number of queries can be highly skewed—typically small, but occasionally very large. 8Noisy Models For Contrastive Learning 
+
+## References 
+
+Abate, A., David, C., Kesseli, P., Kroening, D., and Pol-green, E. Counterexample guided inductive synthesis modulo theories. In Proceedinsg of the 30th Interna-tional Conference on Computer Aided Verification (CAV) ,pp. 270–288, 2018. Aguilera-Ventura, C., Liu, X., Lorini, E., and Rozplokhas, D. A non-interventionist approach to causal reasoning based on lewisian counterfactuals. In Proceedings of the 34th International Joint Conference on Artificial Intelligence (IJCAI) , 2025. Alon, N., Avdiukhin, D., Elboim, D., Fischer, O., and Yaroslavtsev, G. Optimal sample complexity of con-trastive learning. ArXiv , abs/2312.00379, 2023. Ash, J. T., Goel, S., Krishnamurthy, A., and Misra, D. Inves-tigating the role of negatives in contrastive representation learning. In Proceedings of the International Conference on Artificial Intelligence and Statistics (AISTATS) , pp. 7187–7209, 2022. Balcan, M. and Long, P. M. Active and passive learning of linear separators under log-concave distributions. In 
+
+Proceedings of the 26th Annual Conference on Learning Theory (COLT) , pp. 288–316, 2013. Balcan, M.-F., Broder, A., and Zhang, T. Margin based active learning. In Proceedings of the Annual Conference on Computational Learning Theory (COLT) , pp. 35–50, 2007. Dasgupta, S. and Sabato, S. Robust learning from discrim-inative feature feedback. In Proceedings of the 23rd International Conference on Artificial Intelligence and Statistics (AISTATS) , pp. 973–982, 2020. Dasgupta, S., Kalai, A. T., and Monteleoni, C. Analysis of perceptron-based active learning. In Proceedings of the Annual Conference on Computational Learning Theory (COLT) , pp. 249–263, 2005. Diakonikolas, I., Kane, D. M., and Ma, M. Active learn-ing of general halfspaces: Label queries vs membership queries. In Advances in Neural Information Processing Systems (NeurIPS) , volume 37, pp. 49180–49213, 2024. HaoChen, J. Z., Wei, C., Gaidon, A., and Ma, T. Provable guarantees for self-supervised deep learning with spectral contrastive loss. In Proceedings of the Annual Conference on Neural Information Processing Systems (NeurIPS) , pp. 5000–5011, 2021. Hopkins, M., Kane, D., and Lovett, S. The power of compar-isons for actively learning linear classifiers. In Advances in Neural Information Processing Systems (NeurIPS) , vol-ume 33, pp. 6342–6353, 2020. Huber, T., Demmler, M., Mertes, S., Olson, M. L., and An-dré, E. GANterfactual-RL: Understanding reinforcement learning agents’ strategies through visual counterfactual explanations. In Proceedings of the International Con-ference on Autonomous Agents and Multiagent Systems (AAMAS) , pp. 1097–1106, 2023. Jiang, J., Leofante, F., Rago, A., and Toni, F. Robust coun-terfactual explanations in machine learning: A survey. In 
+
+Proceedings of the 33rd International Joint Conference on Artificial Intelligence (IJCAI) , pp. 8086–8094, 2024. Mansouri, F., Simon, H. U., Singla, A., Chen, Y., and Zilles, S. Formal models of active learning from contrastive examples. In Advances in Neural Information Processing Systems (NeurIPS) , 2025. Margatina, K., Vernikos, G., Barrault, L., and Aletras, N. Active learning by acquiring contrastive examples. In 
+
+Proceedings of the Conference on Empirical Methods in Natural Language Processing (EMNLP) , pp. 650–663, 2021. Motwani, R. and Raghavan, P. Randomized algorithms. 
+
+ACM Computing Surveys , 28(1):33–37, 1996. Poulis, S. and Dasgupta, S. Learning with feature feed-back: from theory to practice. In Proceedings of the 20th International Conference on Artificial Intelligence and Statistics (AISTATS) , pp. 1104–1113, 2017. Tan, J., Xu, S., Ge, Y., Li, Y., Chen, X., and Zhang, Y. Coun-terfactual explainable recommendation. In Proceedings of the 30th ACM International Conference on Informa-tion & Knowledge Management (CIKM) , pp. 1784–1793, 2021. Tirnauca, C. Language Learning with Correction Queries .PhD thesis, Universitat Rovira i Virgili, 2009. Wang, C., Singla, A., and Chen, Y. Teaching an active learner with contrastive examples. In Advances in Neural Information Processing Systems (NeurIPS) , 2021. Wang, Y., Qiu, X., Yue, Y., Guo, X., Zeng, Z., Feng, Y., and Shen, Z. A survey on natural language counterfactual gen-eration. In Findings of the Association for Computational Linguistics (EMNLP) , pp. 4798–4818, 2024. 9Noisy Models For Contrastive Learning 
+
+## A. Active Contrastive Complexity Bounds for Specific Classes 
+
+In this section, we apply the results obtained in Sections 3.1, 4.1, and 4.2 for active contrastive learning with respect to 
+
+CE d,f  
+
+> app
+
+and CE d,f 
+
+> prop
+
+. We instantiate our bounds for two representative families of noise functions: (i) p satisfying  
+
+> r1+ c′
+> 4
+
+≤ p(r) ≤ r1+ c 
+
+> 4
+
+, where c, c ′ > 0, and (ii) e defined by e(r) := e− 1 
+
+> r
+> 4
+
+. A summary of these results appears in Table 1. 
+
+Example A.1 . The active contrastive sample complexity of thresholds with respect to the deterministic AMDM is 
+
+MPr ,active 
+
+h
+
+Cthresh , CE d, p
+
+> app
+
+i
+
+(ε, δ ) = Θ 
+
+
+
+log log 1
+
+ε
+
+
+
+,
+
+MPr ,active 
+
+h
+
+Cthresh , CE d, e
+
+> app
+
+i
+
+(ε, δ ) = Θ 
+
+
+
+log ∗ 1
+
+ε
+
+
+
+.
+
+Proof. Let ˜p(r) := p ◦ (p + I)−1  r
+
+> 2
+
+ (p applied to (1) ). Since ˜p(r) ≤ p(r) ≤ r(1+ c), we obtain 
+
+˜p(n)(1) ≤ ˜p(n−1) 
+
+ 14
+
+
+
+≤   14
+
+(1+ c)(n−1) 
+
+.
+
+Hence, using Theorem 3.1 we derive 
+
+MPr ,active 
+
+h
+
+Cthresh , CE d, p
+
+> app
+
+i
+
+(ε, δ ) = τ˜p(1 → 2ε)
+
+≤ log 4 log (1+ c)(2 ε) + 1 
+
+On the other hand, since p ≤ I, we have (p + I)−1 ≥ I/2,
+
+and thus 
+
+˜p(r) ≥ p(r/ 4) 
+
+Specifically, for r ≤ 14 we have 
+
+˜p(r) ≥ p(r/ 4) ≥ p(r2) ≥ r3+2 c′
+
+.
+
+Therefore, 
+
+˜p(n)(1) ≥ ˜p(n−1)  p  14
+
+ ≥   14
+
+(3+2 c′)n
+
+,
+
+and consequently, by Theorem 3.1, 
+
+MPr ,active 
+
+h
+
+Cthresh , CE d, p
+
+> app
+
+i
+
+(ε, δ ) = τ˜p(1 → 2ε)
+
+≥ log 4 log (3+2 c′)(2 ε).
+
+For e, define ˜e(r) := e ◦ (e + I)−1  r
+
+> 2
+
+. Combining the fact that e(r/ 2) ≤ ˜e(r) ≤ e(r) with Theorem 3.1 completes the proof. 
+
+Example A.2 . The active contrastive sample complexity of half-spaces under the deterministic AMDM satisfies 
+
+MPr ,active 
+
+h
+
+CHS , CE d, p
+
+> app
+
+i
+
+(ε, δ ) = O
+
+
+
+log log 1
+
+ε + log k
+
+
+
+,
+
+MPr ,active 
+
+h
+
+CHS , CE d, p
+
+> app
+
+i
+
+(ε, δ ) = Ω 
+
+
+
+log log 1
+
+ε − log k
+
+
+
+,
+
+MPr ,active 
+
+h
+
+CHS , CE d, e
+
+> app
+
+i
+
+(ε, δ ) = O
+
+
+
+log ∗ 1
+
+ε + log ∗ k
+
+
+
+,
+
+MPr ,active 
+
+h
+
+CHS , CE d, e
+
+> app
+
+i
+
+(ε, δ ) = Ω 
+
+
+
+log ∗ 1
+
+ε − log ∗ k
+
+
+
+.
+
+Proof. For the class of half-spaces, all lower bounds follow by combining the corresponding lower bounds for thresh-olds with Theorem 3.5. For the upper bound with p, we apply Theorem 3.4 and use p(r) ≤ r1+ c to obtain 
+
+MPr ,active 
+
+h
+
+CHS , CE d, p
+
+> app
+
+i
+
+(ε, δ )= τp
+
+ 12 →
+
+ ε
+
+2k
+
+ 1
+
+> c
+
+
+
+≤ log 2 log (1+ c)
+
+ 2k
+
+ε
+
+1/c !
+
+= log 2
+
+log (1+ c)(2)  k + log 2
+
+  1
+
+> ε
+
+ 
+
+c
+
+!
+
+= O
+
+
+
+log log 1
+
+ε + log k
+
+
+
+.
+
+For e, note that for all r ≤ 12 we have e(r) ≤ r1+ c for 
+
+c = 1 . Thus, we can use Theorem 3.4 and derive 
+
+MPr ,active 
+
+h
+
+CHS , CE d, e
+
+> app
+
+i
+
+(ε, δ ) = τe
+
+ 12 →
+
+ ε
+
+2k
+
+
+
+= O
+
+
+
+log ∗ 2k
+
+ε
+
+
+
+= O
+
+
+
+log ∗ 1
+
+ε + log ∗ k
+
+
+
+.
+
+Example A.3 . The active expected contrastive sample complexity of thresholds with respect to the probabilistic AMDM satisfies 
+
+Mexp ,active 
+
+h
+
+Cthresh , CE d, p
+
+> prop
+
+i
+
+(ε) = Θ 
+
+r
+
+log 1
+
+ε
+
+!
+
+Mexp ,active 
+
+h
+
+Cthresh , CE d, e
+
+> prop
+
+i
+
+(ε) = Θ 
+
+
+
+log log 1
+
+ε
+
+
+
+.
+
+10 Noisy Models For Contrastive Learning 
+
+Proof. For p, denote g(x) := p(x)/x . Then 
+
+2−⌊ n/ 2⌋− 1
+
+> ⌊n/ 2⌋
+
+Y
+
+> i=1
+
+g(2 −i) ≤ 2−⌊ n/ 2⌋− 1
+
+> ⌊n/ 2⌋
+
+Y
+
+> i=1
+
+2−(ci +2) 
+
+= 2 −Ω( n2),
+
+and 
+
+2−(2 n+1) 
+
+> n
+
+Y
+
+> i=1
+
+g(2 −i) ≥ 2−(2 n+1) 
+
+> n
+
+Y
+
+> i=1
+
+2−(c′i+2) = 2 −O(n2).
+
+(2) Therefore, by plugging in Theorem 4.2 and Theorem 4.3 we get 
+
+Mexp ,active 
+
+h
+
+Cthresh , CE d, p
+
+> prop
+
+i
+
+(ε, δ ) = Θ 
+
+r
+
+log 1
+
+ε
+
+!
+
+Also, for g(x) = e(x)/x we have 
+
+2−⌊ n/ 2⌋− 1
+
+> ⌊n/ 2⌋
+
+Y
+
+> i=1
+
+g(2 −i) = 2 −⌊ n/ 2⌋− 1
+
+> ⌊n/ 2⌋
+
+Y
+
+> i=1
+
+2i+2 exp( −2i)= exp 
+
+
+
+−2Ω( n)
+
+Similarly 
+
+2−(2 n+1) 
+
+> n
+
+Y
+
+> i=1
+
+g(2 −i) = exp 
+
+
+
+−2O(n)
+
+Therefore, 
+
+Mexp ,active 
+
+h
+
+Cthresh , CE d, e
+
+> prop
+
+i
+
+(ε, δ ) = Θ 
+
+
+
+log log 1
+
+ε
+
+
+
+.
+
+Example A.4 . The expected sample requirement for accu-racy ε of thresholds with respect to the probabilistic AMDM is bounded from above by 
+
+Nactive [Cthresh , CE d, p
+
+> prop
+
+]( ε, δ ) = O
+
+
+
+log log 1
+
+ε
+
+
+
+Nactive [Cthresh , CE d, e
+
+> prop
+
+]( ε, δ ) = O
+
+
+
+log ∗ 1
+
+ε
+
+
+
+Moreover, the active contrastive sample complexity of thresholds with respect to the probabilistic AMDM satisfies 
+
+Nactive [Cthresh , CE d, p
+
+> prop
+
+]( ε, δ ) = O
+
+
+
+log log 1
+
+ε + log 1
+
+δ
+
+
+
+MPr ,active [Cthresh , CE d, p
+
+> prop
+
+]( ε, δ ) = Ω log log 1
+
+ε +
+
+r
+
+log 1
+
+δ
+
+!
+
+Nactive [Cthresh , CE d, e
+
+> prop
+
+]( ε, δ ) = O
+
+
+
+log ∗ 1
+
+ε + log 1
+
+δ
+
+
+
+MPr ,active [Cthresh , CE d, e
+
+> prop
+
+]( ε, δ ) = Ω 
+
+
+
+log ∗ 1
+
+ε + log log 1
+
+δ
+
+
+
+Proof. With arguments similar to those used in Exam-ple A.1, it is straightforward to see that 
+
+τ4p(1 → 2ε) = O(log log 1 
+
+> ε
+
+)
+
+and 
+
+τ4e(1 → 2ε) = O(log ∗ 1 
+
+> ε
+
+).
+
+Plugging these into Theorem 4.2 and Corollary 4.7 yields the upper bounds. Since learning is harder in the probabilistic AMDM than in the deterministic AMDM, we can use Example A.1 to derive 
+
+MPr ,active [Cthresh , CE d, p
+
+> prop
+
+]( ε, δ ) = Ω 
+
+
+
+log log 1
+
+ε
+
+
+
+. (3) Denote g(x) := p(x)/x . Similar to the argument in (2) of Example A.3, we have 
+
+min 
+
+(
+
+n ≥ 0
+
+> n
+
+Y
+
+> i=1
+
+g(4 −i) ≤ δ
+
+)
+
+= Ω 
+
+r
+
+log 1
+
+δ
+
+!
+
+.
+
+Plugging this into Corollary 4.4 gives 
+
+MPr ,active [Cthresh , CE d, p
+
+> prop
+
+]( ε, δ )
+
+≥ Ω min 
+
+r
+
+log 1
+
+δ , log 1
+
+ε
+
+!! 
+
+.
+
+Combining this with (3) yields our lower bound for 
+
+MPr ,active [Cthresh , CE d, p
+
+> prop
+
+]( ε, δ ). The proof for e is iden-tical. 
+
+Example A.5 . The expected sample requirement for ac-curacy ε of half-spaces with respect to the probabilistic AMDM is bounded from above by 
+
+Nactive [CHS , CE d, p
+
+> prop
+
+]( ε, δ ) = O
+
+
+
+log log 1
+
+ε + log k
+
+
+
+Nactive [CHS , CE d, e
+
+> prop
+
+]( ε, δ ) = O
+
+
+
+log ∗ 1
+
+ε + log ∗ k
+
+
+
+Moreover, the active contrastive sample complexity of half-spaces with respect to the probabilistic AMDM satisfies 
+
+MPr ,active [CHS , CE d, p
+
+> prop
+
+]( ε, δ ) = O
+
+
+
+log log 1
+
+ε + log 1
+
+δ + log k
+
+
+
+MPr ,active [CHS , CE d, p
+
+> prop
+
+]( ε, δ ) = Ω 
+
+
+
+log log 1
+
+ε − log k
+
+
+
+MPr ,active [CHS , CE d, e
+
+> prop
+
+]( ε, δ ) = O
+
+
+
+log ∗ 1
+
+ε + log 1
+
+δ + log ∗ k
+
+
+
+MPr ,active [CHS , CE d, e
+
+> prop
+
+]( ε, δ ) = Ω 
+
+
+
+log ∗ 1
+
+ε − log ∗ k
+
+
+
+11 Noisy Models For Contrastive Learning 
+
+Proof. Denote ˜p = 3 p(2 x). Again, with arguments similar to those used in Example A.1, it is straightforward to see that 
+
+τ˜p
+
+ 12 →
+
+ ε
+
+2k−1
+
+ 1
+
+> c
+
+
+
+= O(log log 1 
+
+> ε
+
++ log k)
+
+Similarly denote ˜e = 3 e(2 x), then 
+
+τ˜e
+
+ 12 →
+
+ ε
+
+2k−1
+
+ 1
+
+> c
+
+
+
+= O(log ∗ 1 
+
+> ε
+
++ log ∗ k)
+
+Plugging these into Theorem 4.9 and Corollary 4.11 yields the upper bounds. The lower bounds follow immediately from Example A.2. 
+
+## B. Missing Proofs from Section 3.1 
+
+Theorem 3.1. Let f : R≥0 → R≥0 be a non-decreasing and invertible function 4. Define ˜f : R≥0 → R≥0 by 
+
+˜f (r) := f ◦ (f + I)−1  r
+
+> 2
+
+ , (1) 
+
+where I denotes the identity function. Then 
+
+MPr ,active 
+
+h
+
+Cthresh , CE d,f 
+
+> app
+
+i
+
+(ε, δ ) = τ ˜f (1 → 2ε) .
+
+Proof. Denote m = τ ˜f (1 → 2ε).
+
+Upper bound: For a time t, suppose the valid positions of 
+
+θ span an interval It = [ a, b ] ⊆ [0 , 1] . We first show that there exists an xt such that for all possible valid contrastive examples x′ 
+
+> t
+
+for xt, the valid positions for θ will span an interval It+1 such that 
+
+|It+1 | ≤ ˜f (|It|) .
+
+Proving this completes the argument: after m queries, every valid position will span an interval Im of length at most 2ε.Consequently, the threshold corresponding to the center of 
+
+Im is guaranteed to have error less than ε with probability 1. To prove the claim, let t ≥ 1 and choose xt = a+b 
+
+> 2
+
+. With-out loss of generality, suppose the contrastive example x′
+
+> t
+
+received by the learner satisfies x′ 
+
+> t
+
+> x t. Since the labels of x′ 
+
+> t
+
+and xt are different, θ always lies between xt and 
+
+x′
+
+> t
+
+. Therefore |x′ 
+
+> t
+
+− θ| + |xt − θ| = |x′ 
+
+> t
+
+− xt|. Moreover, 
+
+|x′ 
+
+> t
+
+− θ| ≤ f  |xt − θ|. Thus, f −1 |x′ 
+
+> t
+
+− θ| + |x′ 
+
+> t
+
+− θ| ≤ |xt − x′
+
+> t
+
+|. It follows that 
+
+|x′ 
+
+> t
+
+−θ| ≤ (f −1 +I)−1 |xt −x′
+
+> t
+
+| = f ·(f +I)−1 |xt −x′
+
+> t
+
+|
+
+Hence, the refined interval is 
+
+It+1 =
+
+h
+
+x′ 
+
+> t
+
+− f ◦ (f + I)−1 |xt − x′
+
+> t
+
+|, x ′
+
+> t
+
+i
+
+∩ It.
+
+> 4
+
+Invertibility assumptions are made only for ease of presenta-tion. Without invertibility, all proofs continue to hold by replacing every h−1(r) for any function h with inf {x ≥ 0 : h(x) ≥ r}.
+
+The size of It+1 is maximized when x′ 
+
+> t
+
+= b, yielding 
+
+|It+1 | ≤ f ◦ (f + I)−1  b−a
+
+> 2
+
+ = ˜f (|It|) .
+
+Lower bound: At time t, suppose the valid positions of θ
+
+span an interval It = [ a, b ] ⊆ [0 , 1] . We first show that for every xt ∈ X there exists a valid contrastive example x′ 
+
+> t
+
+for 
+
+xt such that the valid positions for θ will span an interval 
+
+It+1 satisfying 
+
+|It+1 | ≥ ˜f (|It|) .
+
+Proving this completes the argument: after m queries, the valid positions will span an interval Im of length greater than 2ε. Consequently, 
+
+Pr[ 1{x ≤ a}̸ = 1{x ≤ b}] > 2ε, 
+
+which implies that every function will have error more than 
+
+ε with respect to some ℓ ∈ { 1{x ≤ a}, 1{x ≤ b}} .To prove the claim, without loss of generality, suppose xt ≤
+
+(a + b)/2. Assume the contrastive example is given by 
+
+x′ 
+
+> t
+
+= b. By a reasoning similar to the upper bound argument, the refined interval is 
+
+It+1 =
+
+h
+
+b − f ◦ (f + I)−1 b − xt
+
+, b 
+
+i
+
+,
+
+which yields |It+1 | ≥ ˜f (|It|).
+
+Lemma B.1. Let X = B 0k, 12
+
+, x ∈ X , ω ∈ Rk, and 
+
+b ∈ R. Consider the half-space C∗(z) := 1{⟨ ω, z⟩ ≥ b}.
+
+Let xproj := x− ⟨ω, x⟩− b 
+
+> ∥ω∥2
+
+ω denote the orthogonal projection of x onto the boundary hyperplane of C∗. Let x′ ∈ X be any point such that C∗(x′)̸ = C∗(x). Then (i) The angle ∠(x′, x, xproj ) is at most 
+
+min 
+
+
+
+tan −1
+
+ ∥x′ − xproj ∥∥x − xproj ∥
+
+
+
+, cos −1
+
+ ∥x − xproj ∥∥x − x′∥
+
+ 
+
+.
+
+(ii) Let C be the half-space whose boundary hyperplane is perpendicular to x′ − x and passes through x′, and such that C(x) = C∗(x). Then 
+
+err( C, C ∗) ≤ 2k ∥x′ − xproj ∥∥x − xproj ∥ .
+
+(iii) Suppose b = 0 . Let C0 be a homogeneous half-space whose boundary hyperplane is perpendicular to x′ − x
+
+such that C0(x) = C∗(x). Then 
+
+err( C0, C ∗) ≤ ∥x′ − xproj ∥
+
+π ∥x − xproj ∥ .
+
+12 Noisy Models For Contrastive Learning 
+
+Proof. Consider all x′ with fixed distance from xproj . For such x′, the angle ∠(x′, x, xproj ) is maximized when 
+
+x′ − xproj is orthogonal to x − xproj (see Figure 1a for an illustration). Thus, ∠(x′, x, xproj ) is always bounded from above by 
+
+tan −1
+
+ ∥x′ − xproj ∥∥x − xproj ∥
+
+
+
+≤ ∥x′ − xproj ∥∥x − xproj ∥ . (4) For x′ with fixed distance from x, the angle ∠(x′, x, xproj )
+
+is also maximized in the same situation. Therefore, it is also bounded from above by 
+
+cos −1
+
+ ∥x − xproj ∥∥x − x′∥
+
+
+
+.
+
+This completes the proof of the first part. Next, observe that the angles between C0 and C∗ and be-tween C and C∗ both equal ∠(x′, x, xproj ). Therefore, from (4) we derive 
+
+err( C0, C ∗) ≤ ∥x′ − xproj ∥
+
+π∥x − xproj ∥ ,
+
+which completes the third part of the lemma. It remains to prove the second part of the lemma. Let C′ de-note the half-space parallel to C∗ that passes through x′ and satisfies C′(x) = C∗(x) (see Figure 1b for an illustration of C′). Note that the mass of the region between C′ and C∗
+
+inside X is at most ∥x′ − xproj ∥. Therefore, 
+
+err( C′, C ∗) ≤ ∥x′ − xproj ∥
+
+VOL( X ) ≤ 2k∥x′ − xproj ∥≤ 2k−1∥x′ − xproj ∥∥x − xproj ∥ .
+
+(5) Now let B′ = B(x′, 1) ⊇ X . Since err( C, C ′) is the mea-sure of the region between C and C′ inside X , normalized by VOL( X ), it is at most the corresponding region inside 
+
+B′, normalized by VOL( X ). Moreover, the region between 
+
+C and C′ in B′ is simply the angle between C and C′
+
+(which is ∠(x′, x, xproj )) multiplied by VOL( B′) 
+
+> π
+
+. Hence, by (4) we have 
+
+err( C, C ′) ≤ ∥x′ − xproj ∥ VOL( B′)
+
+∥x − xproj ∥ VOL( X ) π
+
+= 2k∥x′ − xproj ∥∥x − xproj ∥ π ≤ 2k−1∥x′ − xproj ∥∥x − xproj ∥ .
+
+(6) Combining (5) and (6) completes the proof. 
+
+Corollary B.2. Let f : R≥0 → R≥0 be a non-decreasing function such that f (x) ≤ x1+ c where c > 0. Then 
+
+MPr ,active 
+
+h
+
+CHHS , CE d,f 
+
+> app
+
+i
+
+(ε, δ ) = 
+
+MPr ,active 
+
+h
+
+CHHS , CE d,f 
+
+> prop
+
+i
+
+(ε, δ ) = 1 .
+
+Proof. Choose any point x with ∥x∥ = r, where r := (πεδ )1/c , and let x′ be its contrastive example. Then 
+
+f (r)
+
+r ≤ r1+ c
+
+r = rc = πεδ. 
+
+Even under the probabilistic AMDM we have E∥x′ −
+
+xproj ∥ ≤ f (r), and hence by Markov’s inequality, 
+
+Pr 
+
+
+
+∥x′ − xproj ∥ ≥ f (r)
+
+δ
+
+
+
+≤ δ. 
+
+Therefore, with probability at least 1 − δ,
+
+∥x′ − xproj ∥∥x − xproj ∥ ≤ f (r)/δ r ≤ πε. 
+
+Plugging this into Lemma 3.2 (iii) completes the proof. 
+
+Theorem 3.5. For any non-decreasing function f : R≥0 →
+
+R≥0, we have 
+
+MPr ,active [CHS , CE d,f 
+
+> app
+
+] ( ε, δ )
+
+≥ M Pr ,active [Cthresh , CE d,f 
+
+> app
+
+]  2kε, δ  .
+
+Proof. Set ε′ = 2 kε. For any p ∈ − 14 , 14
+
+ and x ∈ Rk,define Cp(x) := 1{x[0] ≤ p}. Define the subclass 
+
+C′ := Cp p ∈ − 14 , 14
+
+ ,
+
+and let ℓ be a concept in C′.Since the version space depends only on the 0-th coordinate of the samples, the class C′ effectively reduces to threshold functions on the interval − 14 , 14
+
+. By Theorem 3.1, there exists a deterministic AMDM oracle such that, regardless of the learner’s queries, after 
+
+MPr ,active [Cthresh , CE d,f 
+
+> noisy -min
+
+]( ε′, δ )
+
+queries there exist a, b ∈ − 14 , 14
+
+ with b − a ≥ ε′ (since the length of − 14 , 14
+
+ is 12 , the bounds scale accordingly by a factor of 12 ) such that the subset {Cp | p ∈ [a, b ]} remains a valid version space for ℓ.Observe that the rectangle [a, b ] × − 14 , 14
+
+k−1 is contained in the disagreement region between Ca and Cb over X .Therefore, 
+
+Pr[ Ca(x)̸ = Cb(x)] > ε′
+
+2k−1VOL( X ) ≥ 2ε. 
+
+Consequently, by an argument analogous to that of Theo-rem 3.1, every learning algorithm incurs error greater than ε
+
+for at least one of the concepts in {Ca, C b}.13 Noisy Models For Contrastive Learning 
+
+## C. Missing Proofs from Section 3.2 
+
+Theorem 3.6. For any non-decreasing and invertible func-tion f : R≥0 → R≥0, and for all δ ∈ (0 , 1] and ε ≤
+
+min 
+
+ f ( 14 )2 , 14
+
+
+
+, we have 
+
+MPr ,passive 
+
+h
+
+Cthresh , CE d,f 
+
+> app
+
+i
+
+(ε, δ ) ∈ O
+
+ log(1 /δ )min( f −1(ε), ε )
+
+
+
+,
+
+MPr ,passive 
+
+h
+
+Cthresh , CE d,f 
+
+> app
+
+i
+
+(ε, δ ) ∈ Ω
+
+ log(1 /δ )min ( f −1(2 ε) , ε )
+
+
+
+.
+
+Proof. Upper bound: Without loss of generality, assume there exists a xi with ℓ(xi) = 1 . Let x∗ denote the maxi-mum such xi. If f (ε) ≤ ε, the learner outputs the threshold corresponding to the contrastive example for x∗. Otherwise, it outputs the threshold corresponding to x∗.Define ε′ = min( f −1(ε), ε ). For m = log(1 /δ ) 
+
+> ε′
+
+, the proba-bility that after m random samples we have x∗ < θ − ε′ is at most 
+
+(1 − ε′)m ≤ e−ε′m = δ. 
+
+By the definition of contrastive examples, this completes the proof of the upper bound. 
+
+Lower bound: Denote 
+
+x− = min  
+
+> i:ℓ(xi)=0
+
+xi, x+ = max  
+
+> i:ℓ(xi)=1
+
+xi .
+
+Define r := x−−x+ 
+
+> 2
+
+. Suppose the contrastive example for every negatively labeled point is ˜x− := x−+x+−f (r)2 , and for every positively labeled point is ˜x+ := x−+x++f (r)2 .
+
+We first show that with this choice of con-trastive examples all points in the interval 
+
+I =
+
+h
+
+max( x+, ˜x−), min( x−, ˜x+)
+
+i
+
+are valid loca-tions for θ. Denote r′ = |I|. Notice that if f (r)2 ≤ r,then r′ = 2r; otherwise, r′ = f (r). Therefore, 
+
+r′ = min  f (r), 2r.
+
+Note that, by definition, if ˜x+ is a valid contrastive example for x+, it must also be a valid contrastive example for every 
+
+positively labeled point. Therefore, the contrastive examples for negative points restrict the location of valid θ to 
+
+I+ := max  x+, ˜x+ − f  ˜x+ − x+ , ˜x+
+
+Observe that 
+
+˜x+−f  ˜x+ − x+ = ˜ x+−f
+
+
+
+r + f (r)2
+
+
+
+≤ ˜x+−f (r) = ˜ x−
+
+This implies 
+
+h
+
+max( x+, ˜x−), ˜x+
+
+i
+
+⊆ I+.Similarly, the contrastive examples for negative points re-strict the location of valid θ to a superset of 
+
+h
+
+˜x−, min( x−, ˜x+)
+
+i
+
+.
+
+This completes the proof of the claim. Consequently, by an argument analogous to that of Theo-rem 3.1, every learning algorithm incurs error at least r′ 
+
+> 2
+
+.Note if r ≥ ε′ for ε′ := min  f −1(2 ε), ε  we would have 
+
+r′ ≥ 2ε. Thus it remains to show that after m ≤ log(1 /δ )4ε′
+
+queries, the probability that r > ε ′ would be at least δ.Without loss of generality, suppose θ > 1/2. Note that the probability of r > ε ′ is at least the probability of |x+ − θ| >
+
+2ε′, which for ε′ < 1/4 is bounded from below by 
+
+(1 − 2ε′)m ≥ e−4ε′m ≥ δ. 
+
+This completes the proof. 
+
+Theorem 3.7. Let f : R≥0 → R≥0 be such that f (x) ≤ x2
+
+and g(x) := f (x) 
+
+> x
+
+is non-decreasing and invertible. Then 
+
+MPr ,passive 
+
+h
+
+CHHS , CE d,f 
+
+> app
+
+i
+
+(ε, δ ) ∈ O
+
+ log(1 /δ )
+
+g−1 (πε )
+
+
+
+.
+
+Proof. Let 
+
+x∗ = argmin xi ∥xi − x′
+
+> i
+
+∥
+
+be the primary example with minimal distance to its con-trastive example, and ˜x∗ be the contrastive example for x∗.Our algorithm simply outputs the homogeneous half space 
+
+C perpendicular to ˜x∗ − x∗.Set ε′ := g−1(πε )2 . Note that for any a ∈ (0 , 0.5) , the points at distance a from ℓ form a (k − 1) -dimensional sphere whose radius decreases as a increases. Thus, the probability of a point sampled from U[X ] being at most ε′ away from ℓ
+
+is at most 2ε′.Therefore, for m = ln(1 /δ )2ε′ , the probability of 
+
+min x∈S dist( x, ℓ ) > ε ′ is at most 
+
+(1 − 2ε′)m ≤ e−2ε′m ≤ δ. 
+
+Thus, with probability at least 1 − δ, we have ∥˜x∗ − x∗∥ ≤ 
+
+ε′ + f (ε′) ≤ 2ε′. Due to Lemma 3.2 (iii), with probability at least 1 − δ,
+
+err( C, ℓ ) ≤ f (2 ε′)2πε ′ = ε. 
+
+## D. Missing Proofs from Section 4.1 
+
+Lemma D.1. Let f, g : R → R be convex and non-decreasing functions such that f, g ≥ 0. Then f · g is also convex. 
+
+14 Noisy Models For Contrastive Learning 
+
+Proof. Note that for all x, y ∈ R and a ∈ [0 , 1] we have 
+
+f.g (ax + (1 − a)y)
+
+> (i)
+
+≤ (af (x) + (1 − a)f (y)) · (ag (x) + (1 − a)g(y)) = a2f (x)g(x) + (1 − a)2f (y)g(y)+ a(1 − a)( f (x)g(y) + f (y).g (x)) = af (x)g(x) + (1 − a)f (y)g(y) + a(1 − a) f (x)g(y)+ f (y)g(x) − f (x)g(x) − f (y)g(y)
+
+= af (x)g(x) + (1 − a)f (y)g(y)
+
+− a(1 − a) g(y) − g(x)  f (y) − f (x)
+
+> (ii )
+
+≤ af.g (x) + (1 − a)f.g (y)
+
+Here (i) holds due to the convexity of f and g and the fact that f, g ≥ 0, and (ii) is due to the non-decreasing property of f and g.
+
+Lemma D.2. Let Z be a random variable supported on 
+
+[a, b ]. Then for any convex function f : R → R we have 
+
+E[f (Z)] ≤ E[Z] − ab − a f (b) + b − E[Z]
+
+b − a f (a).
+
+Proof. Note that for all x ∈ [a, b ], we can re write x as 
+
+x = x − ab − a b + b − xb − a a. 
+
+Due to the convexity of f , this implies 
+
+f (x) = f
+
+ x − ab − a b + b − xb − a a
+
+
+
+≤ x − ab − a f (b)+ b − xb − a f (a)
+
+Therefore, 
+
+E[f (Z)] ≤ E
+
+ Z − ab − a f (b) + b − Zb − a f (a)
+
+
+
+= E[Z] − ab − a f (b) + b − E[Z]
+
+b − a f (a)
+
+This completes the proof. 
+
+Theorem 4.2. Let f : R≥0 → R≥0 be such that f (x) ≤ x
+
+and g(x) := f (x) 
+
+> x
+
+is non-decreasing and convex. Then 
+
+Mexp ,active 
+
+h
+
+Cthresh , CE d,f 
+
+> prop
+
+i
+
+(ε) ≤
+
+min 
+
+n ≥ 0 2−⌊ n/ 2⌋− 1
+
+> ⌊n/ 2⌋
+
+Y
+
+> i=1
+
+g(2 −i) ≤ ε
+
+ .
+
+Proof. Before proceeding to the proof, we first show that for any x, y ≥ 0. f (x + y) ≥ f (x) + f (y). Note that since 
+
+g is non-decreasing we have f (x+y) 
+
+> x+y
+
+≥ f (x) 
+
+> x
+
+. Thus, 
+
+x · f (x + y)
+
+x + y ≥ f (x) (7) Similarly, 
+
+y · f (x + y)
+
+x + y ≥ f (y) (8) By adding (7) to (8) we derive 
+
+f (x + y) ≥ f (x) + f (y) (9) Let m be an arbitrary number. Starting with I0 = [0 , 1] , in each subroutine t ∈ [m′] (where m′ = ⌊m/ 2⌋), suppose 
+
+θ ∈ It = [ at, b t]. The learner queries x2t−1 = at+bt 
+
+> 2
+
+.Without loss of generality, suppose the label of x2t−1 is 1,and the learner receives a contrastive example x′
+
+> 2t−1
+
+. Then the learner queries x2t = bt and receives x′
+
+> 2t
+
+.Therefore, given a fixed x′ 
+
+> 2t−1
+
+and x′ 
+
+> 2t
+
+we have 
+
+E[x′ 
+
+> 2t−1
+
+− x′
+
+> 2t
+
+] ≤ f (θ − x2t−1) + f (x2t − θ)
+
+> (9)
+
+≤ f (x2t − x2t−1) = f
+
+ rt
+
+2
+
+
+
+,
+
+where rt = bt − at. Hence, after this round the next interval is 
+
+It+1 = [min( x′
+
+> 2t
+
+, x 2t−1), max( x′
+
+> 2t−1
+
+, x 2t)] ,
+
+so that rt+1 ∈ [0 , r t/2] and 
+
+E[rt+1 | rt] ≤ f
+
+ rt
+
+2
+
+
+
+(10) If the learner outputs the midpoint of Im′ , its expected error is 12 E[rm′ ].We now prove by induction that for all t ≤ m′ we have 
+
+E[rm′ ] ≤ E
+
+"
+
+rm′−t
+
+2t ·
+
+> t
+
+Y
+
+> i=1
+
+g
+
+ rm′−t
+
+2i
+
+#
+
+.
+
+Base case. For t = 1 :
+
+E[rm′ ] = E[E[rm′ | rm′−1]] (10) 
+
+≤ E
+
+h
+
+f
+
+ rm′−1
+
+2
+
+i 
+
+= E
+
+h rm′−1
+
+2 · g
+
+ rm′−1
+
+2
+
+i 
+
+.
+
+Inductive step. Assume the claim holds for t and prove it for t + 1 :
+
+E
+
+"
+
+rm′−t
+
+2t ·
+
+> t
+
+Y
+
+> i=1
+
+g
+
+ rm′−t
+
+2i
+
+#
+
+= E
+
+"
+
+E
+
+"
+
+rm′−t
+
+2t ·
+
+> t
+
+Y
+
+> i=1
+
+g
+
+ rm′−t
+
+2i
+
+
+
+| rm′−t−1
+
+## 
+
+.
+
+(11) Using Lemma D.1 we have h(x) := x 
+
+> 2t
+
+· Qti=1 g  x
+
+> 2i
+
+ is a 15 Noisy Models For Contrastive Learning 
+
+convex function. Using Lemma 4.1 this indicates that 
+
+E[h(rm′−t) | rm′−t−1]
+
+≤ 2E[rm′−t | rm′−t−1]
+
+rm′−t−1
+
+h
+
+ rm′−t−1
+
+2
+
+
+
+≤ 2f   rm′−t−1
+
+> 2
+
+
+
+rm′−t−1
+
+h
+
+ rm′−t−1
+
+2
+
+
+
+= g
+
+ rm′−t−1
+
+2
+
+ rm′−t−1
+
+2t+1 
+
+> t
+
+Y
+
+> i=1
+
+g
+
+ rm′−t−1
+
+2i+1 
+
+
+
+= rm′−t−1
+
+2t+1 
+
+> t+1
+
+Y
+
+> i=1
+
+g
+
+ rm′−t−1
+
+2i
+
+
+
+This completes the induction step. Setting t = m′ yields 
+
+E[rm′ ]2 ≤ 2−m′−1
+
+> m′
+
+Y
+
+> i=1
+
+g(2 −i),
+
+which completes the proof. 
+
+Theorem 4.3. Let f : R≥0 → R≥0 be a non-decreasing function. Denote g(x) := min 
+
+ f (x) 
+
+> x
+
+, 1
+
+
+
+. Then 
+
+Mexp ,active 
+
+h
+
+Cthresh , CE d,f 
+
+> prop
+
+i
+
+(ε) ≥
+
+min 
+
+(
+
+n ≥ 0 2−(2 n+1) 
+
+> n
+
+Y
+
+> i=1
+
+g(4 −i) ≤ ε
+
+)
+
+.
+
+Proof. Let I0 = [0 , 1] . At each step t, suppose It = [ at, b t]
+
+contains θ, with length rt = bt − at. Without loss of generality, let the learner’s query be xt ≤ (at + bt)/2, and define the oracle’s response distribution as 
+
+x′ 
+
+> t
+
+=
+
+(
+
+bt, with prob. g(rt/4) ,θ, otherwise. where θ ∈  at+3 bt 
+
+> 4
+
+, b t
+
+. Then for all such θ,
+
+E[|x′ 
+
+> t
+
+− θ|] = g
+
+ rt
+
+4
+
+
+
+|bt − θ| ≤ g
+
+ rt
+
+4
+
+ rt
+
+4
+
+≤ f
+
+ rt
+
+4
+
+
+
+≤ f (|xt − θ|),
+
+so this oracle distribution is valid. Define It+1 = [ θ] if 
+
+x′ 
+
+> t
+
+= θ, and It+1 =  at+3 bt 
+
+> 4
+
+, b t
+
+ otherwise. Let I∗ 
+
+> m
+
+denote the interval after m rounds where θ was not yet returned. If 
+
+h is the learner’s output, let 
+
+θ = argmax z∈{ am,b m} Pr[ h(x)̸ = 1{x ≤ z}].
+
+In those scenarios, the learner’s error is at least |I∗ 
+
+> m|
+> 2
+
+= 
+
+> 12·4m
+
+, and the probability that |Im| > 0 is Qmi=1 g(4 −i).Therefore, the expected error of any learner is at least 
+
+2−(2 m+1) 
+
+> m
+
+Y
+
+> i=1
+
+g(4 −i),
+
+which completes the proof. 
+
+Corollary D.3. Let f : R≥0 → R≥0 be a non-decreasing function. Denote g(x) := min 
+
+ f (x) 
+
+> x
+
+, 1
+
+
+
+. Then 
+
+MPr ,active 
+
+h
+
+Cthresh , CE d,f 
+
+> prop
+
+i
+
+(ε, δ ) ≥
+
+min min 
+
+(
+
+n ≥ 0
+
+> n
+
+Y
+
+> i=1
+
+g(4 −i) ≤ δ
+
+)
+
+, log 2(1 /ε ) − 12
+
+!
+
+.
+
+Proof. Observe that Theorem 4.3 also implies that no learner can achieve error of 12−(2 m+1) with probability more than Qmi=1 g(4 −i), which completes the proof. 
+
+## E. Missing proofs from Section 4.2 
+
+Theorem 4.6. Let f : R≥0 → R≥0 be a non-decreasing function. Then, for every ε ∈ (0 , 1] ,
+
+Nactive 
+
+
+
+Cthresh , CE d,f 
+
+> prop
+
+, ε 
+
+
+
+≤ 4τ4f (1 → 2ε) .
+
+Proof. Starting from I0 = [0 , 1] , let It = [at, b t] de-note the interval of valid positions for θ after t queries. Suppose x′ 
+
+> at
+
+is the contrastive example for at and x′
+
+> bt
+
+is the contrastive example for bt. Then E[x′ 
+
+> at
+
+− x′ 
+
+> bt
+
+] ≤
+
+f (θ − at) + f (bt − θ) ≤ 2f (bt − at). By Markov’s inequal-ity, Pr  x′ 
+
+> at
+
+− x′ 
+
+> bt
+
+> 4f (bt − at) ≤ 12 .Suppose the learner queries at and bt until x′ 
+
+> at
+
+− x′ 
+
+> bt
+
+≤
+
+4f (bt − at). Let Mt be the random variable representing the number of times the learner needs to do this. Then for 
+
+t′ = t + 2 Mt, we have |It′ | ≤ 4f (|It|). Continue this process until |It| ≤ 2ε, at which point the learner outputs the midpoint of the interval, guaranteeing an error less than 
+
+ε.Note that Mt is dominated by a geometric random vari-able with parameter 1/2. This implies E[Mt] = 2,which immediately yields Nactive 
+
+
+
+Cthresh , CE d,f 
+
+> prop
+
+, ε 
+
+
+
+≤
+
+4τ4f (1 → 2ε) .
+
+Lemma E.1 (Multiplicative Chernoff bounds (Motwani & Raghavan, 1996)) . Let X1, . . . , X m be independent ran-dom variables drawn according to some distribution D
+
+with mean p and support included in [0 , 1] . Then, for any γ ∈
+
+h
+
+0, 1 
+
+> p
+
+− 1
+
+i
+
+, the following inequality holds for 
+
+bp = 1
+
+> m
+
+Pmi=1 Xi:
+
+P[bp ≥ (1 + γ)p] ≤ e− mpγ 23
+
+P[bp ≤ (1 − γ)p] ≤ e− mpγ 22
+
+Corollary E.2. For any non-decreasing function f :
+
+16 Noisy Models For Contrastive Learning 
+
+R≥0 → R≥0, we have 
+
+MPr ,active 
+
+h
+
+Cthresh , CE d,f 
+
+> prop
+
+i
+
+(ε, δ )
+
+≤ 8τ4f (1 → 2ε) + 16 ln 
+
+ 1
+
+δ
+
+
+
+.
+
+Proof. We follow the notation of Theorem 4.6. At each time step t, let It = [ at, b t] denote the interval of valid locations for θ. Define the indicator random variable At by 
+
+At := 1x′ 
+
+> at
+
+− x′ 
+
+> bt
+
+≤ 4f (bt − at) .
+
+By the argument in the proof of Theorem 4.6, we have 
+
+E[At] ≥ 12 .Whenever At = 1 , querying at and bt results in an update satisfying 
+
+|It+2 | ≤ 4f (|It|).
+
+Moreover, the sequence (|It|)t≥0 is non-increasing. There-fore, if among A1, A 3, ..., A 2⌊ m+1 2 ⌋− 1 there are at least 
+
+τ4f (1 → 2ε) ones, then after m queries we necessarily have 
+
+|Im| ≤ 2ε, and hence the learner’s output has error at most 
+
+ε.Now consider the sum 
+
+Sm := 
+
+> ⌊(m+1) /2⌋
+
+X
+
+> t=1
+
+A2t−1.
+
+Applying the multiplicative Chernoff bound (Lemma E.1) with γ = 1 /2, for m ≥ 8τ4f (1 → 2ε)+16 ln   1
+
+> δ
+
+ we obtain 
+
+P r [Sm < τ 4f (1 → 2ε)] ≤ e− m 
+
+> 16
+
+≤ δ
+
+With probability at least 1 − δ, the learner thus achieves error at most ε after m queries, completing the proof. 
+
+Lemma E.3. Suppose X = B(0k, 12 ) and let ℓ ∈ C HS ,
+
+x ∈ X . Let f : R≥0 → R≥0 be a non-decreasing func-tion such that f (a) ≤ a 
+
+> 4
+
+. Denote r = dist( x, ℓ ). Then there is a learner that, in expectation, with 4 queries from 
+
+CE d,f  
+
+> prob
+
+finds a z∗ such that (i) dist( z∗, ℓ ) ≤ r, and (ii) with probability at least 1/2 we have dist( z∗, ℓ ) ≤ 3f (2 r).Proof. Let x′ be the contrastive example for x. Without loss of generality, assume ℓ(x) = 1 . Choose a point z in the line fragment between x and x′ such that ∥z − x∥ =(I + 2 f )−1(∥x − x′∥). This implies 
+
+∥z − x′∥ = 2 f (∥z − x∥).
+
+If the label of z is 0, discard x′ and query x for another contrastive example. Define z∗ as the first z with label 
+
+1, and let M denote the random variable representing the number of repetitions of this process. Since ℓ(z∗) = ℓ(x) we have dist( z∗, ℓ ) ≤ dist( x, ℓ ) which completes property (i); it remains to show property (ii) and to bound E[M ]. Using Markov’s inequality, with probability at least 1/2 we have dist( x′, ℓ ) ≤ 2f (r). In that case, the label of z is guaranteed to be 1. Thus, in each iteration, with probability 1/2 the label of z is 1, implying E[M ] = 2 .Finally, we establish property (ii) for z∗. By Markov’s inequality, the probability that ∥x − x′∥ > 2r is at most   
+
+> f(r)
+> r
+
+≤ 14 . Hence, given ℓ(z∗) = 1 , the probability that 
+
+∥x − x′∥ > 2r is at most 1/2. Observe that x′ and x lie on opposite sides of ℓ. Therefore, as long as ∥x − x′∥ ≤ 2r,we have 
+
+dist( z∗, ℓ ) ≤ ∥z∗ − x′∥∥z∗ − x∥ r
+
+= 2f (∥z∗ − x∥)
+
+∥z∗ − x∥ r
+
+≤ 2f (∥x′ − x∥)
+
+∥z∗ − x∥ r
+
+≤ 2f (2 r) r
+
+∥z∗ − x∥
+
+(12) Next note that since f ≤ I 
+
+> 4
+
+we have 
+
+∥z∗ − x∥ = ( I + 2 f )−1(∥x − x′∥) ≥ 2∥x − x′∥
+
+3 ≥ 2r
+
+3 .
+
+Plugging this into (12) completes the proof. 
+
+Theorem 4.9. Let f : R≥0 → R≥0 be a non-decreasing function such that f (x) ≤ x1+ c 
+
+> 4
+
+. Then, for every ε ∈ (0 , 1] ,
+
+Nactive 
+
+
+
+CHS , CE d,f 
+
+> prop
+
+, ε 
+
+
+
+≤ 8τ ˜f
+
+ 12 → ε′
+
+
+
++ 8 ,
+
+where ˜f (x) = 3 f (2 x) and ε′ =   ε
+
+> 2k−1
+
+ 1 
+
+> c
+
+.Proof. The learner divides the training process into multiple sub-phases. By initializing z0 = 0, in each subroutine 
+
+t = 1 , 2, . . . , the learner follows the procedure introduced in Lemma 4.8 with x set to zt−1, and defines zt as the returned z∗ of the procedure. Denote z′ 
+
+> t
+
+as the contrastive example corresponding to zt.For each t, define Ct to be the halfspace whose boundary hyperplane is perpendicular to z′ 
+
+> t
+
+− zt and passes through 
+
+z′
+
+> t
+
+. Suppose the learner’s output is always Ct for the most recent subroutine t.For every zt denote zproj  
+
+> t
+
+as the projection of zt into ℓ. Let 
+
+T be the random variable representing the first subroutine such that 
+
+2k∥z′ 
+
+> T
+
+− zproj  
+
+> T
+
+∥
+
+dist( zT , ℓ ) ≤ ε. 
+
+17 Noisy Models For Contrastive Learning 
+
+By Lemma 3.2 (ii), this implies err( CT , ℓ ) ≤ ε. We now prove that E[T ] ≤ 2τ ˜f
+
+  12 → ε′ + 2 . Combining this bound with Lemma 4.8 completes the proof. For every t, let Mt denote the random variable t′ − t, where 
+
+t′ is the first time such that dist( zt′ , ℓ ) ≤ ˜f (dist( zt′−1, ℓ )) .Since Mt is stochastically dominated by a geometric random variable with parameter 1/2, we have E[Mt] ≤ 2. Let T ′
+
+represent the first subroutine satisfying dist( zT ′ , ℓ ) ≤ ε′.Then, E[T ′] ≤ 2τ ˜f
+
+  12 → ε′.Finally, for each t ≥ T ′, due to Markov’s inequality we have 
+
+Pr 
+
+h
+
+∥zproj  
+
+> t
+
+− z′
+
+> t
+
+∥ > 2f (dist( zt, ℓ )) 
+
+i
+
+≤ 12 . (13) Consequently, in expectation, with two additional subrou-tines after T ′ the learner reaches a zT such that 
+
+2k∥zproj  
+
+> T
+
+− z′ 
+
+> T
+
+∥
+
+dist( zT , ℓ ) ≤ 2k+1 f (dist( zT , ℓ )) dist( zT , ℓ ) ≤ 2k−1 dist( zT , ℓ )c
+
+≤ 2k−1ε′c = ε. 
+
+Corollary E.4. Let f : R≥0 → R≥0 be a non-decreasing function such that f (x) ≤ x1+ c 
+
+> 4
+
+. Then 
+
+MPr ,active 
+
+h
+
+CHS , CE d,f 
+
+> prop
+
+i
+
+(ε, δ )
+
+≤ 32 τ ˜f
+
+ 12 → ε′
+
+
+
++ 136 log 2
+
+3
+
+δ ,
+
+where ˜f (x) = 3 f (2 x) and ε′ =   ε
+
+> 2k−1
+
+ 1 
+
+> c
+
+.Proof. We first show that with at most T = 4 τ ˜f
+
+  12 → ε′ +17 log 2 3 
+
+> δ
+
+subroutines as defined in Theorem 4.9 the learner will have error less than ε with probability at least 2δ 
+
+> 3
+
+.Define the indicator random variable At as 
+
+At := 1{dist( zt, ℓ ) ≤ ˜f (dist( zt−1, ℓ )) }
+
+for zt defined in Theorem 4.9. Denote T ′ = 4 τ ˜f
+
+  12 → ε′ +16 ln 3 
+
+> δ
+
+. Note that whenever among A1, ..., A T ′ at least 
+
+τ ˜f
+
+  12 → ε′ number of ones, then we necessarily must have 
+
+dist( zT ′ , ℓ ) ≤ ε′ .
+
+Consider the sum S1  
+
+> T′
+
+:= PT ′ 
+
+> t=1
+
+At. In Theorem 4.9 we showed E[At] = 12 . Therefore, using multiplicative Cher-noff bounds (Lemma E.1) with γ = 12 we derive 
+
+Pr 
+
+
+
+S1  
+
+> T′
+
+< τ ˜f
+
+ 12 → ε′
+
+ 
+
+≤ e− T ′ 
+
+> 16
+
+≤ δ
+
+3 .
+
+Moreover, since for all t with probability 12 we have 
+
+∥zproj  
+
+> t
+
+− z′
+
+> t
+
+∥ ≤ 2f (dist( zt, ℓ )) .
+
+Then 
+
+Pr 
+
+h
+
+∀t ∈ [T ′ + 1 , T ] : [ ∥zproj  
+
+> t
+
+− z′
+
+> t
+
+∥ > 2f (dist( zt, ℓ )) 
+
+i
+
+< 12T −T ′ < δ
+
+3 .
+
+Thus, using Theorem 4.9 with probability at least 2δ 
+
+> 3
+
+, the learner will have error less than ε.It remains to show that with probability 1 − δ 
+
+> 3
+
+with 8T
+
+queries the number of subroutines will be at most T . Note that the number of subroutines is the number of times z
+
+defined in Lemma 4.8 has label 1 in 8T queries. Denoting K as the number of subroutines, and using mul-tiplicative Chernoff bounds (Lemma E.1) with γ = 12 we derive 
+
+Pr[ K ≤ T ] ≤ e −4T 
+
+> 16
+
+≤ δ
+
+3 ,
+
+which completes the proof. 
+
+## F. Missing proofs from Section 4.3 
+
+Theorem 4.13. Let f : R≥0 → R≥0 be non-decreasing and invertible , δ ∈ (0 , 1] , and ε < min 
+
+ f ( 14 )4 , 18
+
+
+
+. Then 
+
+Mexp ,passive 
+
+h
+
+Cthresh , CE d,f 
+
+> prop
+
+i
+
+(ε, δ ) ∈ O
+
+ log(1 /ε )min( f −1(ε/ 2) , ε )
+
+
+
+,
+
+Mexp ,passive 
+
+h
+
+Cthresh , CE d,f 
+
+> prop
+
+i
+
+(ε, δ ) ∈ Ω
+
+ 1min( f −1(4 ε), ε )
+
+
+
+.
+
+Proof. Lower bound: Theorem 3.6 implies that for any 
+
+ε < min 
+
+ f ( 14 )4 , 18
+
+
+
+, if m ≤ 14 min( f −1(4 ε),2ε) , then any learner interacting with the deterministic AMDM incurs error at least 2ε with probability 1/2. Thus, its expected error is at least ε. Since learning with the probabilistic AMDM is harder, the same lower bound also applies to 
+
+CE d,f 
+
+> prop
+
+.
+
+Upper bound: Let ε′ = min( f −1(ε/ 2) , ε/ 2) . As in Theo-rem 3.6, let x∗ be the largest positively labeled xi (assuming without loss of generality that it exists), and let ˜x∗ be its contrastive example. If f (ε) ≤ ε, the learner outputs the threshold corresponding to the contrastive example of x∗;otherwise, it outputs the threshold corresponding to x∗.We showed in Theorem 3.6 that with probability at least 
+
+1 − ε/ 2, for m ≥ log 2(2 /ε ) 
+
+> ε′
+
+we have x∗ ≥ θ − ε′. Therefore, 
+
+E[˜ x∗ − θ | x∗] ≤ f (ε′)
+
+18 Noisy Models For Contrastive Learning 
+
+Thus, given a fixed set of primary examples, the learner makes an expected error of at most ε/ 2 with probability at least 1 − ε/ 2. Finally, Lemma 4.12 implies that the learner’s expected error is at most ε.
+
+Theorem 4.14. Let CHHS = {1{⟨ ω, x⟩ ≥ 0} | ω ∈ Rk} for 
+
+X = B(0k, 12 ) be the class of homogeneous half-spaces. Let 
+
+f : R≥0 → R≥0 be such that f (x) ≤ x2 and g(x) := f (x)
+
+> x
+
+is non-decreasing and invertible. Then 
+
+Mexp ,passive 
+
+h
+
+CHHS , CE d,f 
+
+> prop
+
+i
+
+(ε) ∈ O log(1 /ε )
+
+g−1   πε 
+
+> 2
+
+!
+
+.
+
+Proof. For any xi and x′
+
+> i
+
+, define Ci as the homoge-neous half-space perpendicular to x′ 
+
+> i
+
+− xi. Let i∗ := argmin i dist( xi, ℓ ) and ˆi := argmin i ∥xi − x′
+
+> i
+
+∥. Our out-put hypothesis is ˆC = Cˆi (the same algorithm as in Theo-rem 3.7). Lemma 3.2 (i) implies that 
+
+err( ˆC, ℓ ) ≤ 1
+
+π cos −1 dist( xˆi, ℓ )
+
+∥xˆi − x′
+
+> ˆi
+
+∥
+
+!
+
+> (i)
+
+≤ 1
+
+π cos −1 dist( xi∗ , ℓ )
+
+∥xˆi − x′
+
+> ˆi
+
+∥
+
+!
+
+> (ii )
+
+≤ 1
+
+π cos −1
+
+ dist( xi∗ , ℓ )
+
+∥xi∗ − x′ 
+
+> i∗
+
+∥
+
+
+
+,
+
+(14) where (i) follows from the definition of i∗, and (ii) follows from the definition of ˆi. Let xproj  
+
+> i∗
+
+be the projection of xi∗
+
+onto ℓ. Since the angle ∠(x′ 
+
+> i∗
+
+, x proj  
+
+> i∗
+
+, x i∗ ) is at least π/ 2, we have 
+
+cos −1
+
+ dist( xi∗ , ℓ )
+
+∥xi∗ − x′ 
+
+> i∗
+
+∥
+
+
+
+≤ cos −1 dist( xi∗ , ℓ )
+
+pdist( xi∗ , ℓ )2 + ∥xi∗ − x′ 
+
+> i∗
+
+∥2
+
+!
+
+= tan −1
+
+ ∥xi∗ − x′ 
+
+> i∗
+
+∥
+
+dist( xi∗ , ℓ )
+
+
+
+≤ ∥xi∗ − x′ 
+
+> i∗
+
+∥
+
+dist( xi∗ , ℓ ) .
+
+(15) Combining (14) and (15) yields 
+
+err( ˆC, ℓ ) ≤ ∥xi∗ − x′ 
+
+> i∗
+
+∥
+
+π dist( xi∗ , ℓ ) .
+
+We now bound the expectation of err( ˆC, ℓ ) conditioned on a fixed set of primary examples. In particular, 
+
+E[err( ˆC, ℓ ) | x1, . . . , x m] ≤ E[∥xi∗ − x′ 
+
+> i∗
+
+∥ | xi∗ ]
+
+π dist( xi∗ , ℓ )
+
+≤ f (dist( xi∗ , ℓ )) 
+
+π dist( xi∗ , ℓ )= g(dist( xi∗ , ℓ )) 
+
+π .
+
+(16) Similar to the argument in Theorem 3.7, for m ≥ ln(2 /ε )2g−1( πε  
+
+> 2
+
+)
+
+we have, with probability at least 1 − ε/ 2,
+
+dist( xi∗ , ℓ ) ≤ g−1  πε 
+
+2
+
+
+
+.
+
+Combining this with (16) and Lemma 4.12 gives 
+
+E[err( ˆC, ℓ )] ≤ ε, 
+
+which completes the proof. 19
