@@ -45,6 +45,9 @@ subscriptions:
         - keyword: representation learning
           keyword_cn: 表征学习
           query: unsupervised representation learning benchmarks
+        - keyword: medical foundation model
+          keyword_cn: 医学基础模型
+          query: medical foundation model pretraining and finetuning methods
       intent_queries:
         - query: survey of contrastive learning architectures and training objectives
           query_cn: 对比学习架构与训练目标综述
@@ -66,4 +69,4 @@ subscriptions:
           enabled: true
           source: manual
           note: ''
-      updated_at: '2026-03-21T09:23:13.621Z'
+      updated_at: '2026-03-21T09:25:02.421Z'
