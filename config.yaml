@@ -25,3 +25,48 @@ subscriptions:
     stage: A
     diff_threshold_pct: 15
   keyword_recall_mode: or
+  intent_profiles:
+    - tag: 生成对比学习
+      description: 衔接生成式学习与对比学习方法
+      enabled: true
+      keywords:
+        - keyword: Joint-Embedding
+          keyword_cn: 联合嵌入
+          query: Joint-Embedding
+        - keyword: representation learning
+          keyword_cn: 表征学习
+          query: deep representation learning techniques
+        - keyword: self-supervised learning
+          keyword_cn: 自监督学习
+          query: self-supervised pretraining frameworks
+        - keyword: contrastive learning
+          keyword_cn: 对比学习
+          query: contrastive learning representation learning
+        - keyword: medical imaging
+          keyword_cn: 医学影像
+          query: medical image analysis radiology pathology
+        - keyword: data augmentation
+          keyword_cn: 数据增强
+          query: augmentation strategies for contrastive learning
+      intent_queries:
+        - query: Bridging generative and contrastive learning methods
+          query_cn: 衔接生成式学习与对比学习方法
+          enabled: true
+          source: manual
+          note: ''
+        - query: Improving sample efficiency in contrastive representation learning
+          query_cn: 提升对比表示学习中的样本效率
+          enabled: true
+          source: manual
+          note: ''
+        - query: Novel contrastive loss functions and objective designs
+          query_cn: 新颖的对比损失函数与目标函数设计
+          enabled: true
+          source: manual
+          note: ''
+        - query: how does contrastive learning improve medical image classification with limited annotations
+          query_cn: 对比学习如何改善标注有限的医学图像分类
+          enabled: true
+          source: manual
+          note: ''
+      updated_at: '2026-03-21T05:39:01.490Z'
