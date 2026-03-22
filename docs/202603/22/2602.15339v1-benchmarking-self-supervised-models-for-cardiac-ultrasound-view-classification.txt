@@ -1,0 +1,144 @@
+Title: Benchmarking Self-Supervised Models for Cardiac Ultrasound View Classification
+
+URL Source: https://arxiv.org/pdf/2602.15339v1
+
+Published Time: Wed, 18 Feb 2026 01:22:35 GMT
+
+Number of Pages: 10
+
+Markdown Content:
+# Benchmarking Self-Supervised Models for Cardiac Ultrasound View Classification 
+
+Youssef Megahed 1,2[0009–0004–2595–5468] , Salma I. Megahed 11 [0009–0008–7763–1288] , Robin Ducharme 3[0000–0002–5665–7429] ,Inok Lee 3, Adrian D. C. Chan 1[0000–0002–2111–247X] , Mark C. Walker 3,4,5,6,7[0000–0001–8974–4548] , and Steven Hawken 1,2,5[0000–0002–3341–9022]  
+
+> 1
+
+Department of Systems and Computer Engineering, Carleton University, Ottawa, Ontario, Canada  
+
+> 2
+
+Department of Methodological and Implementation Research, Ottawa Hospital Research Institute, Ottawa, Ontario, Canada  
+
+> 3
+
+Department of Acute Care Research, Ottawa Hospital Research Institute, Ottawa, Ontario, Canada  
+
+> 4
+
+Department of Obstetrics and Gynecology, University of Ottawa, Ottawa, Ontario, Canada  
+
+> 5
+
+School of Epidemiology and Public Health, University of Ottawa, Ottawa, Ontario, Canada  
+
+> 6
+
+Department of Obstetrics, Gynecology & Newborn Care, The Ottawa Hospital, Ottawa, Ontario, Canada  
+
+> 7
+
+International and Global Health Office, University of Ottawa, Ottawa, Ontario, Canada  
+
+> 8
+
+College of Medicine, Alfaisal University, Riyadh, Saudi Arabia 
+
+Abstract. Reliable interpretation of cardiac ultrasound images is es-sential for accurate clinical diagnosis and assessment. Self-supervised learning has shown promise in medical imaging by leveraging large unla-belled datasets to learn meaningful representations. In this study, we evaluate and compare two self-supervised learning frameworks, USF-MAE, developed by our team, and MoCo v3, on the recently introduced CACTUS dataset (37,736 images) for automated simulated cardiac view (A4C, PL, PSAV, PSMV, Random, and SC) classification. Both models used 5-fold cross-validation, enabling robust assessment of generaliza-tion performance across multiple random splits. The CACTUS dataset provides expert-annotated cardiac ultrasound images with diverse views. We adopt an identical training protocol for both models to ensure a fair comparison. Both models are configured with a learning rate of 0.0001 and a weight decay of 0.01. For each fold, we record performance metrics including ROC-AUC, accuracy, F1-score, and recall. Our results indi-cate that USF-MAE consistently outperforms MoCo v3 across metrics. The average testing AUC for USF-MAE is 99.99% ( ±0.01% 95% CI), compared to 99.97% ( ±0.01%) for MoCo v3. USF-MAE achieves a mean testing accuracy of 99.33% ( ±0.18%), higher than the 98.99% ( ±0.28%)       
+
+> arXiv:2602.15339v1 [eess.IV] 17 Feb 2026 2Y. Megahed et al. reported for MoCo v3. Similar trends are observed for the F1-score and recall, with improvements statistically significant across folds (paired t-test, p=0.0048 < 0.01). This proof-of-concept analysis suggests that USF-MAE learns more discriminative features for cardiac view classifi-cation than MoCo v3 when applied to this dataset. The enhanced per-formance across multiple metrics highlights the potential of USF-MAE for improving automated cardiac ultrasound classification.
+> Keywords: Self-Supervised Learning ·USF-MAE ·Cardiac View Clas-sification.
+
+# 1 Introduction 
+
+Cardiac ultrasound (echocardiography) is a cornerstone imaging modality in both adult and fetal cardiology due to its real-time assessment of cardiac anatomy and function, lack of ionizing radiation, and widespread clinical availability. However, reliable interpretation of echocardiographic images requires extensive training and experience, and manual annotation of cardiac views is both time-consuming and subject to inter-observer variability [1]. The complexity of cardiac ultrasound interpretation is further amplified in fetal imaging, where small car-diac structures and variable fetal positions increase the difficulty of consistent view identification. Deep learning has demonstrated substantial promise for automating medical image analysis, achieving expert-level performance on diverse tasks across modal-ities such as radiography, ultrasound [2–8], and magnetic resonance imaging [9]. Traditional supervised learning approaches rely heavily on large quantities of labelled data, which are often scarce and costly to obtain in clinical settings. In contrast, self-supervised learning (SSL) enables models to leverage vast collec-tions of unlabelled medical images to learn useful representations, subsequently fine-tuning on smaller annotated datasets with improved performance and an-notation efficiency [9, 10]. Recent trends in SSL include both contrastive methods and generative pre-text tasks. Methods such as momentum contrast (MoCo) [11] exploit a con-trastive learning objective to cluster semantically similar examples in embedding space without labels [13]. Masked autoencoder (MAE) approaches [14], originally introduced for natural images, learn to reconstruct masked portions of inputs, effectively encouraging models to capture rich, global structure in image repre-sentations. These pre-training strategies have been adapted to medical imaging tasks, and empirical evidence suggests that in-domain SSL pre-training can yield better downstream performance than models initialized on natural images alone [2, 15]. In the domain of cardiac view classification, prior work has applied con-trastive SSL to learn discriminative features from echocardiograms, improving classification accuracy relative to purely supervised baselines [1]. More recently, the CACTUS dataset was introduced as the first open, graded large-scale dataset of cardiac ultrasound views, encompassing multiple standard views and random Title Suppressed Due to Excessive Length 3         
+
+> Table 1. Dataset distribution of cardiac view classes and data split used in stratified 5-fold cross-validation.
+> Category Number of Images
+> Total Images 37,736 A4C 7,422 PL 6,102 PSAV 5,832 PSMV 6,014 Random 6,021 SC 6,345 Testing Set (per fold) 7,547 Training Set (4-folds) 30,189
+
+images to support both classification and quality assessment tasks [16]. The availability of CACTUS enables rigorous evaluation of self-supervised models tailored specifically for cardiac ultrasound representations. Despite this progress, there remains a need to systematically benchmark SSL frameworks on CACTUS to identify the most effective pre-training paradigms for cardiac ultrasound view classification. Furthermore, foundation models trained on large, diverse unlabeled ultrasound corpora may offer improved transferability compared with SSL models pre-trained on smaller or natural image datasets. In this study, we evaluate and compare our recently published ultrasound self-supervised foundation model with masked autoencoding (USF-MAE) [2] with MoCo v3 [12] on the CACTUS dataset [16]. This comparison serves as a proof-of-concept (POC) to assess whether large-scale, domain-specific self-supervised pre-training yields more discriminative features than contrastive learning for cardiac view classification, an essential first step towards downstream applications such as congenital heart defects (CHD) detection. 
+
+# 2 Methodology 
+
+2.1 Dataset 
+
+We conducted all experiments using the publicly available CACTUS dataset [16], which contains 37,736 expert-annotated cardiac ultrasound images generated by a phantom across six classes: apical four-chamber (A4C), parasternal long-axis (PL), parasternal short-axis aortic valve (PSAV), parasternal short-axis mitral valve (PSMV), Random, and subcostal four-chamber (SC) views (Table 1). The Random views class includes non-standard or non-diagnostic frames, increasing classification difficulty and better simulating real-world variability. To ensure robust evaluation, we adopted a stratified 5-fold cross-validation protocol such that each of the six classes was equally represented in every fold. In each fold, four splits were used for training, and the remaining split was used for testing. 4 Y. Megahed et al.  
+
+> Fig. 1. A) Original ultrasound frame with overlay annotations. B) Cropped and cleaned, processed and inpainted image used for analysis.
+
+2.2 Image Preprocessing 
+
+Ultrasound images often contain sector-shaped acquisition regions and colour annotations or markers, as shown in Fig. 1A. To standardize the input and reduce irrelevant visual artifacts, we applied a three-stage preprocessing pipeline. 
+
+Sector masking and cropping. Each image was first converted to RGB, and a sector mask was applied to isolate the ultrasound field of view. The mask was defined using a pie-slice geometry centred at the bottom midpoint of the image with angular limits of 210 ◦ to 330 ◦ and radius equal to 90% of the im-age height. Pixels outside this region were set to zero. The masked image was then cropped using fixed bounding coordinates to remove peripheral borders and scanner overlays. 
+
+Annotation mask extraction. To remove embedded colour annotations, images were converted to the HSV colour space. Colour thresholds were applied to detect yellow, blue, and red overlays commonly used for measurement markers. Binary masks were generated using these thresholds and subsequently dilated with a 5 × 5 kernel to ensure complete coverage of annotation regions. 
+
+Inpainting. Detected annotation regions were removed and filled in the missing pixel values using the Navier–Stokes–based inpainting [17] implemented in OpenCV (Fig. 1B). This step ensured that classification performance reflected anatomical content rather than overlaid measurement graphics or noisy artifacts. 
+
+2.3 Model Architectures 
+
+We benchmarked two self-supervised frameworks: MoCo v3 [12], and our previ-ously developed ultrasound foundation model, USF-MAE [2]. A detailed com-parison of their pretraining configurations is provided in Table 2. 
+
+MoCo v3 Fine-Tuning For MoCo v3 [12], we initialized a Vision Transformer (ViT)-base model (ViT-B/16) backbone with publicly available MoCo v3 SSL pretrained weights. The classification head was replaced with a linear layer map-ping the ViT feature dimension to six output classes. All backbone parameters were fine-tuned during training. Title Suppressed Due to Excessive Length 5                       
+
+> Table 2. Comparison of pre-training configurations for MoCo v3 and USF-MAE.
+> Component MoCo v3 [12] USF-MAE (ours) [2]
+> Backbone architecture ViT-B/16 ViT-B/16 Pretraining paradigm Contrastive SSL Masked autoencoding (MAE) Pretraining dataset ImageNet-1K OpenUS-46 Dataset domain Natural images Ultrasound images Number of images ∼1.28M ∼370K Pretraining objective Instance discrimination via momentum contrast Patch reconstruction (MSE over masked patches) Masking ratio N/A 25% Pretrained weights Publicly released weights Publicly released weights Fine-tuning on CACTUS Full model fine-tuning Full model fine-tuning
+
+USF-MAE Fine-Tuning For USF-MAE [2], we initialized its ViT-B/16 back-bone with our publicly available ultrasound-specific USF-MAE SSL pretrained weights in GitHub, similar to MoCo v3. The classification head was replaced with a linear layer mapping the ViT feature dimension to six output classes. All backbone parameters were fine-tuned during training as well. Consequently, the two models share identical backbone architecture and fine-tuning protocol, differing only in their pretraining strategy and data domain, namely natural images versus ultrasound images (Table 2). 
+
+2.4 Training and Testing Protocol 
+
+To ensure comparability, both models were trained using identical hyperparam-eters and optimization strategies (end-to-end fine-tuning). All experiments were conducted using NVIDIA L40S GPU acceleration. 
+
+Input processing. Images were resized to 224 × 224 pixels. During training, data augmentation included random rotation (0–90 ◦), horizontal and vertical flipping of 50% probability, and random resized cropping with scale range [0.5, 2.0]. Pixel intensities were normalized using the mean of [0.485, 0.456, 0.406] and the standard deviation of [0.229, 0.224, 0.225]. 
+
+Optimization. Training was performed for 15 epochs per fold using AdamW [18] with a learning rate of 0.0001 and a weight decay of 0.01. A cosine learning rate scheduler with linear warm-up was applied. The batch size was set to 32. A weighted cross-entropy loss was employed. Class weights were computed from the training split of each fold using inverse frequency balancing. 
+
+Model selection. For each fold, the model achieving the lowest training loss was selected as the best checkpoint. 
+
+Evaluation Metrics. Performance was evaluated on the testing split of each fold after training and averaged across all five folds. Reported metrics include accuracy, weighted recall, weighted F1-score, and macro one-versus-rest ROC-AUC. This experimental framework allows a controlled assessment of represen-tation quality learned through different self-supervised pretraining paradigms when transferred to cardiac ultrasound view classification. 6 Y. Megahed et al.  
+
+> Fig. 2. Comparison of MoCo v3 and USF-MAE Pipelines.
+
+# 3 Results 
+
+Table 3 summarizes the mean testing performance across 5-fold cross-validation for both self-supervised frameworks. Overall, both models achieved near-perfect discrimination on the CACTUS dataset; however, USF-MAE consistently out-performed MoCo v3 across all evaluation metrics. USF-MAE achieved a mean testing accuracy of 99.33% ( ±0.18% 95% CI), compared to 98.99% ( ±0.28% 95% CI) for MoCo v3. A similar improvement was observed in weighted F1-score (99.33% vs. 98.99%) and recall (99.33% vs. 98.99%). In terms of macro ROC-AUC, USF-MAE reached 99.99% ( ±0.01% 95% CI), slightly higher than the 99.97% ( ±0.01% 95% CI) obtained with MoCo v3. To assess whether the observed performance differences were statistically signifi-cant, we conducted a paired t-test on the fold-wise F1-scores. USF-MAE achieved significantly higher F1-scores than MoCo v3 across the five folds, p=0.0048 (< 
+
+α of 0.01), corresponding to a mean improvement of 0.34% points. Title Suppressed Due to Excessive Length 7                                                                    
+
+> Table 3. Per-fold performance across 5-fold cross-validation.
+> Fold Accuracy (%) Recall (%) F1-score (%) AUC (%)
+> MoCo v3 USF-MAE MoCo v3 USF-MAE MoCo v3 USF-MAE MoCo v3 USF-MAE
+> 199.18 99.35 99.18 99.35 99.18 99.35 99.98 99.99
+> 299.01 99.35 99.01 99.35 99.01 99.35 99.97 99.99
+> 398.91 99.42 98.91 99.42 98.91 99.42 99.97 99.98
+> 498.97 99.22 98.97 99.22 98.97 99.22 99.98 99.99
+> 598.90 99.31 98.90 99.31 98.90 99.31 99.98 99.98
+> Mean 98.99 99.33 98.99 99.33 98.99 99.33 99.97 99.99
+> 95% CI 0.28 0.18 0.28 0.18 0.28 0.18 0.01 0.01
+
+The normalized confusion matrix for the best-performing USF-MAE model (Fig. 3A) demonstrates minimal inter-class confusion, with per-class sensitivi-ties exceeding 97.5% across all views. The Random class showed slightly higher variability relative to standard anatomical views, but remained highly discrimi-native. The per-class ROC curves (Fig. 3B) further confirm the strong separability of all five cardiac views and the random class, with AUC values approaching 1.0 for each class. These findings indicate that both self-supervised approaches learn highly discriminative representations for cardiac view classification, with USF-MAE providing consistently superior performance under identical fine-tuning conditions. Collectively, these results support the hypothesis that large-scale ultrasound-specific MAE pretraining yields more transferable and discriminative features than contrastive pretraining when applied to cardiac ultrasound view classifica-tion, within the scope of this POC study.   
+
+> Fig. 3. Classification performance for cardiac view classification: A) normalized con-fusion matrix and B) per-class ROC curves showing near perfect discrimination across all classes. 8Y. Megahed et al.
+
+# 4 Discussion 
+
+In this POC study, we benchmarked two SSL paradigms, contrastive learning (MoCo v3) and masked autoencoding (USF-MAE), for cardiac ultrasound view classification on the CACTUS dataset. While both approaches achieved near-ceiling performance across all evaluation metrics, USF-MAE consistently demon-strated superior accuracy, F1-score, and ROC-AUC under identical fine-tuning conditions. These results suggest that ultrasound-specific MAE pretraining pro-duces highly transferable representations for cardiac view discrimination. Two key factors differentiate the evaluated models: (1) the SSL objective (masked autoencoding vs. contrastive learning), and (2) the pretraining data domain (ultrasound-specific data vs. natural images). MoCo v3 was pretrained using contrastive learning on ImageNet-scale natural images, whereas USF-MAE was pretrained using masked autoencoding on large-scale ultrasound data. While both methodological differences may contribute to performance variation, prior studies have consistently demonstrated that domain-specific pretraining often has a larger impact on downstream medical imaging performance than initial-ization from natural image datasets alone. For example, Raghu et al. [19] showed that ImageNet representations may not fully transfer to medical imaging tasks due to domain mismatch. Similarly, Azizi et al. [20] demonstrated that large-scale self-supervised pretraining within the medical domain substantially improves downstream classification performance compared to natural image supervised pretraining. Although the absolute gain in accuracy, as an example, is 0.34%, this cor-responds to a substantial reduction in classification error. Specifically, the error rate decreased from 1.01% to 0.67%, representing a relative error reduction of 33.7%. In already high-performance regimes, such reductions indicate mean-ingful improvements in representation quality rather than marginal numerical gains. Given existing evidence supporting the importance of domain alignment in medical imaging, we hypothesize that ultrasound-specific pretraining contributes more substantially to the observed performance gain than the difference in SSL objective alone. Importantly, MoCo v3 also achieved excellent performance, confirming that contrastive SSL remains a strong baseline for cardiac ultrasound representation learning. The near-perfect discrimination observed for both models suggests that CACTUS view classification is a suitable benchmarking task for evaluating rep-resentation quality before using the models for more complex downstream tasks. From a clinical perspective, accurate cardiac view classification is a foun-dational prerequisite for automated CHD detection in fetal echocardiography. CHD diagnosis depends heavily on the correct acquisition and identification of standard views before structural abnormalities can be assessed. Therefore, robust and transferable representations learned through self-supervised pretraining may facilitate improved generalization when transitioning from view classification to CHD detection tasks. Several limitations should be acknowledged. First, the CACTUS dataset con-sists of simulator-acquired images generated by scanning a phantom, which may Title Suppressed Due to Excessive Length 9
+
+not fully capture the variability present in real-world ultrasound examinations. Second, performance was evaluated on a single dataset, and external validation was not performed in this study. Although this study focused on a single dataset, evidence from our recent work on first-trimester fetal heart view classification [6] supports the generalizability of ultrasound-specific SSL. In that study, USF-MAE also outperformed all baselines on real fetal ultrasound images, demon-strating the practical utility of this pretraining paradigm beyond simulator data. Third, the classification task is inherently easier than fine-grained abnormality detection, and performance differences may become more pronounced in more challenging downstream tasks. Future work will extend this analysis beyond view classification to grading and diagnostic performance using the CACTUS dataset, enabling evaluation of whether ultrasound-specific pretraining improves clinically relevant assessment tasks. We also plan to validate the models on real fetal echocardiography datasets and examine the impact of ultrasound-specific foundation pretraining on CHD detection and multi-class diagnostic classification in the near future. Such investi-gations will determine whether the observed representation advantages translate into meaningful clinical gains. 
+
+# 5 Conclusion 
+
+In this study, we benchmarked USF-MAE and MoCo v3 for cardiac ultrasound view classification on the CACTUS dataset. Under identical fine-tuning con-ditions, USF-MAE achieved consistently superior performance across all eval-uation metrics. These findings suggest that ultrasound-specific MAE pretrain-ing provides highly transferable representations for cardiac view discrimination. The USF-MAE framework and pretrained weights are publicly available at: https://github.com/Yusufii9/USF-MAE. As a POC analysis, this work supports ultrasound foundation models as strong initializations for downstream clinical tasks. Future studies will evaluate whether these advantages translate to im-proved CHD detection in real fetal echocardiography. 
+
+# Use of AI Assistance 
+
+The author(s) used ChatGPT (by OpenAI) for language editing (grammar) and sentence clarity improvement. The tool was used solely to enhance readability and refine sentence structure. It was not used to generate scientific content, ex-perimental results, data analysis, or technical conclusions. After using this tool, the author(s) carefully reviewed and edited the output and take full responsibil-ity for the contents of the manuscript. 
+
+# References 
+
+> 1. Chartsias, A., et al.: Contrastive learning for view classification of echocardiograms. In: MICCAI Workshop on Deep Learning in Medical Image Analysis (2021).
+
+10 Y. Megahed et al. 2. Megahed, Y., et al.: USF-MAE: Ultrasound Self-Supervised Foundation Model with Masked Autoencoding. arXiv preprint arXiv:2510.22990 (2025). 3. Megahed, Y., et al.: Deep Learning Analysis of Prenatal Ultrasound for Identifica-tion of Ventriculomegaly. arXiv preprint arXiv:2511.07827 (2025). 4. Megahed, Y., et al.: Self-Supervised Ultrasound Representation Learning for Renal Anomaly Prediction in Prenatal Imaging. arXiv preprint arXiv:2512.13434 (2025). 5. Megahed, Y., et al.: Improved cystic hygroma detection from prenatal imaging using ultrasound-specific self-supervised representation learning. arXiv preprint arXiv:2512.22730 (2025). 6. Megahed, Y., et al.: Automated Classification of First-Trimester Fetal Heart Views Using Ultrasound-Specific Self-Supervised Learning. arXiv preprint arXiv:2512.24492 (2025). 7. Walker, M.C., et al.: Using deep-learning in fetal ultrasound analysis for diagnosis of cystic hygroma in the first trimester. PLoS One (2022). 8. Miguel, O.X., et al.: Deep learning prediction of renal anomalies for prenatal ultra-sound diagnosis. Scientific Reports (2024). 9. Huang, S.C., Pareek, A., Jensen, M., Lungren, M.P., Yeung, S., Chaudhari, A.S.: Self-supervised learning for medical image classification: a systematic review and implementation guidelines. npj Digital Medicine, 6, 74 (2023). 10. Zeng, X., Abdullah, N., Sumari, P.: Self-supervised learning framework application for medical image analysis: a review and summary. Journal of BioMedical Engineer-ing OnLine (2024). 11. He, K., Fan, H., Wu, Y., Xie, S., Girshick, R.: Momentum Contrast for Unsuper-vised Visual Representation Learning. 2020 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) (2020). Seattle, WA, USA. 12. Chen, X., Xie, S., He, K.: An Empirical Study of Training Self-Supervised Vi-sion Transformers. 2021 IEEE/CVF International Conference on Computer Vision (ICCV) (2020). Montreal, QC, Canada. 13. Chen, X., Fan, H., Girshick, R., He, K.: Improved Baselines with Momentum Con-trastive Learning. arXiv preprint arXiv:2003.04297 (2020). 14. He, K., et al.: Masked Autoencoders Are Scalable Vision Learners. Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (2022). 15. Xiao, J., Bai, Y., Yuille, A., Zhou, Z.: Delving into Masked Autoencoders for Multi-Label Thorax Disease Classification. 2023 IEEE/CVF Winter Conference on Applications of Computer Vision (WACV) (2023). Waikoloa, HI, USA. 16. Elmekki, H., et al.: CACTUS: An open dataset and framework for automated Cardiac Assessment and Classification of Ultrasound images using deep transfer learning. Computers in Biology and Medicine (2025). 17. Bertalmio, M., Bertozzi, A. L., and Sapiro, G., Navier-Stokes, Fluid Dynamics, and Image and Video Inpainting. In Proceedings of the 2001 IEEE Computer Society Conference on Computer Vision and Pattern Recognition (CVPR 2001). 18. Loshchilov, I., Hutter, F., Decoupled Weight Decay Regularization. 7th Interna-tional Conference on Learning Representations (ICLR) (2019). 19. Raghu, M., Zhang, C., Kleinberg, J., Bengio, S.: Transfusion: Understanding Trans-fer Learning for Medical Imaging. In: Advances in Neural Information Processing Systems (NeurIPS) (2019). Vancouver, BC, Canada. 20. Azizi, S., et al.: Big Self-Supervised Models Advance Medical Image Classifications. In: Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV) (2021).

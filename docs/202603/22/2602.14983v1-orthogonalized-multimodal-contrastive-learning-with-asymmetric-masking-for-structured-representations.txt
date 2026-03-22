@@ -1,0 +1,506 @@
+Title: Orthogonalized Multimodal Contrastive Learning with Asymmetric Masking for Structured Representations
+
+URL Source: https://arxiv.org/pdf/2602.14983v1
+
+Published Time: Tue, 17 Feb 2026 03:22:16 GMT
+
+Number of Pages: 28
+
+Markdown Content:
+# Orthogonalized Multimodal Contrastive Learning with Asymmetric Masking for Structured Representations 
+
+Carolin Cissée a, Raneen Younis a,b , Zahra Ahmadi a,b, ∗
+
+> aPeter L. Reichertz Institute for Medical Informatics of TU Braunschweig and Hannover Medical School, Hannover, Germany
+> bLower Saxony Center for AI and Causal Methods in Medicine (CAIMed), Hannover, Germany
+
+Abstract 
+
+Multimodal learning seeks to integrate information from heterogeneous sources, where signals may be shared across modalities, specific to individual modalities, or emerge only through their interaction. While self-supervised multimodal contrastive learning has achieved remarkable progress, most existing meth-ods predominantly capture redundant cross-modal signals, often neglecting modality-specific (unique) and interaction-driven (synergistic) information. Recent extensions broaden this perspective, yet they either fail to explicitly model synergistic interactions or learn different information components in an entangled manner, leading to incomplete representations and potential infor-mation leakage. We introduce COrAL , a principled framework that explicitly and simultaneously preserves redundant, unique, and synergistic information within multimodal representations. COrAL employs a dual-path architecture with orthogonality constraints to disentangle shared and modality-specific features, ensuring a clean separation of information components. To promote synergy modeling, we introduce asymmetric masking with complementary view-specific patterns, compelling the model to infer cross-modal dependen-cies rather than rely solely on redundant cues. Extensive experiments on synthetic benchmarks and diverse MultiBench datasets demonstrate that COrAL consistently matches or outperforms state-of-the-art methods while exhibiting low performance variance across runs. These results indicate that explicitly modeling the full spectrum of multimodal information yields more   
+
+> ∗Corresponding authors
+> Email address: Ahmadi.Zahra@mh-hannover.de (Zahra Ahmadi)
+> arXiv:2602.14983v1 [cs.LG] 16 Feb 2026
+
+stable, reliable, and comprehensive embeddings 1.
+
+Keywords: Contrastive Learning, Multimodal Learning, Self-Supervised Learning 
+
+1. Introduction 
+
+Multimodal learning aims to jointly model and integrate information from heterogeneous data sources, including images, text, audio, and structured data. By leveraging complementary cues across modalities, multimodal frameworks can produce more robust and context-aware representations than unimodal approaches. From an information-centric perspective, different modalities may encode (i) redundant information shared across sources, (ii) modality-specific signals unique to individual modalities, and (iii) synergetic information that emerges only through cross-modal interactions. Effectively capturing and integrating these distinct components is critical for reliable multimodal decision-making, with applications ranging from medical diagnosis and treatment support systems [ 1, 2, 3] to autonomous driving [ 4, 5] and human–robot collaboration [6, 7]. Despite their promise, learning joint multimodal representations that faithfully preserve these heterogeneous information components remains chal-lenging. Modalities differ substantially in structure, noise characteristics, and information density, and naïve fusion strategies often lead to information interference or loss. Approaches that overly prioritize shared representations may suppress modality-unique cues, whereas methods that treat modalities independently risk missing synergistic information arising from cross-modal interactions. These challenges are particularly pronounced in low-supervision settings, where models must primarily rely on intrinsic data structure rather than extensive labeled annotations [ 8, 9]. Recent advances in self-supervised contrastive learning have substantially accelerated progress in multimodal representation learning [ 9, 10 , 11 , 12 ]. Building on unimodal frameworks such as SimCLR [ 13 ], MoCo [ 14 ], and DINO [ 15 ], contrastive methods have been extended to multimodal settings, enabling heterogeneous inputs to be aligned within a shared embedding space [ 10 , 16 , 17 ]. This paradigm is particularly appealing in low-supervision regimes, as positive pairs can be constructed without manual labels through data augmentations or by  
+
+> 1Code is available at: https://github.com/Caro-Ci/COrAL
+
+2modality pairing, with labels introduced only during downstream fine-tuning [ 9, 11 , 12 ]. However, most existing contrastive multimodal frameworks pri-marily emphasize redundantly shared semantics across modalities, implicitly assuming that all task-relevant information resides within a single shared representation space [ 17 , 18 , 19 , 20 ]. As a result, modality-specific features and synergic cross-modal interactions are often underrepresented or entan-gled, limiting robustness and generalization. Empirical evidence increasingly suggests that disentangling shared and unique information components is critical for improving downstream performance and stability. To address these limitations, several recent approaches explicitly attempt to separate shared and modality-specific representations during training [ 21 , 22 , 23 , 24 , 25 ]. Some methods further aim to model synergistic infor-mation arising from cross-modal interactions [ 24 , 25 ]. While these works demonstrate the importance of structured representation learning, informa-tion entanglement persists in practice, indicating that existing mechanisms may not enforce sufficiently strict separation between redundant, unique, and synergistic components. In this work, we propose COrAL , a self-supervised Contrastive 
+
+Or thogonalized framework with Asymmetric masking for Learning multi-modal representations. COrAL explicitly models redundant, modality-unique, and synergistic information while enforcing a strict separation between shared and unique subspaces. The framework introduces a dual-path encoding strat-egy with orthogonality constraints to prevent information leakage between representation components, coupled with an asymmetric masking mecha-nism that promotes the emergence of synergistic information by partially obscuring individual modalities. By design, COrAL overcomes key limita-tions of existing contrastive multimodal approaches, which often conflate shared and modality-specific signals or insufficiently capture cross-modal interactions [ 21 , 22 , 23 , 24 , 25 ]. To the best of our knowledge, it is the first contrastive multimodal framework to jointly preserve redundant information, retain modality-specific cues, and actively promote synergistic representations under explicit orthogonal disentanglement constraints. We evaluate COrAL on controlled synthetic data and multiple multimodal benchmarks. The results demonstrate improved recovery of modality-unique information relative to prior approaches [ 24 , 25 ], while preserving redundant and synergistic components. This balanced representation learning translates into stable, competitive state-of-the-art performance with low variance across runs, suggesting robust optimization and improved generalization. 3The remainder of this paper is organized as follows. Section 2 provides an overview of prior works. Section 3 formalizes the multimodal information decomposition problem. Section 4 presents the proposed COrAL framework and training objective. Section 5 reports empirical experiments on synthetic and MultiBench [ 26 ] datasets. Section 6 concludes with discussion and future directions. 
+
+2. Related work 
+
+2.1. Self-supervised contrastive learning 
+
+The scarcity of labeled data has driven the rapid development of self-supervised contrastive learning methods [ 11 , 12 ]. These approaches learn representations without explicit supervision by constructing positive and negative pairs directly from the data. Typically, different augmentations of the same sample are treated as positive pairs, under the assumption that appropriately augmented views should preserve semantic consistency, while views of different samples form negative pairs whose representations are en-couraged to diverge. By maximizing similarity between positive pairs and minimizing similarity between negative pairs, contrastive objectives enable the learning of semantically meaningful representations without manual an-notation. A key advantage of self-supervised contrastive learning lies in its label efficiency: the learned representations can be fine-tuned using limited labeled data for downstream tasks, often achieving competitive or superior performance compared to fully supervised approaches [ 11 , 12 , 24 ]. This effec-tiveness has been demonstrated extensively in the visual domain. For instance, SimCLR [ 13 ] showed that a simple contrastive framework with strong data augmentations can achieve performance comparable to supervised learning on unimodal data. MoCo [ 14 ] further improved scalability by introducing a momentum-based dynamic dictionary, enabling contrastive learning with large and consistent sets of negative samples. Alternative formulations have reduced the reliance on explicit negative pairs through mechanisms such as momentum encoders or gradient stopping, as exemplified by methods such as DINO [ 15 ], BYOL [ 27 ], and SimSiam [ 28 ]. While these approaches have firmly established self-supervised contrastive learning as a powerful paradigm for representation learning, they primarily focus on unimodal settings. Extending these principles to multimodal data introduces additional challenges related to modality heterogeneity and information interaction, which are not addressed by unimodal contrastive frameworks. 42.2. Multimodality in self-supervised contrastive learning 
+
+The success of self-supervised contrastive learning in unimodal settings has motivated its extension to multimodal data, aiming to jointly model heterogeneous modalities and their interactions. In multimodal contrastive learning, positive pairs are extended to include cross-modal correspondences, enabling alignment across modalities in a shared representation space. Arepresentative example is CLIP [ 17 ], which learns aligned image–text repre-sentations by treating images and their corresponding captions as positive pairs. Subsequent work has focused on improving the efficiency and effec-tiveness of such frameworks. DECLIP [ 18 ], for instance, enriches positive pair construction through augmented intra-modal views, multiple cross-modal views per sample, and nearest-neighbor positives. Despite these advances, many multimodal contrastive approaches remain tailored to specific modality combinations, limiting their general applicability [ 21 , 29 , 30 , 31 ]. To address this, modality-agnostic architectures such as Uni-Perceiver [ 19 ] employ a unified Transformer encoder with modality-specific tokenizers to support diverse modalities and tasks. 
+
+2.3. Redundancy, synergy and uniqueness 
+
+Most multimodal self-supervised contrastive learning approaches focus solely on extracting information that is shared across modalities, implicitly assuming that task-relevant information is redundantly encoded in each modality and can therefore be recovered through cross-modal alignment [ 29 ,20 , 32 , 17 , 33 ]. While effective for learning shared semantics, this assumption neglects modality-specific signals and limits the ability of such methods to capture richer forms of multimodal information. Recent work has therefore sought to extend multimodal representations beyond shared information by explicitly modeling modality-unique compo-nents [ 21 , 22 , 23 , 24 ]. These approaches distinguish between shared and unique information and introduce architectural or objective-level mechanisms to preserve both. FOCAL [ 21 ], for instance, constructs orthogonal latent subspaces for shared and modality-specific features and applies distinct con-trastive objectives within each subspace. DeCUR [ 23 ] similarly separates shared and unique information, but does so implicitly by partitioning a single latent space without enforcing explicit orthogonality. FactorCL [ 22 ] adopts an information-theoretic perspective, factorizing task-relevant information into shared and unique components by jointly maximizing lower bounds on 5task-relevant information and minimizing upper bounds on task-irrelevant information using contrastive estimators. Beyond shared and unique information, CoMM [ 24 ] further models syner-gistic information that emerges through cross-modal interactions. It aligns multimodal representations using complementary contrastive objectives that capture redundant, unique, and synergistic components, and employs ex-changeable modality-specific encoders to support diverse modality combina-tions. Wen et al. [ 25 ] extend this framework with InfMasking, which enhances synergy capture by stochastically masking modality features and pairing par-tial and complete representations, approximating infinitely many masked views. Despite these advances, existing approaches do not simultaneously en-force strict disentanglement between shared and modality-specific information while actively promoting synergistic representations. In particular, CoMM and InfMasking do not explicitly separate shared and unique components in the representation space, which may lead to information interference and reduced interpretability in downstream tasks. In contrast, COrAL learns multimodal representations that explicitly capture redundant, modality-unique, and synergistic information within dis-entangled shared and unique subspaces. Unlike prior methods, COrAL enforces orthogonality to strictly separate shared and modality-specific com-ponents and captures them in isolation through a dual-path architecture. Moreover, while both COrAL and InfMasking use partial masking to enhance synergy capture, COrAL integrates asymmetric masking directly into the shared pathway, eliminating the need for additional representations. 
+
+3. Problem formulation 
+
+Let X = ( X1, . . . , X n) denote a multimodal input comprising n ≥ 2
+
+modalities, and let Y denote the target variable. Following the Partial Information Decomposition (PID) framework[ 34 ], the mutual information between X and Y can be decomposed into conceptually distinct components that reflect different modes of information contributions. To make this decomposition explicit, we first consider the bimodal case X = ( X1, X 2), which provides an interpretable view of the underlying information components. In this setting, the mutual information admits the decomposition 
+
+I(X; Y ) = R + S + U1 + U2, (1) 6where R, S, and Ui represent redundant, synergistic, and modality-unique information, respectively. We define these components as follows: 
+
+Definition 1 (Redundancy) . The redundancy R is the information about Y
+
+that is shared by both modalities X1 and X2.
+
+Definition 2 (Synergy) . The synergy S is the information about Y that arises only through the joint cross-modal interactions of X1 and X2, and cannot be attributed to either modality in isolation. 
+
+Definition 3 (Uniqueness) . For modality i ∈ { 1, 2}, the uniqueness Ui is the information about Y contained exclusively in modality Xi.While the bimodal case offers a clear view, PID naturally extends to general multimodal inputs with n ≥ 2 modalities. In the general setting, redundancy and synergistic information are organized over a lattice of partial information atoms [ 34 ], capturing interactions ranging from pairwise modality combinations to higher-order dependencies involving multiple modalities. In this work, we adopt a simplified principled notation in which R and S
+
+denote aggregate redundancy and synergy across all interaction orders. This abstraction preserves the interpretability central to PID while avoiding the combinatorial complexity of the full lattice representation. From this perspective, an ideal multimodal representation should preserve all information components—redundant, synergistic, and modality-unique—to retain the full spectrum of task-relevant information. To this end, COrAL constructs embeddings in disentangled representation subspaces via a dual-path design: 
+
+• ZSR = F SR (X), which captures shared and synergistic information (R + S), 
+
+• ZUi = F Ui (Xi), which preserves modality-unique information Ui for 
+
+i ∈ { 1, . . . , n }.The final representation is formed by concatenation, 
+
+Z = ( ZSR , Z U 
+
+> 1
+
+, . . . , Z Un ), (2) and is designed to jointly encode the complementary information components present in multimodal observations. 7... + [CLS] qkvqkvqkvqkvqkvqkvqkvqkvFigure 1: COrAL Architecture for multimodal input X = ( X1, . . . , X n). Each modality is processed by a shared pathway F SR (·) for an embedding ZSR , which captures synergistic and redundant information, and by a modality-specific unique pathway F U (·) to produce 
+
+ZU 
+
+> 1
+
+, . . . , Z Un . At inference, neither augmentation nor masking is applied. 
+
+4. COrAL framework 
+
+COrAL is designed to learn comprehensive multimodal representations by explicitly modeling redundant, modality-unique, and synergistic information. Motivated by evidence that different modalities contribute complementary cues to a common task [ 21 , 22 , 23 , 24 ], COrAL combines a dual-path ar-chitecture with an asymmetric masking strategy to disentangle and align multimodal information in a principled manner. 
+
+4.1. Dual-path architecture with asymmetric masking 
+
+Figure 1 provides an overview of the COrAL framework, a transformer-based multimodal architecture explicitly structured to capture redundancy (R), synergy ( S), and modality-unique components ( Ui). Building on mul-timodal transformer designs [ 21 , 24 ], COrAL integrates modality-specific encoders with a fusion transformer and introduces two tightly coupled mech-anisms: (i) a dual-path encoder architecture and (ii) an asymmetric masking strategy. For each input modality, COrAL instantiates two parallel encoding path-ways. The shared pathway extracts a multimodal representation ZSR that 8captures redundant and synergistic information across modalities. In parallel, the unique pathway encodes modality-specific representations ZUi that preserve information unique to each modality. Each pathway employs modality-specific encoders; when required, a latent converter maps encoder outputs into to-ken sequences compatible with the fusion transformer. During pretraining, asymmetric masking is applied within the shared pathway after the modality-specific encoding (and latent conversion, when used) and before fusion. By selectively masking modality features in complementary views, the model is encouraged to maintain embedding consistency under structured information gaps, thereby promoting inference from cross-modal dependencies rather than relying solely on redundant signals. The masked token sequences from all modalities are concatenated and processed by the fusion transformer, yielding the shared representation. In contrast, each unique pathway processes its corresponding modality independently. After encoding and tokenization, the representation dimension-ality is reduced to half of the shared embedding size, and attention pooling produces a compact and discriminative modality-specific vector represen-tation. A separate unique pathway is maintained for each input modality. For pretraining, all representations are projected into a common embedding space through projection heads, and contrastive objectives are applied to the projected embeddings. This design enables joint optimization of shared and modality-unique representations within a unified training framework. 
+
+4.2. Training objective 
+
+During training, two augmentations t′, t ′′ ∼ T are applied to the multi-modal input X = ( X1, . . . , X n), producing two correlated views X′ and X′′ .Each view is processed by the dual-path network F (·), comprising a shared pathway F SR (·) and modality-specific unique pathways F U (·), yielding em-beddings {ZSR ′, Z U ′ 
+
+> 1
+
+, . . . , Z U ′ 
+
+> n
+
+} and {ZSR ′′ , Z U ′′  
+
+> 1
+
+, . . . , Z U ′′  
+
+> n
+
+}, respectively. The overall COrAL objective comprises three terms: 
+
+LCOrAL = λs · L shared + λu · L unique + λo · L orthogonal , (3) where λs, λu, and λo control the relative contribution of each term. The shared loss Lshared enforces contrastive alignment in the shared pathway F SR (·),capturing both redundant and synergistic information across modalities. The unique loss Lunique applies contrastive learning independently within each modality-specific pathway F U (·) to preserve modality-unique information. 9Mask Mask Figure 2: COrAL asymmetric masking strategy for two views X′ and X′′ of a bimodal input X = ( X1, X 2) after encoding and latent conversion ESR i (·).
+
+Both objectives are implemented using the InfoNCE estimator [ 35 ], widely used in contrastive representation learning [14, 17, 21, 22, 24, 25]: 
+
+Lshared = − ˆINCE (ZSR ′, Z SR ′′ ),
+
+Lunique = −
+
+> n
+
+X
+
+> i=1
+
+ˆINCE (ZU ′ 
+
+> i
+
+, Z U ′′  
+
+> i
+
+),
+
+ˆINCE (Z, Z ′) = Ez,z ′
+
+> pos ∼ˆp(Z,Z ′)
+> z′
+> neg ∼ˆp(Z′)
+
+"
+
+log exp sim (z, z ′
+
+> pos
+
+)
+
+P 
+
+> z′
+> neg
+
+exp sim (z, z ′
+
+> neg
+
+)
+
+#
+
+.
+
+(4) To explicitly promote the learning of synergistic information, COrAL incorporates an asymmetric masking operation Mm(·) within the shared pathway F SR (·). The masking ratio m is gradually increased during training. Masking is applied after modality-specific encoding and latent conversion, and before fusion by the transformer T (·). For bimodal inputs, the shared embeddings are defined as: 
+
+ZSR ′ = T (Mm(ESR  
+
+> 1
+
+(X′
+
+> 1
+
+)) , E SR  
+
+> 2
+
+(X′
+
+> 2
+
+)) ,ZSR ′′ = T (ESR  
+
+> 1
+
+(X′′  
+
+> 1
+
+), M m(ESR  
+
+> 2
+
+(X′′  
+
+> 2
+
+))) . (5) Figure 2 illustrates this mechanism for a bimodal case: one view masks features from the first modality, while the complementary view masks the 10 second modality. For general multimodal inputs with n ≥ 2 modalities, this strategy is extended by randomly partitioning modalities into two disjoint subsets M1 and M2 of equal size for each batch. Masking is applied to M1
+
+in the first view and to M2 in the second view: 
+
+ZSR ′ = T  {Mm(ESR i (X′ 
+
+> i
+
+)) }i∈M 1 , {ESR j (X′ 
+
+> j
+
+)}j∈M 2
+
+ ,ZSR ′′ = T  {ESR i (X′′  
+
+> i
+
+)}i∈M 1 , {Mm(ESR j (X′′  
+
+> j
+
+)) }j∈M 2
+
+ . (6) This structured occlusion prevents the model from trivially matching view through redundant signals alone. Instead, maintaining shared embedding consistency under complementary masking encourages the model to leverage cross-modal dependencies, providing a direct learning signal for synergistic information that might otherwise be dominated by redundancy. The orthogonality loss Lorthogonal enforces a strict separation between the shared embedding ZSR and the modality-unique embeddings ZUi , ensuring that each subspace captures independent semantic information and preventing information leakage across representation components. To this end, we adopt the cosine embedding loss (CEL), also used in FOCAL [ 21 ], to encourage orthogonality between embeddings: CEL (Z, Z ′) = Ez,z ′∼ˆp(Z,Z ′) [max (0 , cos_sim (z, z ′))] . (7) The cosine embedding loss is applied to enforce separation between the shared embedding ZSR and the modality-unique embeddings {ZU 
+
+> 1
+
+, . . . , Z Un }
+
+within each view, as well as between different modality-unique embeddings. Specifically, the orthogonality loss is defined as: 
+
+Lorthogonal =
+
+> n
+
+X
+
+> i=1
+
+ CEL (ZU ′ 
+
+> i
+
+, Z SR ′) + CEL (ZU ′′  
+
+> i
+
+, Z SR ′′ )| {z } 
+
+> Uivs SR
+
++
+
+> n−1
+
+X
+
+> i=1
+> n
+
+X
+
+> j=i+1
+
+ CEL (ZU ′ 
+
+> i
+
+, Z U ′ 
+
+> j
+
+) + CEL (ZU ′′  
+
+> i
+
+, Z U ′′  
+
+> j
+
+)| {z } 
+
+> Uivs U j
+
+. (8) Unlike squared cosine similarity losses that enforce exact orthogonality, 
+
+Lorthogonal allows angles of at least 90 ◦ between embeddings. This relaxation improves optimization flexibility while preserving effective separation of se-mantic information across subspaces. Figure 3 summarizes the loss structure for the bimodal case. The shared loss Lshared aligns ZSR ′ and ZSR ′′ , the unique 11 Figure 3: Schematic of the loss calculations between the embeddings of two views X′ and                    
+
+> X′′ for bimodal input, as defined by the loss components of COrAL. ZSR ′and ZSR ′′ are the embeddings containing information shared between modalities and ZU′
+> 1,ZU′
+> 2,ZU′′
+> 1, and
+> ZU′′
+> 2are the embeddings of modality-unique information. Arrows with CEL (·)indicate that cosine embedding loss is calculated between embeddings, and arrows with ˆINCE (·)
+> refer to the InfoNCE estimator of mutual information.
+
+loss Lunique aligns each modality-specific embedding pair (ZU ′ 
+
+> i
+
+, Z U ′′  
+
+> i
+
+), and the orthogonality loss enforces within-view separation between shared and unique representations. During inference, neither data augmentation nor masking is applied. The multimodal input X = ( X1, . . . , X n) is processed through the shared and unique pathways, F SR (·) and F U (·), and the resulting embeddings 
+
+(ZSR , Z U 
+
+> 1
+
+, . . . , Z Un ) are concatenated to form the final representation Z.
+
+5. Experiments 
+
+We evaluate the proposed COrAL framework on both controlled synthetic data and diverse multimodal benchmark datasets. Our experimental de-sign serves two objectives: (i) to assess whether COrAL learns disentangled representations that preserve redundant, modality-unique, and synergistic in-formation, and (ii) to examine how these properties translate into performance on real-world datasets. 
+
+5.1. Comparison methods 
+
+We compare COrAL against four representative state-of-the-art multi-modal contrastive learning approaches. CoMM [ 24 ] employs a multimodal 12 transformer to model redundant, unique, and synergistic information. Inf-Masking [ 25 ] extends CoMM by introducing a masking strategy to enhance the capture of synergistic information. FactorCL [ 22 ] applies factorized con-trastive learning to disentangle shared and modality-specific information. Finally, CLIP [ 17 ] serves as a standard cross-modal contrastive learning base-line that primarily captures redundantly shared semantics without modeling unique or synergistic information. While FactorCL, CoMM, and InfMasking are explicitly designed to decompose multiple information components, CLIP provides a competitive baseline for redundancy-focused representations. 
+
+5.2. Datasets 
+
+We evaluate COrAL’s ability to capture redundant, synergistic, and modality-unique information using the synthetic bimodal Trifeature dataset introduced by Dufumier et al. [24 ]. This controlled synthetic setting enforces the presence of each information component through carefully designed data generation and pairing strategies. The dataset consists of pairs of generated images forming two modalities. Each image depicts a geometric shape charac-terized by three independent attributes: shape, texture, and color, each taking one of ten discrete values. Information components are induced through spe-cific pairing strategies: Redundancy is enforced by pairing images that share the same shape across modalities, while texture remains a modality-unique feature. Synergy is defined via an artificial mapping between the texture of the first modality and the color of the second modality, with training pairs constructed to follow this mapping. The dataset contains 10,000 training pairs and 4,096 test pairs, where test pairs preserve shape consistency while varying texture. Synergy capture is evaluated by linear probing to predict adherence to the predefined texture–color mapping. Redundancy is assessed by predicting the shared shape across modalities, and uniqueness by predicting the texture of the first modality. Random guessing yields an accuracy of 10% for redundancy and uniqueness tasks and 50% for the synergy task. We further evaluate COrAL on five benchmark datasets from MultiBench [26]: 
+
+• MIMIC III [36 ] contains medical records data of over 40,000 ICU patients in the form of tabular patient data and time-series of ICU monitoring parameters. The data that is provided by MultiBench is preprocessed and contains 5 numerical values with patient data and 12 numerical measurements taken every hour over a 24-hour period. The classification goal is whether a patient has a respiratory disease 13 during their stay, determined by any ICD-9 code in group 7 (ICD-9 codes 460-519). 
+
+• CMU-MOSEI [ 37 ], a multimodal sentiment and emotion benchmark dataset of 23,000 monologue videos from over 1,000 speakers and 250 topics. Overall, the videos exceed 65 hours in length. We use the extracted features of the vision and text modalities from MultiBench. The sentiment intensity is labeled with numerical values between -3 and 3; however, prior work [ 22 , 24 ] uses a binary classification of positive or negative sentiment instead. 
+
+• CMU-MOSI [ 38 ] is a dataset for multimodal sentiment analysis from 2,199 YouTube clips. Similar to CMU-MOSEI, sentiment intensity is labeled continuously from -3 to 3. Again, following prior work [ 22 , 24 ], we consider the binary classification (sentiment negative/positive), and we use the extracted vision and text features provided by MultiBench. 
+
+• UR-FUNNY [ 39 ], a dataset for humor detection in speech, consists of samples from more than 16,000 TED talk videos. It contains 8,257 humorous punchlines, including the sentences that precede them, and the same number of negative samples without humorous remarks. The task is to classify whether humour is present in a clip, based on MultiBench’s visual and text features. 
+
+• MUsTARD [40 ], a dataset for sarcasm detection with 690 videos from popular television shows, including the previous sentences for context and an utterance for the binary classification task of sarcasm with text and visual features. 
+
+5.3. Implementation details 
+
+To ensure fair comparison, all models are trained using identical encoder backbones for each dataset and are evaluated under the same experimental protocol. Each experiment is repeated five times with different random seeds (41–45), and we report the mean accuracy and standard deviation across runs. All models are trained for 100 epochs and evaluated via linear probing on the pretrained representations. For COrAL, we use the AdamW optimizer with a learning rate of 1 × 10 −4,weight decay of 1 × 10 −3, and a batch size of 64. Unless stated otherwise, the loss coefficients λs, λu, and λo are set to 1. To progressively encourage the 14 learning of synergistic information, the asymmetric masking ratio increases from 5% to 75% in four stages over 100 training epochs. Baseline methods are trained using a fixed set of hyperparameters reported in their original implementations. Specifically, we use the following hyperparameters: 1 × 10 −4
+
+learning rate for FactorCL; 1 × 10 −3 learning rate, 1 × 10 −2 weight decay, and 0.1 temperature for CoMM; 3 × 10 −4 learning rate, 0.1 temperature, 0.7
+
+masking ratio, and 6 masked views for InfMasking; and 1 × 10 −3 learning rate and 1 × 10 −2 weight decay for CLIP. This allows us to isolate the effects of architectural and objective-level differences, rather than hyperparameter optimization, across all experiments. For the Trifeature dataset, we follow [ 24 ] and use AlexNet without the final average pooling layer as the visual encoder backbone. Feature maps are converted into token sequences via a linear patch embedding layer. For benchmark datasets, modality-specific encoders follow standard configurations: Transformers for text and vision, a shallow MLP with a feature tokenizer for tabular data, and a gated recurring unit for time-series data. For all experiments, a lightweight Transformer with eight attention heads and an additional [CLS] learnable embedding is used as a fusion module in the shared pathway to integrate modality-specific representations, while modality-specific unique pathways use a 2-layer MLP with attention pooling. 
+
+5.4. Results on synthetic data 
+
+Table 1 summarizes results on the synthetic Trifeature dataset. All meth-ods capture redundancy effectively (99-100% accuracy). As expected, CLIP achieves perfect redundancy performance but fails to capture modality-unique and synergistic information, reflecting the limitations of standard cross-modal contrastive objectives. FactorCL improves uniqueness modeling but remains near chance performance on synergy. In contrast, CoMM, InfMasking, and COrAL achieve above-chance performance across all components. InfMasking attains the highest synergy accuracy (77.0%), while COrAL achieves a closely comparable 74.4%, indicating that asymmetric masking strategy effectively enhances synergy capture beyond CoMM. In addition, COrAL exhibits a clear improvement in capturing modality-unique information (96.4%) while main-taining low variance across runs. This results highlight the effectiveness of its orthogonalized representation space and dual-path encoder in disentangling modality-specific and shared factors. 15 Model Redundancy Uniqueness Synergy 
+
+CLIP [17]* 100 .0 11 .6 50 .0
+
+FactorCL [22]* 99 .8 62 .5 46 .5
+
+CoMM [24]* 99 .9 87 .8 71 .9
+
+InfMasking [25]** 99 .9±0.09 90 .6±2.31 77 .0±4.22 
+
+COrAL (ours) 99 .7±0.08 96 .4±1.08 74 .4±2.92 
+
+Table 1: Linear probing accuracy (in %) on the bimodal Trifeature dataset. The best results are marked in bold. * denotes results are taken from [ 24 ]. ** denotes results are taken from [25]. 
+
+Model MIMIC MOSEI MOSI UR-FUNNY MUsTARD Average 
+
+CLIP[17] 66 .0±0.39 64 .2±0.45 50 .6±0.75 57 .4±1.25 65 .5±2.71 60 .7±5.94 
+
+FactorCL[22] 65 .1±0.21 71 .7±1.38 52 .5±1.74 59 .8±0.77 54 .2±2.40 60 .7±7.08 
+
+CoMM [24] 65 .7±0.42 69 .2±0.48 66 .0±1.67 63 .0±1.08 65 .3±2.21 65 .8±1.98 
+
+InfMasking [25] 67 .7±0.37 69 .7±0.23 67 .2±1.00 62 .8±1.22 65 .5±0.62 66 .6±2.32 
+
+COrAL (ours) 67 .4±0.22 70 .4±0.21 67 .9±0.70 63 .5±1.04 64 .4±1.76 66 .7±2.79 
+
+Table 2: Linear evaluation accuracy (in %) after 100 epochs of self-supervised learning on MultiBench datasets. The best results are marked in bold, the second-best results are underlined. 
+
+5.5. Results on MultiBench datasets 
+
+Table 2 reports linear probing results on the MultiBench datasets after self-supervised pretraining. Overall, COrAL demonstrates consistently strong performance across benchmarks. It outperforms CoMM on all five datasets, CLIP on four (MIMIC, MOSEI, MOSI, and UR-FUNNY), and FactorCL on four (MIMIC, MOSI, UR-FUNNY, and MUsTARD), while FactorCL achieves the best performance on MOSEI. InfMasking attains the highest accuracy on MIMIC and matches CLIP on MUsTARD, while exhibiting lower variance across runs. Although the performance difference between COrAL and InfMasking on MIMIC is marginal (0.3%). In terms of average accuracy, COrAL achieves the highest overall performance, albeit by a narrow margin of 0.1%. Importantly, COrAL consistently exhibits low variance across runs, achieving the lowest standard deviation on MOSEI, MOSI, and UR-FUNNY, indicating robust and reliably optimized learned representations across different random initializations. Notably, CLIP performs competitively on MIMIC and MUsTARD despite modeling only redundant information, and FactorCL performs strongly on MOSEI, where redundancy and modality-specific cues appear sufficient for 16 Masking Redundancy Uniqueness Synergy 
+
+Increasing ratio 99 .7±0.08 96 .4±1.08 74 .4±2.92 
+
+None 99 .6±0.22 93 .9±2.70 50 .7±0.38 
+
+25% masking 99 .7±0.14 96 .6±1.39 74 .8±1.25 
+
+50% masking 99 .5±0.08 97 .4±0.63 75 .5±1.09 
+
+75% masking 98 .6±0.74 96 .3±0.64 76 .9±1.99 
+
+Table 3: Linear probing accuracy (in %) of COrAL on Trifeature after 100 epochs of self-supervised learning, comparing the effects of asymmetric masking with increasing amounts, static masking percentages, and no masking. Best results are marked in bold. 
+
+Masking MIMIC MOSEI MOSI UR-FUNNY MUsTARD 
+
+Increasing ratio 67 .4±0.22 70 .4±0.21 67 .9±0.70 63 .5±1.04 64 .4±1.76 
+
+25% masking 67 .3±0.29 70 .2±0.35 65 .6±0.64 64 .0±0.41 61 .4±2.16 
+
+50% masking 67 .3±0.60 70 .2±0.43 66 .2±1.07 63 .6±0.68 60 .4±2.23 
+
+75% masking 67 .4±0.39 70 .4±0.39 65 .3±1.15 63 .6±0.84 61 .3±2.47 
+
+Table 4: Linear probing accuracy (in %) on MultiBench datasets after 100 epochs of self-supervised learning, comparing our adaptive masking approach with static masking ratios. 
+
+the task. This suggests that the relative importance of redundant, unique, and synergistic information varies across tasks, and that improvements in modeling unique and synergistic components do not necessarily translate into gains when redundancy alone is sufficient. Overall, COrAL demonstrates stable and competitive performance across diverse multimodal benchmarks, outperforming prior methods on two datasets and achieving comparable results on the remaining benchmarks. 
+
+5.6. Ablation studies 
+
+To rigorously validate the design of COrAL, we conduct a series of targeted ablation studies examining (i) the impact of asymmetric masking in synergy capture, (ii) sensitivity to the loss weights λs, λu, and λo, (iii) architectural design choices for the unique-information pathway, and (iv) the effectiveness of embedding space disentanglement. Together, these analyses provide both quantitative and qualitative evidence supporting the proposed design. 
+
+5.6.1. Asymmetric masking 
+
+We first evaluate the contribution of our asymmetric masking strategy using the synthetic Trifeature dataset. Table 3 compares performance under 17 1 3 5           
+
+> Value of λo
+> 56
+> 58
+> 60
+> 62
+> 64
+> 66
+> 68
+> 70
+> 72
+> Accuracy (%)
+> orthogonal
+> 0.5 12
+> Value of λs
+> 56
+> 58
+> 60
+> 62
+> 64
+> 66
+> 68
+> 70
+> 72
+> shared
+> 0.5 12
+> Value of λu
+> 56
+> 58
+> 60
+> 62
+> 64
+> 66
+> 68
+> 70
+> 72
+> unique
+> Datasets
+> MIMIC MOSEI MOSI UR-FUNNY MUsTARD
+
+Figure 4: Sensitivity analysis of COrAL: Impact of loss weight variations on linear probing accuracy across MultiBench datasets after 100 epochs. For each of the three loss components 
+
+Lorthogonal , Lshared , and Lunique we plot the changes in accuracy for different values of their 
+
+λ, which weigh their influence on the overall loss LCOrAL .
+
+no masking, fixed masking ratios (25%, 50%, 75%), and our progressively in-creasing masking schedule. Without masking, COrAL achieves high accuracy on uniqueness and redundancy capture but fails to recover synergistic informa-tion, with performance only marginally above chance. This empirical evidence underscores that masking is essential for inducing an effective learning signal for synergy modeling. Introducing masking substantially improves synergy capture while preserving performance on redundant and unique components. On Trifeature, higher static masking ratios (e.g., 75%) in the shared path-way slightly improve synergy capture, achieving 76 .9±1.99 %, closely matching the performance of InfMasking ( 77 .0±4.22 %, Table 1). Importantly, COrAL maintains strong unique information capture even under high masking levels. However, results on real-world MultiBench datasets (Table 4) indicate that high static masking ratios can degrade downstream performance and increase variance. We attribute this discrepancy to the artificially strong synergistic correlations in Trifeature, which may not reflect real-world modality interac-tions. Consequently, we adopt a progressively increasing masking schedule (5% → 35% → 55% → 75% over 25-epoch intervals) for COrAL, which pro-vides stable performance across all datasets. This strategy balances synergy induction and representation stability, making it robust across heterogeneous multimodal settings. 18 Unique Path Architecture MIMIC MOSEI MOSI UR-FUNNY MUsTARD Average                   
+
+> MLP + pool (half size) (ours) 67 .4±0.22 70 .4±0.21 67 .9±0.70 63 .5±1.04 64 .4±1.76 66 .7±2.79
+> MLP + pool (same size) 67 .3±0.52 70 .3±0.43 66 .1±0.49 63 .6±1.32 62 .0±1.34 65 .9±2.89
+> Transformer (half size) 67 .6±0.46 70 .4±0.24 66 .6±1.82 63 .9±0.87 63 .2±1.69 66 .3±2.61
+
+Table 5: Linear evaluation accuracy (in %) on MultiBench datasets after 100 epochs of self-supervised learning, evaluating the impact of different architecture designs and embedding sizes for the unique pathway. We compare two architecture options for the unique pathway: a lightweight two-layer MLP with attention pooling (MLP + pool) and a Transformer-based approach, along with different embedding sizes relative to the shared pathway embedding. 
+
+5.6.2. Loss weight sensitivity 
+
+We next assess sensitivity to the loss weights λs, λu, and λo. Unless otherwise stated, we use λs = λu = λo = 1 . To assess robustness, we independently halve or double λs and λu to examine the impact on each pathway, and increase λo to 3 and 5, inspired by prior orthogonality-based formulations [ 21 ]. In each experiment, we modify only one λ weight at a time, keeping the other two at their default values. As shown in Figure 4, performance variations remain within 5% across all datasets, indicating that COrAL is not overly sensitive to moderate reweighting. While small datasets exhibit slightly increased variance under altered weights, the default setting (λ = 1 for all components) consistently yields low standard deviation and competitive accuracy. These findings confirm that COrAL does not require delicate hyperparameter tuning and that equal weighting provides a stable, general-purpose configuration. 
+
+5.6.3. Unique pathway design 
+
+We further validate architectural choices for our unique pathway F Ui (·)
+
+(Table 5). We compare: (i) our proposed design with two-layer MLP with attention pooling, which outputs embeddings half the dimension of the shared pathway; (ii) a modified version of our architecture that maintains the same output dimensions as the shared embedding; and (iii) a lightweight Trans-former (with 1-layer and 4 attention heads), with output dimensions reduced by half. As shown in Table 5, our proposed design achieves comparable or superior performance across all datasets while maintaining lower complexity. Importantly, the Transformer-based variant does not yield consistent gains, confirming that increased architectural complexity does not necessarily trans-late into improved unique information extraction. This finding supports our lightweight design as an effective balance between representational capacity 19 Figure 5: Visualization of the density of the shared and unique representations of visual and textual information from the MOSI dataset after projection into the embedding space using UMAP. Contour lines for training data density are shown in lighter colors, and contour lines for test data density are shown in darker colors. 
+
+and efficiency. 
+
+5.6.4. Disentangled embedding space 
+
+COrAL explicitly enforces orthogonality between shared and unique repre-sentations, ensuring each captures distinct contents of information components. To verify whether this framework results in structural disentanglement, we project embeddings into a common subspace and visualize their distributions using UMAP (Figure 5). On MOSI (representative example), shared and unique embeddings form clearly separable subspaces, validating COrAL’s abil-ity to provide disentangled representations. Furthermore, test distributions align closely with training distributions, indicating that the learned structural separation generalizes beyond the training data. These results qualitatively validate the effectiveness of the orthogonality constraint and confirm that 20 COrAL achieves meaningful disentanglement in the embedding space. 
+
+5.6.5. Self-supervised finetuning 
+
+While COrAL is optimized for self-supervised pretraining, downstream performance ultimately depends on fine-tuning. A key challenge in fine-tuning is preserving the decomposition of shared and unique information during supervised optimization, as naïve cross-entropy training can induce representa-tion collapse. To mitigate this, we adopt a supervised contrastive fine-tuning strategy [ 41 ]. Positive pairs are constructed from same-class embeddings, and negative pairs from different labels, when computing Lshared and Lunique . For datasets with high intra-class variability, we optionally restrict positive pairs to augmented views of the same sample, treating other same-class samples as neutral by exclusion from the loss. These relaxed constraints enable the model to preserve rich information that can capture dissimilar instances within a heterogeneous class label. Empirical tests indicated that freezing projection heads during fine-tuning and continuing to apply augmentations to generate two views for each sample, yields the best results. During fine-tuning, the orthogonality loss Lorthogonal is continuously retained, although reducing its weight λo may be beneficial depending on the downstream task. To further enhance synergistic information capture, we apply asymmetric masking at a lower ratio, as the model must now additionally perform cross-sample align-ment of embeddings. Overall, fine-tuning introduces greater sensitivity to dataset characteristics, size, and task-specific objectives, making it difficult to prescribe universally optimal hyperparameters across all scenarios. As a representative case, fine-tuning COrAL on CMU-MOSI after 100 epochs of pretraining (with 20% masking, λo = 1 , and early stopping epochs: 46–89) achieves 75.3% accuracy with 0.73% standard deviation across five runs, yielding a 7.4% absolute accuracy gain over the pretrained representation’s linear evaluation. This result demonstrates that COrAL’s disentangled repre-sentations remain transferable and can be effectively adapted to downstream tasks without sacrificing structural integrity. 
+
+6. Conclusion 
+
+This paper addresses the problem of structured information decomposition in multimodal representation learning. While many existing fusion frameworks primarily emphasize redundant information across modalities, they often overlook modality-unique and synergistic components or fail to separate them 21 explicitly. To address this limitation, we proposed COrAL, a multimodal framework that jointly models redundant, modality-specific, and synergistic information within a unified and principled architecture. COrAL combines a dual-path design with orthogonality constraints to enforce separation between shared and unique subspaces, thereby reducing cross-component interference. In addition, an asymmetric masking mechanism is integrated into the shared pathway to promote synergistic feature learning without introducing auxiliary losses or additional representational branches. This design enables explicit and controlled decomposition of multimodal information while maintaining architectural efficiency. Experimental results on both synthetic data and MultiBench benchmarks demonstrate that COrAL effectively captures the three targeted information components and produces stable, competitive downstream performance. On synthetic experiments, the framework shows improved modeling of modality-unique information compared to existing methods. On real-world datasets, COrAL achieves state-of-the-art or comparable accuracy with consistently low variance, indicating robust and reliable representation learning. Future work will focus on extending the framework to settings involving more than two modalities and on developing scalable formulations of the orthogonality and masking mechanisms for higher-order interactions. Overall, this work contributes a structured and empirically validated approach to multimodal fusion, advancing the principled modeling of redundant, unique, and synergistic information in complex multimodal systems. 
+
+CRediT authorship contribution statement Carolin Cissée: Conceptualization, Methodology, Software, Validation, Investigation, Writing - Original Draft, Visualization; Raneen Younis: 
+
+Writing - Review & Editing, Project administration; Zahra Ahmadi: Con-ceptualization, Validation, Writing - Review & Editing, Supervision, Funding acquisition. 
+
+Data availability 
+
+The Multibench datasets [ 26 ] CMU-MOSEI [ 37 ], CMU-MOSI [ 38 ], UR-FUNNY [ 39 ], and MUsTARD [ 40 ] are publicly available, except for the MIMIC III dataset [ 36 , 26 ], which is available upon providing proof of the required credentials. The code for generating the synthetic data is made available by Dufumier et al. [24]. 22 Declaration of competing interest 
+
+The authors declare that they have no known competing financial interests or personal relationships that could have appeared to influence the work reported in this article. 
+
+Acknowledgment 
+
+This work was supported by the Federal Ministry of Research, Tech-nology and Space of Germany [grant number 16IS24059]. We acknowledge the Hannover Medical School for providing MHH-HPC resources that have contributed to the results reported in this paper. 
+
+References 
+
+[1] S. Kodali, Leveraging ai for real-time clinical decision support systems in oncology: Utilizing machine learning for cancer diagnosis, prognosis, and treatment planning based on multi-modal patient data, Los Angel. J. Intell. Syst. Pattern Recognit. 3 (2023) 521–558. [2] R. Zhang, J. Sheng, Q. Zhang, J. Wang, B. Wang, A review of multimodal fusion–based deep learning for alzheimer’s disease, Neurosci. 576 (2025) 80–95. doi:10.1016/j.neuroscience.2025.04.035. [3] A. E. Ouahidi, Y. E. Ouahidi, P.-P. Nicol, S. Hannachi, C. Benic, J. Man-sourati, B. Pasdeloup, R. Didier, Machine learning for pacemaker im-plantation prediction after tavi using multimodal imaging data, Sci. Rep. 14 (1) (2024) 25008. doi:10.1038/s41598-024-76128-z. [4] J.-J. Hwang, R. Xu, H. Lin, W.-C. Hung, J. Ji, K. Choi, D. Huang, T. He, P. Covington, B. Sapp, et al., Emma: End-to-end multimodal model for autonomous driving, arXiv:2410.23262 (2024). [5] Y. Xiao, F. Codevilla, A. Gurram, O. Urfalioglu, A. M. López, Multi-modal end-to-end autonomous driving, IEEE Trans. Intell. Transp. Syst. 23 (1) (2022) 537–547. doi:10.1109/TITS.2020.3013234. [6] D. Wu, P. Zheng, Q. Zhao, S. Zhang, J. Qi, J. Hu, G.-N. Zhu, L. Wang, Empowering natural human–robot collaboration through multimodal language models and spatial intelligence: Pathways 23 and perspectives, Rob. Comput.-Integr. Manuf. 97 (2026) 103064. doi:10.1016/j.rcim.2025.103064. [7] J. Duan, L. Zhuang, Q. Zhang, Y. Zhou, J. Qin, Multimodal perception-fusion-control and human–robot collaboration in manufacturing: Areview, Int. J. Adv. Manuf. Technol. 132 (3) (2024) 1071–1093. doi:10.1007/s00170-024-13385-2. [8] S.-F. Zhang, J.-H. Zhai, B.-J. Xie, Y. Zhan, X. Wang, Multi-modal representation learning: Advances, trends and challenges, in: Proc. Int. Conf. Mach. Learn. Cybern., 2019, pp. 1–6. doi:10.1109/ICMLC48188.2019.8949228. [9] S. Deldari, H. Xue, A. Saeed, J. He, D. V. Smith, F. D. Salim, Be-yond just vision: A review on self-supervised representation learn-ing on multimodal and temporal data, arXiv:2206.02353 (2022). doi:10.48550/arXiv.2206.02353. [10] Y. Zong, O. M. Aodha, T. M. Hospedales, Self-supervised multimodal learning: A survey, IEEE Trans. Pattern Anal. Mach. Intell. 47 (7) (2025) 5299–5318. doi:10.1109/TPAMI.2024.3429301. [11] H. Hu, X. Wang, Y. Zhang, Q. Chen, Q. Guan, A comprehensive survey on contrastive learning, Neurocomputing 610 (2024) 128645. doi:10.1016/j.neucom.2024.128645. [12] A. Jaiswal, A. R. Babu, M. Z. Zadeh, D. Banerjee, F. Makedon, A survey on contrastive self-supervised learning, Technologies 9 (1) (2021). doi:10.3390/technologies9010002. [13] T. Chen, S. Kornblith, M. Norouzi, G. E. Hinton, A simple framework for contrastive learning of visual representations, in: Int. Conf. Mach. Learn., Vol. 119, ICML, 2020, pp. 1597–1607. doi:10.48550/arXiv.2002.05709. [14] K. He, H. Fan, Y. Wu, S. Xie, R. Girshick, Momentum contrast for unsupervised visual representation learning, in: Proc. IEEE Comput. Soc. Conf. Comput. Vis. Pattern Recognit., IEEE, 2020, pp. 9729–9738. doi:10.1109/CVPR42600.2020.00975. [15] M. Caron, H. Touvron, I. Misra, H. Jegou, J. Mairal, P. Bojanowski, A. Joulin, Emerging properties in self-supervised vision transformers, 24 in: Proc. IEEE Int. Conf. Comput. Vis., IEEE, 2021, pp. 9650–9660. doi:10.1109/ICCV48922.2021.00951. [16] P. Hager, M. J. Menten, D. Rueckert, Best of both worlds: Multimodal contrastive learning with tabular and imaging data, in: Proc. IEEE Comput. Soc. Conf. Comput. Vis. Pattern Recognit., IEEE, 2023, pp. 23924–23935. doi:10.1109/CVPR52729.2023.02291. [17] A. Radford, J. W. Kim, C. Hallacy, A. Ramesh, G. Goh, S. Agarwal, G. Sastry, A. Askell, P. Mishkin, J. Clark, et al., Learning transferable visual models from natural language supervision, in: 38th Int. Conf. Mach. Learn., ICML, 2021, pp. 8748–8763. [18] J. Wang, B. Chen, Y. Li, B. Kang, Y. Chen, Z. Tian, Declip: Decoupled learning for open-vocabulary dense perception, in: Proc. IEEE Comput. Soc. Conf. Comput. Vis. Pattern Recognit., IEEE, 2025, pp. 14824–14834. doi:10.1109/CVPR52734.2025.01381. [19] X. Zhu, J. Zhu, H. Li, X. Wu, X. Wang, H. Li, X. Wang, J. Dai, Uni-perceiver: Pre-training unified architecture for generic percep-tion for zero-shot and few-shot tasks, in: Proc. IEEE Comput. Soc. Conf. Comput. Vis. Pattern Recognit., IEEE, 2021, pp. 16804–16815. doi:10.1109/CVPR52688.2022.01630. [20] Y.-H. H. Tsai, Y. Wu, R. Salakhutdinov, L. philippe Morency, Self-supervised learning from a multi-view perspective, in: 9th Int. Conf. Learn Represent., ICLR, 2021. [21] S. Liu, T. Kimura, D. Liu, R. Wang, J. Li, S. Diggavi, M. Srivastava, T. Abdelzaher, Focal: Contrastive learning for multimodal time-series sensing signals in factorized orthogonal latent space, in: Adv. Neural Inf. Process. Syst. 37, 2023, pp. 47309–47338. doi:10.5555/3666122.3668171. [22] P. P. Liang, Z. Deng, M. Ma, J. Zou, L.-P. Morency, R. Salakhutdi-nov, Factorized contrastive learning: Going beyond multi-view redun-dancy, in: Adv. Neural Inf. Process. Syst. 37, 2023, pp. 32971–32998. doi:10.5555/3666122.3667552. [23] Y. Wang, C. M. Albrecht, N. A. A. Braham, C. Liu, Z. Xiong, X. X. Zhu, Decoupling common and unique representations for multimodal 25 self-supervised learning, in: Proc. Eur. Conf. Comput. Vis., Springer, 2024, p. 286–303. [24] B. Dufumier, J. Castillo-Navarro, D. Tuia, J.-P. Thiran, What to align in multimodal contrastive learning?, in: 13th Int. Conf. Learn Represent., ICLR, 2025. doi:10.48550/arXiv.2409.07402. [25] L. Wen, Q. Dai, J. Liu, J. Zheng, Y. Dai, D. Wang, Z. Kang, J. Wang, Z. Xu, J. Duan, Infmasking: Unleashing synergistic information by contrastive multimodal interactions, in: Adv. Neural Inf. Process. Syst. 39, 2025. [26] P. P. Liang, Y. Lyu, X. Fan, Z. Wu, Y. Cheng, J. Wu, L. Chen, P. Wu, M. A. Lee, Y. Zhu, R. Salakhutdinov, L.-P. Morency, Multibench: Mul-tiscale benchmarks for multimodal representation learning, Adv. Neural Inf. Process. Syst. 2021 DB1 (2021) 1–20. [27] J.-B. Grill, F. Strub, F. Altché, C. Tallec, P. Richemond, E. Buchatskaya, C. Doersch, B. Avila Pires, Z. Guo, M. Gheshlaghi Azar, et al., Bootstrap your own latent-a new approach to self-supervised learning, in: Adv. Neural Inf. Process. Syst. 34, Vol. 33, 2020, pp. 21271–21284. [28] X. Chen, K. He, Exploring simple siamese representation learning, in: Proc. IEEE Comput. Soc. Conf. Comput. Vis. Pattern Recognit., IEEE, 2021, pp. 15745–15753. doi:10.1109/CVPR46437.2021.01549. [29] H. Akbari, L. Yuan, R. Qian, W.-H. Chuang, S.-F. Chang, Y. Cui, B. Gong, Vatt: Transformers for multimodal self-supervised learning from raw video, audio and text, in: Adv. Neural Inf. Process. Syst. 35, 2021, pp. 24206 – 24221. doi:10.5555/3540261.3542114. [30] Y. Wang, Y. Han, H. Wang, X. Zhang, Contrast everything: a hierarchi-cal contrastive framework for medical time-series, in: Adv. Neural Inf. Process. Syst. 37, 2023, pp. 55694 – 55717. doi:10.5555/3666122.3668553. [31] J. Liu, S. Chen, Timesurl: self-supervised contrastive learning for uni-versal time series representation learning, in: Proc. 38th AAAI Conf. Artif. Intell., 36th Conf. Innov. Appl. Artif. Intell., 14th Symp. Educ. Adv. Artif. Intell., AAAI Press, 2024. doi:10.1609/aaai.v38i12.29299. 26 [32] C. Tosh, A. Krishnamurthy, D. Hsu, Contrastive learning, multi-view redundancy, and linear models, in: Proc. 32nd Int. Conf. Algor. Learn. Theory, PMLR, 2021, pp. 1179–1206. [33] Y. Tian, C. Sun, B. Poole, D. Krishnan, C. Schmid, P. Isola, What makes for good views for contrastive learning?, in: Adv. Neural Inf. Process. Syst. 34, 2020, pp. 6827–6839. doi:10.5555/3495724.3496297. [34] P. L. Williams, R. D. Beer, Nonnegative decomposition of multivariate information, arXiv:1004.2515 (2010). doi:10.48550/arXiv.1004.2515. [35] A. van den Oord, Y. Li, O. Vinyals, Representation learn-ing with contrastive predictive coding, arXiv:1807.03748 (2019). doi:10.48550/arXiv.1807.03748. [36] A. E. Johnson, T. J. Pollard, L. Shen, L.-w. H. Lehman, M. Feng, M. Ghassemi, B. Moody, P. Szolovits, L. Anthony Celi, R. G. Mark, Mimic-iii, a freely accessible critical care database [dataset], Sci Data 3 (1) (2016) 1–9. [37] A. Bagher Zadeh, P. P. Liang, S. Poria, E. Cambria, L.-P. Morency, Mul-timodal language analysis in the wild: CMU-MOSEI dataset and inter-pretable dynamic fusion graph [dataset], in: Proc. 56th Annu. Meet. As-soc. Comput. Linguist., ACL, 2018, pp. 2236–2246. doi:10.18653/v1/P18-1208. [38] A. Zadeh, R. Zellers, E. Pincus, L.-P. Morency, Mosi: Multimodal corpus of sentiment intensity and subjectivity analysis in online opinion videos [dataset], arXiv:1606.06259 (2016). doi:10.48550/arXiv.1606.06259. [39] M. K. Hasan, W. Rahman, A. Bagher Zadeh, J. Zhong, M. I. Tanveer, L.-P. Morency, M. E. Hoque, UR-FUNNY: A multimodal language dataset for understanding humor [dataset], in: Conf. Empir. Methods Nat. Lang. Process. 9th Int. Jt. Conf. Nat. Lang. Process. Proc., 2019, pp. 2046–2056. doi:10.18653/v1/D19-1211. [40] S. Castro, D. Hazarika, V. Pérez-Rosas, R. Zimmermann, R. Mihalcea, S. Poria, Towards multimodal sarcasm detection (an _Obviously_ perfect paper) [dataset], in: Proc. 57th Annu. Meet. Assoc. Comput. Linguist., ACL, 2019, pp. 4619–4629. doi:10.18653/v1/P19-1455. 27 [41] P. Khosla, P. Teterwak, C. Wang, A. Sarna, Y. Tian, P. Isola, A. Maschinot, C. Liu, D. Krishnan, Supervised contrastive learning, in: Adv. Neural Inf. Process. Syst. 33, 2020, pp. 18661–18673. 28

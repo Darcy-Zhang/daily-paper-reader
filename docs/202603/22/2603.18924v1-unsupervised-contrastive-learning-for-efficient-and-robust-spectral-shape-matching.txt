@@ -1,0 +1,571 @@
+Title: Unsupervised Contrastive Learning for Efficient and Robust Spectral Shape Matching
+
+URL Source: https://arxiv.org/pdf/2603.18924v1
+
+Published Time: Fri, 20 Mar 2026 01:12:49 GMT
+
+Number of Pages: 12
+
+Markdown Content:
+# Unsupervised Contrastive Learning for Efficient and Robust Spectral Shape Matching 
+
+## Feifan Luo 1, Hongyang Chen 2* 
+
+> 1
+
+College of Computer Science and Technology, Zhejiang University, Hangzhou 310027, China 
+
+> 2
+
+Research Center for Data Hub and Security, Zhejiang Lab, Hangzhou 311121, China luoff@zju.edu.cn, dr.h.chen@ieee.org 
+
+Abstract 
+
+Estimating correspondences between pairs of non-rigid de-formable 3D shapes remains a significant challenge in com-puter vision and graphics. While deep functional map meth-ods have become the go-to solution for addressing this prob-lem, they primarily focus on optimizing pointwise and func-tional maps either individually or jointly, rather than directly enhancing feature representations in the embedding space, which often results in inadequate feature quality and subop-timal matching performance. Furthermore, these approaches heavily rely on traditional functional map techniques, such as time-consuming functional map solvers, which incur substan-tial computational costs. In this work, we introduce, for the first time, a novel unsupervised contrastive learning-based ap-proach for efficient and robust 3D shape matching. We begin by presenting an unsupervised contrastive learning framework that promotes feature learning by maximizing consistency within positive similarity pairs and minimizing it within nega-tive similarity pairs, thereby improving both the consistency and discriminability of the learned features. We then design a significantly simplified functional map learning architec-ture that eliminates the need for computationally expensive functional map solvers and multiple auxiliary functional map losses, greatly enhancing computational efficiency. By integrat-ing these two components into a unified two-branch pipeline, our method achieves state-of-the-art performance in both ac-curacy and efficiency. Extensive experiments demonstrate that our approach is not only computationally efficient but also out-performs current state-of-the-art methods across various chal-lenging benchmarks, including near-isometric, non-isometric, and topologically inconsistent scenarios—even surpassing su-pervised techniques. 
+
+Code — https://github.com/LuoFeifan77/ContrastiveFMNet 
+
+## Introduction 
+
+Non-rigid deformable shape matching is a fundamental prob-lem in shape analysis and related fields, focusing on establish-ing meaningful correspondences between shapes. This task has a wide range of applications, including deformation trans-fer (Sumner and Popovi ´c 2004), shape interpolation (Eisen-berger et al. 2021), and statistical shape analysis (Bogo et al. 2014). 
+
+> *
+
+Corresponding author. Copyright © 2026, Association for the Advancement of Artificial Intelligence (www.aaai.org). All rights reserved. 
+
+With recent advancements in deep learning, numerous learning-based approaches have been proposed for non-rigid deformable shape matching, primarily based on the func-tional map pipeline (Ovsjanikov et al. 2012). The seminal work FMNet (also known as deep functional maps)(Litany et al. 2017) was the first to leverage learned shape features as optimal descriptors to generate the desired functional maps. Building upon this framework, several deep learning-based methods(Eisenberger et al. 2021; Cao, Roetzer, and Bernard 2023; Bastian et al. 2024; Attaiki, Pai, and Ovsjanikov 2021) have been introduced to address a variety of shape match-ing scenarios. However, most existing deep functional maps approaches are still concentrating on optimizing pointwise and functional maps individually or simultaneously, e.g., constraining pointwise maps (Halimi et al. 2019; Ayg ¨un, L ¨ahner, and Cremers 2020) and functional maps alone (Li, Donati, and Ovsjanikov 2022; Donati, Corman, and Ovs-janikov 2022), or penalizing both pointwise and functional maps to promote properness (Attaiki and Ovsjanikov 2023; Cao, Roetzer, and Bernard 2023). While regularizing func-tional and pointwise maps is actually to learn informative lo-cal feature representations(Cao, Roetzer, and Bernard 2023), these advanced methods overlook the direct supervision of feature representation within the embedding space, result-ing in subpar feature representation and inferior matching results. Furthermore, these methods like (Cao, Roetzer, and Bernard 2023; Luo et al. 2025) heavily rely on functional map solvers and multiple auxiliary functional map losses, re-sulting in complex training paradigms and low computational efficiency. A detailed comparison of methods can be found in Table 1. To overcome the limitations, we introduce the first unsu-pervised contrastive learning-based method, offering a novel principle for resolving non-rigid 3D shape matching chal-lenges. We first propose the unsupervised contrastive learning framework designed to promote informative feature learn-ing. Positive and negative sets comprising candidate points with high and low similarity, respectively, are defined, de-rived from ranking vertex embedding similarities. Using these sets, a hybrid similarity generator constructs corresponding similarity pairs, i.e., positive and negative. By minimizing distance between positive pairs while maximizing distance between negative pairs, two novel unsupervised contrastive losses are introduced: cross-contrastive loss, which improves 
+
+> arXiv:2603.18924v1 [cs.CV] 19 Mar 2026
+
+ProF Unsup WoS Ol FMNet ✗ ✗ ✗ -GeomFmaps ✗ ✗ ✗ -SRFeat ✓ ✗ ✓ -DUO-FMNet ✗ ✓ ✗ ✗
+
+AttentiveFMaps ✗ ✓ ✗ ✗
+
+RFMNet ✗ ✓ ✓ ✓
+
+ULRSSM ✗ ✓ ✗ ✗
+
+DiffZO ✗ ✓ ✓ ✗
+
+DeepFAFM ✗ ✓ ✗ ✗
+
+Ours ✓ ✓ ✓ ✓
+
+Table 1: Method comparison. Our method is the first unsu-pervised contrastive learning approach specifically for non-rigid deformable 3D shape matching, combining a distinc-tive set of properties that enhance its performance. Where ProF: Pro mote f eatures in the embedding space. Unsup: Full unsup ervised. WoS: W ith out functional map s olver. Ol: O nly single unsupervised functional map loss. feature representation consistency between shapes, and self-contrastive loss, which enhances feature self-discriminability. Then, we build the streamlined functional map learning ar-chitecture without the computationally intensive functional maps solver or auxiliary functional map losses, significantly reducing reliance on structural assumptions of functional maps (e.g., orthogonality) and minimizing the computational cost. Consequently, building upon the contrastive learning and functional map framework, our method achieves supe-rior performance in both efficiency and accuracy across a wide range of matching scenarios. The main contributions are summarized as follows: • The first unsupervised contrastive learning framework for non-rigid deformable 3D shape matching. • A simple yet efficient two-branch architecture without a computationally intensive functional map solver and multiple auxiliary functional losses. • Extensive experiments demonstrate that our approach achieves state-of-the-art performance across challenging benchmarks. 
+
+## Related Works 
+
+Non-rigid 3D shape matching is a long-standing problem that has been studied extensively over the years. For a comprehen-sive overview of the field, readers are encouraged to consult surveys such as (Sahillio ˘glu 2020; Deng et al. 2022). Here, we review approaches most similar to ours. 
+
+Axiomatic Functional Map Methods 
+
+A landmark approach to non-rigid deformable shape match-ing is the functional map framework (Ovsjanikov et al. 2012), which has inspired numerous subsequent works (Ren et al. 2018, 2019; Huang et al. 2020; Hu et al. 2021; Ren et al. 2021; Gao et al. 2021; Pai et al. 2021; Fan et al. 2022; Mag-net et al. 2022; Donati et al. 2022; Hartwig et al. 2023). These methods incorporate functional or map constraints to enhance matching accuracy and robustness. However, ax-iomatic functional map methods rely heavily on the quality of extrinsic (Salti, Tombari, and Di Stefano 2014) and intrin-sic (Sun, Ovsjanikov, and Guibas 2009; Aubry, Schlickewei, and Cremers 2011) handcrafted features. Their performance deteriorates under large-scale deformations, often produc-ing unsatisfactory results. In contrast, our approach directly learns distinguishing features from training data, offering improved accuracy and robustness, especially in challenging matching scenarios. 
+
+Deep Functional Map Methods 
+
+Unlike axiomatic approaches, deep functional map meth-ods aim to eliminate the reliance on handcrafted features by directly extracting shape features from training data. The pioneering FMNet (Litany et al. 2017) improved matching re-sults by optimizing the SHOT descriptor (Salti, Tombari, and Di Stefano 2014) using residual MLP layers. Meth-ods like UnsupFMNet (Halimi et al. 2019) and Ayguen et al. (Ayg ¨un, L ¨ahner, and Cremers 2020) enhanced pointwise or functional maps within their loss functions, while other works (Roufosse, Sharma, and Ovsjanikov 2019; Sharma and Ovsjanikov 2020) optimized functional maps with properties like bijection, and orthogonality. Recent two-branch architectures (Cao, Roetzer, and Bernard 2023; Sun et al. 2023) supervise both pointwise and functional maps to enhance properness, inspiring sub-sequent works (Cao et al. 2024; Cao, Roetzer, and Bernard 2024). Magnet et al. (Magnet and Ovsjanikov 2024) proposed a single-branch network to improve functional maps. How-ever, these methods often neglect feature enhancement in the embedding space, limiting feature learning performance. Additionally, they still depend on computationally expensive solvers, and multiple loss functions, resulting in complex networks and reduced efficiency. In contrast, we propose a novel pipeline that learns in-formative feature representations for more accurate and ro-bust correspondences while significantly reducing reliance on functional map techniques. Our approach outperforms state-of-the-art methods (Cao, Roetzer, and Bernard 2023; Magnet and Ovsjanikov 2024) across challenging shape-matching scenarios, including those using supervised tech-niques (Litany et al. 2017; Donati, Sharma, and Ovsjanikov 2020), while maintaining high computational efficiency. 
+
+Contrastive Learning 
+
+Contrastive learning has recently emerged as a dominant tech-nique in self-supervised learning, applied across various do-mains such as computer vision, natural language processing (NLP), and beyond. The core objective is to bring augmented versions of the same sample closer in the embedding space while pushing apart embeddings of different samples. Follow-up works have extended contrastive learning to structured data, such as graphs (You et al. 2020; Chen and Kou 2023; Shen et al. 2023), meshes (Li, Attaiki, and Ovsjanikov 2022), and point clouds (Xie et al. 2020; Cao and Bernard 2023; Jiang, Sun, and Huang 2023), among others. In contrast to Li et al.(Li, Attaiki, and Ovsjanikov 2022), who employed the PointInfoNCE loss(Xie et al. 2020), a common penalty term in contrastive learning that promotes feature learning in a supervised manner and heavily relies on ground truth, we are the first to systematically introduce a comprehensive 
+
+unsupervised contrastive learning framework specifically for non-rigid 3D shape matching. Our approach not only ad-vances the theoretical foundation of shape matching but also outperforms supervised methods, such as (Li, Attaiki, and Ovsjanikov 2022), in terms of matching performance. 
+
+## Background 
+
+We begin by providing a brief overview of the basic pipeline using deep functional maps and direct interested readers to relevant literature (Ovsjanikov et al. 2016; Donati, Sharma, and Ovsjanikov 2020; Cao, Roetzer, and Bernard 2023) for further details. 
+
+Deep Functional Map Pipeline 
+
+Given a pair of non-rigid 3D shapes denoted as X and Y with 
+
+|VX | and |VY | vertices, respectively. The goal is to compute a high quality dense correspondence between these shapes in an efficient way. The basic learning pipeline estimates a functional map between X and Y using the following five steps. (1) Precompute operators. Compute the first k eigen-functions ΦX ∈ R|VX |× k, ΦY ∈ R|VY |× k eigenvalues 
+
+ΛX , ΛY ∈ Rk×k in matrix notation via generalized eigen-decomposition of the corresponding Laplacian matrices 
+
+LX ∈ R|VX |×| VX |, L Y ∈ R|VY |×| VY |, respectively. The Moore-Penrose pseudo-inverse of ΦM is Φ†X = Φ T 
+
+> X
+
+AX ,where AM is the diagonal matrix of lumped area elements, and T denote transpose operation. (2) Feature extractor. Compute feature vectors FX ∈
+
+R|VX |× d, F Y ∈ R|VY |× d defined on each shape via a feature extractor network Fθ , where d is the dimension of features. (3) Functional map computation. Compute the func-tional maps by solving the optimisation problem 
+
+CYX = arg min 
+
+> CYX
+
+CYX ΦY†FY − ΦX†FX
+
+> 2F
+
++λE reg (CYX ),
+
+(1) The first term represents the descriptor preservation term, while the second term, known as the Laplacian commutativity term, enforces structural consistency in the functional map. The parameter λ acts as a hyperparameter. (4) Functional map penalty. During training stage, struc-tural regularisation (e.g. orthogonality, bijectivity) is imposed on the functional maps, i.e 
+
+Lf map = θbi Lbi + θor Lor , (2) where 
+
+Lbi = ∥CYX CX Y − I∥2F , L or = CYX CT 
+
+> YX
+
+− I 2F . (3) To promote proper functional maps, Cao et al.(Cao, Roetzer, and Bernard 2023) proposed a coupling loss, i.e. 
+
+Lco = CYX − Φ†X ΠX Y ΦY
+
+> 2F
+
+, (4) where the pointwise correspondence matrix ΠX Y can be formulated either as a differentiable doubly-stochastic matrix enabling probabilistic correspondence. (5) Pointwise maps computation. At inference time, the pointwise map commonly by nearest neighbor search be-tween the aligned spectral embeddings ΦX CT 
+
+> X Y
+
+and ΦY ,namely, 
+
+ΠX Y = N N search (Φ Y CT 
+
+> YX
+
+, ΦX ). (5) Most existing deep functional map methods focus solely on optimizing pointwise and functional maps either separately or together, rather than enhancing shape features in embedding space, resulting in less than ideal performance for feature learning and matching results. In contrast, our approach en-hances feature representation learning through contrastive learning, resulting in consistent and discriminative features and more accurate correspondence performance. Further-more, our method eliminates complex and time-consuming components of deep functional maps, such as functional map solvers Eq. (1) , achieving higher computational efficiency than theirs. 
+
+## Unsupervised Contrastive Learning Framework 
+
+In this section, we comprehensively introduce an unsuper-vised contrastive learning framework for enhancing the con-sistency and discriminative power of feature representations in the embedding space. 
+
+Positive and Negative Set 
+
+Definition 1. Considering a vertex xi from shape X and vertex sets {yj }|VY | 
+
+> j=1
+
+from shape Y, calculating the feature similarity scores Si, : = {sim( Fi, Fj )}|VY | 
+
+> j=1
+
+∈ R|VY |, where 
+
+Fi and Fj denote the feature representation of vertex xi and 
+
+yj , respectively. Then, selecting the top k largest scores as the positive sets. Formally, this is expressed as 
+
+P(xi) = {yj ∥yj ∈ topk( Si, :)} ∈ Rk, (6) 
+
+where sim denotes a function measuring the similarity be-tween features, and topk denotes the top-k sampling function. Contrarily, the negative set can be denoted as 
+
+N (xi) = {yj ∥yj /∈ topk( Si, :)} ∈ R|VY |− k. (7) We define the positive set and negative set according to the similarity rank of the feature embeddings. Since the similar-ity score represents the correspondence probability between shapes, the positive set and negative set actually encode the high and low correspondence probability between the shape vertices, respectively. 
+
+Hybrid Similarity Generator 
+
+Building on the previously introduced positive and negative sets, we propose a hybrid similarity generator that produces corresponding positive and negative similarity pairs through two main steps: similarity estimation and similarity sampling. The core of the similarity estimation step involves computing the similarity score matrix SX Y ∈ R|VX |×| VY |, which mea-sures the similarity between vertex features FX and FY . The similarity metric can be defined using either a distance-based or a cosine-based function. In this work, we adopt the cosine similarity function, defined as follows: 
+
+SX Y = FX FT 
+
+> Y
+
+∈ R|VX |×| VY | (8) where the features are L2 row-wise normalized before com-puting dot products. sij represents the feature similarty be-tween vertex xi and yj . Clearly, different vertex features result in different similarity score matrices, capturing the relationships between vertex pairs (xi, y j ) in distinct feature spaces. After estimating the similarity scores for all vertex pairs, we perform a two-stage sampling process to construct the positive and negative similarity pairs, respectively. The ele-ments of the i-th row of the similarity matrix SX Y represent the similarity scores of vertex xi and all vertices from shape 
+
+Y. Therefore, computing the positive similarity pairs involves selecting the first k largest elements from each row, namely: 
+
+S+ 
+
+> X Y
+
+= {sij |sij ∈ topk( Si, :), i = 1 , 2, ..., |VX |} ∈ R|VX |× k,
+
+(9) 
+
+S+ 
+
+> X Y
+
+encodes the set of top k most similar vertex embeddings from shape Y.For the negative similarity sampling stage, we define the remaining similarity pairs as SR 
+
+> X Y
+
+= SX Y \ S+ 
+
+> X Y
+
+∈
+
+R|VX |× (|VY |− k), where \ symbol represents the set difference operation. Then we apply a sampling function to select nodes from SR 
+
+> X Y
+
+to construct the negative similarity pairs, defined as follows: 
+
+S−X Y = {sij |sij ∈ Sample (SR 
+
+> X Y
+
+)}. (10) Clearly, based on the similarity ranking and sampling func-tion, the hybrid similarity generator effectively divides the feature similarity score SX Y into the positive similarity pair 
+
+S+ 
+
+> X Y
+
+and the negative similarity pair S−X Y (see Figure 1), which capture high-similarity and low-similarity feature pairs, respectively. 2x    
+
+> 1y2y3y4y5y
+> 1x
+> 3x
+> 4x
+> 5x
+> SXY
+> 
+> SXY
+> 
+> SXY
+
+Figure 1: A visual example illustrating the similarity score 
+
+SX Y , the positive similarity pair S+ 
+
+> X Y
+
+, and the negative simi-larity pair S−X Y .
+
+Cross and Self Contrastive Learning Loss 
+
+The core objective of our contrastive loss is to narrow the dis-tance between the positive similarity pairs while widening the distance between the negative similarity pairs in the feature space. Building on the hybrid similarity generator described above, we propose cross-contrastive and self-contrastive loss functions, which respectively enhance the consistency and discrimination of the learned feature representations. 
+
+Cross-contrastive loss. The cross-contrastive loss is cal-culated as follows: 
+
+Lcross (FX , FY ) = 1
+
+|VX |
+
+X
+
+> i
+
+−log exp(ˆ s+ 
+
+> ij
+
+/τ c)
+
+Pnc 
+
+> j=1
+
+exp( s− 
+
+> ij
+
+/τ c) ,
+
+(11) where s+ 
+
+> ij
+
+∈ S+ 
+
+> X Y
+
+, s − 
+
+> ij
+
+∈ S−X Y , ˆs+ 
+
+> ij
+
+= 1
+
+> pc
+
+Ppc 
+
+> j=1
+
+s+ 
+
+> ij
+
+, pc means top pc largest scores as the positive pairs, nc denotes the number of negative pairs for each vertex xi, and τc denotes the temperature parameter that controls the sensitivity of penalties on positive and negative similarity. Eq. (11) en-forces the representation of the target features to be close to the central representation of all positive samples and away from all negative samples. Cross-contrastive loss makes the similar features between FX and FY more similar and the dissimilar features more dissimilar, which encourages fea-ture consistency between shapes, beneficial for downstream shape matching tasks. Moreover, we can build a bidirectional cross-contrastive loss function by exchanging the positions of FX and FY in Eq (8). 
+
+Self-constrastive loss. The previously introduced loss 
+
+Lcross enforces similarity consistency between the shape features FX and FY . In addition, to further enhance the discriminability of the features themselves, we incorporate intra-shape similarity relationships and introduce the self-contrastive loss, which encourages the learning of more dis-criminative and self-aware feature representations. Consider shape X as an illustration, the self-similarity score SX X can be expressed as 
+
+SX X = FX FT 
+
+> X
+
+∈ R|VX |×| VX |. (12) For each vertex, we pick the first ps similar candidates as the positive similarity pairs, and we obtain 
+
+S+ 
+
+> X X
+
+= {sij |sij ∈ topk( Si, :), i = 1 , 2, ..., |VX |} ∈ R|VX |× ps .
+
+(13) Similarly, the negative similarity pairs can be acquired by downsampling the remaining vertex features, formulated as: 
+
+S−X X = {sij |sij ∈ Sample (SR 
+
+> X X
+
+)}, (14) where SR 
+
+> X X
+
+= SX X \ S+ 
+
+> X X
+
+∈ R|VX |× (|VX |− ps).Unlike cross-contrastive learning, self-contrastive learning leverages the fact that each vertex’s most similar feature is itself. Therefore, there is no need to encourage proximity to itself or to the central representation of the positive pairs. In-stead, it is sufficient to push the representation away from the negative pairs. Based on this insight, we omit the attraction to positive pairs and define the self-contrastive loss as follows: 
+
+Lself (FX ) = 1
+
+|VX |
+
+X
+
+> i
+
+−log 1
+
+Pns  
+
+> j̸=i
+
+exp( s− 
+
+> ij
+
+/τ s) , (15) where s− 
+
+> ij
+
+∈ S−X X , ns denotes negative sample size, and τc
+
+denotes the temperature parameter. Similarly, we can also apply the self-contrastive loss Lself for shape feature FY .Interestingly, the self-contrastive loss can be regarded as a special case of the cross-contrastive loss when consider-ing correspondences between identical shapes; however, they serve distinct roles in feature learning. The cross-contrastive loss encourages consistency in feature representations across different shapes, while the self-contrastive loss promotes the self-discriminative ability of vertex representations. A visual example is shown in Figure 2. Top row: The color of x1 be-comes cooler after adding the self-contrastive loss, indicating an increased feature difference between x1 and x0, which demonstrates that the loss promotes self-discrimination by ex-panding the distance between dissimilar points in the feature space. Bottom row: After adding the cross-contrastive loss, the color of y0 becomes hotter, while the color of y1 becomes cooler, highlighting that the feature difference between y0
+
+and x0 has decreased, and between y1 and x0 has increased. This illustrates that the cross-contrastive loss promotes fea-ture consistency by reducing the distance between similar points and increasing the distance between dissimilar points. Together, these two losses complement each other, guiding feature learning from different perspectives and leading to more comprehensive and expressive shape representations. Y     
+
+> 0y1y
+> 1x
+> 0x
+> Feature-consistency
+> X1x
+> 0x
+> 0y1y
+> Self-discrimination
+> +𝐀 𝐀𝐀𝐀𝐀
+> +𝐀 𝐀𝐀𝐀𝐀𝐀
+
+Figure 2: A visual example highlighting the functionality of two contrastive losses. The Euclidean distance between the feature of different points x1 on shape X , and y0, y1 on shape 
+
+Y, to the source point x0 is computed, where hotter/colder colors mean smaller/larger distances. 
+
+## Efficient and Robust Unsupervised Contrastive Learning Spectral Shape Matching 
+
+In this section, we propose a novel, two-branch unsupervised shape matching approach, which integrates the aforemen-tioned unsupervised contrastive learning framework and the simplified functional map architecture. An overview of the pipeline is illustrated in Figure 3. 
+
+Unsupervised Contrastive Learning Branch 
+
+The contrastive learning branch follows the previously de-scribed unsupervised contrastive learning framework; there-fore, we do not reiterate it here but provide guidance on sampling functions and parameter settings. To maintain a simple and efficient shape matching framework, we inten-tionally omit the sampling functions, although incorporating them could potentially improve our method’s performance. Specifically, we set S−X Y = SR 
+
+> X Y
+
+, n c = |VY | − pc for cross-contrastive loss Eq. (11) , and S−X X = SR 
+
+> X X
+
+, n s = |VX | − ps
+
+for self-contrastive loss Eq. (15) . Additionally, we set τc = τs
+
+and pc = ps for both losses to further simplify parameter tuning. This approach eliminates the need for designing spe-cialized sampling functions and parameters, demonstrating the robustness of our framework. 
+
+Simplified Functional Map Learning Branch 
+
+Unlike the functional map learning-based approaches (Li, Donati, and Ovsjanikov 2022; Cao, Roetzer, and Bernard 2023; Luo et al. 2025) that heavily rely on computationally expensive functional map solver and multiple functional map losses to achieve desirable performances. Our functional map learning branch is streamlined, comprising only differentiable soft pointwise and functional map computations, along with a single loss term. For the computation of soft pointwise maps, we forego the higher precision but computationally expensive optimal transport algorithm (Eisenberger et al. 2020; Hu et al. 2023). Instead, we utilize the softmax operator to efficiently generate a soft correspondence matrix (Eisenberger et al. 2021), namely, 
+
+ΠX Y = Softmax( FX FT 
+
+> Y
+
+/α ), (16) where the element at position ( i, j) represents the probability of correspondence between the i-th point on X and the j-th point on Y, and α is the scaling factor to determine the softness of the correspondence matrix. Differs from regularized optimization approaches Eq. (1), an alternative computational strategy establishes an explicit relationship between the functional maps and pointwise cor-respondence (Ovsjanikov et al. 2012), namely, 
+
+CYX = Φ †X ΠX Y ΦY . (17) The functional map CYX is calculated by spectral basis pro-jection Eq. (17) , rather than the linear system solver Eq. (1) ,which not only reduces the computational cost but also avoids the instability of the least squares system. A key component of the deep functional maps framework is the incorporation of loss functions to enforce structural properties of functional maps, such as orthogonality, bijectiv-ity, and so on. Most existing deep functional map methods rely on multiple functional map losses to compensate for limitations in their architectures, enabling robust mapping performance across diverse scenarios. By effectively promoting feature consistency and discrim-inability through our contrastive learning framework, con-ventional bijectivity and orthogonality regularizers can be replaced by the proposed contrastive loss. Consequently, our approach operates without relying on explicit structural con-straints, requiring only a single, simple loss function (Hu et al. 2023) from to promote consistency between the functional map and soft pointwise map, namely: 
+
+Lalign = ΦX − ΠX Y ΦY CYX T 2F
+
+. (18) Overall, the total unsupervised loss can be expressed as 
+
+Ltotal = θcross Lcross + θself Lself + θalign Lalign , (19) where θ denotes the corresponding weight. 𝐀 𝐀𝐀𝐀𝐀𝐀 Softmax Operator 
+
+> 𝐀 𝐀𝐀𝐀𝐀
+> 𝐀 𝐀𝐀𝐀𝐀𝐀
+
+## Y
+
+## X
+
+FX
+
+FY
+
+> 
+
+SXY 
+
+> 
+
+SXY 
+
+> 
+
+SXX 
+
+ΠXY CYX 
+
+> Hybrid Similarity Generator
+
+Figure 3: An overview of our method. (1) Feature Extraction: Learned features FX and FY are extracted from shapes X and Y,respectively. (2) Unsupervised Contrastive Learning Branch: The learned features are used to generate positive and negative similarity pairs S+ 
+
+> X Y
+
+, S−X Y , S−X X via the hybrid similarity generator. Two unsupervised contrastive losses Eq. (11) and Eq. (15) are then applied for feature enhancement. (3) Simplified Functional Map Branch: The differentiable pointwise map ΠX Y is computed using the softmax operator Eq. (16) , and the functional map CYX is calculated via spectral basis projection Eq. (17) .A functional loss Eq. (18) is constructed to supervise both pointwise and functional map learning. Finally, we adopt the same strategy as ULRSSM (Cao, Roetzer, and Bernard 2023) to recover the pointwise map during inference, ensuring consistency and accuracy in the final matching results. 
+
+## Experiments and Results 
+
+Baselines 
+
+We extensively compare our method with existing non-rigid deformable shape matching methods, which we categorize as follows: • Axiomatic approaches , including ZoomOut (Melzi et al. 2019b), Smooth Shells (Eisenberger, L ¨ahner, and Cremers 2020), DiscreteOp (Ren et al. 2021), and MWP (Hu et al. 2021). • Supervised approaches , FMNet (Litany et al. 2017), GeomFmaps (Donati, Sharma, and Ovsjanikov 2020),SRFeat-S (Li, Attaiki, and Ovsjanikov 2022). • Unsupervised approaches , including UnsupFMNet (Hal-imi et al. 2019), SURFMNet (Roufosse, Sharma, and Ovsjanikov 2019), Deep Shells (Eisenberger et al. 2020), NeuroMorph (Eisenberger et al. 2021), DUO-FMNet (Do-nati, Corman, and Ovsjanikov 2022), AttentiveFMaps (Li, Donati, and Ovsjanikov 2022), RFMNet (Hu et al. 2023), ULRSSM (Cao, Roetzer, and Bernard 2023), Dif-fZO (Magnet and Ovsjanikov 2024), HybridFMaps (Bas-tian et al. 2024), and DeepFAFM (Luo et al. 2025). More-over, ULRSSM introduces a fine-tuning technique called Test-Time Adaptation (TTA), which individually adjusts the network parameters for each test pair during inference. We extend ULRSSM by incorporating TTA, denoted as ULRSSM(+TTA), and perform a comprehensive compar-ison with this enhanced version. For HybridFMaps (Bas-tian et al. 2024)—another approach that employs fine-tuning to enhance performance was excluded from com-parison. Finally, we will not hightlight supervised meth-ods and fine-tuned matching results because the former relies on ground truth and the latter requires training the network on a test set, and the purpose of using these meth-ods as baselines is to further demonstrate that our methods require neither labeling nor fine-tuning, and still achieve superior performance, even better than them. 
+
+Results 
+
+Extensive experimental results across multiple datasets, in-cluding challenging non-isometric ones, are presented. We use the mean geodesic error (Kim, Lipman, and Funkhouser 2011) to evaluate correspondence accuracy, with all results multiplied by 100 for better readability. 
+
+Near-isometric matching . We evaluate our method on the remeshed versions (Ren et al. 2018) of the standard bench-marks FAUST and SCAPE (referred to as F and S, respec-tively), which are more challenging than the original datasets. FAUST consists of 100 human shapes, representing 10 dif-ferent people in 10 different poses, and is split into 80 for training and 20 for testing. SCAPE contains 71 human shapes, depicting the same person in various poses, and is divided into 51 for training and 20 for testing. The results of these benchmarks are provided in Table 2, where our method is compared with current state-of-the-art axiomatic, supervised, and unsupervised learning approaches. The results indicate that our method performs better than the previous state-of-the-art axiomatic, supervised, and unsu-pervised methods, such as GeomFmaps and DeepFAFM on FAUST, and achieves comparable results on SCAPE. 
+
+Cross-dataset generalization. To evaluate the general-ization performance of our method, we train networks on remeshed datasets and test them on another remeshed dataset, i.e., training on F and testing on S, and vice versa. More-over, we use the more challenging SHREC’19 (S19 for short) dataset (Melzi et al. 2019a) exclusively as a test set. This dataset consists of 44 human shapes, providing a rigorous benchmark for our approach. As shown in Table 2, the quantitative results demonstrate our approach outperforms others in most settings. Neverthe-less, the existing cutting edge supervised (Li, Attaiki, and Ovsjanikov 2022) and unsupervised approach (Cao, Roetzer, and Bernard 2023; Bastian et al. 2024) suffers from huge performance drops when testing on the cross-dataset gen-eralisation datasets (e.g., training on F and testing on S19), Train F S F S SMAL DT4D-H Test F S S19 F S S19 F a S a F a S a intra-class inter-class Axiomatic Methods ZoomOut 6.1 7.5 - 6.1 7.5 - 8.7 15.0 8.7 15.0 47.7 4.0 29.0 SmoothShells 2.5 4.7 - 2.5 4.7 - 5.4 5.0 5.4 5.0 34.9 1.1 6.3 DiscreteOp 5.6 13.1 - 5.6 13.1 - 6.2 14.6 6.2 14.6 36.1 3.6 27.6 MWP 3.1 4.1 - 3.1 4.1 - 8.2 8.7 8.2 8.7 20.9 1.7 25.4 Supervised Methods FMNet 11.1 30.0 - 33.0 17.0 - 42.0 43.0 43.0 41.0 - 9.6 38.0 GeomFmaps 2.6 3.4 9.9 3.0 3.0 12.2 3.2 3.8 8.4 3.1 4.3 2.1 4.1 SRFeat-S 1.1 3.9 13.1 2.5 2.2 8.9 2.3 4.0 3.2 2.1 3.7 2.4 5.0 Unsupervised Methods Deep Shells 1.7 5.4 27.4 2.7 2.5 23.4 12.0 16.0 15.0 10.0 21.4 3.4 31.1 DUO-FMNet 2.5 4.2 6.4 2.7 2.6 8.4 3.0 4.4 3.1 2.7 4.8 2.6 15.8 AttentiveFMaps 1.9 2.6 6.4 2.2 2.2 9.9 2.4 2.8 2.5 2.3 4.4 1.7 11.6 RFMNet 1.7 2.3 6.3 1.7 2.1 6.9 3.6 2.6 3.6 3.9 4.4 1.5 13.9 ULRSSM 1.6 6.7 14.5 4.8 1.9 18.5 2.5 8.9 7.0 1.9 4.5 0.9 5.2 ULRSSM(+TTA) 1.6 2.2 5.7 1.6 1.9 6.7 1.9 2.4 2.1 1.9 4.2 0.9 4.1 DiffZO 1.9 2.4 4.2 1.9 2.4 6.9 2.2 3.8 2.7 2.4 4.3 1.8 4.1 HybridFMaps 1.4 4.2 9.5 2.3 1.8 13.0 2.0 4.6 3.4 1.8 3.5 1.0 3.9 DeepFAFM 1.6 2.7 7.0 1.9 1.9 7.9 2.0 2.9 2.6 1.9 3.9 0.9 4.2 Ours 1.6 2.7 5.8 1.8 2.1 5.8 1.9 2.6 2.2 2.1 3.6 0.9 3.9 
+
+Table 2: Evaluating the matching results across various benchmarks, including near-isometric shape matching, cross-dataset generalization, anisotropic meshing, and non-isometric shape matching, respectively. The numbers in the table are mean geodesic errors ( ×100 ). Bold : Best. Underline: Runner-up. which substantially demonstrates its inadequate generaliza-tion ability compared to existing unsupervised learning-based methods. Additionally, our method achieves superior perfor-mance even compared with the fine-tuning matching results of ULRSSM. Clearly, the results also show that the supe-rior performance of ULRSSM heavily relies on the test-time adaptation process, our method is more robust than it. 
+
+Matching with anisotropic meshing. To evaluate robust-ness across different discretizations, we train networks on remeshed datasets and test them on anisotropic remeshed versions (denoted F a and S a, respectively), which feature different mesh connectivity compared to the original datasets. The results presented in Table 2 show that our method achieves the best performance with state-of-the-art in most settings and demonstrates greater resilience to changes in triangulation. For instance, when training on S and testing on F a, other competitors like HybridFMaps experience signifi-cant performance declines, often overfitting to mesh connec-tivity and producing inaccurate predictions. In contrast, our method maintains strong robustness to varying mesh connec-tivity and consistently surpasses the current state-of-the-art methods. Furthermore, we achieve performance nearly iden-tical to fine-tuning results, which further underscores the robustness of our approach compared to existing learning-based methods. 
+
+Non-isometric shape matching. In the evaluation of non-isometric shape matching, our approach undergoes rigorous testing across two non-isometric datasets: SMAL (Zuffi et al. 2017) and DT4D-H (Magnet et al. 2022), which are sig-nificantly more challenging than previous datasets, such as SHREC’19 (Melzi et al. 2019a), due to the large deforma-tions present in the shapes. The SMAL dataset consists of 49 shapes representing four-legged animals from eight species, divided into a training set of 32 instances and a testing set of 17 instances. In contrast, DT4D-H includes nine classes of humanoid shapes, with a training-testing split of 198 and 95 instances, respectively. As shown in Table 2, our method consistently achieves excellent performance across most settings. On more chal-lenging SMAL, our method surpasses existing supervised approaches and achieves performance comparable to Hy-bridFMaps—which integrates both extrinsic and intrinsic information, while other purely state-of-the-art intrinsic spec-tral techniques like DiffZO and DeepFAFM are unable to attain such results. For the most challenging DT4D-inter dataset, our approach outperforms all baselines, clearly demonstrating the superiority of our method. For additional comparison results, including topological noise matching, runtime comparisons, and so on, please refer to the supplementary materials. 
+
+## Conclusion 
+
+We introduce a novel unsupervised contrastive learning-based approach for non-rigid deformable 3D shape matching, com-prising the unsupervised contrastive learning framework and the simplified functional map learning module. Extensive ex-periments demonstrate that our method achieves state-of-the-art performance in both matching results and computational efficiency, establishing a new benchmark for unsupervised 3D shape matching. Additionally, its streamlined design po-sitions it as a foundational framework for future research. While effective, our method does not yet support partial shape matching or severely non-isometric deformations. A promising research direction involves integrating our frame-work with explicit spatial deformation methods (Eisenberger et al. 2020, 2021; Cao et al. 2024) to enhance robustness across diverse shape matching scenarios. Acknowledgments 
+
+We extend our gratitude to Dongliang Cao for his gen-erous assistance. This work is supported in part by Na-tional Key Research and Development Program of China 2023YFB4502400, in part by National Natural Science Foun-dation of China under Grant 62271452. 
+
+## References 
+
+Attaiki, S.; and Ovsjanikov, M. 2023. Understanding and improving features learned in deep functional maps. In Pro-ceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , 1316–1326. Attaiki, S.; Pai, G.; and Ovsjanikov, M. 2021. DPFM: Deep Partial Functional Maps. In International Conference on 3D Vision , 175–185. Aubry, M.; Schlickewei, U.; and Cremers, D. 2011. The wave kernel signature: A quantum mechanical approach to shape analysis. In IEEE International Conference on Computer Vision Workshops , 1626–1633. Ayg ¨un, M.; L ¨ahner, Z.; and Cremers, D. 2020. Unsuper-vised Dense Shape Correspondence using Heat Kernels. In 
+
+International Conference on 3D Vision , 573–582. Bastian, L.; Xie, Y.; Navab, N.; and L ¨ahner, Z. 2024. Hy-brid functional maps for crease-aware non-isometric shape matching. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , 3313–3323. Bogo, F.; Romero, J.; Loper, M.; and Black, M. J. 2014. FAUST: Dataset and Evaluation for 3D Mesh Registration. In IEEE Conference on Computer Vision and Pattern Recog-nition , 3794–3801. Cao, D.; and Bernard, F. 2023. Self-supervised learning for multimodal non-rigid 3d shape matching. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , 17735–17744. Cao, D.; Eisenberger, M.; El Amrani, N.; Cremers, D.; and Bernard, F. 2024. Spectral meets spatial: Harmonising 3d shape matching and interpolation. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , 3658–3668. Cao, D.; Roetzer, P.; and Bernard, F. 2023. Unsupervised Learning of Robust Spectral Shape Matching. ACM Transac-tions on Graphics , 42: 1–15. Cao, D.; Roetzer, P.; and Bernard, F. 2024. Revisiting map relations for unsupervised non-rigid shape matching. In 2024 International Conference on 3D Vision , 1371–1381. IEEE. Charlier, B.; Feydy, J.; Glaunes, J. A.; Collin, F.-D.; and Durif, G. 2021. Kernel operations on the gpu, with autodiff, without memory overflows. Journal of Machine Learning Research , 22(74): 1–6. Chen, J.; and Kou, G. 2023. Attribute and structure preserv-ing graph contrastive learning. In Proceedings of the AAAI conference on artificial intelligence , 7024–7032. Deng, B.; Yao, Y.; Dyke, R. M.; and Zhang, J. 2022. A survey of non-rigid 3D registration. In Computer Graphics Forum ,volume 41, 559–589. Donati, N.; Corman, E.; Melzi, S.; and Ovsjanikov, M. 2022. Complex Functional Maps: A Conformal Link Between Tan-gent Bundles. Computer Graphics Forum , 41: 317–334. Donati, N.; Corman, E.; and Ovsjanikov, M. 2022. Deep orientation-aware functional maps: Tackling symmetry issues in Shape Matching. In IEEE/CVF Conference on Computer Vision and Pattern Recognition , 732–741. Donati, N.; Sharma, A.; and Ovsjanikov, M. 2020. Deep Geo-metric Functional Maps: Robust Feature Learning for Shape Correspondence. In IEEE/CVF Conference on Computer Vision and Pattern Recognition , 8589–8598. Eisenberger, M.; L ¨ahner, Z.; and Cremers, D. 2020. Smooth Shells: Multi-Scale Shape Registration With Functional Maps. In IEEE/CVF Conference on Computer Vision and Pattern Recognition , 12262–12271. Eisenberger, M.; Novotny, D.; Kerchenbaum, G.; Labatut, P.; Neverova, N.; Cremers, D.; and Vedaldi, A. 2021. Neuro-Morph: Unsupervised Shape Interpolation and Correspon-dence in One Go. In Proceedings of the IEEE/CVF Con-ference on Computer Vision and Pattern Recognition , 7473– 7483. Eisenberger, M.; Toker, A.; Leal-Taix ´e, L.; and Cremers, D. 2020. Deep shells: Unsupervised shape correspondence with optimal transport. Advances in Neural information processing systems , 33: 10491–10502. Fan, A.; Ma, J.; Tian, X.; , X.; and Liu, W. 2022. Coherent Point Drift Revisited for Non-Rigid Shape Matching and Registration. In IEEE/CVF Conference on Computer Vision and Pattern Recognition , 1424–1434. Gao, M.; Lahner, Z.; Thunberg, J.; Cremers, D.; and Bernard, F. 2021. Isometric Multi-Shape Matching. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , 14183–14193. Halimi, O.; Litany, O.; Rodol `a, E. R.; Bronstein, A. M.; and Kimmel, R. 2019. Unsupervised Learning of Dense Shape Correspondence. In IEEE/CVF Conference on Computer Vision and Pattern Recognition , 4365–4374. Hartwig, F.; Sassen, J.; Azencot, O.; Rumpf, M.; and Ben-Chen, M. 2023. An elastic basis for spectral shape corre-spondence. In ACM SIGGRAPH conference proceedings ,1–11. Hu, L.; Li, Q.; Liu, S.; and Liu, X. 2021. Efficient de-formable shape correspondence via multiscale spectral man-ifold wavelets preservation. In IEEE/CVF Conference on Computer Vision and Pattern Recognition , 14531–14540. Hu, L.; Li, Q.; Liu, S.; Yan, D.-M.; Xu, H.; and Liu, X. 2023. RFMNet: Robust Deep Functional Maps for unsupervised non-rigid shape correspondence. Graphical Models , 129: 1–11. Huang, R.; Ren, J.; Wonka, P.; and Ovsjanikov, M. 2020. Con-sistent ZoomOut: Efficient Spectral Map Synchronization. 
+
+Computer Graphics Forum , 39: 265–278. Jiang, P.; Sun, M.; and Huang, R. 2023. Non-rigid shape registration via deep functional maps prior. Advances in Neural Information Processing Systems , 36: 58409–58427. Kim, V. G.; Lipman, Y.; and Funkhouser, T. 2011. Blended intrinsic maps. ACM transactions on graphics , 30: 1–12. Kingma, D. P.; and Ba, J. 2015. Adam: A method for stochas-tic optimization. In International Conference for Learning Representations (ICLR) .L ¨ahner, Z.; Rodol `a, E.; Bronstein, M. M.; Cremers, D.; Burghard, O.; Cosmo, L.; Dieckmann, A.; Klein, R.; Sahillio ˇglu, Y.; et al. 2016. SHREC’16: Matching of de-formable shapes with topological noise. In Eurographics Workshop on 3D Object Retrieval , 55–60. Li, L.; Attaiki, S.; and Ovsjanikov, M. 2022. SRFeat: Learn-ing locally accurate and globally consistent non-rigid shape correspondence. In 2022 International Conference on 3D Vision , 144–154. Li, L.; Donati, N.; and Ovsjanikov, M. 2022. Learning multi-resolution functional maps with spectral attention for robust shape matching. Advances in Neural Information Processing Systems , 35: 29336–29349. Litany, O.; Remez, T.; Rodol `a, E.; Bronstein, A.; and Bron-stein, M. 2017. Deep Functional Maps: Structured Prediction for Dense Shape Correspondence. In IEEE International Conference on Computer Vision , 5660–5668. Luo, F.; Li, Q.; Hu, L.; Wang, H.; Xu, H.; Liu, X.; Liu, S.; and Chen, H. 2025. Deep Frequency Awareness Functional Maps for Robust Shape Matching. IEEE Transactions on Visualization and Computer Graphics , 31: 7781–7794. Magnet, R.; and Ovsjanikov, M. 2024. Memory-scalable and simplified functional map learning. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , 4041–4050. Magnet, R.; Ren, J.; Sorkine-Hornung, O.; and Ovsjanikov, M. 2022. Smooth non-rigid shape matching via effective dirichlet energy optimization. In International Conference on 3D Vision , 495–504. Melzi, S.; Marin, R.; Rodol `a, E.; Castellani, U.; Ren, J.; Poulenard, A.; Ovsjanikov, P.; et al. 2019a. SHREC’19: matching humans with different connectivity. In Eurograph-ics Workshop on 3D Object Retrieval , 1–8. Melzi, S.; Ren, J.; Rodol `a, E.; Sharma, A.; Wonka, P.; and Ovsjanikov, M. 2019b. ZoomOut: Spectral Upsampling for Efficient Shape Correspondence. ACM Transactions on Graphics , 38: 1–14. Ovsjanikov, M.; Ben-Chen, M.; Solomon, J.; Butscher, A.; and Guibas, L. 2012. Functional maps: a flexible representa-tion of maps between shapes. ACM Transactions on Graphics ,31: 1–11. Ovsjanikov, M.; Corman, E.; Bronstein, M.; Rodol `a, E.; Ben-Chen, M.; Guibas, L.; Chazal, F.; and Bronstein, A. 2016. Computing and processing correspondences with functional maps. In SIGGRAPH ASIA 2016 Courses , 1–60. Pai, G.; Ren, J.; Melzi, S.; Wonka, P.; and Ovsjanikov, M. 2021. Fast Sinkhorn Filters: Using Matrix Scaling for Non-Rigid Shape Correspondence with Functional Maps. In 
+
+IEEE/CVF Conference on Computer Vision and Pattern Recognition , 384–393. Ren, J.; Melzi, S.; Wonka, P.; and Ovsjanikov, M. 2021. Dis-crete optimization for shape matching. In Computer Graphics Forum , volume 40, 81–96. Ren, J.; Panine, M.; Wonka, P.; and Ovsjanikov, M. 2019. Structured regularization of functional map computations. In 
+
+Computer Graphics Forum , volume 38, 39–53. Ren, J.; Poulenard, A.; Wonka, P.; and Ovsjanikov, M. 2018. Continuous and orientation-preserving correspondences via functional maps. ACM Transactions on Graphics , 37: 1–16. Roufosse, J.-M.; Sharma, A.; and Ovsjanikov, M. 2019. Un-supervised Deep Learning for Structured Shape Matching. In IEEE/CVF International Conference on Computer Vision ,1617–1627. Sahillio ˘glu, Y. 2020. Recent advances in shape correspon-dence. The Visual Computer , 36: 1705–1721. Salti, S.; Tombari, F.; and Di Stefano, L. 2014. SHOT: Unique signatures of histograms for surface and texture description. 
+
+Computer Vision and Image Understanding , 125: 251–264. Sharma, A.; and Ovsjanikov, M. 2020. Weakly supervised deep functional maps for shape matching. Advances in Neu-ral Information Processing Systems , 33: 19264–19275. Sharp, N.; Attaiki, S.; Crane, K.; and Ovsjanikov, M. 2022. Diffusionnet: Discretization agnostic learning on surfaces. 
+
+ACM Transactions on Graphics (TOG) , 41(3): 1–16. Shen, X.; Sun, D.; Pan, S.; Zhou, X.; and Yang, L. T. 2023. Neighbor contrastive learning on learnable graph augmen-tation. In Proceedings of the AAAI conference on artificial intelligence , 9782–9791. Sumner, R. W.; and Popovi ´c, J. 2004. Deformation transfer for triangle meshes. ACM Transactions on graphics , 23: 399–405. Sun, J.; Ovsjanikov, M.; and Guibas, L. 2009. A concise and provably informative multi-scale signature based on heat diffusion. Computer Graphics Forum , 28: 1383–1392. Sun, M.; Mao, S.; Jiang, P.; Ovsjanikov, M.; and Huang, R. 2023. Spatially and Spectrally Consistent Deep Functional Maps. In Proceedings of the IEEE/CVF International Con-ference on Computer Vision , 14497–14507. Wang, Y.; Guo, J.; Yan, D.-M.; Wang, K.; and Zhang, X. 2019. A robust local spectral descriptor for matching non-rigid shapes with incompatible shape structures. In Proceedings of the IEEE/CVF conference on Computer Vision and Pattern Recognition , 6231–6240. Xie, S.; Gu, J.; Guo, D.; Qi, C. R.; Guibas, L.; and Litany, O. 2020. Pointcontrast: Unsupervised pre-training for 3d point cloud understanding. In European conference on computer vision , 574–591. You, Y.; Chen, T.; Sui, Y.; Chen, T.; Wang, Z.; and Shen, Y. 2020. Graph contrastive learning with augmentations. 
+
+Advances in neural information processing systems , 33: 5812– 5823. Zuffi, S.; Kanazawa, A.; Jacobs, D. W.; and Black, M. J. 2017. 3D menagerie: Modeling the 3D shape and pose of animals. In Proceedings of the IEEE conference on computer vision and pattern recognition , 6365–6373. Unsupervised Contrastive Learning for Efficient and Robust Spectral Shape Matching 
+
+## Supplementary Material 
+
+In this supplementary document, we first provide the im-plementation details of our method in Section A. Next, we present experiments evaluating the robustness of our method against topological noise in Section B. Section C includes an analysis of the training and inference times across datasets with varying vertex resolutions. In Section D, we perform an ablative study to investigate the impact of the cross-similarity threshold pc and the self-similarity threshold ps. Section E evaluates the significance of the two contrastive losses in our framework. Eventually, in Section F, we present additional qualitative results of our method. 
+
+## A. Implementation Details 
+
+We use DiffusionNet (Sharp et al. 2022) as the feature extrac-tor with its default settings, which employs 16-dimensional HKS features (Sun, Ovsjanikov, and Guibas 2009) as input and generates 128-dimensional learned features for the net-work. For pointwise map computation, we set α = 0 .07 .For functional map computation, we use truncated eigensys-tems with k = 200 . Regarding our unsupervised loss, we empirically set θcross = 1 , θself = 0 .1, and θalign = 1 ,respectively. Additionally, we set τc = τs = 1 .0, and con-figure the number of cross and self-similarities as follows: 
+
+pc = ps = 30 for near-isometric matching, anisotropic mesh-ing, and generalization, pc = ps = 10 for non-isometric matching, and topological matching settings. For training, we use the Adam optimizer (Kingma and Ba 2015) with a learning rate of 0.001 for all learning parameters. Table 3: Topological noise on TOPKIDS(L ¨ahner et al. 2016). The table presents the mean geodesic errors ( ×100 ). Bold :Best. Underline: Runner-up. TOPKIDS Fully intrinsic Axiomatic Methods ZoomOut 33.7 ✓
+
+DiscreteOp 35.5 ✓
+
+SmoothShells 11.8 ✗
+
+Unsupervised Methods UnsupFMNet 38.5 ✓
+
+SURFMNet 48.6 ✓
+
+Deep Shells 13.7 ✗
+
+NeuroMorph 13.8 ✗
+
+AttentiveFMaps 23.4 ✓
+
+ULRSSM 9.4 ✓
+
+ULRSSM(+TTA) 9.2 ✓
+
+Ours 7.6 ✓
+
+## B. Matching with topological noise 
+
+Topological noise presents a significant challenge for shape-matching methods as it distorts the intrinsic shape geometry in a non-isometric manner. To evaluate the robustness of our method against topological noise, we conducted experiments using the SHREC’16 TOPKIDS dataset (L ¨ahner et al. 2016), which consists of 26 shapes, one of which is noise-free, and the remaining 25 shapes contain varying degrees of topologi-cal noise. The matching results are summarized in Table 3. Since topological noise distorts the intrinsic geometry of shapes, many purely intrinsic methods—such as SURFMNet and At-tentionFMaps—struggle to produce satisfactory results under such conditions. In contrast, methods that incorporate extrin-sic information, such as SmoothShell and DeepShell, often demonstrate improved robustness and accuracy. Notably, the purely intrinsic method ULRSSM still performs strongly in the presence of topological noise by simultaneously optimiz-ing pointwise and functional maps. However, our approach introduces a novel perspective through a contrastive learn-ing framework, which enhances both feature accuracy and robustness. As a result, it outperforms both ULRSSM and its fine-tuned variant, highlighting the superior performance and effectiveness of our method. Source GT AttentiveFMaps ULRSSM Ours 
+
+Figure 4: Comparisons with other methods on shape match-ing with topological noise (L ¨ahner et al. 2016). Our results, with smoother and more accurate texture distributions, illus-trate that our approach is more robust to topological noise compared to existing methods 
+
+## C. Runtime comparison 
+
+We evaluate the training and inference time of our method across datasets with varying vertex resolutions (Wang et al. 2019), namely 5K, 8K, 10K, 12K, and 15K vertices, and compare it to the state-of-the-art unsupervised methods. All competitors are implemented using their original param-eter configurations as reported in respective publications. Quantitative comparisons are presented in Figure 5. Our method demonstrates the shortest training time, exhibiting over twice the speed of competing approaches like ULRSSM and DeepFAFM. While DiffZO currently stands as the most efficient functional maps learning method by eliminating time-consuming functional maps solvers (alongside our ap-proach), it incurs additional computational overhead through implicit iterative solving of both pointwise and functional maps. In contrast, our framework achieves exceptional com-putational efficiency through: (1) the simplified functional map architecture to date, and (2) a contrastive learning frame-work requiring only a minimal selection of positive pairs. These innovations contribute substantially to the superior training efficiency of our approach. In terms of inference efficiency, our method consistently outperforms competitors. DiffZO suffers from notable latency caused by its iterative ZoomOut-style upsampling for pointwise map computation. Although its implicit representation leverages the KeOps library (Charlier et al. 2021) to improve handling of high-resolution meshes (e.g., 15K vertices), this acceleration fails to offset the overall computational overhead. DeepFAFM fur-ther exceeds ULRSSM’s inference time due to its additional filter function computations. While sharing ULRSSM’s in-ference strategy, our approach benefits from lower feature di-mensions at both the input and output stages ( ours: input/out-put = 16/128; ULRSSM: = 128/256 ), resulting in faster execution. Notably, ULRSSM’s test-time adaptation (TTA) refinement strategy, while improving results, increases infer-ence time by orders of magnitude. Crucially, without relying on any time-consuming fine-tuning techniques, our method surpasses even ULRSSM (+TTA) in final accuracy. All the statistics were collected on a server with Intel(R) Xeon(R) Platinum 8358 CPU @ 2.60GHz, and a single NVIDIA A100-958 SXM4-80GB GPU. 5000 8000 10000 12000 15000     
+
+> Number of vertices
+> 10 20 40 60 80 100 120 130
+> Runtime (s)
+> Training Time
+> ULRSSM
+> DiffZO
+> DeepFAFM
+> Ours 5000 8000 10000 12000 15000
+> Number of vertices
+> 20 40 60 80 100
+> Runtime (s)
+> 900 1000 1100 1200 1300 1400 1500
+> ULRSSM+TTA
+> Inference Time
+> ULRSSM
+> DiffZO
+> DeepFAFM
+> Ours
+> ULRSSM+TTA
+
+Figure 5: Runtime comparison with different numbers of vertices. Left: Average training time per method (100 itera-tions). Right: Average inference time per method (100 shape pairs), where ULRSSM(+TTA) runtime (black line) is plotted against the right-hand axis due to its exceptional magnitude (≥ 50× longer than other methods), the remaining competing approaches are scaled against the left-hand axis. Our method achieves best performance 
+
+## D. Parameter analysis 
+
+Since the cross-similarity threshold pc and self-similarity threshold ps play a critical role in our architecture, selecting the appropriate number is essential for improving matching results. Parameter analysis experiments are conducted on the FAUST, SCAPE, SHREC’19, and SMAL datasets to explore the effects of different parameter settings on the matching accuracy and generalization performance, and the results are summarized in Table 4. As the value of pc and ps increases, the results on FAUST, SCAPE, and SMAL remain largely unchanged, clearly demonstrating that our method is robust to both near-isometric and non-isometric matching. Regard-ing the impact of the similarity threshold on the network’s generalization ability, we observe that increasing pc and ps
+
+has a minimal effect when the network is trained on FAUST. In contrast, for SCAPE, increasing pc and ps helps mitigate the impact of inconsistent data distribution and enhances gen-eralization performance. Finally, we set pc = ps = 30 for near-isometric matching, anisotropic meshing, and general-ization, and pc = ps = 10 for non-isometric and topological noise matching. Table 4: Parameter analysis on remeshed FAUST, SCAPE, SHREC’19, and SMAL, respectively. Train F S SMAL Test F S19 S S19 
+
+pc = ps = 10 1.5 6.0 1.9 9.7 3.6 
+
+pc = ps = 20 1.5 6.2 1.9 8.2 3.7 
+
+pc = ps = 30 1.6 5.8 2.1 5.8 3.5 
+
+pc = ps = 40 1.6 5.0 2.1 6.3 3.8 
+
+pc = ps = 50 1.6 5.4 2.2 6.6 3.6 
+
+## E. Ablation Studies 
+
+The ablation studies we conduct on the challenging topologi-cal noise dataset (e.g., TOPKIDS) to evaluate the importance of our two losses, namely, cross- and self-contrastive losses. The results are summarized in Table 5. The first and second rows show the network trained without Lcross and 
+
+Lself , respectively. Comparing the first and last rows, we observe that Lcorss significantly improves matching perfor-mance by encouraging consistency in feature representations. Similarly, comparing the second and last rows, we see that 
+
+Lself enhances matching performance by promoting the self-discriminative ability of vertex representations, leading to more informative feature embeddings. Table 5: Ablation study on TOPKIDS(L ¨ahner et al. 2016) dataset. TOPKIDS w.o Lcross 17.7 w.o Lself 8.4 Ours 7.6 
+
+## F. Qualitative Results 
+
+In this section, we provide the qualitative results of our method on SHREC’19, SMAL, and DT4D-H correspond-ing to the quantitative results reported in the main text. Source GeomFmaps SRFeat-S ULRSSM DiffZO Ours GT DeepFAFM 
+
+v
+
+vFigure 6: Comparisons of cross-dataset generalization performance with other methods. Top row: training on FAUST (Ren et al. 2018) and testing on SHREC’19 (Melzi et al. 2019a). Bottom row: Training on SCAPE (Ren et al. 2018) and testing on SHREC’19. Our method exhibits fewer errors and less color distortion compared to other approaches, highlighting its robust performance. Source GeomFmaps SRFeat-S ULRSSM DiffZO Ours GT DeepFAFM 
+
+Figure 7: Comparisons with other methods on the SMAL (Zuffi et al. 2017) (top row) and DT4D-H (Magnet et al. 2022) (bottom row) datasets. Our approach results in fewer errors and less texture distortion than other methods, demonstrating its superior performance for non-isometric shape matching.

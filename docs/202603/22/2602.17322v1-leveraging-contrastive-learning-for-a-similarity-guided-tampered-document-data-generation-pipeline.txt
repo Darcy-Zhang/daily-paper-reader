@@ -1,0 +1,1451 @@
+Title: Leveraging Contrastive Learning for a Similarity-Guided Tampered Document Data Generation Pipeline
+
+URL Source: https://arxiv.org/pdf/2602.17322v1
+
+Published Time: Fri, 20 Feb 2026 01:50:09 GMT
+
+Number of Pages: 23
+
+Markdown Content:
+# Leveraging Contrastive Learning for a Similarity-Guided Tampered Document Data Generation Pipeline 
+
+## Mohamed Dhouib LIX, ´ Ecole Polytechnique, IP Paris, France 
+
+> mohamed.dhouib@polytechnique.edu
+
+## Davide Buscaldi LIPN, Universit´ e Sorbonne Paris Nord, France 
+
+> davide.buscaldi@lipn.univ-paris13.fr
+
+## Sonia Vanier LIX, ´ Ecole Polytechnique, IP Paris, France 
+
+> sonia.vanier@polytechnique.edu
+
+## Aymen Shabou DataLab Groupe, Cr´ edit Agricole S.A, France 
+
+> aymen.shabou@credit-agricole-sa.fr
+
+## Abstract 
+
+Detecting tampered text in document images is a challeng-ing task due to data scarcity. To address this, previous work has attempted to generate tampered documents us-ing rule-based methods. However, the resulting documents often suffer from limited variety and poor visual quality, typically leaving highly visible artifacts that are rarely ob-served in real-world manipulations. This undermines the model’s ability to learn robust, generalizable features and results in poor performance on real-world data. Motivated by this discrepancy, we propose a novel method for generat-ing high-quality tampered document images. We first train an auxiliary network to compare text crops, leveraging con-trastive learning with a novel strategy for defining positive pairs and their corresponding negatives. We also train a second auxiliary network to evaluate whether a crop tightly encloses the intended characters, without cutting off parts of characters or including parts of adjacent ones. Using a carefully designed generation pipeline that leverages both networks, we introduce a framework capable of produc-ing diverse, high-quality tampered document images. We assess the effectiveness of our data generation pipeline by training multiple models on datasets derived from the same source images, generated using our method and existing ap-proaches, under identical training protocols. Evaluating these models on various open-source datasets shows that our pipeline yields consistent performance improvements across architectures and datasets. 
+
+## 1. Introduction 
+
+Due to the presence of sensitive information, document im-ages are frequent targets of malicious tampering, making the development of robust detection methods essential. Pre-training a visual model for this task is a promising approach, as pretrained models have consistently demonstrated strong performance across a wide range of visual tasks. This has become a standard strategy in natural image forgery de-tection [7, 30]. However, in the case of document im-ages, large-scale tampered datasets are not publicly avail-able, and manually creating them is time-consuming and costly. This scarcity has led previous work [6, 25] to rely on rule-based pipelines to synthetically generate tampered documents, simulating one or more of the following com-mon tampering operations: (a) Copy-move : a text region is copied and pasted within the same image. (b) Splicing : a text region is copied from a source image and inserted into a different target image. (c) Insertion : new text is added directly to the image. (d) Inpainting : text is removed using background-aware fill-ing techniques. (e) Coverage : a text region is hidden by overlaying a visually similar background patch. However, these pipelines often produce low-quality tamper-ing with visible traces, causing models trained on them to overfit to shortcuts and fail to generalize to real-world ma-nipulations. In contrast, human-made manipulations, par-ticularly those involving copy-move, splicing, and cover-age, can result in high-quality alterations that are difficult to detect. This is mainly because humans tend to choose regions with similar backgrounds and text characteristics, allowing tampered areas to blend seamlessly into their sur-roundings. In this work, we propose a novel framework to generate high-quality tampered document images. We achieve this by training two auxiliary networks: the first is trained with contrastive learning to compare any two crops and assess their similarity; the second evaluates whether a given crop tightly encloses the intended characters. By leveraging both networks, we design a pipeline that gen-1
+
+> arXiv:2602.17322v1 [cs.CV] 19 Feb 2026
+
+erates high-quality tampered document images. For a fair comparison, we create directly comparable datasets from the same source images using our method and previously proposed pipelines [6, 25], and separately train five models on each dataset under an identical training setup. Models trained on data generated with our approach consistently surpass the baselines across different datasets. Our main contributions are: • We introduce two auxiliary networks: one for crop sim-ilarity estimation trained using contrastive learning and another for evaluating bounding box quality. • By using these auxiliary networks, we propose a tam-pered document image generation framework that pro-duces diverse and high-quality manipulations. • We show that our data-generation pipeline yields con-sistent performance improvements across various models and datasets. • We publicly release our codebase, including the training scripts, the tampered data generation pipeline, and pre-trained model weights, along with a dataset of approxi-mately 2.8M tampered document images (TDoc-2.8M): GitHub and Hugging Face. 
+
+## 2. Related work 
+
+2.1. Forgery detection in natural images 
+
+Recent work in image forgery detection consistently ben-efits from large-scale training data. ManTra-Net [33] was trained on 1.25 million patches manipulated to cover 385 manipulation types. SPAN [8] introduced a spatial pyra-mid attention mechanism for multi-scale patch relations, training on the same datasets as ManTra-Net. PSCC-Net [18] improved localization using spatio-channel cor-relation modules and was pretrained on 380,000 syn-thetic tampered and pristine images. CAT-Net [10] tar-gets JPEG compression inconsistencies via dual RGB and DCT streams and was trained on roughly 900,000 images. ObjectFormer [30] used learnable object-level queries over RGB and frequency-domain patches, and was trained on a large-scale tampering dataset. CAT-Netv2 [11] improved CAT-Net with Multiscale DCT Processing and DCT Pyra-mid Pooling, and was also trained on around 900,000 ma-nipulated images. TruFor [7] combines semantic and noise-level features via a two-stream transformer, and was trained on the same mixture of datasets as CAT-Netv2. 
+
+2.2. Document image tampering detection 
+
+Due to the unavailability of open-source datasets, early works [3, 12, 27] were limited to training and testing on private data. Later, [31] introduced T-SROIE, a small-scale dataset for evaluation, focusing on character-level replace-ments generated by the SRNet [32] model. However, SR-Net often leaves clear visual artifacts, leading many models to achieve near-perfect scores that fail to translate to real-world effectiveness. More recently, [25] introduced Doc-Tamper, a dataset built from approximately 50,000 docu-ments, comprising 120,000 tampered and 30,000 pristine samples. This dataset was generated using a rule-based pipeline, relying on each text bounding box height and width, as well as foreground and background colors ex-tracted using the SAUVOLA [26] algorithm. However, the tampered images often contain visual artifacts not typi-cally found in human-made manipulations, largely due to SAUVOLA’s inaccurate segmentation and the rule-based pipeline’s inability to account for visual factors like font consistency and text alignment. In addition, the DTD model proposed in [25] was evaluated solely on the DocTamper and T-SROIE datasets, yielding strong results that obscure its limited performance on real-world, human-generated manipulations. Subsequent works [4, 23] have built on this work and proposed architectural improvements, but follow the same evaluation strategy, failing to prove the efficiency of their approach on real-world data. On the other hand, [6] focused on concealing splicing via local post-processing and image blending. However, these operations often fail to conceal manipulation cues such as font discrepancies and cut-off characters, and may even introduce additional arti-facts that are not typically present in real-world manipula-tions. To enable robust evaluation, [2] introduced FindIt, a dataset of human-made forgeries created using a variety of tools. It was later extended into FindItAgain [28], the first high-quality dataset for document tampering detection and localization. More recently, RTM [20] was proposed, a diverse and high-quality dataset that covers multiple doc-ument types and tampering strategies, all manually crafted by experts. Although FindItAgain and RTM both provide human-made, high-quality tampered documents that reflect real-world scenarios, they remain limited in scale, compris-ing fewer than 4,000 tampered documents in total. As a re-sult, they are better suited for zero-shot evaluations or fine-tuning rather than pretraining. This motivates our work on automatic, high-quality tampered document generation. 
+
+## 3. Method 
+
+To generate high-quality tampered documents that better reflect real-world scenarios, we consider the five tamper-ing types explained above: copy-move, splicing, insertion, inpainting, and coverage. Inpainting is relatively straight-forward, where background-aware filling methods such as those provided by OpenCV are used. For copy-move, splic-ing, and coverage, a crop is copied from a source image and placed into a target image. To ensure the tampering is convincing, the visual characteristics of the source and tar-get regions must closely match. For insertion, new content such as text is added and must match the surrounding con-tent in color, font, size, and alignment to appear realistic. To ensure visual consistency, whether between source and 2(A) Font Mismatch (B) Blur Inconsistency  
+
+> (C) Background Color Mismatch (D) Text Horizontal Misalignment
+> Figure 1. Illustration of some failure cases in tampered document generation caused by a visual mismatch between the source and target crops, resulting in obvious visual artifacts.
+
+target regions or between rendered and surrounding text, we introduce a similarity function defined as 
+
+S(x, u ) = Fθ (x) · F θ (u)
+
+∥F θ (x)∥ ∥F θ (u)∥ . (1) where Fθ is a neural network trained to extract visual fea-tures from image regions and accepts inputs of arbitrary spatial dimensions. Candidate crops can then be selected based on these similarity scores. Moreover, when the source or target crop contains text, one common source of poor tampering quality is an ill-defined bounding box that cuts through characters, leaving detectable artifacts. To avoid this, we introduce a bounding box quality function Gθ (·) ∈
+
+[0 , 1] , where lower output values indicate poorly defined crops. Generating high-quality tampering requires both a high similarity score and a high bounding box quality score. Correctly training both Fθ and Gθ is therefore key to gen-erating high-quality tampered documents. We use a novel training framework for Fθ , based on contrastive learning, to capture visual similarity between two text crops or be-tween a text crop and a blank crop. For Gθ , we adopt a supervised learning approach that considers both the crop and its surrounding context to assess bounding box quality. The training procedures for both networks are detailed in the following two subsections. 
+
+3.1. Assessing crop similarity 
+
+For copy-move and splicing, high-quality tampering re-quires that source and target patches share visual charac-teristics such as font style and size, foreground and back-ground color, texture, and both vertical and horizontal text alignment. Additional factors, including brightness, con-trast, saturation, sharpness, blur, and noise patterns, must also be consistent. Significant mismatches in any of these properties can create perceptible artifacts that reveal the tampering. As shown in Fig. 1, even when most features align, a single discrepancy can result in clearly visible ma-nipulation traces. The persistent presence of these cases in  
+
+> Figure 2. Illustration of positive and negative pairs in our con-trastive setting. The red box denotes the anchor, the green its pos-itive, and the blue boxes the negatives.
+
+the training data can compromise the training process by constituting shortcuts for the model, undermining its ability to generalize to genuine real-world manipulations. For cov-erage, most of these characteristics still apply, except for those related to text. The height and width of the bound-ing box, along with the number of characters, can serve as a good proxy for estimating the actual font size. It is, however, challenging to accurately compare the other visual characteristics, which is why we propose to train a neural network Fθ to perform this task. While a convolutional neu-ral network is well-suited to this task, the primary challenge is obtaining appropriate training data, which motivates the use of contrastive learning. 
+
+Defining positive pairs We observe that adjacent text or blank regions along the same line in a document often share similar visual properties. This observation motivates a sim-ple yet effective contrastive learning paradigm, where such regions can be treated as positive pairs for training. We define ExtractLineSegments(OCR( I)) as a function that takes the per-character OCR bounding boxes OCR( I) and returns pairs {(bi, l i)}ni=1 , where each bi corresponds to either a text segment or a blank region and is assigned a line index li. For a target crop bi, we define positives as crops from the same line with the same width, height, and number of characters, whose bounding-box centers satisfy 
+
+∥ci − cj ∥2 < τ 0 w. Here ci and cj are the centers of bi and 
+
+bj , τ0 is a threshold, and w is the average character width in the image. When more than one positive candidate is iden-tified, we uniformly sample a single positive and discard the rest. For more details on ExtractLineSegments , please re-fer to Sec. A. 
+
+Defining negatives We define negatives as crops bj that contain the same number of characters as bi and whose ver-tical distance to bi exceeds τ1 × h, where h is the average character height in the image, and whose aspect ratio satis-3fies wj /h j 
+
+> wi/h i
+
+∈ [1 − ε, 1 + ε], with w and h denoting width and height and ε a tolerance parameter. Setting a relatively high value for τ1 ensures that on average, negative examples are visually different from the anchor. Figure 2 illustrates the result of this process, showing that anchors and their positive pairs share nearly identical visual attributes, while most negatives exhibit clear differences in one or more of these attributes. We note that negative examples are first collected from the same image as the source crop, and then from other images if necessary, until the desired number of negative samples is reached. In addition, we generate Malt 
+
+altered versions of each anchor bi by applying random local shifts and visual transformations. These altered crops sim-ulate visually inconsistent but structurally similar regions, and are treated as hard negatives. For more details on the applied data augmentation, please refer to Sec. C.1. 
+
+Loss calculation The contrastive loss is defined as: 
+
+Li = − log exp 
+
+ S( bi,b + 
+
+> i)/τ
+
+
+
+> exp
+
+ S( bi,b + 
+
+> i)/τ
+
++P 
+
+> b−
+> i∈N i
+> exp
+
+ S( bi,b − 
+
+> i)/τ
+
+ (2) where τ is a temperature parameter, b+ 
+
+> i
+
+is a positive crop, and Ni is the set of negative crops. 
+
+Model architecture and input size We implement Fθ as a lightweight convolutional network with approximately nine million parameters. All crops fed into Fθ are resized to a height of 128 pixels, maintaining aspect ratio except for negative examples, which are additionally adjusted in width to match their corresponding anchor’s width. To robustly compare (i) two text crops and (ii) a text crop with a blank crop, we use two decoupled embedding heads: a foreground head that captures text-centric cues and a background head that models non-text regions. The similarity between two text crops is computed using both heads, whereas compar-isons involving a blank crop use only the background head. This allows the model to remain sensitive to informative text cues, such as color, font, and alignment, while maintaining a robust representation for blank regions. Full architectural details are provided in Sec. C.2. A simplified overview of our proposed pipeline is provided in Algorithm 1. Examples of the similarity between a target crop and its candidates under Fθ , once fully trained, are shown in Fig. 3. Notice that the resulting similarity scores account for all visual cues discussed earlier, including but not limited to font, brightness, saturation, chromaticity, and the spatial position of the text within each crop. 
+
+3.2. Assessing bounding box quality 
+
+Given an image I and two crops, the first from I defined by a bounding box bi and the second from a possibly different image I′ defined by bj , as shown in Fig. 4, even if they score highly under our visual similarity network Fθ , a poorly de-fined box, one that cuts through characters or includes parts of neighbors, will always introduce highly visible artifacts. 
+
+Algorithm 1 Mining positive and negative crop pairs for training Fθ . 
+
+> 1:
+
+Input: Document image I0, character-level OCR, thresholds 
+
+τ0, τ 1, tolerance ε, negatives per anchor N , augmented hard negatives per anchor Malt , function ExtractLineSegments 
+
+(Sec. A), function GetAlteredCrop (Sec. C.1)  
+
+> 2:
+
+Output: contrastive pairs and corresponding negative crops  
+
+> 3:
+
+{(bi, ℓ i)}ni=1 ← ExtractLineSegments(OCR( I0))  
+
+> 4:
+
+w ← average character width in I0; h ← average character height in I0 
+
+> 5:
+
+Initialize collection S ← ∅  
+
+> 6:
+
+for each anchor index i do  
+
+> 7:
+
+ci ← crop( I0, b i) 
+
+> 8:
+
+Let nchars ,i be the number of characters in bi 
+
+> 9:
+
+Initialize Pi ← ∅ , Ni ← ∅  
+
+> 10:
+
+Step 1: Positive mining.  
+
+> 11:
+
+for each j̸ = i do  
+
+> 12:
+
+if ℓj = ℓi, wj = wi, hj = hi, #chars j = nchars ,i , and p(xi − xj )2 + ( yi − yj )2 < τ 0 · w then  
+
+> 13:
+
+Pi ← P i ∪ { crop( I0, b j )} 
+
+> 14:
+
+end if  
+
+> 15:
+
+end for  
+
+> 16:
+
+if |P i| = 0 then  
+
+> 17:
+
+continue  
+
+> 18:
+
+else  
+
+> 19:
+
+p ← RANDOM CHOICE (Pi) 
+
+> 20:
+
+Pi ← { p} 
+
+> 21:
+
+end if  
+
+> 22:
+
+Step 2: Anchor-based hard negatives.  
+
+> 23:
+
+for t = 1 to Malt do  
+
+> 24:
+
+calt  
+
+> i
+
+← GetAlteredCrop( I0, b i) 
+
+> 25:
+
+Ni ← N i ∪ { calt  
+
+> i
+
+} 
+
+> 26:
+
+end for  
+
+> 27:
+
+Step 3: Intra-image negatives.  
+
+> 28:
+
+for each j̸ = i do  
+
+> 29:
+
+cj ← crop( I0, b j ) 
+
+> 30:
+
+if |yi − yj | > τ 1 · h, #chars j = nchars ,i , and wj /h j 
+
+> wi/h i
+
+∈
+
+[1 − ε, 1 + ε] then  
+
+> 31:
+
+c′ 
+
+> j
+
+← resize( cj , (wi, h i))  
+
+> 32:
+
+Ni ← N i ∪ { c′ 
+
+> j
+
+} 
+
+> 33:
+
+end if  
+
+> 34:
+
+end for  
+
+> 35:
+
+Step 4: Cross-document negatives.  
+
+> 36:
+
+while |N i| < N do  
+
+> 37:
+
+Select a new document I′ 
+
+> 38:
+
+{(bk , ℓ k )} ← ExtractLineSegments(OCR( I′))  
+
+> 39:
+
+for each (bk , ℓ k ) do  
+
+> 40:
+
+if #chars k = nchars ,i , wk /h k 
+
+> wi/h i
+
+∈ [1 − ε, 1 + ε] then  
+
+> 41:
+
+c′ 
+
+> k
+
+← resize(crop( I′, b k ), (wi, h i))  
+
+> 42:
+
+Ni ← N i ∪ { c′ 
+
+> k
+
+} 
+
+> 43:
+
+end if  
+
+> 44:
+
+if |N i| = N then  
+
+> 45:
+
+break  
+
+> 46:
+
+end if  
+
+> 47:
+
+end for  
+
+> 48:
+
+end while  
+
+> 49:
+
+Add tuple (ci, Pi, Ni) to S 
+
+> 50:
+
+end for  
+
+> 51:
+
+return S
+
+4Figure 3. Similarity scores from Fθ between a target crop (left) and candidate crops. The score below each crop indicates its sim-ilarity to the target crop and is scaled by a factor of 10. 
+
+To address these cases, one could rely on algorithms based on foreground estimation and connected-component analy-sis. However, these methods are slow and would introduce computational overhead to our pipeline. We therefore train a lightweight convolutional network Gθ with approximately eight million parameters to predict bounding box quality, yielding up to a 10 × speedup over such methods. 
+
+Training data For each image I, we extract the set of line segments, defined by their bounding boxes (b0, . . . , b n) = ExtractLineSegments  OCR( I) and assess the quality of each bounding box following the procedure described in Sec. D.2.1, then assign y = 1 to well-defined cases and 
+
+y = 0 to ill-defined ones. We have observed that certain document domains yield near-perfect OCR, which reduces ill-defined crops and risks domain-specific overfitting. To mitigate this, for each box labeled y = 1 we randomly ex-pand or contract its boundaries so that it cuts a character or includes part of a neighbor, and assign the label y = 0 to the resulting crop. For more details on the data-preparation step, please refer to Sec. D.2. 
+
+Model input and architecture In some cases, looking only at the crop does not suffice to decide if the box is well de-fined, so we also provide to the model its immediate neigh-borhood: along with each crop ck = I[yk 
+
+> 0
+
+: yk 
+
+> 1
+
+, x k 
+
+> 0
+
+: xk 
+
+> 1
+
+],
+
+we also extract four edge strips of thickness t pixels to cap-  
+
+> (A) Bad Source Crop (B) Bad Target Crop
+> Figure 4. Illustration of failure cases in document tampering due to poor bounding boxes: (A) an ill-defined source box cutting through characters; (B) an ill-defined target box overlapping ad-jacent text.
+> Figure 5. A simplified illustration of our tampered document gen-eration process.
+
+ture its immediate neighborhood:                                       
+
+> tk=Iyk
+> 0−t:yk
+> 0, x k
+> 0:xk
+> 1
+> ,bk=Iyk
+> 1:yk
+> 1+t, x k
+> 0:xk
+> 1
+> ,ℓk=Iyk
+> 0:yk
+> 1, x k
+> 0−t:xk
+> 0
+> ,rk=Iyk
+> 0:yk
+> 1, x k
+> 1:xk
+> 1+t.
+
+(3) To ensure that index 0 along the thickness axis always lies closest to the crop border, we vertically flip the top strip and horizontally flip the left strip: 
+
+˜tk = flipud( tk), ˜bk = bk, ˜ℓk = fliplr( ℓk), ˜rk = rk, (4) where flipud reverses rows and fliplr reverses columns. We then form the two stripe inputs by simple concatenation: 
+
+tb k = concat h
+
+ ˜tk, ˜bk
+
+, lr k = concat v
+
+ ˜ℓk, ˜rk
+
+. (5) Each crop is fed to a small 2D-CNN. Each stripe is first processed by a 2D-CNN to aggregate edge context and then processed by a 1D-CNN. The obtained embeddings are con-catenated and sent to a sigmoid classifier. For more details on Gθ ’s architecture, please refer to Sec. D.1. We train Gθ using binary cross-entropy. An evaluation of 
+
+Gθ ’s ability to assess crop quality on real data, together with a comparison against algorithm-based alternatives, is pro-vided in Sec. D.3. 
+
+3.3. Data generation 
+
+To generate realistic tampered document images, we fol-low a multi-stage process guided by both the crop similar-ity network Fθ and the crop quality network Gθ . We begin by constructing a database of source crops. For each image, we apply ExtractLineSegments to the character-level OCR output to extract both text segments and blank regions, where each blank region is assigned the same number of characters as its nearest text neighbor of similar size. Text crops are then passed through Gθ , and only those with a high predicted quality score are retained. The selected crops are then grouped in the database by width, height, and num-ber of characters. For any target image I, we retrieve its 5processed crops from the database and sample up to n re-gions from the image to manipulate. For each selected re-gion r = ( x, y, w i, h i), we apply the following procedure: • If r is blank and a probability pins is met, we look for the nearest text crop of the same size (wi, h i), re-trieve its character string tc, and calculate its embedding 
+
+vc = Fθ (c). For each font fj and color col k sampled around the Sauvola-estimated foreground color, we ren-der the text into the target region and compute its embed-ding: 
+
+Pj,k = Render  tc, f j , col k, crop( I, r ) vPj,k = Fθ (Pj,k ) (6) We then select the rendered crop whose embedding is most similar to vc:
+
+(j∗, k ∗) = arg max 
+
+> j,k
+
+vc · vPj,k 
+
+∥vc∥ ∥ vPj,k ∥ . (7) and replace r by Pj∗,k ∗ , updating the tampering mask ac-cordingly. • Alternatively, with probability pinp , we apply inpainting to region r and update the tampering mask accordingly. • Otherwise, we search for candidate crops cj either: 
+
+– With probability pspl , select from the precomputed database the crops of size (wi, h i) whose character count matches that of r.
+
+– With probability 1 − pspl , select from the same image the crops whose character count matches that of r and whose aspect ratio satisfies wj /h j 
+
+> wi/h i
+
+∈ [1 − ε′, 1 + ε′],
+
+then resize each to (wi, h i).We then compute the embedding of the target crop and of each candidate, and select the best match by maximizing the cosine similarity: 
+
+j∗ = arg max 
+
+> j
+
+Fθ (crop( I, r )) · F θ (cj )
+
+Fθ (crop( I, r )) Fθ (cj ) . (8) The chosen crop cj∗ replaces region r, and the tampering mask is updated accordingly. Because ExtractLineSegments provides both text and blank segments, this unified procedure enables tamper-ing via all five categories: insertion, inpainting, copy-move, splicing, and coverage. For more details about the rendering and inpainting functions, please refer to Secs. B.1 and B.2. The data generation process can either be done before train-ing or on-the-fly. In the second case, the embeddings of all crops using Fθ need to be precomputed, and ε′ is set to zero. We summarize the full procedure in Algorithm 2. For clar-ity, Algorithm 2 assumes that Gθ operates solely on the crop input, without incorporating the surrounding stripe informa-tion. An illustration of the generation process is presented in Fig. 5. Examples of the resulting tampered documents are provided in Sec. E. 
+
+Algorithm 2 Tampering a Set of Document Images Using 
+
+Fθ and Gθ
+
+1: Input: Document images {I(d)}Dd=1 ; character-level OCR; threshold 
+
+τ2; aspect-ratio tolerance ε′; probabilities pins , p inp , p spl ; max tam-pered regions nmax ; font set {fj }; functions ExtractLineSegments 
+
+(Sec. A), Render (Sec. B.1), Inpaint (Sec. B.2), Fθ (Sec. 3.1), Gθ
+
+(Sec. 3.2), 2: Output: Yields tampered image and mask pairs 3: Step 1: Preprocess documents and build crop database 
+
+4: DB ← ∅ 
+
+5: for each image I(d) do 
+
+6: {b(d) 
+
+> i
+
+}kd 
+
+> i=1
+
+← ExtractLineSegments (OCR (I(d))) 
+
+7: for each b(d) 
+
+> i
+
+= ( xi, y i, w i, h i) do 
+
+8: ci ← crop (I(d), b (d) 
+
+> i
+
+)
+
+9: if Gθ (ci) > τ 2 then 
+
+10: Add (ci, w i, h i, #chars i) to DB 11: end if 
+
+12: end for 
+
+13: end for 
+
+14: Step 2: Tamper each document 
+
+15: for each target image I do 
+
+16: Initialize mask ← 0H×W
+
+17: Retrieve B = {bi}, the retained bounding boxes for I from the preprocessing step 18: Sample n ∼ U ({0, . . . , n max })
+
+19: Sample n regions {r1, . . . , r n} ⊂ B 
+
+20: for each region ri = ( xi, y i, w i, h i) do 
+
+21: if ri is blank and Bernoulli (pins ) then 
+
+22: Find nearest text crop c ∈ B to ri of size (wi, h i); let tc
+
+be its text 23: vc ← F θ (c)
+
+24: Estimate foreground color col 0 via the Sauvola algorithm 25: Define col k = col 0 + (∆ R, ∆G, ∆B ), with ∆X ∈{− 2, −1, 0, 1, 2} for X ∈ { R, G, B }
+
+26: for each font fj and color col k do 
+
+27: Pj,k ← Render (tc, f j , col k , crop (I, r i)) 
+
+28: vj,k ← F θ (Pj,k )
+
+29: end for 
+
+30: (j∗, k ∗) ← arg max j,k vc·vj,k  
+
+> ∥vc∥∥ vj,k ∥
+
+31: I[yi : yi + hi, x i : xi + wi] ← Pj∗,k ∗
+
+32: mask [yi : yi + hi, x i : xi + wi] ← 1
+
+33: else if Bernoulli (pinp ) then 
+
+34: cinp ← Inpaint (crop (I, r i)) 
+
+35: mask [yi : yi +hi, x i : xi +wi] ←  cinp ̸ = crop (I, r i)
+
+36: I[yi : yi + hi, x i : xi + wi] ← cinp 
+
+37: else 
+
+38: if Bernoulli (pspl ) then 
+
+39: C ← query DB for crops of size (wi, h i) and 
+
+#chars = # chars i
+
+40: else 
+
+41: C ← { cj ∈ B | wj /h j 
+
+> wi/h i
+
+∈ [1 −ε′, 1+ ε′], #chars j =#chars i}
+
+42: Resize each cj ∈ C to (wi, h i)
+
+43: end if 
+
+44: cr ← crop (I, r i), vr ← F θ (cr )
+
+45: j∗ ← arg max cj ∈C       
+
+> vr·F θ(cj)
+> ∥vr∥∥F θ(cj)∥
+
+46: I[yi : yi + hi, x i : xi + wi] ← cj∗
+
+47: mask [yi : yi + hi, x i : xi + wi] ← 1
+
+48: end if 
+
+49: end for 
+
+50: yield (I, mask )
+
+51: end for 
+
+6Table 1. Zero-shot document tampering detection results on RTM, FindItAgain, and FindIt for several models trained on data generated using different data generation approaches. ∆(%) indicates the relative performance gain of our generation method over the best of [25] and [6]. P, R, and F1 correspond to precision, recall, and F1 score, while Image and Pixel denote image-level classification and pixel-level localization performance. Note that the source images used to generate the training data are the same across models and data generation methods as described in Sec. 4.1, and all models were trained using the same training protocol as described in Sec. 4.2.3.                                                                                                                                                                                                                                                                                                                                                                                                   
+
+> Model Data Gen. RTM FindItAgain FindIt
+> Image Pixel Image Pixel Image Pixel PRF1 PRF1 PRF1 PRF1 PRF1 PRF1 PSCC-Net [25] 38.5 27.9 32.3 7.5 10.0 8.6 47.8 31.4 37.9 8.7 9.2 8.9 61.3 53.5 57.1 11.2 11.9 11.5 [6] 33.8 34.1 33.9 7.9 8.1 8.0 51.8 36.6 42.9 7.5 8.7 8.1 60.8 52.0 56.1 8.9 9.7 9.3 Ours 39.3 40.2 39.7 10.5 10.8 10.6 56.7 60.0 58.3 10.6 12.8 11.6 62.9 55.0 58.7 12.0 12.1 12.0
+> ∆(%) +2.1% +17.9% +17.1% +32.9% +8.0% +23.3% +9.5% +63.9% +35.9% +21.8% +39.1% +30.3% +2.6% +2.8% +2.8% +7.1% +1.7% +4.3% CAT-Net [25] 36.5 32.7 34.5 8.7 10.1 9.3 37.0 28.5 32.2 9.5 4.9 6.5 47.6 40.7 43.9 10.3 10.1 10.2 [6] 36.5 31.5 33.8 8.9 9.4 9.1 34.9 31.7 33.2 10.7 5.2 7.0 42.3 40.6 41.4 11.8 8.3 9.7 Ours 40.0 35.0 37.4 9.2 11.0 10.0 48.0 34.2 40.0 11.0 5.6 7.4 51.5 42.5 46.6 13.0 10.5 11.7
+> ∆(%) +9.6% +7.0% +8.1% +3.4% +8.9% +7.5% +29.7% +7.9% +20.2% +2.8% +7.7% +5.7% +8.2% +4.4% +6.2% +10.2% +4.0% +13.7% DTD [25] 36.4 52.0 42.8 9.8 10.2 10.0 47.8 37.1 41.8 8.8 10.2 9.4 55.5 56.2 55.8 13.6 13.9 13.7 [6] 36.5 50.8 42.5 10.8 7.6 8.9 43.1 33.5 37.7 9.8 7.0 8.2 46.8 38.0 41.9 11.9 7.4 9.1 Ours 36.6 73.3 48.9 14.9 11.4 12.9 50.0 40.0 44.4 12.5 12.4 12.5 62.3 66.2 64.2 14.0 14.4 14.2
+> ∆(%) +0.3% +41.0% +14.0% +38.0% +11.8% +29.0% +4.6% +7.8% +6.2% +27.6% +21.6% +31.9% +12.3% +17.8% +15.1% +2.9% +3.6% +3.6% ASC-Former [25] 40.7 30.0 34.5 15.4 13.6 14.4 36.6 60.3 45.6 10.8 9.8 10.2 54.7 65.0 59.3 24.9 12.2 16.4 [6] 35.8 26.1 30.2 13.9 12.0 12.9 31.1 54.3 39.6 9.4 8.8 9.1 47.0 57.2 51.7 22.4 10.4 14.2 Ours 44.3 32.3 37.4 23.4 16.1 19.1 38.6 62.9 47.8 15.3 12.3 13.6 69.6 68.8 69.2 30.1 13.9 19.0
+> ∆(%) +8.8% +7.7% +8.4% +51.9% +18.4% +32.6% +5.5% +4.3% +4.8% +41.7% +25.5% +32.0% +27.2% +5.8% +16.5% +20.9% +13.9% +15.9% FFDN [25] 46.1 46.9 46.5 19.8 17.1 18.4 47.5 54.3 50.7 13.0 8.7 10.4 77.7 61.3 68.5 28.6 25.5 27.0 [6] 42.7 45.4 44.0 18.1 14.6 16.2 51.4 37.1 43.2 12.0 10.6 11.3 73.8 48.1 58.2 30.2 23.9 26.7 Ours 46.4 51.0 48.6 28.2 20.6 23.8 68.9 57.1 62.5 31.6 21.4 25.5 82.3 70.0 75.7 36.3 28.3 31.8
+> ∆(%) +0.7% +8.7% +4.5% +42.4% +20.5% +29.3% +34.0% +5.2% +23.1% +143.1% +101.9% +125.7% +5.9% +14.2% +10.5% +20.2% +11.0% +17.8%
+
+## 4. Experiments 
+
+4.1. Training data 
+
+For tampered document generation and preparing the train-ing data for the auxiliary networks, we use approximately 1.2 million documents from the CC-MAIN-2021-31-PDF-UNTRUNCATED corpus. We filter this corpus to re-tain only documents containing more than 512 charac-ters, and limit the proportion of native PDFs to 5%. Ad-ditionally, we use around 300k documents from the IIT-CDIP [16] dataset, and 500k documents from the DocMa-trix [15] dataset. We further incorporate several smaller datasets, including CORD [24], B-MOD [9], DUDE [14], TNCR [1], M6Doc [5], SmartDoc [22], XFUND [34], and InfoVQA [21]. To increase diversity, we further scrape around 175k publicly available government documents with the process explained in Sec. F. We upsample B-MOD by a factor of 20, CORD and XFUND by a factor of 20, In-foVQA by a factor of 10, and TNCR by a factor of 5. For all datasets, OCR is performed using the Google Cloud Vision API. To avoid data leakage, we remove any image that fully or partially matches the source images used to construct the different splits of the evaluation datasets using the proce-dure detailed in Sec. G. After filtering and upsampling, the resulting dataset contains around 2.8 million images and is used both to generate training data for the tampering models and to train the auxiliary networks. 
+
+4.2. Experimental setting 
+
+4.2.1. Training setup for auxiliary networks 
+
+We train the crop-similarity network Fθ and the bounding box quality assessment network Gθ for one epoch using a batch size of 64. For Fθ , we set the number of negative samples N = 256 and the number of augmented anchor samples Malt = 10 . The threshold τ0 is set to 10. We set 
+
+τ1 = 10 , ϵ = 0 .1, and the temperature parameter τ = 0 .1.For Gθ , the stripe thickness t is set to 9. 
+
+4.2.2. Data-generation setup 
+
+We set the crop quality filtering threshold τ2 = 0 .5, the insertion probability pins = 0 .05 , the inpainting probability 
+
+pinp = 0 .05 , and the splicing probability pspl = 0 .5. The maximum number of tampered regions nmax is set to 5, and the aspect ratio tolerance ϵ′ = 0 .05 .
+
+4.2.3. Training setup for document tampering models 
+
+We propose a unified training and evaluation protocol named the Syn2Real Protocol. All document tampering de-tection and localization networks reported in the following sections are trained using a resolution of 1024 × 1024 for 2 epochs with a batch size of 64 on the corresponding syn-thetic dataset. The Focal Loss [17] with γ = 2 is used for both the segmentation head and the document-level classifi-cation head. The maximum learning rate is set to 1 × 10 −4
+
+and we adopt a Cosine Annealing scheduler [19]. We apply data augmentation, with details provided in Sec. H. This training setup is kept unchanged across models and pre-training data, and the same seed is used for all runs. Models are then evaluated on real, human-made document manip-ulation using RTM [20], FindItAgain [28], and FindIt [2], under the same evaluation setup in both the zero-shot and fine-tuning settings. We refer to the variant that uses our generated dataset as Syn2Real-TDoc-2.8M protocol. 74.3. Results and evaluation 
+
+4.3.1. Main results 
+
+To demonstrate the superiority of our data generation ap-proach, we train five models, DTD [25], ASC-Former [20], CAT-Net [10], PSCC-Net [18], and FFDN [4], on three datasets: one generated by our method and two produced by prior approaches proposed in [6] and [25]. These are, to our knowledge, the only methods in the literature that propose automatic data generation for document tampering detection and localization, with DocTamper [25] being the de facto reference on which most subsequent works rely for training data. To isolate the effect of data generation, tampered images are derived from the same source docu-ments described in Sec. 4.1, and all training configurations are kept identical across runs, as explained in Sec. 4.2.3. We assess performance in the zero-shot setting, reporting document-level classification and pixel-level segmentation results. The resulting models are evaluated on three human-made document manipulation datasets, RTM [20], FindItA-gain [28] and FindIt [2]. We note that these three datasets represent the only publicly available human-made docu-ment manipulation benchmarks. Tab. 1 shows that models trained on data generated by our method achieve higher per-formance than those trained on data generated by previous methods. This improvement is consistent across datasets and architectures, with stronger models such as FFDN and ASC-Former benefiting even more from being trained on the higher-quality data generated by our approach. The results also indicate that performance gains are more pro-nounced on RTM and FindItAgain, which were designed to reflect realistic manipulation scenarios, in contrast with FindIt, which was created by non-expert volunteers with heterogeneous skill levels and without explicit quality con-trol. The gains on these more challenging datasets are even more notable for the stronger models FFDN and ASC-Former. FFDN, for example, benefits from a 125.7 percent relative pixel-level F1 score improvement on FindItAgain, increasing its pixel-level F1 score from 11.3 to 25.5. The comparison above shows that our data generation strategy substantially outperforms the one used to create DocTam-per [25]. To further confirm this, we compare the aver-age performance of models trained directly on DocTamper with those trained on our generated dataset in Tab. 2. Train-ing on data generated by our approach yields significantly 
+
+Table 2. Comparison of models trained on data generated by our approach and on the DocTamper dataset. Results are averaged across models and evaluation datasets.                    
+
+> Training Data Image-level Pixel-level Prec Rec F1 Prec Rec F1
+> DocTamper 39.4 36.7 37.3 11.7 8.3 9.4 Ours 53.2 52.6 52.0 18.2 14.2 15.7
+
+Table 3. Impact of data-generation strategy on document tamper-ing detection and localization after fine-tuning. Models are pre-trained on synthetic data generated by different approaches and then fine-tuned on each target dataset’s training split. Results are averaged across models and evaluation datasets.                          
+
+> Data Gen. Image-level Pixel-level Prec Rec F1 Prec Rec F1
+> [25] 65.6 64.6 63.7 29.4 26.3 27.1 [6] 62.5 61.8 61.2 27.9 26.3 26.5 Ours 73.5 65.1 67.5 34.6 27.3 30.0
+
+Table 4. Ablation study on the auxiliary networks Fθ and Gθ used in the data generation process. When ablating Fθ , Sauvola thresh-olding was used, as in [25]. Results are averaged across models and evaluation datasets and reported in the zero-shot setting.                                                        
+
+> Model Ours w/o Gθw/o Fθw/o Fθ, G θ
+> Img Pix Img Pix Img Pix Img Pix
+> CAT-Net 41.3 9.7 41.1 9.6 40.6 9.5 40.4 9.5 DTD 52.5 13.2 51.5 12.9 49.1 12.3 48.3 12.0 PSCC-Net 52.2 11.4 51.3 11.0 45.9 10.3 43.8 9.8 ASC-Former 51.5 17.2 50.9 16.8 49.0 14.5 48.4 14.1 FFDN 62.3 27.0 61.4 26.6 57.8 24.0 55.0 23.5
+
+stronger models, with the average pixel-level F1 score in-creasing from 9.4 to 15.7. We next assess whether these benefits remain after fine-tuning. Table 3 reports the aver-age performance of the same models, pretrained on each synthetic dataset and then fine-tuned on each evaluation dataset’s training split. Models pretrained with data gen-erated by our approach still achieve the best results on av-erage, confirming that our data generation approach pro-vides a stronger starting point even when real annotations are available. Detailed per-model and per-dataset results are provided in Sec. I. Furthermore, we show in Sec. J that models trained on data generated using our approach gen-eralize well to AI-generated tampering. We also provide in Sec. K a quantitative and qualitative analysis of the ef-fect of F and G on the quality of the generated data. In addition, we present qualitative comparisons and precision-recall curves of the resulting tampering localization models trained on data generated by our approach versus previous work in Sec. L.1 and Sec. L.2. Section M.1 provides an analysis of the per-image generation time of our approach, showing that F and G together account for less than 20 per-cent of the total processing time. Section M.2 demonstrates that our generation method is robust to variations in OCR quality. 
+
+4.3.2. Ablation study 
+
+Table 4 reports the impact of removing the similarity net-work Fθ and the bounding-box quality network Gθ from the generation pipeline on the performance of models trained on the resulting generated dataset. Removing Fθ results in a consistent reduction in both image-level and pixel-8level F1 scores, demonstrating that selecting visually sim-ilar regions is important for producing realistic tampering examples. Excluding Gθ also causes a performance de-cline, which confirms the importance of filtering out low-quality crops that would otherwise introduce highly visible artifacts. When both networks are removed, performance drops even further, indicating that the two modules con-tribute complementary benefits. 
+
+## 5. Conclusion 
+
+We presented a framework for generating high-quality tam-pered document images. Our approach combines a simi-larity network Fθ , trained using contrastive learning to en-force visual consistency between source and target regions, with a bounding box quality network Gθ , which filters out ill-defined crops that would otherwise introduce obvious ar-tifacts. Building on these two components, we proposed a unified data generation pipeline that supports all five tam-pering types and generates high-quality samples. 
+
+## References 
+
+[1] Abdelrahman Abdallah, Alexander Berendeyev, Islam Nu-radin, and Daniyar Nurseitov. Tncr: Table net detection and classification dataset. Neurocomputing , 2021. 7 [2] Chlo´ e Artaud, Antoine Doucet, Jean-Marc Ogier, and Vin-cent Poulain d’Andecy. Receipt dataset for fraud detection. In First International Workshop on Computational Docu-ment Forensics , 2017. 2, 7, 8 [3] Maryam Bibi, Anmol Hamid, Momina Moetesum, and Im-ran Siddiqi. Document forgery detection using printer source identification—a text-independent approach. In 2019 Inter-national Conference on Document Analysis and Recognition Workshops (ICDARW) , pages 7–12. IEEE, 2019. 2 [4] Zhongxi Chen, Shen Chen, Taiping Yao, Ke Sun, Shouhong Ding, Xianming Lin, Liujuan Cao, and Rongrong Ji. En-hancing tampered text detection through frequency feature fusion and decomposition. In European Conference on Com-puter Vision , pages 200–217. Springer, 2024. 2, 8 [5] Hiuyi Cheng, Peirong Zhang, Sihang Wu, Jiaxin Zhang, Qiyuan Zhu, Zecheng Xie, Jing Li, Kai Ding, and Lianwen Jin. M 6doc: A large-scale multi-format, multi-type, multi-layout, multi-language, multi-annotation category dataset for modern document layout analysis, 2023. 7 [6] Li Dong, Weipeng Liang, and Rangding Wang. Robust text image tampering localization via forgery traces enhancement and multiscale attention. IEEE Transactions on Consumer Electronics , 2024. 1, 2, 7, 8, 9 [7] Fabrizio Guillaro, Davide Cozzolino, Avneesh Sud, Nicholas Dufour, and Luisa Verdoliva. Trufor: Leveraging all-round clues for trustworthy image forgery detection and localiza-tion. In Proceedings of the IEEE/CVF conference on com-puter vision and pattern recognition , pages 20606–20615, 2023. 1, 2 [8] Xuefeng Hu, Zhihan Zhang, Zhenye Jiang, Syomantak Chaudhuri, Zhenheng Yang, and Ram Nevatia. Span: Spa-tial pyramid attention network for image manipulation local-ization. In Computer Vision–ECCV 2020: 16th European Conference, Glasgow, UK, August 23–28, 2020, Proceed-ings, Part XXI 16 , pages 312–328. Springer, 2020. 2 [9] Martin Kiˇ sˇ s, Michal Hradiˇ s, and Oldˇ rich Kodym. Brno mo-bile ocr dataset, 2019. 7 [10] Myung-Joon Kwon, In-Jae Yu, Seung-Hun Nam, and Heung-Kyu Lee. Cat-net: Compression artifact tracing net-work for detection and localization of image splicing. In 
+
+Proceedings of the IEEE/CVF winter conference on applica-tions of computer vision , pages 375–384, 2021. 2, 8 [11] Myung-Joon Kwon, Seung-Hun Nam, In-Jae Yu, Heung-Kyu Lee, and Changick Kim. Learning jpeg compression ar-tifacts for image manipulation detection and localization. In-ternational Journal of Computer Vision , 130(8):1875–1895, 2022. 2 [12] Christoph H Lampert, Lin Mei, and Thomas M Breuel. Print-ing technique classification for document counterfeit detec-tion. In 2006 International Conference on Computational Intelligence and Security , pages 639–644. IEEE, 2006. 2 [13] Rui Lan, Yancheng Bai, Xu Duan, Mingxing Li, Lei Sun, and Xiangxiang Chu. Flux-text: A simple and advanced diffusion transformer baseline for scene text editing. arXiv preprint arXiv:2505.03329 , 2025. 6 [14] Jordy Van Landeghem, Rub´ en Tito, Łukasz Borchmann, Michał Pietruszka, Paweł J´ oziak, Rafał Powalski, Dawid Ju-rkiewicz, Micka¨ el Coustaty, Bertrand Ackaert, Ernest Val-veny, Matthew Blaschko, Sien Moens, and Tomasz Sta-nisławek. Document understanding dataset and evaluation (dude), 2023. 7 [15] Hugo Laurenc ¸on, Andr´ es Marafioti, Victor Sanh, and L´ eo Tronchon. Building and better understanding vision-language models: insights and future directions., 2024. 7 [16] David Lewis, Gady Agam, Shlomo Argamon, Ophir Frieder, and Jefferson Heard. Building a test collection for complex document information processing. pages 665–666, 2006. 7 [17] Tsung-Yi Lin, Priya Goyal, Ross Girshick, Kaiming He, and Piotr Doll´ ar. Focal loss for dense object detection. In Pro-ceedings of the IEEE international conference on computer vision , pages 2980–2988, 2017. 7 [18] Xiaohong Liu, Yaojie Liu, Jun Chen, and Xiaoming Liu. Pscc-net: Progressive spatio-channel correlation network for image manipulation detection and localization. IEEE Trans-actions on Circuits and Systems for Video Technology , 32 (11):7505–7517, 2022. 2, 8 [19] Ilya Loshchilov and Frank Hutter. Sgdr: Stochas-tic gradient descent with warm restarts. arXiv preprint arXiv:1608.03983 , 2016. 7 [20] Dongliang Luo, Yuliang Liu, Rui Yang, Xianjin Liu, Jishen Zeng, Yu Zhou, and Xiang Bai. Toward real text manip-ulation detection: New dataset and new solution. Pattern Recognition , 157:110828, 2025. 2, 7, 8 [21] Minesh Mathew, Viraj Bagal, Rub` en P´ erez Tito, Dimosthe-nis Karatzas, Ernest Valveny, and C. V Jawahar. Infograph-icvqa, 2021. 7 [22] Nibal Nayef, Muzzamil Luqman, Sophea Prum, S´ ebastien Eskenazi, Joseph Chazalon, and Jean-Marc Ogier. Smartdoc-
+
+9qa: A dataset for quality assessment of smartphone captured document images - single and multiple distortions. 2015. 7 [23] Anh D Nguyen, Hye-Young Kim, and Hoa N Nguyen. Taliu: A novel decoder and augmentation strategy for boosting tam-pered document image detection. IEEE Access , 2025. 2 [24] Seunghyun Park, Seung Shin, Bado Lee, Junyeop Lee, Jae-heung Surh, Minjoon Seo, and Hwalsuk Lee. Cord: A con-solidated receipt dataset for post-ocr parsing. 2019. 7 [25] Chenfan Qu, Chongyu Liu, Yuliang Liu, Xinhong Chen, Dezhi Peng, Fengjun Guo, and Lianwen Jin. Towards robust tampered text detection in document image: New dataset and new solution. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pages 5937– 5946, 2023. 1, 2, 7, 8, 9 [26] J. Sauvola and M. Pietik¨ ainen. Adaptive document image binarization. Pattern Recognition , 33(2):225–236, 2000. 2 [27] Shize Shang, Xiangwei Kong, and Xingang You. Document forgery detection using distortion mutation of geometric pa-rameters in characters. Journal of Electronic Imaging , 24(2): 023008–023008, 2015. 2 [28] Beatriz Mart´ ınez Torn´ es, Th´ eo Taburet, Emanuela Boros, Kais Rouis, Antoine Doucet, Petra Gomez-Kr¨ amer, Nico-las Sidere, and Vincent Poulain d’Andecy. Receipt dataset for document forgery detection. In International Confer-ence on Document Analysis and Recognition , pages 454– 469. Springer, 2023. 2, 7, 8 [29] Yuxiang Tuo, Wangmeng Xiang, Jun-Yan He, Yifeng Geng, and Xuansong Xie. Anytext: Multilingual visual text gen-eration and editing. arXiv preprint arXiv:2311.03054 , 2023. 6[30] Junke Wang, Zuxuan Wu, Jingjing Chen, Xintong Han, Ab-hinav Shrivastava, Ser-Nam Lim, and Yu-Gang Jiang. Ob-jectformer for image manipulation detection and localiza-tion. In Proceedings of the IEEE/CVF Conference on Com-puter Vision and Pattern Recognition (CVPR) , pages 2364– 2373, 2022. 1, 2 [31] Yuxin Wang, Boqiang Zhang, Hongtao Xie, and Yongdong Zhang. Tampered text detection via rgb and frequency rela-tionship modeling. Chinese Journal of Network and Infor-mation Security , 8(3):29–39, 2022. 2 [32] Liang Wu, Chengquan Zhang, Jiaming Liu, Junyu Han, Jing-tuo Liu, Errui Ding, and Xiang Bai. Editing text in the wild, 2019. 2 [33] Yue Wu, Wael AbdAlmageed, and Premkumar Natarajan. Mantra-net: Manipulation tracing network for detection and localization of image forgeries with anomalous features. In 
+
+Proceedings of the IEEE/CVF conference on computer vi-sion and pattern recognition , pages 9543–9552, 2019. 2 [34] Yiheng Xu, Tengchao Lv, Lei Cui, Guoxin Wang, Yijuan Lu, Dinei Florencio, Cha Zhang, and Furu Wei. Layoutxlm: Multimodal pre-training for multilingual visually-rich docu-ment understanding, 2021. 7 
+
+10 Leveraging Contrastive Learning for a Similarity-Guided Tampered Document Data Generation Pipeline 
+
+# Supplementary Material 
+
+## A. Extracting Line Segments 
+
+ExtractLineSegments converts raw OCR character boxes into a set of contiguous text (or blank) segments, each tagged with a line index. These segment pairs (bi, ℓ i) serve as anchors for both our contrastive-learning sampling and our tampering pipelines. The algorithm can be found in Al-gorithm 3 and a detailed explanation is given below. 
+
+1. Line clustering. 
+
+Given a character level OCR that returns a set of character-level boxes {bi}, where bi = ( xi, y i, w i, h i) denotes the top-left corner (xi, y i), width wi, and height hi, we first sort all bi by their bottom edge yi+hi. Starting from the topmost box, we form a new line cluster L1. We then iterate through the remaining boxes in sorted order: if the vertical span of a box differs from the first box of the current cluster by at most a threshold δy , we add it to that cluster; otherwise we begin a new line cluster. This produces {L 1, L2, . . . , LL},
+
+where each Lℓ is a vertically consistent set of boxes. 
+
+2. Segment generation. 
+
+Within each line Lℓ, we sort its boxes by their horizontal midpoint xi + 12 wi. We then enumerate every contiguous subsequence, 
+
+{ bi1 , b i2 , . . . , b ik } ⊂ L ℓ, k ≥ 1,
+
+and merge it into a single segment whose bounding box 
+
+b =  min  
+
+> j
+
+xij , min  
+
+> j
+
+yij , max  
+
+> j
+
+(xij + wij ) − min  
+
+> j
+
+xij ,
+
+max  
+
+> j
+
+(yij + hij ) − min  
+
+> j
+
+yij
+
+
+
+and which inherits the line index ℓ. Collecting all such 
+
+{(bi, ℓ i)}ni=1 yields every possible contiguous run in each line. The text content of these runs is simply the concatena-tion of their character in their horizontal order 
+
+3. blank-segment injection. 
+
+To enrich the segment set with blank regions and to ensure each one has at least a negative blank pair (for our con-trastive learning pairs collection): 1. Compute the average character-width ¯w and height ¯h
+
+from all single-character boxes. 2. For each (bi, ℓ i) of size (wi, h i), attempt to place a same-sized box at horizontal offsets ±k w i (for 1 ≤ k ≤⌊W/w i⌋) that • lies within the central third of the page width (applied only during contrastive-learning sampling to avoid pairing text crops with blank regions near the page margins, where background color often shifts) • does not overlap any existing box. When found, add its bounding box with the same line index ℓi and associate to it a string of “+” characters whose length matches the string in (bi). Note that us-ing “+” here is arbitrary, any symbol not found naturally in documents will work. The only requirements are that these synthetic strings do not occur in real text (so they are not filtered out when selecting candidate crops with differing content) and that their length matches that of a nearby text segment, ensuring that, when rendered, the resulting font size is similar to nearby text regions. 3. In parallel, search for a hard-negative location by plac-ing a box at a vertical gap 10 ¯h above or below bi, then scanning horizontally for a non-overlapping spot. 
+
+## B. More about the rendering and inpainting functions 
+
+B.1. Rendering 
+
+In Algorithm 2, the function 
+
+Pj,k = Render  tc, f j , col k, crop( I, r )
+
+takes as input a text string tc, a font identifier fj , a fore-ground color col k ∈ [0 , 255] 3, and the target image patch 
+
+B = crop( I, r ) ∈ RH×W ×3. It outputs a new patch 
+
+Pj,k ∈ RH×W ×3,
+
+with the same spatial size as B, where the text tc has been rasterized on top of the original background using font fj
+
+and color col k.Implementation-wise, the rendering function proceeds as follows: • A visible region inside the box is defined by subtracting fixed horizontal and vertical margins from the width and height of B.• A font scale and stroke thickness are chosen so that the rendered text fits entirely inside this region. This is done via a simple binary search on the scale, using OpenCV’s 
+
+getTextSize as a feasibility check. • Once a valid scale is found, the text is drawn onto a copy of B, centered in the box, using OpenCV’s putText 
+
+function. 1The function therefore acts as a deterministic rasterizer: 
+
+(tc, f j , col k, B ) 7 −→ Pj,k ,
+
+ensuring that the entire string lies within the target region while preserving the original background outside the glyph strokes. 
+
+B.2. Inpainting 
+
+In Algorithm 2, the function 
+
+cinp = Inpaint  crop( I, r )
+
+operates on a single RGB patch c = crop( I, r ) ∈ RH×W ×3
+
+and returns an inpainted patch 
+
+cinp ∈ RH×W ×3,
+
+in which selected foreground text has been removed and re-placed by a plausible continuation of the background. Concretely, the inpainting function first constructs a bi-nary mask inside the patch c indicating which pixels should be removed, and then fills these pixels using a background-aware inpainting algorithm: • In a full-box mode, the whole region is marked as missing. • In a text-only mode, the patch is converted to grayscale and a per-pixel threshold map is computed using Sauvola’s local thresholding method. Pixels darker than their local threshold are treated as foreground strokes and included in the mask, while the rest of the background remains unmasked. • Given this mask, the missing pixels are reconstructed with OpenCV’s Navier–Stokes inpainting method (INPAINT NS ) with a small inpainting radius, which propagates image structure and color from the mask boundary into the interior. Thus, Inpaint can be viewed as a patch-level operator that either erases the entire box or selectively removes text strokes while preserving surrounding background texture, with a probability of 0.5 for each operation. 
+
+## C. More about Fθ and its training process 
+
+C.1. Data augmentation applied on anchors 
+
+To generate hard negatives, we apply a series of randomized augmentations to the anchor crop itself. These augmented variants are then added to the anchor’s negative set. The goal is to create visually inconsistent but structurally similar crops that challenge the contrastive model to focus on fine-grained visual differences. Given a bounding box bi = ( x, y, w, h ) defining the an-chor crop in an image I, we extract the crop and apply one of two augmentation strategies, as follows: 
+
+1. Geometric Perturbation. With a probability of 15%, and only if the crop is not blank, we apply a vertical off-set to the anchor crop. The offset is randomly sampled in proportion to the crop height. Depending on the sampled value, the crop is shifted either upward or downward. If the resulting crop dimensions differ from the original, it is re-sized back to the original width and height. This simulates misalignment. 
+
+2. Appearance-Based Transformations. Otherwise, we apply a composition of visual augmentations using Albu-mentations. The pool of available transformations includes RandomBrightnessContrast, HueSaturationValue, Motion-Blur, RGBShift, ChannelShuffle, ColorJitter, and Random-TextColor. The number of applied augmentations k is drawn from a decreasing probability distribution P (k) ∝
+
+1/k . The augmentations are composed and applied in se-quence. 
+
+3. Validity Check and Filtering. To ensure that each augmented crop is sufficiently distinct from the original an-chor, we evaluate the following: • Pixel difference ratio: the percentage of differing pixels. We allow a minimal difference of 5 percent. • L2 distance: the Euclidean distance between the raw RGB pixel vectors. We allow a minimal distance of 12. If the augmented crop is too similar to the original an-chor, new augmentations are sampled, until the criterions above are met or we exceed one hundred attempts. 
+
+4. Final Selection. If an augmented version passes the similarity threshold, it is added to the set of hard negatives 
+
+Ni corresponding to the anchor bi. Otherwise, the attempt is discarded. This process is repeated Malt times per anchor, resulting in multiple hard negatives that maintain spatial structure but differ in appearance, helping the contrastive model learn more discriminative features. 
+
+C.2. Crop-Similarity Network Architecture 
+
+The similarity network Fθ is implemented using a modi-fied ConvNeXt-style encoder. Given an input crop x ∈
+
+R3×H×W , it produces a 192-dimensional descriptor used with cosine similarity. 
+
+Backbone. We use a ConvNeXt-like architecture with stage depths {3, 6, 27 } and channel dimensions 
+
+{32 , 96 , 192 }, with two modifications: (i) the first down-sampling layer uses stride 2 (instead of the default 4) to preserve higher spatial resolution in early features; and (ii) a fixed 2D sinusoidal positional encoding is injected into the feature map before the final stage to retain absolute 2spatial information. To avoid losing border pixels when 
+
+H or W is odd, reflect padding is applied prior to stride-2 downsamples. 
+
+Pooling and Meta-head. After the final stage, the feature map (B, 192 , H ′, W ′) is processed by three branches: (i) a cross-attention pooling layer with 8 learnable queries (each 128-D) attending over the spatial tokens (keys/values pro-jected from the 192-D features to 128-D); (ii) global av-erage pooling; and (iii) global max pooling. The branch outputs are concatenated to form a vector of size 192 + 192 + 8 × 128 , which is passed through a small MLP (Linear → GELU → Linear ) to produce a 192-D descriptor. 
+
+Foreground/Background embeddings and usage. The 192-D descriptor is split into two L2-normalized 96-D vec-tors: a background embedding fbg (x) (layout/texture) and a foreground embedding ffg (x) (text cues such as font, color, alignment). For comparisons where both crops contain text, the final embedding for each crop is the 192-D concatena-tion [fbg (x); ffg (x)] , and the similarity is the average of background and foreground cosine scores: 
+
+s(x, y ) = 12 ⟨fbg (x), f bg (y)⟩ + 12 ⟨ffg (x), f fg (y)⟩.
+
+If at least one crop is blank, we route through the back-ground pathway only: the effective embedding reduces to 
+
+fbg (·) (96-D), and similarity is computed solely in the back-ground space, 
+
+s(x, y ) = ⟨fbg (x), f bg (y)⟩.
+
+C.3. Sensitivity to visual characteristics 
+
+To verify that the crop-similarity network does not rely on a single trivial cue but instead exploits a broad range of visual characteristics, we test the sensitivity of the similarity score to local appearance changes. We first collect around 50,000 text-crop pairs for which the network assigns a high self-similarity score ( s > 0.9). For each pair (c, c 1), we gen-erate perturbed versions ˜c of c by applying one transforma-tion at a time and measure the cosine similarity between the embeddings of ˜c and c1 (and vice versa). For each transfor-mation, we sweep an intensity parameter (e.g., from small to larger perturbations) and report the average percentage of remaining similarity across all crops. We consider the following transformations, each designed to probe a differ-ent type of invariance: translation (horizontal and vertical shifts), which tests sensitivity to small misalignments of the text; rotation; Gaussian noise (increasing standard devia-tion) and JPEG compression (decreasing quality); bright-ness and contrast adjustments; gamma correction; satura-tion changes; Gaussian blur and motion blur; erosion and dilation, which thin or thicken strokes and approximate the  
+
+> Figure 6. Similarity degradation curves for several visual trans-formations. Each curve shows the average percentage of retained similarity as the intensity of a single perturbation increases.
+
+effects of binarization or resampling; and shading, which applies a smooth illumination gradient across the crop to mimic non-uniform lighting. The results shown in Fig. 6 demonstrate that the network is sensitive to all these visual cues and does not rely on any single trivial characteristic. 
+
+## D. More About the Crop Quality Assess-ment Network Architecture and Data Pre-processing 
+
+D.1. Crop Quality Assessment Network Architec-ture 
+
+The bounding box quality network Gθ is implemented using a combination of convolutional encoders that process both the crop and its surrounding context. The network follows a multi-branch architecture: 
+
+RGB Crop Encoder. The crop itself is processed by a lightweight ConvNeXt-style encoder, which adopts the same architectural modifications as the one used for Fθ , no-tably, the first downsampling layer uses stride 2 instead of 4, and fixed 2D sinusoidal positional encodings are added before the final stage. However, the last stage, contrary to 
+
+Fθ , contains only 9 layers. 
+
+Context Stripe Encoder. The stripe pair (tb k, lr k), rep-resenting the crop’s top–bottom and left–right context, is processed by a second module: • Each stripe is flattened and projected into a 1D sequence using 1D convolutions. • The sequences are passed through stacks of 1D ConvNeXt-like blocks. 3Table 5. Robustness of our data generation pipeline to OCR qual-ity. We report average zero-shot performance across models and evaluation datasets when using Google OCR, when replacing the OCR engine with Tesseract, and when perturbing the Google OCR bounding boxes prior to generation. 
+
+Data Gen. Image-level Pixel-level Prec Rec F1 Prec Rec F1 
+
+Baseline (Google OCR) 53.2 52.6 52.0 18.2 14.2 15.7 Tesseract OCR 52.4 52.5 51.6 17.9 13.9 15.3 Perturbed OCR boxes 52.7 52.0 51.6 17.6 13.5 15.0 • Each sequence is then pooled using both average and max pooling, producing four 64-dimensional vectors, concate-nated into a 256-dimensional stripe embedding. 
+
+Classifier Head. The final crop embedding (d=384) and context embedding (d=256) are concatenated into a single 640-dimensional vector. This vector is passed through a feedforward classifier: 
+
+Linear(640 → 2560) → GELU → Linear(2560 → 2) 
+
+The output is a 2-dimensional vector used for binary classi-fication. We note that we use a neural network instead of rely-ing on rules and background/foreground estimation algo-rithms because those approaches are slow. Our model is about 12 times faster than the employed data-filtering pro-cess explained below. 
+
+D.2. Data Preparation 
+
+D.2.1. Border Integrity Test 
+
+BORDER INTEGRITY TEST , illustrated in Algorithm 4, is a connected-components criterion on an Otsu-binarized im-age that flags border contact with a one-pixel tolerance when a foreground component touches the box boundary without being fully inside. The routine takes a boolean in-put global . When global is true the box is first ex-panded by a fixed margin and the same test is applied; when                            
+
+> Table 6. Detection performance on synthetic tampered datasets generated with and without Fθand Gθ. Lower F1 indicates more realistic and challenging tampering. Averages across different models are shown.
+> Generation Pixel-level Setting Prec Rec F1
+> ours 67.6 29.3 40.1
+> w/o Gθ68.4 39.8 49.7 w/o Fθ69.9 71.5 68.5 w/o Fθ,Gθ85.1 90.2 87.4
+
+false the test is applied to the crop alone. Each crop is eval-uated under both dark-text and light-text polarities and in both modes (global and local). A crop is deemed ill-defined only if all four evaluations indicate border contact. If local and global tests disagree, the crop is discarded, otherwise it is labeled as well defined. 
+
+D.2.2. The Labeling Process 
+
+Given an image I, we obtain character boxes from OCR and group them into line segments us-ing ExtractLineSegments , which yields boxes 
+
+b = (x0, y 0, x 1, y 1) with text metadata. Candidates are subsampled by width buckets to control size diversity. For each box we run BORDER INTEGRITY TEST with 
+
+global true in both polarities. A box is labeled y = 1 
+
+when at least one polarity indicates no border contact under the global test; otherwise it is labeled y = 0 , subject to per-bucket caps and simple balance constraints. To enrich ill-defined data when quotas are not met, some y = 1
+
+boxes are perturbed by padding or cropping their sides with small integer offsets, clipped to image bounds, and retested with the global setting under the opposite polarity; if border contact is detected the perturbed box is accepted as y = 0 , otherwise it remains y = 1 and the expansion or padding is discarded. As a final sanity check, the local form of B ORDER INTEGRITY TEST is run in both polarities on each stored crop: y = 0 must return true in both runs and y = 1 must return false in both runs; crops failing these conditions are discarded. 
+
+D.2.3. Crop perturbation 
+
+To enrich ill-defined examples, some y = 1 crops are perturbed by padding or cropping the four sides by small integer offsets. Padding expands a side outward. Cropping moves it inward. For each active side s ∈{left , right , top , bottom } we draw an integer offset ∆s ∈{1, . . . , ∆max } with a distribution biased toward small val-ues. Concretely: • Range. Let h = y1−y0 and w = x1−x0. We set ∆max =min  20 , ⌊0.3 · max( h, w )⌋ to adapt the maximum step to the box scale while capping it in pixels. • Skew toward small moves. We use a truncated geometric-like law Pr(∆ s = k) ∝ ρ k−1 on k ∈{1, . . . , ∆max } with ρ ∈ (0 , 1) , default ρ = 0 .5, which concentrates mass on {1, 2, 3}.• Coherent moves. With probability 1/2 we tie all active sides to the same offset value ∆ and to the same opera-tion, which produces more realistic, coherent expansions or contractions along multiple sides. • Nondegeneracy. Before applying a crop operation on a side, we ensure the updated width and height remain pos-itive by enforcing 
+
+ˆw = ˆ x1 − ˆx0 ≥ 2, ˆh = ˆ y1 − ˆy0 ≥ 2.
+
+4If a proposed ∆s would violate these bounds, we reduce it to the largest value that preserves ˆw ≥ 2 and ˆh ≥ 2, or skip that side if no feasible value exists. • Clipping. After the side-wise updates, the box is clipped to image bounds: 
+
+ˆx0 ← max(0 , ˆx0), ˆy0 ← max(0 , ˆy0),
+
+ˆx1 ← min( W, ˆx1), ˆy1 ← min( H, ˆy1).
+
+These choices keep perturbations small and realistic, scale them with the content, and prevent degenerate boxes while allowing enough variability. The global test is rerun and only if border contact is detected the perturbed crop is ac-cepted as ill defined with y = 0 . The process is illustrated in Algorithm 5. 
+
+D.2.4. Augmentation. 
+
+We apply a joint photometric transform to the crop and stripes. The transformation samples, with the indicated probabilities and ranges, from the following operations: • Brightness/Contrast: random brightness and contrast changes with limits 0.4 (applied with p = 0 .25 ). • Hue/Saturation/Value: hue/saturation/value shifts up to 
+
+±40 (applied with p = 0 .25 ). • RGB Channel Shifts: per-channel shifts up to ±40 (ap-plied with p = 0 .25 ). • Color Jitter: coupled brightness/contrast/saturation/hue jitter (same limits; p = 0 .25 ). • Channel Shuffle: random permutation of RGB channels (p = 0 .2). • Text-Color Perturbation: brighten low-luminance (foreground-like) pixels to vary ink color (threshold =40 ; p = 0 .2). • Inversion: full-color inversion ( p = 0 .2). • Blur/Defocus (base): Gaussian/median/box/motion blur with kernel limits 3 − 7 and defocus radius 1 − 2 (each 
+
+p = 0 .15 ). • Blur/Defocus (for bad-defined): a wider blur band with kernels up to 31 and defocus radius 1 − 11 to simulate stronger degradation. • Compression: JPEG quality sampled in [10 , 85] (p =0.2). • Sharpening: α ∈ [0 .2, 0.5] , lightness [0 .5, 1.0] (p =0.1). • Additive Noise: Gaussian noise with σ ∈ [0 .05 , 0.1] 
+
+(p = 0 .1) and ISO noise with color shift [0 .01 , 0.02] , in-tensity [0 .01 , 0.05] (p = 0 .1). • Multiplicative Noise: per-channel multiplier in 
+
+[0 .975 , 1.025] (p = 0 .1). • Occasional Grayscale: convert to grayscale with small probability ( p = 0 .01 ). 
+
+Table 7. Inference speed comparison between the crop-quality net-work and classical baseline algorithms. Lower is better for latency; higher is better for throughput. The slowdown ratio is defined as (classic / model) per-image time. The evaluation is done with a batch size of 1024.                             
+
+> Method Per-image (ms) Throughput (img/s) Slowdown ratio
+> Crop-quality net (ours) 0.159 ±0.000 6306.8 1.00 ×
+> Niblack 1.213 ±0.018 824.3 7.65 ×
+> Adaptive mean 0.536 ±0.007 1866.4 3.38 ×
+> Adaptive Gaussian 0.638 ±0.009 1567.0 4.02 ×
+> Sauvola 1.783 ±0.021 560.8 11.25 ×
+
+D.3. More on the Crop Quality Assessment Network 
+
+D.3.1. Comparison with algorithmic alternatives 
+
+We compare the inference cost of our crop-quality network against several algorithmic baselines that follow the proce-dure described in Algorithm 4. The baselines rely on clas-sical local-thresholding schemes, namely Niblack, adaptive mean, adaptive Gaussian, and Sauvola. As shown in Tab. 7, our network is substantially faster in both per-image latency and throughput while providing higher-quality crop scoring. 
+
+D.3.2. Evaluating the Crop Quality Assessment Network 
+
+We evaluate our crop-quality network on all the DIBCO datasets, which provide human-annotated segmentation masks. These masks allow us to easily create both well-defined and ill-defined crops. For well-defined crops, we begin by selecting a random region and then iteratively shrink the bounding box in each direction until it touches a positive mask (or the box becomes empty and is discarded). For ill-defined crops, we simply choose a box randomly un-til we get one that cuts through a region labeled as posi-tive. We do this 100 times per document. The results re-ported in Tab. 8 show that our crop-quality network reli-ably distinguishes well-defined crops from corrupted ones. Combined with the improvements observed in our ablation experiments when using this model, these findings confirm that the network effectively fulfills its intended role. 
+
+## E. Examples of Generated Manipulations 
+
+To illustrate the diversity and realism of our tampered docu-ment generation pipeline, we provide examples of tampered documents alongside their ground-truth masks. ?? , ?? , and Fig. 10 present 24 samples covering all five types of tamper-ing (copy-move, splicing, insertion, inpainting, and cover-age) across a variety of document layouts, fonts, and back-
+
+Table 8. Crop-quality classification results on data derived from the DIBCO datasets.     
+
+> Method Accuracy well-defined Accuracy ill-defined
+> Crop-quality network 98.6% 97.9 %
+
+5ground textures. 
+
+## F. Data Scraping 
+
+To further diversify our training corpus, we scrape addi-tional document images from publicly available sources. In particular, we collect 175k documents from the Offi-cial Journal of the French Republic ( https://www. journal-officiel.gouv.fr ), which provides scans of administrative texts, including laws, decrees, and official announcements. These documents offer complex layouts, multilingual content, and high visual diversity, making them valuable for our task. We note that we only scrape docu-ments that are in the public domain. 
+
+## G. Filtering for Out-of-Domain Evaluation 
+
+To ensure out-of-domain evaluation and prevent data leak-age, we remove any image that either fully or partially matches any image from the source data used to construct the evaluation datasets. Concretely, we slide a 64 ×64 patch over the images, compute a hash for each patch, and discard any training image whose patch hashes overlap with those of the evaluation datasets. 
+
+## H. Data augmentation applied during training the various tampering detection and local-ization networks 
+
+During training, we apply, for all models and datasets, the same data augmentation operations which consists of a se-ries of augmentations applied on both the document images and their corresponding tampering masks. The augmenta-tions are probabilistically applied and consist of both geo-metric and photometric transformations. Below, we detail each augmentation used. 
+
+H.1. Photometric Augmentations (Image Only) 
+
+• Brightness Adjustment: Using ColorJitter , bright-ness is randomly modified in the range [0 .3, 2.0] .• Contrast Adjustment: Image contrast is randomly per-turbed in the range [0 .3, 2.0] .• Saturation Adjustment: Saturation is altered within the same range [0 .3, 2.0] .• Gaussian Blur: Randomly applied with kernel sizes from {3, 5, 7 }.
+
+H.2. Geometric Augmentations (Image + Mask) 
+
+• Small Angle Rotation: Images and masks are rotated by a random angle between −5◦ and +5 ◦.• 90°-Based Rotations: Random rotation of either +90 ◦,
+
+−90 ◦, or 180 ◦.• Horizontal and Vertical Flips: Applied independently to image and mask with small probability (0.05). • Random Shrink and Rescale: The image and mask are randomly scaled by a factor from [0 .5, 2.0] , using one of 
+
+BILINEAR , BICUBIC , or LANCZOS .• Perspective Warp: With small probability (0.1), homo-graphic transformations are applied by perturbing image corners. 
+
+H.3. Compression Artifacts (Image Only) 
+
+To simulate JPEG compression: • A random number (0–5) of JPEG recompressions are ap-plied with quality values randomly selected from a user-defined range (typically 50–100). The probabilities are controlled via a configuration file, which is included in the codebase and contains the default values used in our training. 
+
+## I. Per-Model and Per-Dataset Results 
+
+I.1. Fine-Tuning Results 
+
+We report the average fine-tuning performance across all datasets and models in Tab. 3, and provide detailed per-dataset results in Tab. 9. These results confirm our data gen-eration method yields better performance across all datasets and models. 
+
+I.2. Ablation Results 
+
+We report the average ablation results across all datasets and models in Tab. 4, and provide detailed per-dataset results in Tab. 11. The results confirm that both F and G contribute positively to the final model performance. 
+
+## J. Generalization to AI-Generated Tampering 
+
+To assess the generalization ability of our model to AI-generated manipulations, which were not included in the pretraining data, we construct a dedicated benchmark by synthesizing 10,000 tampered document images us-ing the FLUX-Text [13] and AnyText [29] models, along with an additional 10,000 untampered (pristine) examples. All images, both tampered and untampered, are sourced from the CC-MAIN-2021-31-PDF-UNTRUNCATED cor-pus, excluding any documents used during pretraining, to ensure a fair and unbiased evaluation. As shown in Tab. 10, models trained on data generated by our approach general-izes well to these AI-generated forgeries without requiring additional fine-tuning. 
+
+## K. Assessing the impact of F and G on tamper-ing quality 
+
+K.1. Quantitative assessment 
+
+Detection and localization metrics as a proxy of Tam-pering Quality Assessing the quality of tampered docu-ments via human annotation is time-consuming and costly. 6Table 9. Document tampering detection and localization results after fine-tuning. Models are pretrained on synthetic data generated by different approaches and then fine-tuned on each target dataset’s training split. Results are reported on RTM, FindItAgain, and FindIt. P, R, and F1 correspond to precision, recall, and F1 score, while Image and Pixel denote image-level classification and pixel-level localization performance.                                                                                                                                                                                                                                                                                                         
+
+> Model Data Gen. RTM FindItAgain FindIt
+> Image Pixel Image Pixel Image Pixel PRF1 PRF1 PRF1 PRF1 PRF1 PRF1 PSCC-Net [25] 54.8 88.5 67.7 15.2 17.8 16.4 59.8 54.0 56.8 14.1 31.3 19.4 74.6 73.7 74.2 35.3 34.4 34.8 [6] 52.1 88.2 65.5 14.3 16.7 15.4 58.5 53.4 55.8 13.3 28.7 18.2 71.1 69.1 70.1 32.4 34.2 33.3 Ours 53.3 90.2 67.0 15.9 20.4 17.9 73.0 54.2 62.2 30.1 22.6 25.8 71.6 72.5 72.1 34.3 32.7 33.5 CAT-Net [25] 63.7 75.5 69.1 23.6 18.3 20.6 35.1 37.1 36.1 6.3 5.6 5.9 60.2 77.5 67.8 47.8 27.3 34.8 [6] 57.1 72.2 63.8 24.1 18.2 20.7 33.2 35.6 34.4 6.7 5.8 6.2 75.5 75.1 75.3 48.9 27.6 35.3 Ours 59.6 77.6 67.4 26.1 18.1 21.4 77.8 40.0 52.8 9.4 7.2 8.1 78.5 68.7 73.3 52.0 28.9 37.2 DTD [25] 64.1 77.1 70.0 21.0 18.3 19.6 75.0 25.7 38.3 16.3 13.2 14.6 78.1 75.0 76.5 40.1 46.4 43.0 [6] 64.8 72.1 68.3 21.7 19.5 20.5 61.1 31.4 41.5 15.4 12.9 14.0 68.8 77.7 73.0 39.2 45.1 41.9 Ours 67.5 73.9 70.6 23.0 22.0 22.5 80.0 34.3 48.0 16.9 13.0 14.7 83.8 77.5 80.5 40.5 46.6 43.3 ASC-Former [25] 52.6 47.4 49.9 27.6 25.5 26.5 63.6 40.0 49.1 10.4 14.6 12.1 81.7 81.3 81.5 56.6 40.8 47.4 [6] 43.0 33.1 37.4 20.5 24.9 22.5 60.8 36.6 45.7 10.2 13.2 11.5 74.6 74.8 74.7 48.5 44.3 46.3 Ours 51.7 46.3 48.9 25.7 27.7 26.7 63.6 40.0 49.1 34.4 15.1 21.0 89.7 76.3 82.5 56.1 39.6 46.4 FFDN [25] 76.6 70.6 73.5 33.9 37.1 35.4 58.3 60.0 59.1 33.4 20.6 25.5 86.0 85.0 85.5 59.6 43.8 50.5 [6] 70.1 65.2 67.6 31.2 36.4 33.6 62.3 58.9 60.6 34.4 22.6 27.3 83.6 84.0 83.8 57.5 44.9 50.4 Ours 78.6 75.1 76.8 36.1 39.0 37.5 80.7 60.0 68.8 46.4 29.8 36.3 93.5 90.0 91.7 71.9 46.9 56.8
+
+To obtain a proxy for tampering quality, we evaluate the localization performance of models trained on data gener-ated with and without using the auxiliary networks Fθ and 
+
+Gθ . The images used come from the CC-MAIN-2021-31-PDF-UNTRUNCATED corpus, excluding any documents that were used during the model’s pretraining. Specifically, we use the different models after pretraining to detect manipulations on: • 10,000 tampered documents generated using our full pipeline (including Fθ and Gθ ); • 10,000 tampered documents generated using only Gθ (ab-lating Fθ ); • 10,000 tampered documents generated using only Fθ (ab-lating Gθ ); • 10,000 tampered documents generated without using Fθ
+
+or Gθ .Each image then undergoes a compression with a ratio of fifty percent. We then compare the localization results as a measure of the tampering signal present in each set. Since the same model and base images are used in both cases, a lower F1 score indicates better-quality tampering. 
+
+Table 10. Zero-shot performance on AI-generated tampering. Evaluation was conducted on 5,000 FLUX-Text tampered sam-ples and 5,000 AnyText tampered samples, combined with 10,000 untampered images and averaged across models. 
+
+Method Image-level Pixel-level Prec Rec F1 Prec Rec F1 
+
+Ours 84.1 99.5 90.9 79.9 87.2 83.1 
+
+As shown in Tab. 6, documents generated using our pro-posed pipeline result in significantly lower F1 scores at both the image and pixel level, confirming the effectiveness of our auxiliary networks in producing more realistic manipu-lations. 
+
+K.2. Qualitative assessment 
+
+Figure 7 provides a qualitative evaluation of the impact of the similarity network Fθ and the crop-quality network Gθ
+
+on the realism of the generated tampering. Across a va-riety of document layouts and font styles, the benefits of the full pipeline are clear. When both networks are active (left column), the replaced regions match the surrounding text, producing visually coherent manipulations with no ar-tifact left by ill-defined crops. Disabling Fθ while keep-ing Gθ (no similarity ) often leads to noticeable inconsisten-cies: characters become slightly misaligned, spacing drifts, and the texture or color among other visual characteristics of the pasted crop differ from the surrounding line. These artifacts appear because the system can no longer ensure that the selected source crop is visually compatible with the target region. Conversely, disabling Gθ while keeping Fθ
+
+(no quality ) results in bounding boxes that occasionally cut into neighboring characters or include traces of surround-ing text. Although the chosen crop may be visually sim-ilar, the poor geometric fit introduces clear edge artifacts that would not appear in a realistic forgery. Finally, dis-abling both auxiliary networks ( no sim no quality ) leads to the most degraded results. The pasted regions frequently ex-hibit mismatched fonts or colors and often overlap the orig-inal text in implausible ways. These examples show that 7Table 11. Ablation results on RTM, FindItAgain, and FindIt.                                                                                                                                                                                                                              
+
+> Model Data Gen. RTM FindItAgain FindIt
+> Image Pixel Image Pixel Image Pixel PRF1 PRF1 PRF1 PRF1 PRF1 PRF1 PSCC-Net Ours 39.3 40.2 39.7 10.5 10.8 10.6 56.7 60.0 58.3 10.6 12.8 11.6 62.9 55.0 58.7 12.0 12.1 12.0 w/o Fθ, G θ38.8 39.7 39.2 6.8 9.9 8.1 42.4 40.0 41.2 8.3 10.7 9.4 46.0 57.5 51.1 11.9 11.8 11.8 CAT-Net Ours 40.0 35.0 37.4 9.2 11.0 10.0 48.0 34.2 40.0 11.0 5.6 7.4 51.5 42.5 46.6 13.0 10.5 11.7 w/o Fθ, G θ38.6 34.8 36.6 9.7 10.1 9.9 47.5 33.9 39.5 10.5 5.6 7.3 51.5 40.0 45.0 12.7 10.1 11.2 DTD Ours 36.6 73.3 48.9 14.9 11.4 12.9 50.0 40.0 44.4 12.5 12.4 12.5 62.3 66.2 64.2 14.0 14.4 14.2 w/o Fθ, G θ35.7 65.7 46.2 12.9 10.9 11.8 46.4 37.2 41.3 10.7 9.9 10.3 60.3 55.0 57.5 14.7 13.5 14.0 ASC-Former Ours 44.3 32.3 37.4 23.4 16.1 19.1 38.6 62.9 47.8 15.3 12.3 13.6 69.6 68.8 69.2 30.1 13.9 19.0 w/o Fθ, G θ44.3 32.3 37.4 12.5 20.4 15.5 35.7 54.3 43.1 13.4 8.4 10.3 67.1 62.7 64.8 24.9 12.2 16.4 FFDN Ours 46.4 51.0 48.6 28.2 20.6 23.8 68.9 57.1 62.5 31.6 21.4 25.5 82.3 70.0 75.7 36.3 28.3 31.8 w/o Fθ, G θ50.2 42.5 46.0 22.1 20.4 21.2 60.9 40.0 48.2 18.5 19.3 18.9 70.4 71.3 70.8 34.1 27.3 30.3
+
+neither visual similarity alone nor box-quality alone suf-fices: both components are required to guarantee realistic and artifact-free tampering. Overall, this qualitative study confirms that the combination of Fθ and Gθ is essential for producing high-fidelity forgeries suitable for training robust tampering-detection models. 
+
+## L. Further comparison of models trained us-ing our data generation approach and pre-vious work 
+
+L.1. Qualitative comparison of localization perfor-mance 
+
+Figure 8 compares the localization maps produced by FFDN when trained on data generated by our approach ver-sus the best of models trained on data generated by [25] and [6]. Overall, the examples illustrate that models trained on data generated by our approach localize tampered re-gions more accurately, especially in the harder cases. In both cases false positives are present, however, models 
+
+Figure 7. Visual comparison of tampered regions generated un-der four settings: with both Fθ and Gθ enabled ( full ), with the similarity network Fθ disabled ( no similarity ), with the crop-quality network Gθ disabled ( no quality ), and with both disabled (no sim no quality ). These examples illustrate the impact of each auxiliary network on tampering realism. 
+
+trained on our approach show less false positives and lo-calize more frequently hard tampered areas. These quali-tative trends confirm that the proposed generation pipeline provides more informative supervision for challenging doc-ument forgeries, leading to sharper and more reliable local-ization. 
+
+L.2. Precision-Recall curves 
+
+To further demonstrate that our data generation approach surpasses the baselines, we provide in Fig. 9 the preci-sion–recall curves for FFDN and ASC-Former. These curves show that, at equal precision, the recall of the final models trained using our data generation approach is higher. The same also holds at equal recall. 
+
+## M. On the time cost and robustness of our data generation approach 
+
+M.1. Generation time analysis 
+
+All document tampering experiments were conducted on a single machine equipped with one NVIDIA A100 GPU and 16 CPU cores. On this hardware, the average cost of gen-erating a single tampered region is approximately 0.15 sec-onds. This includes all operations. Within this total time cost, the two auxiliary networks used during generation, 
+
+Fθ (crop similarity) and Gθ (crop quality), contribute about 
+
+19 .3% of the total per-region cost, while the remainder is dominated by classical disk and CPU bound operations (im-age I/O, cropping, resizing), text rendering, and inpainting. Generating the entire dataset of 2.8 million tampered im-ages with corresponding pixel-level masks required about 
+
+290 hours on a single A100 with 16 CPU cores. In practice, the process can be parallelized and can be further sped up by distributing different shards of the CSV list across multi-ple machines or GPUs, but all results reported in this paper were obtained from a single-node setup. 8Figure 8. Qualitative comparison of the FFDN segmentation maps when the model is trained on data generated by our approach (Ours ) versus the best of models trained on data generated by [25] and [6], which we denote collectively as Baseline in the figure. Each block shows the input image (left), the predicted tamper-ing mask of our model (red), the baseline prediction (green), and the ground-truth mask (blue). Images and ground-truth masks are from the RTM dataset. 
+
+M.2. OCR quality robustness 
+
+Our generation pipeline relies on character-level OCR to obtain the initial bounding boxes used by   
+
+> (a) ASC-Former (b) FFDN
+> Figure 9. Precision–recall curves averaged across datasets for ASC-Former and FFDN.
+
+ExtractLineSegments and by the subsequent tam-pering stages. A natural concern is therefore how sensitive the overall detection performance on models trained on this data is to the choice and accuracy of the OCR engine. We study this in two ways: (i) replacing the default OCR system with a different engine (we choose Tesseract), and (ii) explicitly perturbing the OCR bounding boxes before data generation. 
+
+Replacing the OCR engine. In the first experiment, we replace the default OCR back-end, Google OCR, with Tesseract, keeping all other components of the generation and training pipeline unchanged. We then regenerate the full tampered training set and retrain the downstream de-tection models on this new data. When evaluated in the same zero-shot setting as our main experiments, the aver-age Pixel-level and Image-level F1 score decreases by only 
+
+0.4 points compared to the original pipeline, with similarly small changes in precision and recall as presented in Tab. 5. 
+
+Perturbing OCR bounding boxes. In the second exper-iment, we keep the default OCR engine but artificially de-grade its output before generation. For each OCR bound-ing box, we randomly expand or contract its boundaries by an integer offset sampled uniformly from [−3, 3] pixels on each side. If the resulting width or height becomes smaller than 3 pixels, the box is discarded. Despite this additional noise, the final detection performance remains stable: the average Pixel-level F1 score drops by only 0.7 points rela-tive to the baseline, and Image-level results show a compa-rable small degradation. 9Algorithm 3 ExtractLineSegments 
+
+Require: Character boxes {bi = ( xi, y i, w i, h i)}, vertical thresh-old δy , image width W , average char width ¯w, average char height ¯h
+
+Ensure: Segment list {(b, ℓ, text )}
+
+1: 1. Line clustering 
+
+2: Sort {bi} by yi + hi ascending 
+
+3: L ← [] , current cluster ← [ ] 
+
+4: for each bi in sorted order do 
+
+5: if current cluster is empty or |yi − yfirst | ≤ δy and |yi +
+
+hi − (yfirst + hfirst )| ≤ δy then 
+
+6: add bi to current cluster 
+
+7: else 
+
+8: append current cluster to L
+
+9: current cluster ← [ bi ]
+
+10: end if 
+
+11: end for 
+
+12: append current cluster to L
+
+13: 2. Segment generation 
+
+14: S ← [] 
+
+15: for each line Lℓ in L do 
+
+16: sort Lℓ by xi + 12 wi
+
+17: for every contiguous subsequence (bi1 , . . . , b ik ), k ≥ 1 do 
+
+18: xmin ← min j xij , ymin ← min j yij
+
+19: w ← max j (xij +wij ) − xmin , h ← max j (yij +hij ) −
+
+ymin 
+
+20: text ← concatenate chars of bij in order 
+
+21: append ( ( xmin , y min , w, h ), ℓ, text ) to S
+
+22: end for 
+
+23: end for 
+
+24: 3. Blank-segment injection 
+
+25: for each (bi, ℓ i, ) in S do 
+
+26: (x, y, w, h ) ← bi
+
+27: for k = 1 to ⌊W/w ⌋ do 
+
+28: for d ∈ {− 1, +1 } do 
+
+29: x′ ← x + d · k · w
+
+30: if x′ ∈ [ W 
+
+> 3
+
+, 2W 
+
+> 3
+
+− w] and no overlap with any box 
+
+then 
+
+31: text ← ’+’ len( text i)
+
+32: append ( ( x′, y, w, h ), ℓ i, text ) to S
+
+33: break both loops 
+
+34: end if 
+
+35: end for 
+
+36: end for 
+
+37: hard negative 
+
+38: for ∆y ∈ {± 10 ¯h} do 
+
+39: for k = 1 to ⌊W/w ⌋ do 
+
+40: for d ∈ {− 1, +1 } do 
+
+41: x′ ← x + d · k · w, y′ ← y + ∆ y
+
+42: if inside page and no overlap then 
+
+43: text ← ‘-’ len( text i)
+
+44: append ( ( x′, y ′, w, h ), ℓ i, text ) to S
+
+45: break all loops 
+
+46: end if 
+
+47: end for 
+
+48: end for 
+
+49: end for 
+
+50: end for 
+
+51: return S
+
+10 Algorithm 4 BorderIntegrityT EST 
+
+Require: Either an RGB image I ∈ RH×W ×3 and a box (x0, y 0, x 1, y 1) with 0 ≤ x0 < x 1 ≤ W , 0 ≤ y0 < y 1 ≤ H, or a grayscale crop C ∈ Rh×w; a boolean global ; a boolean invert mask . Constant: TOL = 1 . 
+
+> 1:
+
+if global then  
+
+> 2:
+
+h ← y1 − y0; m ← max( ⌊h/ 2⌋, 8)  
+
+> 3:
+
+xpad 0 ← max(0 , x 0 − m), xpad 1 ← min( W, x 1 + m) 
+
+> 4:
+
+ypad 0 ← max(0 , y 0 − m), ypad 1 ← min( H, y 1 + m) 
+
+> 5:
+
+ˆI ← I[ypad 0 : ypad 1 , x pad 0 : xpad 1 ]; ˆG ← GRAY ( ˆI) 
+
+> 6:
+
+else  
+
+> 7:
+
+ˆG ← C; xpad 0 ← 0; ypad 0 ← 0 
+
+> 8:
+
+end if  
+
+> 9:
+
+if invert mask then ˆB ← OTSU ( ˆG, BINARY INV ) else ˆB ← OTSU ( ˆG, BINARY ) end if  
+
+> 10:
+
+{(xi, y i, w i, h i, area i)}Ni=1 ← CCS TATS ( ˆB, 8)  
+
+> 11:
+
+for i ← 1 to N do  
+
+> 12:
+
+if area i < min component area then continue  
+
+> 13:
+
+end if  
+
+> 14:
+
+if global then  
+
+> 15:
+
+X1 ← xi + xpad 0 , Y1 ← yi + ypad 0 , X2 ← X1 + wi, Y2 ← Y1 + hi 
+
+> 16:
+
+intersectsX ← (X1 ≤ x1) ∧ (X2 ≥ x0), intersectsY ← (Y1 ≤ y1) ∧ (Y2 ≥ y0) 
+
+> 17:
+
+fullyInside ← (X1 ≥ x0+1) ∧ (X2 ≤ x1−1) ∧ (Y1 ≥ y0+1) ∧ (Y2 ≤ y1−1)  
+
+> 18:
+
+if intersectsX ∧ intersectsY ∧ ¬ fullyInside then return true  
+
+> 19:
+
+end if  
+
+> 20:
+
+else  
+
+> 21:
+
+X1 ← xi, Y1 ← yi, X2 ← xi+wi, Y2 ← yi+hi 
+
+> 22:
+
+touches ← (X1 ≤ 1) ∨ (Y1 ≤ 1) ∨ (X2 ≥ w−1) ∨ (Y2 ≥ h−1)  
+
+> 23:
+
+inside ← (X1 ≥ 1) ∧ (Y1 ≥ 1) ∧ (X2 ≤ w−1) ∧ (Y2 ≤ h−1)  
+
+> 24:
+
+if touches ∧ ¬ inside then return true  
+
+> 25:
+
+end if  
+
+> 26:
+
+end if  
+
+> 27:
+
+end for  
+
+> 28:
+
+return false 
+
+11 Algorithm 5 DataPreparation for Gθ
+
+Require: Image I, OCR-derived boxes B = {(xk 
+
+> 0
+
+, y k 
+
+> 0
+
+, x k 
+
+> 1
+
+, y k 
+
+> 1
+
+)} from E XTRACT LINE SEGMENTS ; per-bucket caps; target N
+
+crops.  
+
+> 1:
+
+Initialize per-bucket counters for y=1 well-defined and y=0 ill-defined. Initialize counters for ill-defined normal and ill-defined manipulated.  
+
+> 2:
+
+Shuffle B and optionally subsample by width bins.  
+
+> 3:
+
+for each b = ( x0, y 0, x 1, y 1) ∈ B do  
+
+> 4:
+
+gdark ← BORDER INTEGRITY TEST (I, x 0, x 1, y 0, y 1, global =true , invert mask =true ) 
+
+> 5:
+
+glight ← BORDER INTEGRITY TEST (I, x 0, x 1, y 0, y 1, global =true , invert mask =false ) 
+
+> 6:
+
+if gdark = false or glight = false then  
+
+> 7:
+
+y ← 1 
+
+> 8:
+
+fg darker ← (gdark = false ) 
+
+> 9:
+
+else  
+
+> 10:
+
+if ill-defined bucket not full and normal within balance then  
+
+> 11:
+
+y ← 0; increment ill-defined normal  
+
+> 12:
+
+else  
+
+> 13:
+
+continue  
+
+> 14:
+
+end if  
+
+> 15:
+
+end if  
+
+> 16:
+
+if y=1 and ill-defined bucket not full then  
+
+> 17:
+
+Choose a random subset of sides and small integer offsets ∆s ≥ 1; choose per-side operation in {pad, crop } 
+
+> 18:
+
+Build ˆb = (ˆ x0, ˆy0, ˆx1, ˆy1) by side-wise pad or crop; clip to image bounds; if degenerate, revert to b 
+
+> 19:
+
+gpert ← BORDER INTEGRITY TEST (I, ˆx0, ˆx1, ˆy0, ˆy1, global =true , invert mask =¬fg darker ) 
+
+> 20:
+
+if gpert = true then  
+
+> 21:
+
+y ← 0; b ← ˆb; increment ill-defined manipulated  
+
+> 22:
+
+end if  
+
+> 23:
+
+end if  
+
+> 24:
+
+C ← I[y0 : y1, x 0 : x1]; G ← GRAY (C) 
+
+> 25:
+
+sdark ← BORDER INTEGRITY TEST (G, global =false , invert mask =true ) 
+
+> 26:
+
+slight ← BORDER INTEGRITY TEST (G, global =false , invert mask =false ) 
+
+> 27:
+
+if y=0 and not (sdark = true ∧ slight = true ) then continue  
+
+> 28:
+
+end if  
+
+> 29:
+
+if y=1 and not (sdark = false ∧ slight = false ) then continue  
+
+> 30:
+
+end if  
+
+> 31:
+
+If the per-bucket cap for y is not exceeded, store (b, y ) 
+
+> 32:
+
+if stored crops reach target N then break  
+
+> 33:
+
+end if  
+
+> 34:
+
+end for  
+
+> 35:
+
+return stored crops with labels 12 Figure 10. Examples of generated tampered documents and their corresponding masks. 
+
+13

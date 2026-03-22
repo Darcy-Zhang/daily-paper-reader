@@ -1,0 +1,247 @@
+Title: Evaluating Compositional Structure in Audio Representations
+
+URL Source: https://arxiv.org/pdf/2603.13685v1
+
+Published Time: Tue, 17 Mar 2026 01:55:04 GMT
+
+Number of Pages: 5
+
+Markdown Content:
+# EVALUATING COMPOSITIONAL STRUCTURE IN AUDIO REPRESENTATIONS 
+
+# Chuyang Chen Bea Steers Brian McFee Juan Bello 
+
+# Music and Audio Research Laboratory, New York University, USA 
+
+ABSTRACT 
+
+We propose a benchmark for evaluating compositionality in audio representations. Audio compositionality refers to representing sound scenes in terms of constituent sources and attributes, and combin-ing them systematically. While central to auditory perception, this property is largely absent from current evaluation protocols. Our framework adapts ideas from vision and language to audio through two tasks: A-COAT, which tests consistency under additive transfor-mations, and A-TRE, which probes reconstructibility from attribute-level primitives. Both tasks are supported by large synthetic datasets with controlled variation in acoustic attributes, providing the first benchmark of compositional structure in audio embeddings. 
+
+Index Terms — Audio representation learning, compositional-ity, audio encoders, evaluation and benchmark 
+
+1. INTRODUCTION 
+
+Compositionality—the ability to represent complex structures in terms of their constituent parts and the rules by which they combine—is a hallmark of human perception and cognition [1]. It underpins reasoning, generalization, and ultimately, progress toward general intelligence [2]. In the auditory domain, compositionality is especially salient: natural sound scenes emerge as mixtures of individual sources [3], where different acoustic attributes combine in structured but variable ways. Despite the inherently compositional nature of sound, modern large-scale pretrained audio encoders are rarely evaluated in this light. Existing benchmarks [4], [5], [6], [7], [8] primarily focus on downstream classification or recognition tasks. Recent work has proposed evaluation frameworks [9] that assess properties includ-ing informativeness, equivariance, invariance, and disentanglement. However, it is unclear whether current audio encoders capture com-positional structure in their learned embeddings. To address this gap, we introduce a benchmark for systemat-ically evaluating compositionality in audio representations. Our framework adapts ideas from other domains [10], [11], [12] to the auditory setting through two complementary tasks, focusing on source- and attribute-level composition. A-COAT (Audio Compo-sitional Object Algebra Test) measures whether encoders preserve global structure under additive transformations of sound mixtures, while A-TRE (Audio Tree Reconstruction Error) provides a graded measure of whether encoders capture local attribute-level com-position. Together, these tasks complement recent representation evaluation frameworks by focusing on compositionality as a core property of audio embeddings. Our contributions are threefold: (i) we propose a benchmark 1
+
+with two complementary tasks— A-COAT and A-TRE —for diag-nosing compositional structure in audio representations; (ii) we re-      
+
+> 1Code and datasets are available at https://github.com/ chuyangchencd/audio-compositionality .
+
+lease large-scale and balanced datasets of synthetic audio scenes with controlled variation in acoustic attributes; and (iii) we bench-mark a diverse set of pretrained audio encoders, establishing refer-ence points for future research on compositionality. 
+
+2. RELATED WORK 2.1. Evaluating Audio Representations 
+
+Evaluation of audio representations has largely centered on down-stream tasks. Common protocols involve training shallow classi-fication or regression layers on frozen embeddings to assess their utility for tasks such as tagging, speech recognition, or acoustic event detection. Benchmarks including DCASE [5], HEAR [6], SU-PERB [7], and the ICME AECC [8] have expanded this paradigm by aggregating a broad suite of downstream tasks to test robustness and transferability across audio domains. These frameworks provide valuable insight into predictive power and generalization, but they remain tied to task-specific accuracy. More recent studies have argued for broader evaluation be-yond downstream probing [9], emphasizing generalizable and inter-pretable properties including informativeness, equivariance, invari-ance, and disentanglement. Although these axes reveal important structural aspects of learned representations, systematic evaluation of compositionality—both in terms of whether embeddings preserve additive mixtures of sources and whether they can be reconstructed from underlying primitive attributes—has not yet been addressed. This leaves open the question of how well current audio encoders capture compositional structure, a capacity central to auditory per-ception and reasoning. 
+
+2.2. Evaluating Compositionality 
+
+Approaches to compositionality often begin with reasoning tasks. In vision and language, CLEVR [10], SCAN [13], and related datasets test systematic generalization in question answering or instruction-following setups. Audio analogs include CLEAR [14], which adapts CLEVR to acoustic scenes for QA, and CompA [15], which intro-duces a diagnostic dataset for compositional reasoning of LLMs. Other studies focus on disentangling attributes such as pitch or tim-bre [16], or on robustness to perturbations and domain shifts [17], [18], highlighting stability rather than structured composition. A complementary line of work directly measures composition-ality in the representation space. Compositional Object Algebra Test (COAT) [12] tests whether embeddings preserve additive composi-tion under controlled transformations in images, while Tree Recon-struction Error (TRE) [11] measures reconstructibility from primi-tive attributes, applied in both images and text. These approaches remain diagnostic tools rather than widely adopted benchmarks. We build directly on this line of work, extending COAT and TRE to audio and systematizing them into a benchmark framework for com-positionality in audio representations. 
+
+> arXiv:2603.13685v1 [cs.SD] 14 Mar 2026
+
+3. METHOD 
+
+We present the first benchmark explicitly designed to measure com-positionality in audio representations. Our framework consists of two complementary tasks: A-COAT , which tests whether embed-dings preserve algebraic consistency under additive transformations, and A-TRE , which evaluates whether representations can be recon-structed from primitive attributes. Together, these perspectives de-fine a unified and reproducible protocol for probing compositional structure in audio embeddings. 
+
+3.1. Audio Scenes 
+
+Both proposed tasks are evaluated on audio scenes . We define a scene X as a set of N sources {s1, . . . , s N }, where each source is parameterized by four attributes: (1) timbre, the tone or sound tex-ture of the source; (2) pitch, the fundamental frequency of the sound; (3) rate, how quickly the sound repeats over time; and (4) amplitude, the perceived loudness of the source. Each attribute is discretized into K classes, and a source is represented as sn = [ tn, p n, r n, a n].
+
+3.2. A-COAT 
+
+A-COAT tests whether the effect of adding the same sources is rep-resented consistently across different base scenes. Each test instance is a quadruple of scenes (A, B, C, D ) constructed from a base pair 
+
+(A, C ) and an added set of sources T = {s+1 , . . . , s + 
+
+> t
+
+}, with 
+
+B = A ∪ T, D = C ∪ T. 
+
+For an encoder f producing embeddings zX = f (X), we eval-uate whether the difference vectors zB − zA and zD − zC align. The A-COAT score is their cosine similarity [19]: 
+
+A-COAT( A, B, C, D ) = ⟨zB − zA, z D − zC ⟩∥zB − zA∥ ∥ zD − zC ∥ .
+
+The score lies in [−1, 1] , where 1 indicates perfect alignment, 0 in-dicates orthogonality, and −1 indicates opposite alignment. 
+
+3.3. A-TRE 
+
+A-TRE evaluates whether encoder representations can be systemat-ically constructed from compositional primitives. In contrast to A-COAT, which is training-free, A-TRE involves fitting a lightweight neural composition model gθ that maps scene metadata to the en-coder’s embedding space. Let Y denote the set of all attribute classes across timbre, pitch, rate, and amplitude. For each y ∈ Y we assign a learnable token vector Qy ∈ RD , where D matches the encoder’s embedding size. To compute gθ (X) for a scene, each source sn = [ tn, p n, r n, a n]
+
+is represented by the sum of the token vectors assigned to its at-tribute classes: E(sn) = Qtn + Qpn + Qrn + Qan . The sequence 
+
+{E(s1), . . . , E (sN )}, together with a learnable [CLS] token [20], is processed by a single-layer Transformer encoder [21] (single-head self-attention + feed-forward), and the output of the [CLS] 
+
+token defines the predicted scene embedding ˆz = gθ (X). This formulation follows TRE in testing linear accessibility of attribute composition, while a scene-level Transformer allows nonlinear ag-gregation across sources. The A-TRE score for a scene is the cosine similarity between the encoder and predicted embeddings: 
+
+A-TRE( X) = ⟨z, ˆz⟩∥z∥ ∥ ˆz∥ , z = f (X).
+
+4. EXPERIMENT 4.1. Dataset Generation 
+
+The evaluation of A-TRE requires fine-grained metadata about source attributes, which is difficult to obtain from real recordings. While A-COAT could in principle be applied to real data, we adopt a unified synthetic audio scene generation pipeline to ensure oracle access to attribute primitives and controlled composition structure for both tasks. This design additionally provides precise control over attributes for dataset balancing, as described in Section 4.2. Each scene is a 10-s clip at 32 kHz, composed of N sources. Sources are synthesized with the learnfm DX7 FM synthe-sizer [22], controlling timbre and pitch. For each source, we generate a short tone with duration determined by the repetition rate, then duplicate and shift it at regular intervals to fill the 10-s window. Amplitude is applied as a multiplicative gain. The fi-nal clip is produced by summing normalized sources, followed by conditional peak normalization to mitigate clipping. All attributes are discretized into K = 8 classes: • Timbre: eight manually selected learnfm patches. • Pitch: MIDI 36–84, linearly binned. • Rate: 0.2–3.0 Hz repetition, logarithmically binned. • Amplitude: [−26 , 0] dB, linearly binned and converted to linear gains in [0 , 1] .
+
+A-COAT: we generate 50,000 candidate quadruples. For each, a transformation set T of 1–3 sources is sampled, then base scenes 
+
+A and C are sampled independently with 1 to 4 − | T | sources. The completed quadruple is formed as in Section 3.2. A-TRE: we gen-erate 150,000 candidate scenes, each containing 1–4 sources. 
+
+4.2. Data Balancing 
+
+To obtain evaluation sets that are both diverse and evenly distributed across attributes, we apply an entropy-based balancing step to the large candidate pools. Let A = {timbre , pitch , rate , amplitude }.For a scene X and α ∈ A , with class proportions pα(k) over k ∈{1, . . . , K }, the normalized scene-level entropy for α is 
+
+Hα(X) = − 1log 2 K
+
+> K
+
+X
+
+> k=1
+
+pα(k) log 2 pα(k),
+
+so that Hα(X) ∈ [0 , 1] . For an A-COAT test instance (A, B, C, D ),we define quadruple-level entropy for attribute α ∈ A as 
+
+Hquad  
+
+> α
+
+(A, B, C, D ) = Hα(A) + Hα(C) + Hα(T ),
+
+where T is the transformation set and Hα(·) is the scene-level at-tribute entropy. This aggregates the entropies of the varying parts, reflecting how both base-scene diversity and transformation diver-sity contribute to compositional difficulty. We use Entrofy [23], a greedy subset selection algorithm that maximizes coverage of user-specified features, to subsample candi-date pools. Our goal is to obtain approximately uniform distributions of Hα(X) and Hquad  
+
+> α
+
+(A, B, C, D ) across α ∈ A . For A-COAT, we subsample 2,000 quadruples from the candidate pool. For A-TRE, we subsample 10,000 scenes and partition them into 8,000 training, 1,000 validation, and 1,000 test examples. For later analysis, we define aggregate scene- and quadruple-level diversity as H(X) = P 
+
+> α∈A
+
+Hα(X) and Hquad (A, B, C, D ) = 
+
+P 
+
+> α∈A
+
+Hquad  
+
+> α
+
+(A, B, C, D ). These summarize overall diversity and are used to analyze how it influences task performance. Model (checkpoint) Architecture Training Objective #Params A-COAT ↑ A-TRE ↑
+
+Downsample – None – 1.00 ± 0.01 0.23 ± 0.16 Random – None – 0.00 ± 0.04 0.00 ± 0.04 PANNs (Cnn14) CNN Supervised classification (AudioSet) 81M 0.27 ± 0.24 0.93 ± 0.04 PaSST (PaSST-S) Transformer Supervised classification (AudioSet) 86M 0.26 ± 0.19 0.87 ± 0.05 CLAP (630k-AS-best) Transformer Contrastive audio–text pretraining 31M 0.39 ± 0.20 0.90 ± 0.05 Whisper (large-v2) Hybrid Automatic speech recognition (ASR) 635M 0.32 ± 0.22 0.98 ± 0.01 AF-Whisper (AF3) Hybrid Alignment to LLM via adaptor layers 635M 0.28 ± 0.16 0.89 ± 0.03 AudioMAE (AS-2M) Transformer Masked autoencoding (self-supervised) 86M 0.41 ± 0.24 0.99 ± 0.01 
+
+BEATs (iter3) Transformer Iterative masked prediction (self-supervised) 90M 0.40 ± 0.21 0.97 ± 0.02 
+
+Table 1 . Performance comparison across baselines and pretrained audio encoders. The Downsample baseline attains a perfect A-COAT score by construction, while the Random baseline produces near-zero scores on both metrics. 0.0 
+
+> 0.5
+> 1.0
+> A-COAT
+> (a)
+> PANNs
+> PaSST
+> CLAP
+> Whisper
+> AF-Whisper
+> AudioMAE
+> BEATs
+> 0.8
+> 0.9
+> 1.0
+> A-TRE
+> (b)
+
+Fig. 1 . Model score distributions for A-COAT (a) and A-TRE (b) as notched box plots. Boxes show the interquartile range with median in red; notches give an approximate 95% confidence interval. 
+
+4.3. Model Selection 
+
+To contextualize results, we evaluate both simple baselines and a diverse set of pretrained audio encoders, as shown in Table 1. 
+
+Baselines. The Downsample baseline reduces audio input to di-mensionality D via band-limited resampling. Because it preserves linear superposition in the signal domain, it is expected to achieve a trivial perfect score on A-COAT, but to perform poorly on A-TRE as it does not explicitly encode attribute-level composition. The Ran-dom baseline samples D-dimensional outputs from a normal distri-bution. We set D = 768 for both baselines. 
+
+Encoders. We include supervised, multimodal, and self-supervised encoders. Supervised: PANNs [24], a CNN trained on AudioSet with cross-entropy loss, and PaSST [25], a transformer also trained on AudioSet. Multimodal: CLAP [26], trained with con-trastive audio–text alignment; Whisper [27], trained for automatic speech recognition (ASR); and AF-Whisper [28], a Whisper-based encoder adapted for audio question answering. Self-supervised: Au-dioMAE [29], a transformer trained with masked autoencoding, and BEATs [30], a large-scale SSL model based on iterative pretraining. We use officially released pretrained checkpoints for all models. 
+
+4.4. Evaluation Protocol 
+
+To ensure comparability, we standardize input/output handling: au-dio is resampled to each model’s required rate; if longer durations are expected, we zero-pad; and if models produce a sequence of embed-dings, we global-average to obtain a fixed vector. For Whisper and AF-Whisper, which expect 30-s input, we retain only the first 10-s of tokens before pooling to avoid the influence of padding noise. For A-COAT, we compute scores directly on the test quadruples using frozen encoder representations; no training is required. For A-TRE, evaluation proceeds in two stages. First, for each encoder we train a lightweight composition model gθ on the training split with cosine similarity loss and select checkpoints using the val-idation set. The trained model is then applied to the held-out test set to compute scores. TRE models are trained with Adam ( β1=0 .9,
+
+β2=0 .999 ), batch size 64, weight decay 10 −4, and learning rate 
+
+10 −4 decayed to 10 −5 with cosine annealing, for up to 20 epochs with early stopping after 4 epochs without validation improvement. We do not observe overfitting or underfitting, as confirmed by the small gaps between training and validation curves for all models. All reported results are averaged across samples for both tasks. 
+
+5. RESULTS AND DISCUSSION 5.1. Overall Results 
+
+Table 1 summarizes overall results. The baselines behave as ex-pected: Downsample achieves a trivial perfect score on A-COAT but fails on A-TRE, underscoring that strong performance on one task does not imply success on the other. Random remains near orthogonal on both metrics. Across encoders, paired t-tests with Benjamini–Hochberg correction [31] indicate significant differences on A-TRE, and most comparisons are also significant on A-COAT. The only A-COAT pairs without statistically significant differences are AudioMAE vs. BEATs, PANNs vs. AF-Whisper, and CLAP vs. BEATs. These results confirm that both tasks elicit systematic varia-tion across models rather than collapsing to similar scores. To probe potential effects of the synthetic domain gap, we applied CORAL-based domain adaptation [32] and observed minimal, inconsistent changes, suggesting trends are not driven by simple distributional alignment. 
+
+5.2. Breakdown: A-COAT Results 
+
+Figure 1(a) shows the distribution of A-COAT scores across mod-els. Although overall differences are moderate, models trained with 0 2 4                          
+
+> Hquad
+> 0
+> 1
+> A-COAT
+> PANNs
+> 024
+> Hquad
+> PaSST
+> 024
+> Hquad
+> CLAP
+> 024
+> Hquad
+> Whisper
+> 024
+> Hquad
+> AF-Whisper
+> 024
+> Hquad
+> AudioMAE
+> 024
+> Hquad
+> BEATs
+> 012
+> H
+> 0.6
+> 0.8
+> 1.0
+> A-TRE
+> 012
+> H
+> 012
+> H
+> 012
+> H
+> 012
+> H
+> 012
+> H
+> 012
+> H
+> (a)
+> (b)
+
+Fig. 2 . Model scores as a function of diversity. (a) A-COAT vs Hquad : most models exhibit consistent negative slopes except BEATs . (b) A-TRE vs H: slopes vary across models, indicating differing sensitivity to diversity. Red lines show linear fits with 95% confidence intervals. reconstruction-style objectives (AudioMAE, BEATs) and cross-modal alignment (CLAP) consistently reach higher means. For AudioMAE and BEATs, this is consistent with their training setup: reconstructing masked patches or acoustic tokens encourages rep-resentations that explain mixtures in terms of the additive contri-butions of individual sources. CLAP, despite not being trained on reconstruction, also performs strongly. By aligning audio with text embeddings, it inherits a structured space where additive rela-tions are preserved [19], which supports compositional differences between scenes. Figure 2(a) examines how performance varies with quadruple diversity, quantified by Hquad . All models except BEATs show negative slopes, indicating that their embedding differences become less consistent as Hquad increases. This reflects the added challenge of maintaining stable relational structure in more diverse quadru-ples. BEATs is the only model with a positive slope, suggesting that its embeddings become more reliable at higher Hquad . This distinguishes BEATs from other encoders and shows that models can differ markedly in how they handle higher Hquad .In summary, A-COAT demonstrates that reconstruction-based objectives and cross-modal alignment with representations that themselves encode additive structure (such as text) are especially effective for capturing additive compositional structure. Most mod-els are sensitive to increasing diversity, while BEATs uniquely improves, indicating a qualitatively distinct form of robustness. 
+
+5.3. Breakdown: A-TRE Results 
+
+Figure 1(b) compares model score distributions on A-TRE. Au-dioMAE and BEATs remain strong, consistent with A-COAT, and Whisper also performs well. AF-Whisper, though built on the Whisper backbone, is finetuned in the Audio Flamingo frame-work for audio QA, which prioritizes semantic abstraction over fine-grained acoustic detail. This explains its weaker A-TRE per-formance compared to Whisper. PANNs attains relatively strong performance, whereas PaSST—trained with the same tagging objec-tive—performs worse. This suggests that CNNs are more effective at capturing the local time–frequency patterns needed for attribute composition than transformer architectures trained for tagging. CLAP also ranks lower, as its contrastive audio–text alignment emphasizes invariance rather than detailed attribute encoding. Figure 2(b) shows how A-TRE score varies with scene diver-sity H. AudioMAE and Whisper remain nearly flat, indicating their embeddings preserve robust attribute composition even as diversity increases. The other models display varying patterns, reflecting dif-ferent ways of generalizing under diversity. This underscores that A-TRE exposes diverse generalization behaviors rather than produc-ing a uniform trend across encoders. In summary, A-TRE demonstrates that local attribute com-position is best preserved by models whose objectives emphasize fine-grained acoustic detail (AudioMAE, Whisper, BEATs). In con-trast, A-COAT evaluates global relational consistency under additive transformations. Together, the two tasks reveal complementary di-mensions of compositionality in audio representations. 
+
+6. CONCLUSION 
+
+We introduced A-COAT and A-TRE, the first benchmark for sys-tematically evaluating compositionality in audio representations. By adapting ideas from vision and language to the auditory domain, our framework provides complementary measures of global relational structure and local attribute-level composition. Experiments across pretrained audio encoders reveal clear dif-ferences in how training paradigms affect compositional structure, with self-supervised models such as AudioMAE and BEATs exhibit-ing stronger compositional representations than supervised or multi-modal approaches. These results establish reference points for future work and highlight the role of pretraining objectives in shaping com-positional structure. Future work may investigate how compositionality metrics re-late to downstream performance and extend this framework beyond synthetic data to natural recordings. Applying these ideas to multi-modal audio–text or audio–visual representations is another promis-ing direction. 
+
+7. REFERENCES 
+
+[1] J. A. Fodor and Z. W. Pylyshyn, “Connectionism and cognitive architecture: A critical analysis,” Cognition , vol. 28, no. 1-2, pp. 3–71, 1988. [2] B. M. Lake, T. D. Ullman, J. B. Tenenbaum, and S. J. Ger-shman, “Building machines that learn and think like people,” 
+
+Behavioral and brain sciences , vol. 40, p. e253, 2017. [3] A. S. Bregman, Auditory scene analysis: The perceptual orga-nization of sound . MIT press, 1994. [4] J. F. Gemmeke, D. P. Ellis, D. Freedman, A. Jansen, W. Lawrence, R. C. Moore, M. Plakal, and M. Ritter, “Audio set: An ontology and human-labeled dataset for audio events,” in 2017 IEEE international conference on acoustics, speech and signal processing (ICASSP) . IEEE, 2017, pp. 776–780. [5] A. Mesaros, T. Heittola, A. Diment, B. Elizalde, A. Shah, E. Vincent, B. Raj, and T. Virtanen, “Dcase 2017 challenge setup: Tasks, datasets and baseline system,” in DCASE 2017-workshop on detection and classification of acoustic scenes and events , 2017. [6] J. Turian, J. Shier, H. R. Khan, B. Raj, B. W. Schuller, C. J. Steinmetz, C. Malloy, G. Tzanetakis, G. Velarde, K. McNally 
+
+et al. , “Hear 2021: Holistic evaluation of audio representa-tions,” arXiv preprint arXiv:2203.03022 , vol. 1, no. 3, p. 5, 2022. [7] S.-w. Yang, P.-H. Chi, Y.-S. Chuang, C.-I. J. Lai, K. Lakhotia, Y. Y. Lin, A. T. Liu, J. Shi, X. Chang, G.-T. Lin et al. , “Superb: Speech processing universal performance benchmark,” arXiv preprint arXiv:2105.01051 , 2021. [8] J. Zhang, H. Dinkel, Q. Song, H. Wang, Y. Niu, S. Cheng, X. Xin, K. Li, W. Wang, Y. Wang et al. , “The icme 2025 audio encoder capability challenge,” arXiv preprint arXiv:2501.15302 , 2025. [9] C. Plachouras, J. Guinot, G. Fazekas, E. Quinton, E. Bene-tos, and J. Pauwels, “Towards a unified representation eval-uation framework beyond downstream tasks,” arXiv preprint arXiv:2505.06224 , 2025. [10] J. Johnson, B. Hariharan, L. Van Der Maaten, L. Fei-Fei, C. Lawrence Zitnick, and R. Girshick, “Clevr: A diagnostic dataset for compositional language and elementary visual rea-soning,” in Proceedings of the IEEE conference on computer vision and pattern recognition , 2017, pp. 2901–2910. [11] J. Andreas, “Measuring compositionality in representation learning,” arXiv preprint arXiv:1902.07181 , 2019. [12] S. Xie, A. S. Morcos, S.-C. Zhu, and R. Vedantam, “Coat: Measuring object compositionality in emergent representa-tions.” in ICML , 2022, pp. 24 388–24 413. [13] B. Lake and M. Baroni, “Generalization without systematicity: On the compositional skills of sequence-to-sequence recurrent networks,” in International conference on machine learning .PMLR, 2018, pp. 2873–2882. [14] J. Abdelnour, G. Salvi, and J. Rouat, “Clear: A dataset for com-positional language and elementary acoustic reasoning,” arXiv preprint arXiv:1811.10561 , 2018. [15] S. Ghosh, A. Seth, S. Kumar, U. Tyagi, C. K. Evuru, S. Ramaneswaran, S. Sakshi, O. Nieto, R. Duraiswami, and D. Manocha, “Compa: Addressing the gap in composi-tional reasoning in audio-language models,” arXiv preprint arXiv:2310.08753 , 2023. [16] J. Engel, C. Resnick, A. Roberts, S. Dieleman, M. Norouzi, D. Eck, and K. Simonyan, “Neural audio synthesis of musical notes with wavenet autoencoders,” in International conference on machine learning . PMLR, 2017, pp. 1068–1077. [17] C. Wang, G. Richard, and B. Mcfee, “Transfer learning and bias correction with pre-trained audio embeddings,” arXiv preprint arXiv:2307.10834 , 2023. [18] V. Deng, C. Wang, G. Richard, and B. McFee, “Investigating the sensitivity of pre-trained audio embeddings to common ef-fects,” in ICASSP 2025-2025 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP) . IEEE, 2025, pp. 1–5. [19] T. Mikolov, K. Chen, G. Corrado, and J. Dean, “Efficient esti-mation of word representations in vector space,” arXiv preprint arXiv:1301.3781 , 2013. [20] J. Devlin, M.-W. Chang, K. Lee, and K. Toutanova, “Bert: Pre-training of deep bidirectional transformers for language under-standing,” in Proceedings of the 2019 conference of the North American chapter of the association for computational linguis-tics: human language technologies, volume 1 (long and short papers) , 2019, pp. 4171–4186. [21] A. Vaswani, N. Shazeer, N. Parmar, J. Uszkoreit, L. Jones, A. N. Gomez, L. Kaiser, and I. Polosukhin, “Attention is all you need,” Advances in neural information processing systems ,vol. 30, 2017. [22] B. Whitman, “learnfm: Differentiable dx7 fm synthesizer,” https://github.com/bwhitman/learnfm, 2020, accessed: 2025-09-17. [23] D. Huppenkothen, B. McFee, and L. Nor´ en, “Entrofy your co-hort: A transparent method for diverse cohort selection,” Plos one , vol. 15, no. 7, p. e0231939, 2020. [24] Q. Kong, Y. Cao, T. Iqbal, Y. Wang, W. Wang, and M. D. Plumbley, “Panns: Large-scale pretrained audio neural net-works for audio pattern recognition,” IEEE/ACM Transactions on Audio, Speech, and Language Processing , vol. 28, pp. 2880–2894, 2020. [25] K. Koutini, J. Schl¨ uter, H. Eghbal-Zadeh, and G. Widmer, “Ef-ficient training of audio transformers with patchout,” arXiv preprint arXiv:2110.05069 , 2021. [26] B. Elizalde, S. Deshmukh, M. Al Ismail, and H. Wang, “Clap learning audio concepts from natural language supervision,” in 
+
+ICASSP 2023-2023 IEEE International Conference on Acous-tics, Speech and Signal Processing (ICASSP) . IEEE, 2023, pp. 1–5. [27] A. Radford, J. W. Kim, T. Xu, G. Brockman, C. McLeavey, and I. Sutskever, “Robust speech recognition via large-scale weak supervision,” in International conference on machine learning .PMLR, 2023, pp. 28 492–28 518. [28] A. Goel, S. Ghosh, J. Kim, S. Kumar, Z. Kong, S.-g. Lee, C.-H. H. Yang, R. Duraiswami, D. Manocha, R. Valle 
+
+et al. , “Audio flamingo 3: Advancing audio intelligence with fully open large audio language models,” arXiv preprint arXiv:2507.08128 , 2025. [29] P.-Y. Huang, H. Xu, J. Li, A. Baevski, M. Auli, W. Galuba, F. Metze, and C. Feichtenhofer, “Masked autoencoders that listen,” Advances in Neural Information Processing Systems ,vol. 35, pp. 28 708–28 720, 2022. [30] S. Chen, Y. Wu, C. Wang, S. Liu, D. Tompkins, Z. Chen, and F. Wei, “Beats: Audio pre-training with acoustic tokenizers,” 
+
+arXiv preprint arXiv:2212.09058 , 2022. [31] Y. Benjamini and Y. Hochberg, “Controlling the false discov-ery rate: a practical and powerful approach to multiple testing,” 
+
+Journal of the Royal statistical society: series B (Methodolog-ical) , vol. 57, no. 1, pp. 289–300, 1995. [32] B. Sun and K. Saenko, “Deep coral: Correlation alignment for deep domain adaptation,” in European conference on computer vision . Springer, 2016, pp. 443–450.

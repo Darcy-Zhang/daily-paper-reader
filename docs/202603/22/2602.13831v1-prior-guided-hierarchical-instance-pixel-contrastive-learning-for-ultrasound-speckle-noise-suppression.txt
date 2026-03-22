@@ -1,0 +1,415 @@
+Title: Prior-guided Hierarchical Instance-pixel Contrastive Learning for Ultrasound Speckle Noise Suppression
+
+URL Source: https://arxiv.org/pdf/2602.13831v1
+
+Published Time: Tue, 17 Feb 2026 01:42:22 GMT
+
+Number of Pages: 9
+
+Markdown Content:
+> IEEE TRANSACTIONS AND JOURNALS TEMPLATE 1
+
+# Prior-guided Hierarchical Instance–pixel Contrastive Learning for Ultrasound Speckle Noise Suppression 
+
+Zhenyu Bu, Yuanxin Xie, and Guang-Quan Zhou, Senior Member, IEEE 
+
+Abstract — Ultrasound denoising is essential for miti-gating speckle-induced degradations, thereby enhancing image quality and improving diagnostic reliability. Never-theless, because speckle patterns inherently encode both texture and fine anatomical details, effectively suppressing noise while preserving structural fidelity remains a signif-icant challenge. In this study, we propose a prior-guided hierarchical instance–pixel contrastive learning model for ultrasound denoising, designed to promote noise-invariant and structure-aware feature representations by maximizing the separability between noisy and clean samples at both pixel and instance levels. Specifically, a statistics-guided pixel-level contrastive learning strategy is introduced to enhance distributional discrepancies between noisy and clean pixels, thereby improving local structural consis-tency. Concurrently, a memory bank is employed to fa-cilitate instance-level contrastive learning in the feature space, encouraging representations that more faithfully ap-proximate the underlying data distribution. Furthermore, a hybrid Transformer–CNN architecture is adopted, coupling a Transformer-based encoder for global context model-ing with a CNN-based decoder optimized for fine-grained anatomical structure restoration, thus enabling comple-mentary exploitation of long-range dependencies and local texture details. Extensive evaluations on two publicly avail-able ultrasound datasets demonstrate that the proposed model consistently outperforms existing methods, confirm-ing its effectiveness and superiority. 
+
+Index Terms — prior-guided, hierarchical contrastive learning, Transformer-CNN. 
+
+I. I NTRODUCTION 
+
+# ULTRASOUND imaging is a widely adopted, cost-effective and non-invasive diagnostic modality that plays a critical role across a broad range of clinical applications, including cardiology, obstetrics, and abdominal assessment. 
+
+Manuscript submitted Feb, 2026. This work was supported by the National Natural Science Foundation of China under Grant 62371121. (Corresponding author: Guang-Quan Zhou.) Zhenyu Bu is with the School of Biological Science and Medical Engineering, Southeast University, Nanjing 211189, China, and with Department of Biomedical Engineering, The Ohio State University, Columbus 43210, USA. (e-mail: zhenyu.bu@osumc.edu). Yuanxin Xie is with the School of Biological Science and Medi-cal Engineering, Southeast University, Nanjing 211189, China (e-mail: 230258624@seu.edu.cn). Guang-Quan Zhou is with the School of Biological Science and Medical Engineering, Southeast University, Nanjing 211189, China, and with the Jiangsu Key Laboratory of Biomaterials and Devices, South-east University, Nanjing 211189, China, and also with the State Key Laboratory of Digital Medical Engineering, Southeast University, Nanjing 211189, China (e-mail: guangquan.zhou@seu.edu.cn). 
+
+Compared to other imaging modalities such as CT, MRI, and PET [1]–[3], ultrasound offers a unique combination of safety, affordability, and real-time imaging capabilities. It has evolved beyond basic grayscale imaging driven by increasing clinical demand. Technological advancements in ultrasound, including Doppler Imaging [4] and Elastography [5], have significantly enhanced its diagnostic potential, allowing for the evaluation of blood flow, tissue elasticity and the early detection of conditions such as liver fibrosis. These advantages have established ultrasound as an indispensable modality in both emergency care and preventive healthcare settings. Despite its clinical advantages, ultrasound imaging is in-herently prone to speckle noise caused by the coherent na-ture of ultrasound wave reflection [6]. This artifact severely degrades image clarity, obscures anatomical boundaries, and complicates accurate clinical interpretation [7]. Beyond visual quality, speckle noise also undermines the reliability of down-stream tasks such as classification, segmentation and lesion detection [8], [9]. These challenges underscore the urgent need for robust and structure-aware denoising techniques to restore diagnostic fidelity and enhance computational performance. Over the past several years, a variety of techniques have been designed for noise reduction. They can be generally cat-egorized into two groups: non-learning methods and learning-based methods. Dabov et al. [10] proposed a Block Matching and 3D Collaborative Filtering (BM3D) image denoising, which leverages the principles of non-local similarity and sparse representation to effectively reduce noise while pre-serving image details. Michal et al. [11] proposed a K-SVD algorithm. This is an iterative method for sparse representation, aiming at finding a ”dictionary” matrix such that the input data can be approximated by a few elements in the dictionary. However, these popular non-learning methods usually intro-duce excessive smoothing effects when applying on ultrasound datasets, resulting in the missing anatomical details and a certain degree of blur image boundary. Recently, learning-based methods have emerged as powerful alternatives [12]–[14]. These approaches are widely employed for noise reduction due to their robust feature extraction capabilities and adaptability to complex noise environments. Their ability to automatically learn and generalize intricate patterns from data not only compensates for the limitations of traditional techniques but also paves the way for improved im-age restoration performance and enhanced preservation of fine details. Several CNN-based approaches have been specifically  
+
+> arXiv:2602.13831v1 [cs.CV] 14 Feb 2026 2IEEE TRANSACTIONS AND JOURNALS TEMPLATE
+
+developed to tackle this problem. Denoising Convolutional Neural Network (DnCNN) designed by Zhang et al. [15] aims to learn and model noise patterns, which is based on residual learning and the clean image is obtained by subtracting the learned noise from the noisy input image. Chen et al. [16] introduced a Residual Encoder-Decoder Convolutional Neural Network (RED-CNN) for low-dose CT denoising. The primary concept involves employing an encoder-decoder architecture to train a model capable of transforming a low-dose CT image into a high-dose CT image. Nevertheless, the performance of RED-CNN may be suboptimal when confronted with complex tasks due to its limited capacity to capture global contextual information. Li et al. [17] established a residual encoder-decoder network based on multi-attention fusion for ultrasound image denoising. This architecture leverages multiple convo-lution and deconvolution layers, as well as multi-attention fusion blocks to capture both local and global image features. However, these experiments were conducted using additive Gaussian white noise. In contrast, ultrasound speckle noise typically behaves as multiplicative noise, and its statistical characteristics are more consistent with a Rayleigh distribu-tion. This implies that the experiments cannot accurately cap-ture the true noise distribution inherent in ultrasound images. Due to their exceptional ability to capture global features and deliver superior performance, transformer models such as ViT, Swintransformer, CSwintransformer [18]–[21] have found extensive use in the realm of computer vision. Nu-merous models leveraging transformer architectures have been developed to effectively reduce noise. Liu et al. [22] proposed SwinIR for image super-resolution, denoising and compression artifact removal. It includes shadow feature extraction, deep feature selection and high-quality image reconstruction parts. In the deep feature extraction module, the model employs multiple Residual Swin Transformer Blocks (RSTB), which utilize a shifted window-based multi-head self-attention mech-anism to effectively capture both local details and global information in the image. Wang et al. [23] introduced Uformer, a U-shaped pure transformer network for image restoration. It replaces the MLP with Locally-enhanced Feed-Forward (LeFF) to enhance local information. However, these methods are primarily designed for generic image restoration and do not explicitly account for the unique statistical and structural characteristics of ultrasound speckle. Since speckle patterns inherently encode both texture and fine anatomical details, overlooking this property may lead to suboptimal noise sup-pression, inadvertently attenuating structural information and potentially influencing clinical decision-making. To effectively suppress speckle noise while preserving tex-ture and fine anatomical details, we introduce a prior-guided hierarchical instance–pixel contrastive learning framework that encourages noise-invariant and structure-aware representations by enhancing the discriminability between noisy and clean samples at both pixel and instance levels. Specifically, astatistics-guided pixel-level contrastive learning strategy is designed to enforce pixel level structural consistency by ex-plicitly modeling the statistical characteristics of speckle noise, thereby preventing the suppression of fine-grained anatom-ical details. In parallel, a memory-augmented instance-level contrastive learning module operates in the global feature space to align noisy and clean image global representations, mitigating semantic drift induced by accumulated noise per-turbations. Furthermore, we adopt a hybrid Transformer–CNN architecture that leverages the Transformer’s ability to model long-range context and the CNN’s strength in preserving fine-grained anatomical details. Overall, our main contributions are summarized as follows:  
+
+> •
+
+To suppress speckle noise while preserving texture and fine anatomical details, we propose a prior-guided hierar-chical instance–pixel contrastive learning framework that learns noise-robust and structure-aware representations by contrasting noisy and clean samples at both pixel and instance levels.  
+
+> •
+
+We adopt a hybrid Transformer–CNN architecture, where global contextual representations are first modeled by a Transformer encoder and subsequently refined by a CNN decoder to recover fine anatomical structures.  
+
+> •
+
+Extensive experiments on two public ultrasound datasets, BUSI and CAMUS, demonstrate that our method consis-tently outperforms existing approaches across different noise levels. 
+
+II. M ETHODOLOGY 
+
+A. Architecture Overview 
+
+The overall architecture is shown in Figure 1. We propose a dual-branch hybrid Transformer-CNN architecture with shared weights, jointly processing both noisy and clean ultrasound images to facilitate representation alignment. Let Inoisy ∈
+
+RH×W denote the noisy input image and Iclean the clean counterpart. We adopt a Gaussian-approximated multiplicative speckle noise model: 
+
+Inoisy = Iclean (1 + ε), ε ∼ N (0 , σ 2), (1) which has been widely used as a practical approximation of ultrasound speckle noise. To unify the representation space for both domains, we define a shared encoder Φθ that maps inputs from the image manifold M into a latent token embedding space: 
+
+Φθ : M → RN ×d. (2) The input image is partitioned into non-overlapping patches 
+
+{xi}Ni=1 and embedded with positional encodings pi:
+
+X0 = {E(xi) + pi}Ni=1 , (3) where E(·) denotes patch embedding function. Inspired by the CSWin Transformer [21], these tokens are processed through L CSWin Transformer blocks to improve the model’s efficiency and effectiveness. Each block applies Cross-Shape Window Self-Attention (CS-WSA) and feedfor-ward MLP modules with residual connections:        
+
+> Xl=Xl−1+CS-MSA (LN (Xl−1)) + MLP (LN (Xl−1)) ,l= 1 , . . . , L,
+> (4)
+
+where LN (·) denotes layer normalization. The encoder output 
+
+Z is the final token representation: 
+
+Z = Φ θ (Inoisy ) ∈ RN ×d. (5) BU et al. : PRIOR-GUIDED HIERARCHICAL INSTANCE–PIXEL CONTRASTIVE LEARNING FOR ULTRASOUND SPECKLE NOISE SUPPRESSION 3 
+
+> Fig. 1. Overall pipeline of the proposed prior-guided hierarchical instance–pixel contrastive learning framework for ultrasound speckle noise suppression. The noisy ultrasound image is encoded by a hybrid Transformer–CNN pipeline, where the Transformer-based encoder captures global contextual features and the CNN-based decoder focuses on fine-grained anatomical structure restoration. Prior-guided hierarchical instance-pixel contrastive learning module in the middle demonstrates that jointly performing pixel and instance-level contrastive learning to encourage noise-invariant and structure-aware representation.
+
+The decoder Ψϕ reshapes and decodes the latent tokens into a full-resolution image: 
+
+ˆI = Ψ ϕ(reshape (Z)) , Ψϕ : RN ×d → RH×W . (6) To supervise denoising, we minimize the L1 loss between the predicted and clean image: 
+
+ˆI = arg min  
+
+> I
+
+EIclean 
+
+∥Ψϕ(Φ θ (Inoisy )) − Iclean ∥1
+
+ . (7) 
+
+B. Prior-guided Hierarchical Instance–pixel Contrastive Learning 
+
+We propose a prior-guided hierarchical contrastive learning framework that jointly performs pixel- and instance-level con-trastive learning to encourage noise-invariant and structure-aware representations. Specifically, the framework consists of two complementary components: Statistics-Guided Pixel-Level Contrastive Learning (SPCL) and Memory-Augmented Instance-Level Contrastive Learning (MICL). 
+
+1) Statistics-Guided Pixel-Level Contrastive Learning: 
+
+Statistics-Guided Pixel-Level Contrastive Learning (SPCL) is designed to enforce pixel-wise structural consistency by explicitly accounting for the statistical properties of speckle noise, thereby reducing noise-dominated interference while preserving fine-grained anatomical details. During the denois-ing process, the objective is to accurately distinguish noise from clean signal components and to restore the true pixel intensities from degraded input images. By leveraging pixel-level contrastive learning, the model can make more precise decisions regarding the status of each pixel. In SPCL, positive samples are defined as the pixels at corresponding locations in the clean (ground truth) image, whereas negative samples are the pixel points generated in the noisy image under the guidance of prior knowledge. Through this method, the model gradually learns to distinguish clean pixels from noisy counterparts, thereby learning how to reduce or eliminate the impact of noise. Another significant advantage of SPCL lies in its enhanced ability to handle local noise and spatially varying patterns within an image. SPCL can capture local differences and variations, making the denoising process more refined and per-sonalized. This capability is especially crucial when addressing non-uniform noise distributions or region-specific noise char-acteristics commonly observed in ultrasound imaging. Our framework demonstrates the integration of the proposed SPCL module, which leverages feature information from the final decoder layer of both network branches. Let the output feature maps from the noisy and clean branches be denoted 4 IEEE TRANSACTIONS AND JOURNALS TEMPLATE 
+
+as PN , PC ∈ RN ×H×W , respectively. We randomly select a spatial position K = ( i, j ) in PN as the anchor point (denoted in red). Its corresponding position in PC is defined as the 
+
+positive sample (denoted in green), i.e., p+ = PC 
+
+> :,i,j
+
+. The anchor is thus pa = PN 
+
+> :,i,j
+
+.To capture local structural consistency, we randomly sample multiple such anchor points {Kk}Mk=1 from PN , and for each 
+
+Kk, define a square neighborhood Ωk of size s×s (e.g., s = 3 
+
+or s = 5 ) centered at Kk. For each region Ωk, we compute the local mean and variance across all spatial positions and channels as: 
+
+μk = 1
+
+|Ωk|
+
+X
+
+> (u,v )∈Ωk
+
+PN 
+
+> :,u,v
+
+, (8) 
+
+σ2 
+
+> k
+
+= 1
+
+|Ωk|
+
+X
+
+> (u,v )∈Ωk
+
+ PN 
+
+> :,u,v
+
+− μk
+
+2 (9) These statistics act as prior-guided cues to enhance the network’s sensitivity to local textures and structural variations, serving as auxiliary signals in the contrastive learning objec-tive. To identify severely corrupted regions dominated by speckle noise, we further compute the mean-to-standard-deviation ratio 
+
+ρK of each region: 
+
+ρK = μK
+
+σK
+
+(10) Regions where ρK < τnoise are considered to exhibit significant noise characteristics. Based on empirical observa-tions across multiple ultrasound datasets, we set the threshold 
+
+τnoise = 1 .92 . This threshold is supported by prior studies indi-cating that fully developed speckle noise in ultrasound images typically follows a Rayleigh distribution, where the signal-to-noise ratio (SNR) converges to approximately 1.91–1.92 [24], [25]. In our design, only regions satisfying this condition are selected as negative sample candidates for contrastive learn-ing. These regions provide representative hard negatives that encourage the network to distinguish between noisy and clean spatial patterns in a more discriminative manner. Accordingly, we define the pixel-level contrastive loss as: 
+
+Lpix = − X
+
+> K∈S
+
+log exp( paK · p+ 
+
+> K
+
+/τ )exp( paK · p+ 
+
+> K
+
+/τ ) + P 
+
+> j∈N K
+
+exp( paK · p− 
+
+> j
+
+/τ )
+
+(11) where paK and p+ 
+
+> K
+
+denote the anchor and positive features at position K, and p− 
+
+> j
+
+represents negative features sampled from high-noise regions NK as defined above. τ is a temperature scaling parameter.     
+
+> 2) Memory-Augmented Instance-Level Contrastive Learn-ing:
+
+Memory-Augmented Instance-Level Contrastive Learning (MICL) is introduced to align global semantic representations between noisy and clean images in the global feature space. By contrasting image-level embeddings and leveraging a memory bank to provide a diverse set of negative samples, MICL mitigates speckle-induced semantic drift and promotes stable, noise-invariant instance representations. In particular, Given a mini-batch of B samples 
+
+{(xNi , x Ci )}Bi=1 , where xNi is a noisy ultrasound image and xCi is its corresponding clean counterpart, we extract their global feature embeddings using the shared-weight encoder F(·):
+
+zNi = F(xNi ), zCi = F(xCi ) (12) These embeddings zNi and zCi are treated as a positive pair, while embeddings from previous batches are used as negative samples. To ensure a diverse and memory-efficient negative sample pool, we adopt a first-in-first-out (FIFO) memory bank 
+
+M with fixed capacity, which stores encoded feature vectors from prior mini-batches. Each feature zNi is encouraged to be close to its clean counterpart zCi (positive) while being dissimilar to the stored negative features z− 
+
+> j
+
+∈ M. This contrastive objective is optimized using the InfoNCE loss: 
+
+Linst = −
+
+> B
+
+X
+
+> i=1
+
+log exp( zNi · zCi /τ )exp( zNi · zCi /τ ) + P  
+
+> z−
+> j∈M
+
+exp( zNi · z− 
+
+> j
+
+/τ )
+
+(13) where τ denotes the temperature parameter controlling distri-bution sharpness. After each training iteration, the current batch of clean fea-tures {zCi }Bi=1 is appended to M, replacing the oldest entries when capacity is exceeded. This design enables the learning module to operate in the global feature space, explicitly aligning noisy and clean image representations and mitigating semantic drift caused by accumulated noise perturbations. 
+
+C. The Hybrid Loss Function 
+
+Total loss: We employ a hybrid loss function composed of two components. The first component is the L1 loss, which quantifies the discrepancy between the predicted pixel values and the ground truth. The second component integrates contrastive learning loss, incorporating both prior knowledge-guided and instance-level loss functions. The formula is as follows: 
+
+L = LL1 + LCon (14) where LL1 is L1 loss and LCon is the hybrid contrastive loss. 
+
+L1 loss: The L1 loss is used to calculate the difference between final output and the image without any noise added (ground truth). L1 loss between a clean image Iclean and a predicted image Ipred is given by: 
+
+L1 = 1
+
+H × W
+
+> H
+
+X
+
+> h=1
+> W
+
+X
+
+> w=1
+
+|Iclean (h, w ) − Ipred (h, w )| (15) where H and W denote the height and width of the image, corresponding to the number of pixel rows and columns, respectively. Iclean (h, w ) and Ipred (h, w ) are the pixel value at position (h, w ) in the clean image and predicted image respectively. 
+
+Contrastive loss: The contrastive loss comprises two com-ponents: Statistics-Guided Pixel-Level Contrastive Learning BU et al. : PRIOR-GUIDED HIERARCHICAL INSTANCE–PIXEL CONTRASTIVE LEARNING FOR ULTRASOUND SPECKLE NOISE SUPPRESSION 5
+
+and Memory-Augmented Instance-Level Contrastive Learning, which can be formulated as follows: 
+
+LCon = LP ixel + LInstance (16) where LPixel denotes the Statistics-Guided Pixel-Level Con-trastive Learning loss, which enforces pixel-wise structural consistency by explicitly modeling the statistical charac-teristics of speckle noise. LInstance denotes the Memory-Augmented Instance-Level Contrastive Learning Loss, aiming to align global semantic representations of noisy and clean images. Through image-level contrast and a memory bank that supplies diverse negatives, this module reduces speckle-induced semantic drift and stabilizes noise-invariant global representations. Thus, the total loss function can be formulated as: 
+
+L = L1 + αLP ixel + βLInstance (17) where α and β are weighting parameters that balance the contributions of the pixel and instance level contrastive loss components to the total loss function. 
+
+III. E XPERIMENT SETTING 
+
+A. Data Preprocessing 
+
+We conduct experiments on two public ultrasound datasets, BUSI [26] and CAMUS [27]. As these datasets provide only clean images without corresponding noise labels, synthetic noise is introduced to generate noisy observations according to Eq. (1). Speckle noise is adopted as the noise model in this study, as it is a prevalent artifact in ultrasound imaging and has been extensively investigated. It is employed to reflect the characteristic noise behavior observed in practical ultrasound acquisitions. Speckle noise with varying intensities (0.25, 0.5, and 0.75) is applied to the ultrasound images to simulate noise conditions ranging from mild to severe. Through this proce-dure, a comprehensive dataset is constructed to facilitate the evaluation and comparison of different denoising techniques. 
+
+B. Implementation Details 
+
+All comparative and ablation experiments were imple-mented in PyTorch and executed on an NVIDIA GTX 4090 GPU. The resolution of all images was resized to 224 × 224 
+
+pixels. During the training phase, an initial learning rate of 0.001 was set, and a total of 200 training epochs were planned. To optimize the training efficiency, the AdamW optimizer was chosen, combined with the ReduceLROnPlateau strategy for dynamically adjusting the learning rate, with the aim of further accelerating training speed and improving the model’s generalization capabilities. Furthermore, the training and testing sets were split with a ratio of 7:3 for both BUSI and CAMUS datasets. The specific quantities of the public datasets are shown in Table I. Based on the dataset split, the BUSI dataset comprises 546 images for training and 234 images for testing, whereas the CAMUS dataset consists of 1400 training images and 600 testing images.                
+
+> TABLE I DIVISION OF DATASET . S UMMARY OF THE DATASET PARTITIONING FOR TRAINING ,TESTING AND TOTAL SAMPLES IN THE BUSI AND CAMUS
+> DATASETS .
+> Dataset Train Val Total (# N um )
+> BUSI 546 234 780 CAMUS 1400 600 2000
+
+C. Evaluation Metrics 
+
+PSNR (Peak Signal-to-Noise Ratio) and SSIM (Structural Similarity Index) [28] are commonly used to evaluate image quality in denoising task. In addition, RMSE (Root Mean Square Error) [29] is employed as an evaluation metric to further assess denoising performance. 
+
+1) SSIM: It measures the structural similarity between the original and denoised images and is more consistent with human visual perception. 
+
+SSIM (x, y ) = (2 μxμy + C1)(2 σxy + C2)(μ2 
+
+> x
+
++ μ2 
+
+> y
+
++ C1)( σ2 
+
+> x
+
++ σ2 
+
+> y
+
++ C2) (18) 
+
+2) PSNR: It measures the ratio between the maximum possible signal power and the power of the corrupting noise, providing an objective measure of reconstruction fidelity. 
+
+P SN R = 10 log 10 
+
+ M AX 2
+
+M SE 
+
+
+
+(19) 
+
+3) RMSE: RMSE quantifies the pixel-wise difference be-tween the predicted and original images, providing a straight-forward measure of restoration error. 
+
+RM SE =
+
+vuut 1
+
+w × h
+
+> w
+
+X
+
+> i=1
+> h
+
+X
+
+> j=1
+
+[Iori (i, j ) − Ipred (i, j )] 2 (20) 
+
+IV. R ESULTS AND DISCUSSION 
+
+A. Comparison experiments 
+
+We conduct the comparative experiments, aiming to bench-mark the proposed method against the performance of state-of-the-art image restoration or denoising models. The comparison methods included three categories: classical denoising tech-niques, such as BM3D, deep learning methods based purely on convolutional neural networks (CNNs), which have gained widespread used in recent years for their excellent feature extraction capabilities and methods based on Transformers, which leverage self-attention mechanisms to capture long-range dependencies in images. We show the comparative ex-perimental results on two public datasets, BUSI and CAMUS datasets respectively. Figure 2 shows the visualization results based on two representative images. From Table II, we report the performance of various denois-ing methods on the BUSI and CAMUS datasets. σ represents different levels of noise standard deviation, specifically 0.25, 0.5 and 0.75 in our experiment setting. Larger values corre-spond to higher noise levels, resulting in more severe noise corruption across the images. PSNR, SSIM, and RMSE are 6 IEEE TRANSACTIONS AND JOURNALS TEMPLATE         
+
+> TABLE II WE PRESENT A COMPARATIVE ANALYSIS OF DENOISING RESULTS ON BOTH BUSI AND CAMUS DATASETS . E XPERIMENTAL EVALUATIONS WERE CARRIED OUT AT NOISE LEVELS OF 0.25, 0.5 AND 0.75 RESPECTIVELY . T HE BEST RESULTS ACROSS THESE EVALUATIONS ARE HIGHLIGHTED IN BOLD FOR CLARITY AND EMPHASIS .
+
+Datasets Methods σ = 0.25 σ = 0.5 σ = 0.75 PSNR SSIM RMSE PSNR SSIM RMSE PSNR SSIM RMSE BM3D [10] 27.9196 0.8264 7.6514 28.6314 0.8139 7.6498 27.6144 0.8065 7.9549 UNet [30] 38.1121 0.9816 3.0182 34.4947 0.9577 4.2414 33.4131 0.9405 4.4913 DnCNN [15] 36.7261 0.9773 3.2945 34.6723 0.9591 4.0224 33.1491 0.9360 4.5809 CAMUS RED-CNN [16] 29.8887 0.8778 5.4783 29.2920 0.9029 5.3683 28.1246 0.8724 5.8272 SwinIR [22] 34.5439 0.9689 4.4822 34.1665 0.9556 4.3323 33.7896 0.9429 4.4731 Uformer [23] 38.5574 0.9815 2.9227 34.5160 0.9591 4.1921 33.5542 0.9389 4.4211 Restormer [31] 38.4462 0.9805 3.1848 34.5170 0.9584 4.1875 33.5354 0.9385 4.4654 
+
+Proposed 38.8399 0.9842 2.8928 34.7329 0.9612 4.0132 33.8249 0.9435 4.3495 
+
+BM3D [10] 22.4846 0.8165 9.6218 21.5155 0.8004 9.6314 22.3558 0.8057 9.1061 UNet [30] 22.0179 0.8345 9.4409 22.0002 0.8048 9.4249 24.0726 0.8080 8.8002 DnCNN [15] 25.9552 0.8342 7.8082 24.1854 0.7887 8.1447 24.3415 0.7655 8.1674 BUSI RED-CNN [16] 32.4131 0.9273 4.9464 26.4941 0.7901 8.0179 25.3338 0.7619 7.7326 SwinIR [22] 35.7962 0.9457 3.8637 32.5459 0.9428 4.5876 31.8615 0.9141 5.2568 Uformer [23] 36.4134 0.9689 3.4251 32.4754 0.9431 5.1203 31.2750 0.9153 5.5109 Restormer [31] 36.4244 0.9687 3.6884 32.4852 0.9428 5.1782 31.2595 0.9122 5.6498 
+
+Proposed 36.5392 0.9703 3.3214 32.6842 0.9472 4.3251 32.1351 0.9173 4.8491 
+
+employed to evaluate denoising performance, where higher PSNR and SSIM values and lower RMSE values indicate better image quality and more effective noise suppression. For the CAMUS dataset, BM3D achieves modest denoising performance, while certain CNN-based methods, including RED-CNN, demonstrate limited effectiveness. At σ = 0 .5,BM3D and RED-CNN obtain SSIM values of 0.8139 and 0.9029, respectively, which are comparatively lower than those achieved by other methods. Among this table, CNN-based models show moderate performance. UNet and DnCNN achieve performance comparable to that of transformer-based models. Among CNN-based methods, DnCNN attains the highest SSIM of 0.9591, while Uformer achieves the high-est SSIM among transformer-based methods with the same value. However, Uformer attains a slightly lower PSNR than DnCNN, with values of 34.5610 and 34.6723, respectively. By leveraging the proposed prior-guided hierarchical contrastive learning framework, our model achieves superior performance, reaching peak values of 34.7329 in PSNR and 0.9612 in SSIM. At a noise level of σ = 0 .75 , severe noise is applied to the ultrasound images. Under this setting, BM3D and RED-CNN exhibit comparatively lower PSNR and SSIM values, whereas the proposed method achieves the best overall performance. Experimental results on the BUSI dataset indicate that the transformer-based models generally outperform the CNN-based methods. One possible explanation for this performance difference is the variation in image resolution, as BUSI im-ages generally have higher spatial resolution than those in the CAMUS dataset. This performance difference may be attributed to the ability of transformer-based models to capture long-range spatial dependencies, which become increasingly important in high-resolution images. In contrast, CNN-based methods primarily rely on local receptive fields, which may be insufficient for modeling large-scale structural consistency in high-resolution ultrasound images. However, the integration of both remains complementary. For low-resolution images, CNN-based models may be less effective in exploiting their local receptive field advantages, as the available contextual information is limited and local features alone may be insufficient for comprehensive denois-ing. In contrast, Transformer-based models are designed to capture global contextual information, allowing them to handle images effectively and deliver superior denoising results even for smaller images. Under high-noise conditions, our proposed method consistently improves image quality, demonstrating strong robustness and adaptability across different datasets. At a noise level of σ = 0 .75 , all CNN-based methods including BM3D, yield PSNR values below 30. In contrast, Transformer-based models such as SwinIR, Uformer and Restormer surpass a PSNR of 31, highlighting the strength of global feature modeling. On this dataset, the proposed method achieves the highest performance, benefiting from the prior-guided hierarchical instance–pixel contrastive learning strategy and the hybrid network. Overall, the proposed method effectively learns noise-invariant and structure-aware representations through the prior-guided hierarchical instance–pixel contrastive learning frame-work along with the Transformer-CNN architecture, leading to superior denoising performance across two public ultrasound datasets. 
+
+B. Ablation study 
+
+In this section, we conduct an ablation study to evaluate the effectiveness of the proposed components. Here we implement our ablation study under BUSI dataset with σ = 0 .5. Table IV presents the results of the ablation experiments for the three parts (Transformer-CNN Model, Statistics-Guided Pixel-Level Contrastive Learning and Memory-Augmented Instance-Level Contrastive Learning. This table compares the performance of ultrasound image denoising models under four different con-figurations. Each column’s !indicates that the corresponding BU et al. : PRIOR-GUIDED HIERARCHICAL INSTANCE–PIXEL CONTRASTIVE LEARNING FOR ULTRASOUND SPECKLE NOISE SUPPRESSION 7 
+
+> Fig. 2. Qualitative comparison of denoising results on representative ultrasound images (CAMUS and BUSI). The top row in each subplot displays the clean reference, noisy input, and outputs from classical and deep learning-based baselines (BM3D, UNet and RED-CNN). The bottom row shows results obtained under DnCNN, SwinIR, Uformer, Restormer, and our proposed method. Red boxes indicate regions of interest for detailed visual inspection.
+
+part is enabled in the model, while %indicates that the part is not included. Here, PSNR, SSIM and RMSE are selected as metrics to evaluate the denoising performance of the models. From the perspective of PSNR, the model with all part enabled achieved a PSNR value of 32.6842, indicating that the model can restore images with high accuracy. Compared to other configurations, the complete model demonstrates a sig-nificant improvement in retaining image details and structure. Regarding SSIM, which reflects the amount of structural in-formation retained after image denoising, the complete model also exhibits the best performance, reaching 0.9472. This result indicates that the model not only enhances the visual quality of images but also better preserves their structural details under our specific design. For RMSE, which measures the pixel-level error between the original image and the denoised image, the complete model achieves the lowest RMSE value of 4.3251, signifying the highest prediction accuracy at the pixel level. When either Statistics-Guided Pixel-Level Contrastive Learning and Memory-Augmented Instance-Level Contrastive Learning are removed, declines in PSNR and SSIM are ob-served and RMSE increases. This demonstrates that two types of contrastive learning contribute to the overall performance improvement of the model. The most critical observation is that when the hybrid architecture (i.e., Hybrid, Pixel Level, and Instance Level) is entirely omitted, all performance met-rics deteriorate significantly: PSNR drops to 22.0002, SSIM 8 IEEE TRANSACTIONS AND JOURNALS TEMPLATE 
+
+decreases to 0.8048 and RMSE rises to 9.4249. These results indicate that both the prior-guided hierarchi-cal contrastive learning strategy and the hybrid architecture contribute to improved denoising performance.       
+
+> TABLE III ABLATION EXPERIMENTS EVALUATING THE IMPACT OF HYBRID ,
+> PIXEL -LEVEL ,AND INSTANCE -LEVEL MODULES ON PSNR, SSIM, AND
+> RMSE. R ESULTS ARE BASED ON THE BUSI DATASET WITH A NOISE LEVEL OF 0.5.
+
+Module Metrics Hybrid Pixel Instance PSNR ↑ SSIM ↑ RMSE ↓
+
+% % % 22.0002 0.8048 9.4249 
+
+! % % 32.1449 0.9349 5.0192 
+
+! ! % 32.4251 0.9423 4.5154 
+
+! ! ! 32.6842 0.9472 4.3251     
+
+> TABLE IV ABLATION EXPERIMENTS TO EVALUATE THE IMPACT OF ENCODER -DECODER ORDERS ON PSNR, SSIM, AND RMSE METRICS .
+
+Order Metrics Encoder Decoder PSNR ↑ SSIM ↑ RMSE ↓
+
+Transformer Transformer 32.1421 0.9325 4.9828 CNN Transformer 32.5221 0.9312 5.0252 CNN CNN 22.0002 0.8048 9.4249 Transformer CNN 32.6842 0.9472 4.3251 
+
+C. Hyper-parameter experiments 
+
+We further investigate the impact of key hyper-parameters on model performance, including the loss weight coefficients and the depth of the transformer blocks in the encoder. 
+
+> TABLE V HYPERPARAMETER ANALYSIS OF THE PIXEL LEVEL LOSS WEIGHT AND ITS IMPACT ON MODEL PERFORMANCE .
+
+α1 PSNR ↑ SSIM ↑ RMSE ↓
+
+0.1 34.5481 0.9578 4.3264 0.3 34.4264 0.9584 4.2185 0.5 34.7194 0.9603 4.1154 0.7 34.6062 0.9589 4.2558 
+
+1) Weight of loss function: We further analyze the effect of different loss weight coefficients. Table V explores the impact of different weights for Statistics-Guided Pixel-Level Contrastive Learning loss function on the experimental results, with weights of α1 = 0 .1, 0.3, 0.5, 0.7 being tested. From the final results, the best performance is achieved when α1 = 0 .5.Given α1 = 0 .5, Table VI investigates the effect of the weight for Memory-Augmented Instance-Level Contrastive Learning loss function based on high-dimensional features. Under the condition α1 = 0 .5, experiments were conducted with α2 = 0 .1, 0.3, 0.5, 0.7. As shown in Table VI, the optimal performance is obtained when α1 = 0 .5 and α2 = 0 .7.
+
+> TABLE VI HYPERPARAMETER ANALYSIS OF THE INSTANCE LEVEL LOSS WEIGHT AND ITS IMPACT ON MODEL PERFORMANCE .
+
+α1 α2 PSNR ↑ SSIM ↑ RMSE ↓
+
+0.5 0.1 34.6621 0.9591 4.2511 0.5 0.3 34.7051 0.9597 4.0823 0.5 0.5 34.6721 0.9587 4.2648 0.5 0.7 34.7329 0.9612 4.0132 
+
+> TABLE VII PERFORMANCE METRICS UNDER DIFFERENT TRANSFORMER BLOCK DEPTH CONFIGURATIONS .
+
+Depth PSNR ↑ SSIM ↑ RMSE ↓
+
+2, 2, 32, 2 30.6842 0.9158 5.0515 2, 4, 32, 2 32.6842 0.9472 4.3251 2, 8, 32, 2 31.5149 0.9175 5.0195 2, 16, 32, 2 30.8489 0.9251 4.8942 
+
+2) Depth of transformer blocks: Table VII illustrates the im-pact of different transformer block depths on image denoising performance. Here, depth refers to the number of stacked layers within the Transformer network. Several transformer depth configurations are experimentally set and evaluated, including (2, 2, 32, 2), (2, 4, 32, 2), (2, 8, 32, 2), and (2, 16, 32, 2). We observe that the configuration with a depth of 2, 4, 32, 2 achieved optimal results in terms of both PSNR and SSIM, indicating that this depth strikes a balance between performance and computational complexity. Additionally, the RMSE metric reached its lowest value under this configuration, reflecting the smallest error between the predicted and ground truth images. As the depth increases, slight improvements in PSNR and SSIM are observed for some configurations; however, the gains are marginal and the reduction in RMSE remains limited. This suggests that increasing the depth beyond a certain point does not yield substantial performance gains and may increase the risk of overfitting. 
+
+V. C ONCLUSION 
+
+In this paper, we introduce a prior-guided hierarchical instance–pixel contrastive learning framework that promotes noise-robust and structure-aware representations by increasing the distinction between noisy and clean samples at both pixel and instance levels. Statistics-Guided Pixel-Level Con-trastive Learning module leverages prior statistical cues to en-hance local structural consistency, while Memory-Augmented Instance-Level Contrastive Learning module aligns global representations between noisy and clean images, mitigating semantic drift induced by noise perturbations. Coupled with a Transformer–CNN backbone that integrates global context modeling and local detail preservation, our proposed method demonstrates robust denoising performance across different noise levels on two public ultrasound datasets. BU et al. : PRIOR-GUIDED HIERARCHICAL INSTANCE–PIXEL CONTRASTIVE LEARNING FOR ULTRASOUND SPECKLE NOISE SUPPRESSION 9
+
+REFERENCES 
+
+[1] F. A. Duck, A. C. Baker, and H. C. Starritt, Ultrasound in medicine .CRC Press, 2020. [2] T. G. Leighton, “What is ultrasound?,” Progress in biophysics and molecular biology , vol. 93, no. 1-3, pp. 3–83, 2007. [3] Y. N. Zhang, K. J. Fowler, G. Hamilton, J. Y. Cui, E. Z. Sy, M. Balanay, J. C. Hooker, N. Szeverenyi, and C. B. Sirlin, “Liver fat imaging—a clinical overview of ultrasound, ct, and mr imaging,” The British journal of radiology , vol. 91, no. 1089, p. 20170959, 2018. [4] C. Y. Ho and S. D. Solomon, “A clinician’s guide to tissue doppler imaging,” Circulation , vol. 113, no. 10, pp. e396–e398, 2006. [5] J.-L. Gennisson, T. Deffieux, M. Fink, and M. Tanter, “Ultrasound elastography: principles and techniques,” Diagnostic and interventional imaging , vol. 94, no. 5, pp. 487–495, 2013. [6] S. Sudha, G. Suresh, and R. Sukanesh, “Speckle noise reduction in ultrasound images by wavelet thresholding based on weighted variance,” 
+
+International journal of computer theory and engineering , vol. 1, no. 1, p. 7, 2009. [7] H.-W. Xie, H. Guo, G.-Q. Zhou, N. Q. Nguyen, and R. W. Prager, “Improved ultrasound image quality with pixel-based beamforming using a wiener-filter and a snr-dependent coherence factor,” Ultrasonics ,vol. 119, p. 106594, 2022. [8] K. Chen, K. Long, Y. Ren, J. Sun, and X. Pu, “Lesion-inspired denoising network: Connecting medical image denoising and lesion detection,” in 
+
+Proceedings of the 29th ACM International Conference on Multimedia ,pp. 3283–3292, 2021. [9] M. Xia, H. Yang, Y. Huang, Y. Qu, G. Zhou, F. Zhang, Y. Wang, and Y. Guo, “3d pyramidal densely connected network with cross-frame un-certainty guidance for intravascular ultrasound sequence segmentation,” 
+
+Physics in Medicine & Biology , vol. 68, no. 5, p. 055001, 2023. [10] K. Dabov, A. Foi, V. Katkovnik, and K. Egiazarian, “Image denoising by sparse 3-d transform-domain collaborative filtering,” IEEE Transactions on image processing , vol. 16, no. 8, pp. 2080–2095, 2007. [11] M. Aharon, M. Elad, and A. Bruckstein, “K-svd: An algorithm for designing overcomplete dictionaries for sparse representation,” IEEE Transactions on signal processing , vol. 54, no. 11, pp. 4311–4322, 2006. [12] K.-N. Wang, Y. He, S. Zhuang, J. Miao, X. He, P. Zhou, G. Yang, G.-Q. Zhou, and S. Li, “Ffcnet: Fourier transform-based frequency learning and complex convolutional network for colon disease classification,” in 
+
+International Conference on Medical Image Computing and Computer-Assisted Intervention , pp. 78–87, Springer, 2022. [13] G.-Q. Zhou, F. Zhao, Q.-H. Yang, K.-N. Wang, S. Li, S. Zhou, J. Lu, and Y. Chen, “Tagnet: A transformer-based axial guided network for bile duct segmentation,” Biomedical Signal Processing and Control , vol. 86, p. 105244, 2023. [14] K.-N. Wang, S.-X. Li, Z. Bu, F.-X. Zhao, G.-Q. Zhou, S.-J. Zhou, and Y. Chen, “Sbcnet: Scale and boundary context attention dual-branch network for liver tumor segmentation,” IEEE Journal of Biomedical and Health Informatics , 2024. [15] K. Zhang, W. Zuo, Y. Chen, D. Meng, and L. Zhang, “Beyond a gaussian denoiser: Residual learning of deep cnn for image denoising,” IEEE transactions on image processing , vol. 26, no. 7, pp. 3142–3155, 2017. [16] H. Chen, Y. Zhang, M. K. Kalra, F. Lin, Y. Chen, P. Liao, J. Zhou, and G. Wang, “Low-dose ct with a residual encoder-decoder convolutional neural network,” IEEE transactions on medical imaging , vol. 36, no. 12, pp. 2524–2535, 2017. [17] L. Yancheng, X. Zeng, Q. Dong, and X. Wang, “Red-mam: A residual encoder-decoder network based on multi-attention fusion for ultrasound image denoising,” Biomedical Signal Processing and Control , vol. 79, p. 104062, 2023. [18] A. Vaswani, N. Shazeer, N. Parmar, J. Uszkoreit, L. Jones, A. N. Gomez, Ł. Kaiser, and I. Polosukhin, “Attention is all you need,” Advances in neural information processing systems , vol. 30, 2017. [19] A. Dosovitskiy, L. Beyer, A. Kolesnikov, D. Weissenborn, X. Zhai, T. Unterthiner, M. Dehghani, M. Minderer, G. Heigold, S. Gelly, et al. ,“An image is worth 16x16 words: Transformers for image recognition at scale,” arXiv preprint arXiv:2010.11929 , 2020. [20] Z. Liu, Y. Lin, Y. Cao, H. Hu, Y. Wei, Z. Zhang, S. Lin, and B. Guo, “Swin transformer: Hierarchical vision transformer using shifted windows,” in Proceedings of the IEEE/CVF international conference on computer vision , pp. 10012–10022, 2021. [21] X. Dong, J. Bao, D. Chen, W. Zhang, N. Yu, L. Yuan, D. Chen, and B. Guo, “Cswin transformer: A general vision transformer backbone with cross-shaped windows,” 2021. [22] J. Liang, J. Cao, G. Sun, K. Zhang, L. Van Gool, and R. Timofte, “Swinir: Image restoration using swin transformer,” in Proceedings of the IEEE/CVF international conference on computer vision , pp. 1833– 1844, 2021. [23] Z. Wang, X. Cun, J. Bao, W. Zhou, J. Liu, and H. Li, “Uformer: A general u-shaped transformer for image restoration,” in Proceedings of the IEEE/CVF conference on computer vision and pattern recognition ,pp. 17683–17693, 2022. [24] F. Destrempes, J. Meunier, and H. Labelle, “Segmentation of breast lesions in ultrasound images using normalized cuts and kernel-induced distance measures,” IEEE Transactions on Image Processing , vol. 22, no. 2, pp. 625–638, 2013. [25] A. Misra and M. Singh, “A new quantitative measure of signal-to-noise ratio for medical imaging,” Medical Imaging 2013: Image Processing ,vol. 8669, p. 86694V, 2013. [26] W. Al-Dhabyani, M. Gomaa, H. Khaled, and A. Fahmy, “Dataset of breast ultrasound images,” Data in brief , vol. 28, p. 104863, 2020. [27] S. Leclerc, E. Smistad, J. Pedrosa, A. Østvik, F. Cervenansky, F. Es-pinosa, T. Espeland, E. A. R. Berg, P.-M. Jodoin, T. Grenier, et al. ,“Deep learning for segmentation using an open large-scale dataset in 2d echocardiography,” IEEE transactions on medical imaging , vol. 38, no. 9, pp. 2198–2210, 2019. [28] A. Hore and D. Ziou, “Image quality metrics: Psnr vs. ssim,” in 2010 20th international conference on pattern recognition , pp. 2366–2369, IEEE, 2010. [29] T. O. Hodson, “Root mean square error (rmse) or mean absolute error (mae): When to use them or not,” Geoscientific Model Development Discussions , vol. 2022, pp. 1–10, 2022. [30] O. Ronneberger, P. Fischer, and T. Brox, “U-net: Convolutional networks for biomedical image segmentation,” in Medical Image Computing and Computer-Assisted Intervention–MICCAI 2015: 18th International Conference, Munich, Germany, October 5-9, 2015, Proceedings, Part III 18 , pp. 234–241, Springer, 2015. [31] S. W. Zamir, A. Arora, S. Khan, M. Hayat, F. S. Khan, and M.-H. Yang, “Restormer: Efficient transformer for high-resolution image restoration,” in Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , pp. 5728–5739, 2022.

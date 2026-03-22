@@ -6,8 +6,8 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-03-21
-- 运行时间：2026-03-21 19:30:35 UTC
+- 最新运行日期：2026-03-22
+- 运行时间：2026-03-22 20:07:54 UTC
 - 运行状态：成功
 - 本次总论文数：17
 - 精读区：6
@@ -15,65 +15,65 @@
 
 ### 今日简报（AI）
 - 今日共生成 17 篇推荐（精读 6 篇，速读 11 篇）
-- 精读：《Asymptotic and Finite-Time Guarantees for Langevin-Based Temperature Annealing in InfoNCE》（9.0/10）, 《Free Lunch in Medical Image Foundation Model Pre-training via Randomized Synthesis and Disentanglement》（8.0/10）
-- 速读：《Equilibrium contrastive learning for imbalanced image classification》（8.0/10）, 《Towards Uniformity and Alignment for Multimodal Representation Learning》（8.0/10）, 《Theoretical Analysis of Contrastive Learning under Imbalanced Data: From Training Dynamics to a Pruning Solution》（8.0/10）
+- 精读：《Prior-guided Hierarchical Instance-pixel Contrastive Learning for Ultrasound Speckle Noise Suppression》（8.0/10）, 《Variational views for self-supervised learning in radio astronomy》（8.0/10）
+- 速读：《RoboAug: One Annotation to Hundreds of Scenes via Region-Contrastive Data Augmentation for Robotic Manipulation》（8.0/10）, 《Orthogonalized Multimodal Contrastive Learning with Asymmetric Masking for Structured Representations》（8.0/10）, 《Benchmarking Self-Supervised Models for Cardiac Ultrasound View Classification》（8.0/10）
 - 这些结果覆盖了当下较热的方向，建议先看精读区论文的关键问题与方法。
-- 详情：[/202603/21/README](/202603/21/README)
+- 详情：[/202603/22/README](/202603/22/README)
 
 ### 精读区论文标签
-1. [Asymptotic and Finite-Time Guarantees for Langevin-Based Temperature Annealing in InfoNCE](/202603/21/2603.12552v1-asymptotic-and-finite-time-guarantees-for-langevin-based-temperature-annealing-in-infonce)  
-   标签：评分：9.0/10、query:q9
-   evidence：InfoNCE温度退火的理论分析与收敛保证
-2. [Free Lunch in Medical Image Foundation Model Pre-training via Randomized Synthesis and Disentanglement](/202603/21/2602.12317v1-free-lunch-in-medical-image-foundation-model-pre-training-via-randomized-synthesis-and-disentanglement)  
-   标签：评分：8.0/10、query:profile-1
-   evidence：医学图像基础模型预训练与合成数据增强及表示学习
-3. [Predictive Reasoning with Augmented Anomaly Contrastive Learning for Compositional Visual Relations](/202603/21/2603.01125v1-predictive-reasoning-with-augmented-anomaly-contrastive-learning-for-compositional-visual-relations)  
-   标签：评分：8.0/10、query:q1
-   evidence：新颖的对比学习方法，结合增强异常检测
-4. [SpikeCLR: Contrastive Self-Supervised Learning for Few-Shot Event-Based Vision using Spiking Neural Networks](/202603/21/2603.16338v1-spikeclr-contrastive-self-supervised-learning-for-few-shot-event-based-vision-using-spiking-neural-networks)  
+1. [Prior-guided Hierarchical Instance-pixel Contrastive Learning for Ultrasound Speckle Noise Suppression](/202603/22/2602.13831v1-prior-guided-hierarchical-instance-pixel-contrastive-learning-for-ultrasound-speckle-noise-suppression)  
+   标签：评分：8.0/10、query:q10
+   evidence：医学超声的分层实例-像素对比学习
+2. [Variational views for self-supervised learning in radio astronomy](/202603/22/2602.18923v1-variational-views-for-self-supervised-learning-in-radio-astronomy)  
    标签：评分：8.0/10、query:q2
-   evidence：面向事件视觉的对比自监督学习框架
-5. [CRE-T1 Preview Technical Report: Beyond Contrastive Learning for Reasoning-Intensive Retrieval](/202603/21/2603.17387v1-cre-t1-preview-technical-report-beyond-contrastive-learning-for-reasoning-intensive-retrieval)  
+   evidence：耦合自监督表示学习，使用VAE生成视图用于射电天文学
+3. [Breaking the Prototype Bias Loop: Confidence-Aware Federated Contrastive Learning for Highly Imbalanced Clients](/202603/22/2603.03007v1-breaking-the-prototype-bias-loop-confidence-aware-federated-contrastive-learning-for-highly-imbalanced-clients)  
    标签：评分：8.0/10、query:q1
-   evidence：批判对比学习局限性并提出超越方法
-6. [Grounded Multimodal Retrieval-Augmented Drafting of Radiology Impressions Using Case-Based Similarity Search](/202603/21/2603.17765v1-grounded-multimodal-retrieval-augmented-drafting-of-radiology-impressions-using-case-based-similarity-search)  
+   evidence：联邦对比学习，引入置信度感知原型聚合机制
+4. [ViSA: Visited-State Augmentation for Generalized Goal-Space Contrastive Reinforcement Learning](/202603/22/2603.14887v1-visa-visited-state-augmentation-for-generalized-goal-space-contrastive-reinforcement-learning)  
+   标签：评分：8.0/10、query:q8
+   evidence：对比学习应用于强化学习，超越计算机视觉
+5. [VLM2Rec: Resolving Modality Collapse in Vision-Language Model Embedders for Multimodal Sequential Recommendation](/202603/22/2603.17450v1-vlm2rec-resolving-modality-collapse-in-vision-language-model-embedders-for-multimodal-sequential-recommendation)  
    标签：评分：8.0/10、query:q4
-   evidence：用于医学检索的多模态对比图文嵌入
+   evidence：多模态对比学习，解决视觉语言模型的模态坍塌问题
+6. [Unsupervised Contrastive Learning for Efficient and Robust Spectral Shape Matching](/202603/22/2603.18924v1-unsupervised-contrastive-learning-for-efficient-and-robust-spectral-shape-matching)  
+   标签：评分：8.0/10、query:q1
+   evidence：无监督对比学习用于谱形状匹配，改进嵌入空间特征质量
 
 ### 速读区论文标签
-1. [Equilibrium contrastive learning for imbalanced image classification](/202603/21/2602.09506v2-equilibrium-contrastive-learning-for-imbalanced-image-classification)  
-   标签：评分：8.0/10、query:q9
-   evidence：新型均衡对比学习，引入几何构型目标函数
-2. [Towards Uniformity and Alignment for Multimodal Representation Learning](/202603/21/2602.09507v1-towards-uniformity-and-alignment-for-multimodal-representation-learning)  
-   标签：评分：8.0/10、query:q9
-   evidence：新型对比损失设计，解耦对齐与均匀性目标
-3. [Theoretical Analysis of Contrastive Learning under Imbalanced Data: From Training Dynamics to a Pruning Solution](/202603/21/2602.10357v1-theoretical-analysis-of-contrastive-learning-under-imbalanced-data-from-training-dynamics-to-a-pruning-solution)  
-   标签：评分：8.0/10、query:q8
-   evidence：不平衡数据下对比学习的理论分析
-4. [Spectral-Spatial Contrastive Learning Framework for Regression on Hyperspectral Data](/202603/21/2602.10745v1-spectral-spatial-contrastive-learning-framework-for-regression-on-hyperspectral-data)  
+1. [RoboAug: One Annotation to Hundreds of Scenes via Region-Contrastive Data Augmentation for Robotic Manipulation](/202603/22/2602.14032v1-roboaug-one-annotation-to-hundreds-of-scenes-via-region-contrastive-data-augmentation-for-robotic-manipulation)  
    标签：评分：8.0/10、query:q6
-   evidence：高光谱数据的光谱-空间对比学习与增强策略
-5. [Learning Generalizable 3D Medical Image Representations from Mask-Guided Self-Supervision](/202603/21/2603.13660v1-learning-generalizable-3d-medical-image-representations-from-mask-guided-self-supervision)  
-   标签：评分：7.0/10、query:q8
-   evidence：医学影像自监督学习使用对比目标
-6. [Towards Stable Self-Supervised Object Representations in Unconstrained Egocentric Video](/202603/21/2603.13912v1-towards-stable-self-supervised-object-representations-in-unconstrained-egocentric-video)  
+   evidence：区域对比数据增强用于样本高效的机器人学习
+2. [Orthogonalized Multimodal Contrastive Learning with Asymmetric Masking for Structured Representations](/202603/22/2602.14983v1-orthogonalized-multimodal-contrastive-learning-with-asymmetric-masking-for-structured-representations)  
+   标签：评分：8.0/10、query:q4
+   evidence：多模态对比学习与结构化表示
+3. [Benchmarking Self-Supervised Models for Cardiac Ultrasound View Classification](/202603/22/2602.15339v1-benchmarking-self-supervised-models-for-cardiac-ultrasound-view-classification)  
+   标签：评分：8.0/10、query:q10
+   evidence：有限标签医学图像分类的自监督预训练
+4. [Leveraging Contrastive Learning for a Similarity-Guided Tampered Document Data Generation Pipeline](/202603/22/2602.17322v1-leveraging-contrastive-learning-for-a-similarity-guided-tampered-document-data-generation-pipeline)  
+   标签：评分：8.0/10、query:q7
+   evidence：将对比学习与生成式数据生成流程相结合
+5. [Human-like Object Grouping in Self-supervised Vision Transformers](/202603/22/2603.13994v1-human-like-object-grouping-in-self-supervised-vision-transformers)  
    标签：评分：7.0/10、query:q7
-   evidence：自监督视觉表征学习，从无标注第一人称视频学习稳定目标表示
-7. [DCP-CLIP:A Coarse-to-Fine Framework for Open-Vocabulary Semantic Segmentation with Dual Interaction](/202603/21/2603.13951v1-dcp-clipa-coarse-to-fine-framework-for-open-vocabulary-semantic-segmentation-with-dual-interaction)  
-   标签：评分：7.0/10、query:q4
-   evidence：跨模态视觉-文本交互，用于开放词汇语义分割
-8. [Enhancing Mental Health Classification with Layer-Attentive Residuals and Contrastive Feature Learning](/202603/21/2603.14075v1-enhancing-mental-health-classification-with-layer-attentive-residuals-and-contrastive-feature-learning)  
-   标签：评分：7.0/10、query:q8
-   evidence：对比特征学习用于心理健康分类，超越视觉领域
-9. [Mastering Negation: Boosting Grounding Models via Grouped Opposition-Based Learning](/202603/21/2603.12606v1-mastering-negation-boosting-grounding-models-via-grouped-opposition-based-learning)  
-   标签：评分：6.0/10、query:q3
-   evidence：基于分组对抗的学习，利用负样本进行视觉-语言定位
-10. [Text-Phase Synergy Network with Dual Priors for Unsupervised Cross-Domain Image Retrieval](/202603/21/2603.12711v1-text-phase-synergy-network-with-dual-priors-for-unsupervised-cross-domain-image-retrieval)  
-   标签：评分：6.0/10、query:q5
-   evidence：无监督跨域表示学习与语义对齐
-11. [Representation Learning for Spatiotemporal Physical Systems](/202603/21/2603.13227v1-representation-learning-for-spatiotemporal-physical-systems)  
+   evidence：在人工对齐基准上评估包括DINO在内的自监督视觉Transformer
+6. [MotionCFG: Boosting Motion Dynamics via Stochastic Concept Perturbation](/202603/22/2603.14073v1-motioncfg-boosting-motion-dynamics-via-stochastic-concept-perturbation)  
+   标签：评分：7.0/10、query:q3
+   evidence：通过扰动概念嵌入创建负样本锚点的对比方法，用于改进生成质量
+7. [Is the reconstruction loss culprit? An attempt to outperform JEPA](/202603/22/2603.14131v1-is-the-reconstruction-loss-culprit-an-attempt-to-outperform-jepa)  
+   标签：评分：7.0/10、query:q2
+   evidence：JEPA预测式表征学习与重建目标对比
+8. [ViSA: Visited-State Augmentation for Generalized Goal-Space Contrastive Reinforcement Learning](/202603/22/2603.14887v2-visa-visited-state-augmentation-for-generalized-goal-space-contrastive-reinforcement-learning)  
+   标签：评分：7.0/10、query:q1
+   evidence：对比强化学习的新型数据增强方法
+9. [SHAMISA: SHAped Modeling of Implicit Structural Associations for Self-supervised No-Reference Image Quality Assessment](/202603/22/2603.13669v2-shamisa-shaped-modeling-of-implicit-structural-associations-for-self-supervised-no-reference-image-quality-assessment)  
    标签：评分：6.0/10、query:q2
-   evidence：时空物理系统的自监督表示学习评估
+   evidence：非对比自监督学习与结构化关系
+10. [Evaluating Compositional Structure in Audio Representations](/202603/22/2603.13685v1-evaluating-compositional-structure-in-audio-representations)  
+   标签：评分：6.0/10、query:q5
+   evidence：音频表征组合结构评估基准
+11. [Pixel-level Scene Understanding in One Token: Visual States Need What-is-Where Composition](/202603/22/2603.13904v1-pixel-level-scene-understanding-in-one-token-visual-states-need-what-is-where-composition)  
+   标签：评分：6.0/10、query:q7
+   evidence：自监督视觉状态表示学习，采用全局到局部重建目标
 
 
 <div class="dpr-home-promo-card">

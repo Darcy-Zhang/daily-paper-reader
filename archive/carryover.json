@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-03-21T19:27:40.520063+00:00",
-  "updated_date": "20260321",
+  "generated_at": "2026-03-22T20:04:34.070113+00:00",
+  "updated_date": "20260322",
   "carryover_days": 9,
   "items": [
     {
@@ -39,7 +39,7 @@
       "matched_requirement_id": "req-10",
       "selection_source": "carryover_cache",
       "paper_id": "2603.12514v1",
-      "carry_days": 1
+      "carry_days": 2
     },
     {
       "id": "2602.19857v1",
@@ -82,7 +82,7 @@
       "matched_requirement_id": "req-10",
       "selection_source": "carryover_cache",
       "paper_id": "2602.19857v1",
-      "carry_days": 1
+      "carry_days": 2
     },
     {
       "id": "2603.09367v1",
@@ -121,92 +121,7 @@
       "matched_requirement_id": "req-1",
       "selection_source": "carryover_cache",
       "paper_id": "2603.09367v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2602.15339v1",
-      "title": "Benchmarking Self-Supervised Models for Cardiac Ultrasound View Classification",
-      "abstract": "Reliable interpretation of cardiac ultrasound images is essential for accurate clinical diagnosis and assessment. Self-supervised learning has shown promise in medical imaging by leveraging large unlabelled datasets to learn meaningful representations. In this study, we evaluate and compare two self-supervised learning frameworks, USF-MAE, developed by our team, and MoCo v3, on the recently introduced CACTUS dataset (37,736 images) for automated simulated cardiac view (A4C, PL, PSAV, PSMV, Random, and SC) classification. Both models used 5-fold cross-validation, enabling robust assessment of generalization performance across multiple random splits. The CACTUS dataset provides expert-annotated cardiac ultrasound images with diverse views. We adopt an identical training protocol for both models to ensure a fair comparison. Both models are configured with a learning rate of 0.0001 and a weight decay of 0.01. For each fold, we record performance metrics including ROC-AUC, accuracy, F1-score, and recall. Our results indicate that USF-MAE consistently outperforms MoCo v3 across metrics. The average testing AUC for USF-MAE is 99.99% (+/-0.01% 95% CI), compared to 99.97% (+/-0.01%) for MoCo v3. USF-MAE achieves a mean testing accuracy of 99.33% (+/-0.18%), higher than the 98.99% (+/-0.28%) reported for MoCo v3. Similar trends are observed for the F1-score and recall, with improvements statistically significant across folds (paired t-test, p=0.0048 < 0.01). This proof-of-concept analysis suggests that USF-MAE learns more discriminative features for cardiac view classification than MoCo v3 when applied to this dataset. The enhanced performance across multiple metrics highlights the potential of USF-MAE for improving automated cardiac ultrasound classification.",
-      "authors": [
-        "Youssef Megahed",
-        "Salma I. Megahed",
-        "Robin Ducharme",
-        "Inok Lee",
-        "Adrian D. C. Chan",
-        "Mark C. Walker",
-        "Steven Hawken"
-      ],
-      "primary_category": "eess.IV",
-      "categories": [
-        "eess.IV",
-        "cs.AI",
-        "cs.CV"
-      ],
-      "published": "2026-02-17T04:00:16+00:00",
-      "link": "https://arxiv.org/pdf/2602.15339v1",
-      "tags": [
-        "keyword:生成对比学习",
-        "query:生成对比学习"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "Self-supervised pretraining for medical image classification with limited labels",
-      "llm_evidence_cn": "有限标签医学图像分类的自监督预训练",
-      "llm_evidence": "有限标签医学图像分类的自监督预训练",
-      "canonical_evidence": "有限标签医学图像分类的自监督预训练",
-      "llm_tldr_en": "Benchmarks self-supervised models (USF-MAE, MoCo v3) for cardiac ultrasound classification.",
-      "llm_tldr_cn": "基准测试自监督模型用于心脏超声视图分类。",
-      "llm_tldr": "基准测试自监督模型用于心脏超声视图分类。",
-      "llm_tags": [
-        "query:q10"
-      ],
-      "matched_query_tag": "query:q10",
-      "matched_query_text": "how does contrastive learning improve medical image classification with limited annotations",
-      "matched_requirement_id": "req-10",
-      "selection_source": "carryover_cache",
-      "paper_id": "2602.15339v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.03007v1",
-      "title": "Breaking the Prototype Bias Loop: Confidence-Aware Federated Contrastive Learning for Highly Imbalanced Clients",
-      "abstract": "Local class imbalance and data heterogeneity across clients often trap prototype-based federated contrastive learning in a prototype bias loop: biased local prototypes induced by imbalanced data are aggregated into biased global prototypes, which are repeatedly reused as contrastive anchors, accumulating errors across communication rounds. To break this loop, we propose Confidence-Aware Federated Contrastive Learning (CAFedCL), a novel framework that improves the prototype aggregation mechanism and strengthens the contrastive alignment guided by prototypes. CAFedCL employs a confidence-aware aggregation mechanism that leverages predictive uncertainty to downweight high-variance local prototypes. In addition, generative augmentation for minority classes and geometric consistency regularization are integrated to stabilize the structure between classes. From a theoretical perspective, we provide an expectation-based analysis showing that our aggregation reduces estimation variance, thereby bounding global prototype drift and ensuring convergence. Extensive experiments under varying levels of class imbalance and data heterogeneity demonstrate that CAFedCL consistently outperforms representative federated baselines in both accuracy and client fairness.",
-      "authors": [
-        "Tian-Shuang Wu",
-        "Shen-Huan Lyu",
-        "Ning Chen",
-        "Yi-Xiao He",
-        "Bing Tang",
-        "Baoliu Ye",
-        "Qingfu Zhang"
-      ],
-      "primary_category": "cs.LG",
-      "categories": [
-        "cs.LG",
-        "cs.DC"
-      ],
-      "published": "2026-03-03T14:01:08+00:00",
-      "link": "https://arxiv.org/pdf/2603.03007v1",
-      "tags": [
-        "keyword:对比学习进展",
-        "query:对比学习进展"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "federated contrastive learning with confidence-aware prototype aggregation",
-      "llm_evidence_cn": "联邦对比学习，引入置信度感知原型聚合机制",
-      "llm_evidence": "联邦对比学习，引入置信度感知原型聚合机制",
-      "canonical_evidence": "联邦对比学习，引入置信度感知原型聚合机制",
-      "llm_tldr_en": "Proposes CAFedCL, a confidence-aware federated contrastive learning framework addressing prototype bias in imbalanced client settings.",
-      "llm_tldr_cn": "提出CAFedCL框架，通过置信度感知机制解决联邦对比学习中的原型偏置问题。",
-      "llm_tldr": "提出CAFedCL框架，通过置信度感知机制解决联邦对比学习中的原型偏置问题。",
-      "llm_tags": [
-        "query:q1"
-      ],
-      "matched_query_tag": "query:q1",
-      "matched_query_text": "contrastive learning recent advances and new methods",
-      "matched_requirement_id": "req-1",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.03007v1",
-      "carry_days": 1
+      "carry_days": 2
     },
     {
       "id": "2603.04878v1",
@@ -247,7 +162,7 @@
       "matched_requirement_id": "req-5",
       "selection_source": "carryover_cache",
       "paper_id": "2603.04878v1",
-      "carry_days": 1
+      "carry_days": 2
     },
     {
       "id": "2603.14086v1",
@@ -283,44 +198,7 @@
       "matched_requirement_id": "req-3",
       "selection_source": "carryover_cache",
       "paper_id": "2603.14086v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2602.13831v1",
-      "title": "Prior-guided Hierarchical Instance-pixel Contrastive Learning for Ultrasound Speckle Noise Suppression",
-      "abstract": "Ultrasound denoising is essential for mitigating speckle-induced degradations, thereby enhancing image quality and improving diagnostic reliability. Nevertheless, because speckle patterns inherently encode both texture and fine anatomical details, effectively suppressing noise while preserving structural fidelity remains a significant challenge. In this study, we propose a prior-guided hierarchical instance-pixel contrastive learning model for ultrasound denoising, designed to promote noise-invariant and structure-aware feature representations by maximizing the separability between noisy and clean samples at both pixel and instance levels. Specifically, a statistics-guided pixel-level contrastive learning strategy is introduced to enhance distributional discrepancies between noisy and clean pixels, thereby improving local structural consistency. Concurrently, a memory bank is employed to facilitate instance-level contrastive learning in the feature space, encouraging representations that more faithfully approximate the underlying data distribution. Furthermore, a hybrid Transformer-CNN architecture is adopted, coupling a Transformer-based encoder for global context modeling with a CNN-based decoder optimized for fine-grained anatomical structure restoration, thus enabling complementary exploitation of long-range dependencies and local texture details. Extensive evaluations on two publicly available ultrasound datasets demonstrate that the proposed model consistently outperforms existing methods, confirming its effectiveness and superiority.",
-      "authors": [
-        "Zhenyu Bu",
-        "Yuanxin Xie",
-        "Guang-Quan Zhou"
-      ],
-      "primary_category": "cs.CV",
-      "categories": [
-        "cs.CV"
-      ],
-      "published": "2026-02-14T16:01:58+00:00",
-      "link": "https://arxiv.org/pdf/2602.13831v1",
-      "tags": [
-        "keyword:生成对比学习",
-        "query:生成对比学习"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "hierarchical instance-pixel contrastive learning for medical ultrasound",
-      "llm_evidence_cn": "医学超声的分层实例-像素对比学习",
-      "llm_evidence": "医学超声的分层实例-像素对比学习",
-      "canonical_evidence": "医学超声的分层实例-像素对比学习",
-      "llm_tldr_en": "Prior-guided hierarchical contrastive learning for ultrasound denoising preserving anatomical details",
-      "llm_tldr_cn": "先验引导的分层对比学习用于超声去噪保留解剖细节",
-      "llm_tldr": "先验引导的分层对比学习用于超声去噪保留解剖细节",
-      "llm_tags": [
-        "query:q10"
-      ],
-      "matched_query_tag": "query:q10",
-      "matched_query_text": "how does contrastive learning improve medical image classification with limited annotations",
-      "matched_requirement_id": "req-10",
-      "selection_source": "carryover_cache",
-      "paper_id": "2602.13831v1",
-      "carry_days": 1
+      "carry_days": 2
     },
     {
       "id": "2603.02929v1",
@@ -360,128 +238,7 @@
       "matched_requirement_id": "req-7",
       "selection_source": "carryover_cache",
       "paper_id": "2603.02929v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2602.14983v1",
-      "title": "Orthogonalized Multimodal Contrastive Learning with Asymmetric Masking for Structured Representations",
-      "abstract": "Multimodal learning seeks to integrate information from heterogeneous sources, where signals may be shared across modalities, specific to individual modalities, or emerge only through their interaction. While self-supervised multimodal contrastive learning has achieved remarkable progress, most existing methods predominantly capture redundant cross-modal signals, often neglecting modality-specific (unique) and interaction-driven (synergistic) information. Recent extensions broaden this perspective, yet they either fail to explicitly model synergistic interactions or learn different information components in an entangled manner, leading to incomplete representations and potential information leakage. We introduce \\textbf{COrAL}, a principled framework that explicitly and simultaneously preserves redundant, unique, and synergistic information within multimodal representations. COrAL employs a dual-path architecture with orthogonality constraints to disentangle shared and modality-specific features, ensuring a clean separation of information components. To promote synergy modeling, we introduce asymmetric masking with complementary view-specific patterns, compelling the model to infer cross-modal dependencies rather than rely solely on redundant cues. Extensive experiments on synthetic benchmarks and diverse MultiBench datasets demonstrate that COrAL consistently matches or outperforms state-of-the-art methods while exhibiting low performance variance across runs. These results indicate that explicitly modeling the full spectrum of multimodal information yields more stable, reliable, and comprehensive embeddings.",
-      "authors": [
-        "Carolin Cissee",
-        "Raneen Younis",
-        "Zahra Ahmadi"
-      ],
-      "primary_category": "cs.LG",
-      "categories": [
-        "cs.LG"
-      ],
-      "published": "2026-02-16T18:06:53+00:00",
-      "link": "https://arxiv.org/pdf/2602.14983v1",
-      "tags": [
-        "keyword:生成对比学习",
-        "query:生成对比学习"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "multimodal contrastive learning with structured representations",
-      "llm_evidence_cn": "多模态对比学习与结构化表示",
-      "llm_evidence": "多模态对比学习与结构化表示",
-      "canonical_evidence": "多模态对比学习与结构化表示",
-      "llm_tldr_en": "Proposes orthogonalized multimodal contrastive learning with asymmetric masking to capture modality-specific and synergistic information beyond redundant cross-modal signals.",
-      "llm_tldr_cn": "提出正交化多模态对比学习，通过非对称掩码捕获模态特有及协同信息。",
-      "llm_tldr": "提出正交化多模态对比学习，通过非对称掩码捕获模态特有及协同信息。",
-      "llm_tags": [
-        "query:q4"
-      ],
-      "matched_query_tag": "query:q4",
-      "matched_query_text": "contrastive learning representation learning",
-      "matched_requirement_id": "req-4",
-      "selection_source": "carryover_cache",
-      "paper_id": "2602.14983v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2602.17322v1",
-      "title": "Leveraging Contrastive Learning for a Similarity-Guided Tampered Document Data Generation Pipeline",
-      "abstract": "Detecting tampered text in document images is a challenging task due to data scarcity. To address this, previous work has attempted to generate tampered documents using rule-based methods. However, the resulting documents often suffer from limited variety and poor visual quality, typically leaving highly visible artifacts that are rarely observed in real-world manipulations. This undermines the model's ability to learn robust, generalizable features and results in poor performance on real-world data. Motivated by this discrepancy, we propose a novel method for generating high-quality tampered document images. We first train an auxiliary network to compare text crops, leveraging contrastive learning with a novel strategy for defining positive pairs and their corresponding negatives. We also train a second auxiliary network to evaluate whether a crop tightly encloses the intended characters, without cutting off parts of characters or including parts of adjacent ones. Using a carefully designed generation pipeline that leverages both networks, we introduce a framework capable of producing diverse, high-quality tampered document images. We assess the effectiveness of our data generation pipeline by training multiple models on datasets derived from the same source images, generated using our method and existing approaches, under identical training protocols. Evaluating these models on various open-source datasets shows that our pipeline yields consistent performance improvements across architectures and datasets.",
-      "authors": [
-        "Mohamed Dhouib",
-        "Davide Buscaldi",
-        "Sonia Vanier",
-        "Aymen Shabou"
-      ],
-      "primary_category": "cs.CV",
-      "categories": [
-        "cs.CV"
-      ],
-      "published": "2026-02-19T12:39:38+00:00",
-      "link": "https://arxiv.org/pdf/2602.17322v1",
-      "tags": [
-        "keyword:生成对比学习",
-        "query:生成对比学习"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "bridges contrastive learning with generative data generation pipeline",
-      "llm_evidence_cn": "将对比学习与生成式数据生成流程相结合",
-      "llm_evidence": "将对比学习与生成式数据生成流程相结合",
-      "canonical_evidence": "将对比学习与生成式数据生成流程相结合",
-      "llm_tldr_en": "Uses contrastive learning to guide generation of high-quality tampered document images for training data augmentation.",
-      "llm_tldr_cn": "利用对比学习引导生成高质量篡改文档图像用于训练数据增强。",
-      "llm_tldr": "利用对比学习引导生成高质量篡改文档图像用于训练数据增强。",
-      "llm_tags": [
-        "query:q7"
-      ],
-      "matched_query_tag": "query:q7",
-      "matched_query_text": "Bridging generative and contrastive learning methods",
-      "matched_requirement_id": "req-7",
-      "selection_source": "carryover_cache",
-      "paper_id": "2602.17322v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2602.14032v1",
-      "title": "RoboAug: One Annotation to Hundreds of Scenes via Region-Contrastive Data Augmentation for Robotic Manipulation",
-      "abstract": "Enhancing the generalization capability of robotic learning to enable robots to operate effectively in diverse, unseen scenes is a fundamental and challenging problem. Existing approaches often depend on pretraining with large-scale data collection, which is labor-intensive and time-consuming, or on semantic data augmentation techniques that necessitate an impractical assumption of flawless upstream object detection in real-world scenarios. In this work, we propose RoboAug, a novel generative data augmentation framework that significantly minimizes the reliance on large-scale pretraining and the perfect visual recognition assumption by requiring only the bounding box annotation of a single image during training. Leveraging this minimal information, RoboAug employs pre-trained generative models for precise semantic data augmentation and integrates a plug-and-play region-contrastive loss to help models focus on task-relevant regions, thereby improving generalization and boosting task success rates. We conduct extensive real-world experiments on three robots, namely UR-5e, AgileX, and Tien Kung 2.0, spanning over 35k rollouts. Empirical results demonstrate that RoboAug significantly outperforms state-of-the-art data augmentation baselines. Specifically, when evaluating generalization capabilities in unseen scenes featuring diverse combinations of backgrounds, distractors, and lighting conditions, our method achieves substantial gains over the baseline without augmentation. The success rates increase from 0.09 to 0.47 on UR-5e, from 0.16 to 0.60 on AgileX, and from 0.19 to 0.67 on Tien Kung 2.0. These results highlight the superior generalization and effectiveness of RoboAug in real-world manipulation tasks. Our project is available at https://x-roboaug.github.io/.",
-      "authors": [
-        "Xinhua Wang",
-        "Kun Wu",
-        "Zhen Zhao",
-        "Hu Cao",
-        "Yinuo Zhao",
-        "Zhiyuan Xu",
-        "Meng Li",
-        "Shichao Fan",
-        "Di Wu",
-        "Yixue Zhang",
-        "Ning Liu",
-        "Zhengping Che",
-        "Jian Tang"
-      ],
-      "primary_category": "cs.RO",
-      "categories": [
-        "cs.RO"
-      ],
-      "published": "2026-02-15T07:40:00+00:00",
-      "link": "https://arxiv.org/pdf/2602.14032v1",
-      "tags": [
-        "keyword:生成对比学习"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "region-contrastive data augmentation for sample-efficient robotic learning",
-      "llm_evidence_cn": "区域对比数据增强用于样本高效的机器人学习",
-      "llm_evidence": "区域对比数据增强用于样本高效的机器人学习",
-      "canonical_evidence": "区域对比数据增强用于样本高效的机器人学习",
-      "llm_tldr_en": "RoboAug uses region-contrastive generative augmentation to reduce annotation needs from hundreds to one per scene.",
-      "llm_tldr_cn": "RoboAug利用区域对比生成增强将每场景标注需求从数百减少到单个。",
-      "llm_tldr": "RoboAug利用区域对比生成增强将每场景标注需求从数百减少到单个。",
-      "llm_tags": [
-        "query:q6"
-      ],
-      "matched_query_tag": "query:q6",
-      "matched_query_text": "augmentation strategies for contrastive learning",
-      "matched_requirement_id": "req-6",
-      "selection_source": "carryover_cache",
-      "paper_id": "2602.14032v1",
-      "carry_days": 1
+      "carry_days": 2
     },
     {
       "id": "2603.03530v1",
@@ -519,7 +276,7 @@
       "matched_requirement_id": "req-9",
       "selection_source": "carryover_cache",
       "paper_id": "2603.03530v1",
-      "carry_days": 1
+      "carry_days": 2
     },
     {
       "id": "2603.04516v1",
@@ -560,7 +317,7 @@
       "matched_requirement_id": "req-8",
       "selection_source": "carryover_cache",
       "paper_id": "2603.04516v1",
-      "carry_days": 1
+      "carry_days": 2
     },
     {
       "id": "2603.00951v1",
@@ -596,43 +353,7 @@
       "matched_requirement_id": "req-9",
       "selection_source": "carryover_cache",
       "paper_id": "2603.00951v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.18924v1",
-      "title": "Unsupervised Contrastive Learning for Efficient and Robust Spectral Shape Matching",
-      "abstract": "Estimating correspondences between pairs of non-rigid deformable 3D shapes remains a significant challenge in computer vision and graphics. While deep functional map methods have become the go-to solution for addressing this problem, they primarily focus on optimizing pointwise and functional maps either individually or jointly, rather than directly enhancing feature representations in the embedding space, which often results in inadequate feature quality and suboptimal matching performance. Furthermore, these approaches heavily rely on traditional functional map techniques, such as time-consuming functional map solvers, which incur substantial computational costs. In this work, we introduce, for the first time, a novel unsupervised contrastive learning-based approach for efficient and robust 3D shape matching. We begin by presenting an unsupervised contrastive learning framework that promotes feature learning by maximizing consistency within positive similarity pairs and minimizing it within negative similarity pairs, thereby improving both the consistency and discriminability of the learned features.We then design a significantly simplified functional map learning architecture that eliminates the need for computationally expensive functional map solvers and multiple auxiliary functional map losses, greatly enhancing computational efficiency. By integrating these two components into a unified two-branch pipeline, our method achieves state-of-the-art performance in both accuracy and efficiency. Extensive experiments demonstrate that our approach is not only computationally efficient but also outperforms current state-of-the-art methods across various challenging benchmarks, including near-isometric, non-isometric, and topologically inconsistent scenarios, even surpassing supervised techniques.",
-      "authors": [
-        "Feifan Luo",
-        "Hongyang Chen"
-      ],
-      "primary_category": "cs.CV",
-      "categories": [
-        "cs.CV"
-      ],
-      "published": "2026-03-19T14:02:12+00:00",
-      "link": "https://arxiv.org/pdf/2603.18924v1",
-      "tags": [
-        "keyword:对比学习进展",
-        "query:对比学习进展"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "unsupervised contrastive learning for 3D shape matching, novel CL method",
-      "llm_evidence_cn": "用于三维形状匹配的无监督对比学习新方法",
-      "llm_evidence": "用于三维形状匹配的无监督对比学习新方法",
-      "canonical_evidence": "用于三维形状匹配的无监督对比学习新方法",
-      "llm_tldr_en": "First unsupervised contrastive learning approach for spectral shape matching, directly enhancing feature representations in embedding space.",
-      "llm_tldr_cn": "首个用于谱形状匹配的无监督对比学习方法，直接增强嵌入空间特征表示。",
-      "llm_tldr": "首个用于谱形状匹配的无监督对比学习方法，直接增强嵌入空间特征表示。",
-      "llm_tags": [
-        "query:q1"
-      ],
-      "matched_query_tag": "query:q1",
-      "matched_query_text": "contrastive learning recent advances and new methods",
-      "matched_requirement_id": "req-1",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.18924v1",
-      "carry_days": 1
+      "carry_days": 2
     },
     {
       "id": "2603.04037v1",
@@ -671,7 +392,7 @@
       "matched_requirement_id": "req-3",
       "selection_source": "carryover_cache",
       "paper_id": "2603.04037v1",
-      "carry_days": 1
+      "carry_days": 2
     },
     {
       "id": "2602.18010v1",
@@ -710,7 +431,7 @@
       "matched_requirement_id": "req-4",
       "selection_source": "carryover_cache",
       "paper_id": "2602.18010v1",
-      "carry_days": 1
+      "carry_days": 2
     },
     {
       "id": "2602.22452v1",
@@ -746,7 +467,7 @@
       "matched_requirement_id": "req-3",
       "selection_source": "carryover_cache",
       "paper_id": "2602.22452v1",
-      "carry_days": 1
+      "carry_days": 2
     },
     {
       "id": "2603.08012v1",
@@ -783,43 +504,7 @@
       "matched_requirement_id": "req-8",
       "selection_source": "carryover_cache",
       "paper_id": "2603.08012v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2602.18923v1",
-      "title": "Variational views for self-supervised learning in radio astronomy",
-      "abstract": "Modern astronomical surveys are producing progressively larger and more complex datasets, making traditional supervised approaches that rely on extensive labelled catalogues increasingly difficult. Consequently, pre-training using self-supervised learning (SSL), which offers a scalable route by extracting structure directly from unlabelled images, is becoming attractive for many downstream applications. In this work we consider the use of coupled self-supervised representation learning approaches for radio galaxy morphology pre-training. In order to account for the more nuanced variations in radio galaxy morphology than are typically included in the augmented views of view-based SSL algorithms, we use a pre-trained Variational Autoencoder (VAE) to generate views for training a larger view-based self-supervised model. To do this, a $β$-VAE was trained on the Radio Galaxy Zoo (RGZ) dataset, where moderate regularization ($β= 2.3$) was found to provide a good balance between reconstruction quality and disentanglement of generative factors such as source multiplicity and lobe asymmetry. An analysis of the $β$-VAE reveals that Fanaroff-Riley class identity manifests as a continuous transition across the latent space, rather than being associated to a single discrete dimension. $β$-VAE reconstructions were then incorporated as generative augmentations within a view-based SSL pipeline. Our experiments show that combining these generative views with standard image augmentations improves downstream classification performance, and we present ablation studies clarifying the relative contribution of each augmentation type. These results indicate that generative and contrastive approaches are complementary, and point toward disentanglement-aware self-supervised learning as a promising direction for future radio astronomy surveys.",
-      "authors": [
-        "Johnny Joseph Alphonse",
-        "Anna M. M. Scaife"
-      ],
-      "primary_category": "astro-ph.IM",
-      "categories": [
-        "astro-ph.IM",
-        "astro-ph.GA"
-      ],
-      "published": "2026-02-21T18:29:31+00:00",
-      "link": "https://arxiv.org/pdf/2602.18923v1",
-      "tags": [
-        "keyword:对比学习进展"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "coupled self-supervised representation learning with VAE-generated views for radio astronomy",
-      "llm_evidence_cn": "耦合自监督表示学习，使用VAE生成视图用于射电天文学",
-      "llm_evidence": "耦合自监督表示学习，使用VAE生成视图用于射电天文学",
-      "canonical_evidence": "耦合自监督表示学习，使用VAE生成视图用于射电天文学",
-      "llm_tldr_en": "Develops coupled SSL with variational views for radio galaxy morphology pre-training on unlabeled astronomical data.",
-      "llm_tldr_cn": "开发耦合自监督学习，利用变分视图在射电星系形态预训练。",
-      "llm_tldr": "开发耦合自监督学习，利用变分视图在射电星系形态预训练。",
-      "llm_tags": [
-        "query:q2"
-      ],
-      "matched_query_tag": "query:q2",
-      "matched_query_text": "self-supervised representation learning with contrastive objectives",
-      "matched_requirement_id": "req-2",
-      "selection_source": "carryover_cache",
-      "paper_id": "2602.18923v1",
-      "carry_days": 1
+      "carry_days": 2
     },
     {
       "id": "2602.21154v1",
@@ -859,7 +544,7 @@
       "matched_requirement_id": "req-4",
       "selection_source": "carryover_cache",
       "paper_id": "2602.21154v1",
-      "carry_days": 1
+      "carry_days": 2
     },
     {
       "id": "2603.09370v1",
@@ -897,7 +582,7 @@
       "matched_requirement_id": "req-1",
       "selection_source": "carryover_cache",
       "paper_id": "2603.09370v1",
-      "carry_days": 1
+      "carry_days": 2
     },
     {
       "id": "2603.07874v1",
@@ -935,7 +620,7 @@
       "matched_requirement_id": "req-4",
       "selection_source": "carryover_cache",
       "paper_id": "2603.07874v1",
-      "carry_days": 1
+      "carry_days": 2
     },
     {
       "id": "2602.23589v2",
@@ -971,7 +656,7 @@
       "matched_requirement_id": "req-4",
       "selection_source": "carryover_cache",
       "paper_id": "2602.23589v2",
-      "carry_days": 1
+      "carry_days": 2
     },
     {
       "id": "2603.04772v1",
@@ -1013,7 +698,7 @@
       "matched_requirement_id": "req-3",
       "selection_source": "carryover_cache",
       "paper_id": "2603.04772v1",
-      "carry_days": 1
+      "carry_days": 2
     },
     {
       "id": "2603.10648v2",
@@ -1050,7 +735,7 @@
       "matched_requirement_id": "req-1",
       "selection_source": "carryover_cache",
       "paper_id": "2603.10648v2",
-      "carry_days": 1
+      "carry_days": 2
     },
     {
       "id": "2603.09825v1",
@@ -1092,7 +777,7 @@
       "matched_requirement_id": "req-8",
       "selection_source": "carryover_cache",
       "paper_id": "2603.09825v1",
-      "carry_days": 1
+      "carry_days": 2
     },
     {
       "id": "2603.08224v1",
@@ -1132,86 +817,7 @@
       "matched_requirement_id": "req-4",
       "selection_source": "carryover_cache",
       "paper_id": "2603.08224v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.13994v1",
-      "title": "Human-like Object Grouping in Self-supervised Vision Transformers",
-      "abstract": "Vision foundation models trained with self-supervised objectives achieve strong performance across diverse tasks and exhibit emergent object segmentation properties. However, their alignment with human object perception remains poorly understood. Here, we introduce a behavioral benchmark in which participants make same/different object judgments for dot pairs on naturalistic scenes, scaling up a classical psychophysics paradigm to over 1000 trials. We test a diverse set of vision models using a simple readout from their representations to predict subjects' reaction times. We observe a steady improvement across model generations, with both architecture and training objective contributing to alignment, and transformer-based models trained with the DINO self-supervised objective showing the strongest performance. To investigate the source of this improvement, we propose a novel metric to quantify the object-centric component of representations by measuring patch similarity within and between objects. Across models, stronger object-centric structure predicts human segmentation behavior more accurately. We further show that matching the Gram matrix of supervised transformer models, capturing similarity structure across image patches, with that of a self-supervised model through distillation improves their alignment with human behavior, converging with the prior finding that Gram anchoring improves DINOv3's feature quality. Together, these results demonstrate that self-supervised vision models capture object structure in a behaviorally human-like manner, and that Gram matrix structure plays a role in driving perceptual alignment.",
-      "authors": [
-        "Hossein Adeli",
-        "Seoyoung Ahn",
-        "Andrew Luo",
-        "Mengmi Zhang",
-        "Nikolaus Kriegeskorte",
-        "Gregory Zelinsky"
-      ],
-      "primary_category": "cs.CV",
-      "categories": [
-        "cs.CV",
-        "cs.AI",
-        "q-bio.NC"
-      ],
-      "published": "2026-03-14T15:43:10+00:00",
-      "link": "https://arxiv.org/pdf/2603.13994v1",
-      "tags": [
-        "keyword:对比学习进展",
-        "query:对比学习进展"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "self-supervised vision transformers with DINO objective for visual pretraining",
-      "llm_evidence_cn": "自监督视觉Transformer，使用DINO目标进行视觉预训练",
-      "llm_evidence": "自监督视觉Transformer，使用DINO目标进行视觉预训练",
-      "canonical_evidence": "自监督视觉Transformer，使用DINO目标进行视觉预训练",
-      "llm_tldr_en": "Evaluates self-supervised vision transformers against human perception benchmarks, showing DINO-trained models align increasingly with human object grouping.",
-      "llm_tldr_cn": "评估自监督视觉Transformer与人类感知基准的对齐，显示DINO训练模型与人类物体分组越来越一致。",
-      "llm_tldr": "评估自监督视觉Transformer与人类感知基准的对齐，显示DINO训练模型与人类物体分组越来越一致。",
-      "llm_tags": [
-        "query:q7"
-      ],
-      "matched_query_tag": "query:q7",
-      "matched_query_text": "latest breakthrough methods in self supervised visual pretraining",
-      "matched_requirement_id": "req-7",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.13994v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.17248v1",
-      "title": "Pathology-Aware Multi-View Contrastive Learning for Patient-Independent ECG Reconstruction",
-      "abstract": "Reconstructing a 12-lead electrocardiogram (ECG) from a reduced lead set is an ill-posed inverse problem due to anatomical variability. Standard deep learning methods often ignore underlying cardiac pathology losing vital morphology in precordial leads. We propose Pathology-Aware Multi-View Contrastive Learning, a framework that regularizes the latent space through a pathological manifold. Our architecture integrates high-fidelity time-domain waveforms with pathology-aware embeddings learned via supervised contrastive alignment. By maximizing mutual information between latent representations and clinical labels, the framework learns to filter anatomical \"nuisance\" variables. On the PTB-XL dataset, our method achieves approx. 76\\% reduction in RMSE compared to state-of-the-art model in patient-independent setting. Cross-dataset evaluation on the PTB Diagnostic Database confirms superior generalization, bridging the gap between hardware portability and diagnostic-grade reconstruction.",
-      "authors": [
-        "Youssef Youssef",
-        "Jitin Singla"
-      ],
-      "primary_category": "cs.LG",
-      "categories": [
-        "cs.LG",
-        "cs.AI"
-      ],
-      "published": "2026-03-18T01:06:30+00:00",
-      "link": "https://arxiv.org/pdf/2603.17248v1",
-      "tags": [
-        "keyword:对比学习进展",
-        "query:对比学习进展"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "applies multi-view contrastive learning to ECG reconstruction beyond computer vision, with pathology-aware supervised contrastive alignment",
-      "llm_evidence_cn": "将多视角对比学习应用于计算机视觉之外的ECG重建，采用病理感知的监督对比对齐",
-      "llm_evidence": "将多视角对比学习应用于计算机视觉之外的ECG重建，采用病理感知的监督对比对齐",
-      "canonical_evidence": "将多视角对比学习应用于计算机视觉之外的ECG重建，采用病理感知的监督对比对齐",
-      "llm_tldr_en": "Pathology-aware contrastive learning reconstructs ECG signals using multi-view alignment beyond vision.",
-      "llm_tldr_cn": "病理感知对比学习利用多视角对齐重建心电信号，超越视觉领域。",
-      "llm_tldr": "病理感知对比学习利用多视角对齐重建心电信号，超越视觉领域。",
-      "llm_tags": [
-        "query:q8"
-      ],
-      "matched_query_tag": "query:q8",
-      "matched_query_text": "contrastive learning applications beyond computer vision",
-      "matched_requirement_id": "req-8",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.17248v1",
-      "carry_days": 1
+      "carry_days": 2
     }
   ]
 }
