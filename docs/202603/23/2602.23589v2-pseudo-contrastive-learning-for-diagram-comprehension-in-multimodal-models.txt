@@ -1,0 +1,399 @@
+Title: Pseudo Contrastive Learning for Diagram Comprehension in Multimodal Models
+
+URL Source: https://arxiv.org/pdf/2602.23589v2
+
+Published Time: Tue, 03 Mar 2026 03:35:19 GMT
+
+Number of Pages: 9
+
+Markdown Content:
+## Pseudo Contrastive Learning for Diagram Comprehension in Multimodal Models 
+
+Hiroshi Sasaki The Japan Research Institute, Limited 
+
+sasaki.hiroshi@jri.co.jp 
+
+Abstract 
+
+Recent multimodal models such as Contrastive Language-Image Pre-training (CLIP) have shown remarkable ability to align visual and linguistic representations. However, do-mains where small visual differences carry large semantic significance, such as diagram understanding, remain chal-lenging due to the models’ limited sensitivity to fine-grained structural variations. We propose a new training paradigm designed to en-hance diagram comprehension in vision-language models. Our approach introduces pseudo contrastive samples gen-erated by a diagram renderer that creates synthetic dia-grams using randomly picked text elements. These samples highlight structural differences in diagrammatic imagery without requiring any modification or editing of the original data. By incorporating these pseudo contrastive samples into the training objective, the model learns to capture more precise and semantically consistent diagram structures. Empirical evaluations on a benchmark dataset of flowcharts demonstrate substantial improvements over standard CLIP and hard-negative CLIP training in both image-text matching and visual question answering tasks. The results underscore the value of domain-specific training strategies and contribute to advancing diagrammatic un-derstanding within the broader context of vision-language learning. 
+
+1. Introduction 
+
+Vision-Language Models (VLMs), such as CLIP (Con-trastive Language-Image Pre-training) [16], have emerged as powerful tools, integrating visual and linguistic informa-tion to achieve remarkable capabilities in image understand-ing. These models have demonstrated superior performance across diverse tasks, ranging from image captioning and vi-sual question answering (VQA) to zero-shot recognition, by effectively bridging the modalities of visual perception and language. Their ability to link visual and textual inputs has Start Gather Materials Prepare Hair Hair Parted Normally? Tie Hair into a Ponytail Part Hair Normally Check Ponytail Position 
+
+Diagram Images (raster format) 
+
+> "Gather Materials", "Hair Parted Normally?", "Start", "Part Hair Normally", "Prepare Hair", "Tie Hair into Ponytail", "Check Ponytail Position" :
+
+Extracted Text Pseudo Diagrams (editable format) OCR Random Reconstruction 
+
+> Prepare Hair Tie Hair into Ponytail Check Ponytail Position Prepare Hair Tie Hair into Ponytail Check Ponytail Position Prepare Hair Tie Hair into Ponytail Check Ponytail Position
+
+Hard Positive / Negative Samples Contrastive Learning with Pseudo Hard Samples Diagram Editing 
+
+Figure 1. Conceptual overview of our proposed method. Text is extracted from a raster image via OCR to generate pseudo dia-grams with random connections. These are rendered into an ed-itable format, from which hard positive and negative pairs are cre-ated through rule-based edits. The resulting samples are used to train a VLM with structure-aware contrastive learning, enhancing its ability to distinguish fine-grained structural differences. 
+
+advanced artificial intelligence applications. Meanwhile, diagrams, exemplified by flowcharts, serve as indispensable visual representations for conveying com-plex concepts and intricate procedures that are challenging to express concisely through natural language alone. These visual artifacts are widely employed across various do-mains, including engineering, software development, busi-ness process modelling, and education, due to their clarity and efficacy in illustrating relationships, sequences, and de-cision points. The inherent value of diagrams underscores the significance of enabling VLMs to comprehend their de-tailed content. 1
+
+> arXiv:2602.23589v2 [cs.CV] 2 Mar 2026
+
+However, despite the general advancements in VLM ca-pabilities, conventional models exhibit a critical shortcom-ing when it comes to understanding the fine-grained struc-tural information present in diagram images. Structural el-ements, such as the directional arrows indicating process flow, lines representing connections, or symbols denoting branching conditions between nodes, carry immense se-mantic weight. Current VLMs often struggle to accurately capture these subtle yet crucial details [24]. This deficiency is particularly problematic because even minor variations in a diagram’s structural information can fundamentally alter its meaning. For instance, a single mis-placed arrow, a swapped connection, or a slightly modi-fied branching condition can completely change the inter-pretation of a process or system. The inability of VLMs to reliably discern these minute structural differences signifi-cantly hinders their utility in applications requiring precise diagrammatic understanding. One straightforward approach to improving VLM per-formance on diagram understanding is to finetune the mod-els on datasets of diagram images. However, this approach faces several challenges. Firstly, conventional contrastive learning techniques, commonly used for VLM finetuning, are often inadequate for distinguishing the subtle struc-tural variations inherent in diagrams. These methods typ-ically focus on learning broader semantic similarities and differences, failing to provide the granular distinction nec-essary for accurate diagrammatic interpretation. Secondly, many current VLMs do not support input with sufficient im-age resolution to comprehend the fine details of diagrams, which leads to the loss of this information through processes like image downscaling at the time of input. The concept of hard negative sampling [15] has shown promise in improving contrastive learning by enabling mod-els to learn finer distinctions between general images. Nev-ertheless, even with hard negative sampling, accurately identifying the precise structural information within dia-gram images remains a challenge. Furthermore, current hard negative sampling methods often rely on generative models for synthesising negative samples. These genera-tive models typically struggle with the degree of precise control required to create subtle yet meaningful structural variations within diagrams that effectively highlight crucial differences. Rule-based image editing has also been explored for gen-erating hard negative samples and smaller sub-images that retain their resolution, demonstrating effectiveness in em-phasising fine structural differences in diagrams for con-trastive learning [17]. However, this method, too, suffers from a significant constraint that necessitates the availabil-ity of component-editable image source files (e.g., vector graphics, hereafter referred to as “editable data”) to perform the required image manipulations, thus limiting its applica-bility to real-world scenarios where such editable data are not available. To overcome these limitations, we propose a novel con-trastive learning framework that enhances the sensitivity of VLMs to fine-grained structural differences within dia-gram imagery without requiring editable data in its training dataset. Our method specifically addresses the challenge of VLMs acquiring of fine-grained structural awareness in di-agrammatic information. Our proposed technique involves, first, performing Opti-cal Character Recognition (OCR) on a target diagram image to extract all textual labels associated with nodes and other elements. Subsequently, we generate synthetic pseudo dia-gram images by randomly constructing nodes and edges us-ing a randomly selected subset of these extracted text labels. These pseudo diagrams are created alongside their corre-sponding editable data. This process allows us to create a diverse pool of structurally varied, albeit semantically non-sensical, diagrams. We then apply rule-based hard positive and negative sampling to these pseudo diagrams for con-trastive learning. These randomly constructed diagrams, al-though semantically incoherent, retain sufficient structural variability to serve as effective hard positives and negatives. We evaluated the model finetuned with our proposed methodology on flowchart images, a representative type of diagram. Our results demonstrate significant performance improvements in both text-image matching tasks and Vi-sual Question Answering (VQA) tasks, regardless of the ab-sence of semantically plausible training data, confirming the effectiveness of our approach in enhancing the VLM’s abil-ity to comprehend the intricate structural information within diagram images. The key contributions of this work are: • We propose a novel method to generate hard positive and hard negative pairs for contrastive learning on diagrams, using only raster images without the need for editable for-mats (e.g., vector graphics) or pre-existing captions. • Our method enables the creation of a finetuning dataset that emphasises subtle structural differences in diagrams while maintaining image sizes suitable for VLM inputs. • We demonstrate through experiments on image-text matching and VQA tasks that finetuning with our method significantly improves a CLIP model’s diagram under-standing capabilities, even without access to editable data. 
+
+2. Related Work 
+
+This section reviews relevant literature in Vision-Language Models, diagram understanding, and contrastive learning, highlighting the context and motivation for our proposed approach. 
+
+Vision-Language Models Vision-Language Models (VLMs) are desined to bridge the semantic gap between 2visual and textual modalities. Pioneering works like CLIP [16] and ALIGN [5] demonstrated the power of large-scale pre-training on image-text pairs, achieving im-pressive zero-shot generalisation capabilities across various tasks such as image classification, retrieval, and caption-ing. Subsequent models, including BLIP (Bootstrapping Language-Image Pretraining) [7] and Flamingo [1], further enhanced multimodal understanding by incorporating more sophisticated architectures and training strategies, leading to improved performance in tasks like visual question answering (VQA) and multimodal dialogue. These models excel at tasks involving natural images and general visual concepts, demonstrating robust performance in matching images to descriptive text or answering questions about common visual scenes. However, while these general-purpose VLMs exhibit strong performance on natural images, their inherent architecture and training data typi-cally do not equip them with the specialised understanding required for highly structured visual information, such as diagrams. 
+
+Diagram specific vision models Whilst the consider-able success of general-purpose VLMs like CLIP is well-demonstrated, their limitations in specialised contexts such as diagram interpretation have spurred the development of more tailored solutions. One significant strand of research centres on finetuning pretrained models using diagram-specific datasets [11, 25]. For instance, UniChart [11] adapts the Donut architecture [6] for chart comprehension, finetuning it on a dataset of chart images. MAVIS [25] in-troduces a mathmatical visual instruction tuning framework which leverages a custom vision encoder called CLIP-Math, which is a CLIP model finetuned on mathematical diagrams to facilitate visual problem solving. Another strategy is diagram-specific preprocessing, such as the “granulation” method proposed in [17]. This technique manipulates ele-ments in vectorised images to subdivide large diagrams into smaller parts, enabling them to be input into VLMs without a loss of resolution. These works suggest that task-specific data preparation strategies are crucial for enhancing the di-agram understanding capabilities of VLMs. 
+
+Contrastive Learning and Hard Negative Sampling 
+
+Contrastive learning has emerged as a highly effective paradigm for learning powerful representations by encour-aging similar data points to be closer and dissimilar ones further apart in an embedding space. This approach has been central to the success of self-supervised learning meth-ods in computer vision, including SimCLR [2], MoCo [3], and the aforementioned VLMs like CLIP. A critical compo-nent in the effectiveness of contrastive learning is the se-lection of negative samples. The quality and ”hardness” of negative samples directly impact the model’s ability to learn discriminative features. Hard negative mining strate-gies, which prioritise negative samples that are close to the anchor in the embedding space, have been shown to signifi-cantly boost performance by forcing the model to learn finer distinctions. Triplet loss and its variants, such as Triplet-CLIP [15], explicitly leverage hard negative samples by constructing triplets of anchor, positive, and hard negative examples. Whilst these methods have demonstrated suc-cess in improving fine-grained discrimination for natural images, applying them effectively to diagram understand-ing presents unique challenges. Generating hard negative samples for diagrams that accurately reflect subtle struc-tural differences, rather than just semantic content, is com-plex. Current generative models often struggle to maintain the precise structural integrity and semantic consistency re-quired for creating meaningful hard negatives in this do-main. Moreover, rule-based hard negative generation [17], while precise, frequently requires access to editable data, circumventing the core problem of raster-image-only under-standing. The reviewed literature highlights that existing methods are inadequate in robustly interpreting the subtle structural information within diagram imagery, especially when only raster image data is available. Our work addresses this critical limitation by proposing a novel contrastive learning framework that specifically targets the nuances of diagram-matic structure. 
+
+3. Method 
+
+Our approach comprises three steps: editable pseudo dia-gram synthesis, rule-based hard contrastive data generation and structure-aware contrastive learning. The first step re-generates pseudo diagram images and captions in editable format from original (uneditable format) diagram images (detailed in Sec. 3.1). In the subsequent step, a set of rule-based diagrammatic editing operations is applied to the ed-itable pseudo diagram data to generate hard positive and negative samples (detailed in Sec. 3.2). Lastly, model train-ing is conducted via contrastive learning that attends the diagrammatic structual difference between the pseudo di-agrams and their hard samples, as outlined in Sec. 3.3. A visual summary of the process is provided in Fig. 1. 
+
+3.1. Editable pseudo diagram synthesis 
+
+The pseudo diagram synthesis process is illustrated in Fig. 2. Let R = {ri}N R 
+
+> i=1
+
+denote the set of origi-nal diagram images in raster-format. The process in-volves regenerating diagrams D = {di,j }i=1: N R,j =1: N d =
+
+{(vi,j , t i,j , c i,j )}i=1: N R,j =1: N d , where vi,j is the diagram image in an editable format such as vector graphics and 
+
+ti,j , c i,j are the corresponding description and diagram def-inition codes (e.g., Mermaid code [12], referred to as “dia-gram codes” or simply “codes”), by the steps in ?? –2. 3"Part Hair Normally" "Tie Hair into Ponytail" "Check Ponytail Position" "Part Hair Normally" "Tie Hair into Ponytail" "Check Ponytail Position" "Prepare Hair" "Hair Parted Normally?" "Part Hair Normally" "Prepare Hair" "Hair Parted Normally?" "Part Hair Normally" 
+
+> Start Gather Materials Prepare Hair Hair Parted Normally? Tie Hair into a Ponytail Part Hair Normally Check Ponytail Position
+
+Diagram Images (raster format) 
+
+"Gather Materials", (734, 607) "Hair Parted Normally?", (683, 2027) "Start", (757, 138) "Part Hair Normally", (1030, 3080) "Prepare Hair", (795, 1082) "Tie Hair into Ponytail", (665, 3548) "Check Ponytail Position", (733, 4017) :
+
+Extracted Text OCR 
+
+"Prepare Hair" "Hair Parted Normally?" "Part Hair Normally" "Part Hair Normally" "Tie Hair into Ponytail" "Check Ponytail Position" "Prepare Hair" "Hair Parted Normally?" "Part Hair Normally" "Part Hair Normally" "Tie Hair into Ponytail" "Check Ponytail Position" 
+
+Neighbour Text Combinations Random Connected Nodes 
+
+> Part Hair Normally Check Ponytail Position Tie Hair into Ponytail Part Hair Normally Check Ponytail Position Tie Hair into Ponytail Part Hair Normally Check Ponytail Position Tie Hair into Ponytail
+
+Pseudo Diagrams (editable format) 
+
+... ... ... ... 
+
+> Yes
+> No Prepare Hair Hair Parted Normally? Part Hair Normally
+> Yes
+> No Prepare Hair Hair Parted Normally? Part Hair Normally
+> flowchart TD A["Prepare Hair"] --> B{"Hair Parted Normally?"} B -->|"Yes"| A B -->|"No"| C["Part Hair Normally"] C --> B
+> Yes
+> No Prepare Hair Hair Parted Normally? Part Hair Normally
+> The step 'Prepare Hair' occurs the next step 'Hair Parted Normally?' The descision point 'Hair Parted Normally?' proceeds to 'Prepare Hair' if the decision is 'Yes'. The descision point 'Hair Parted Normally?' proceeds to 'Part Hair Normally' if the decision is 'No'..
+
+... flowchart TD A[/"Part Hair Normally"/] --> C["Check Ponytail Position"] B["Tie Hair into Ponytail"] --> A C --> A The step 'Part Hair Normally' occurs the next step 'Check Ponytail Position'. The step 'Tie Hair into Ponytail' occurs the next step 'Part Hair Normally'. The step 'Check Ponytail Position' occurs the next step 'Part Hair Normally'. Figure 2. The editable pseudo diagram synthesis flow. OCR-extracted text is grouped by its proximity into combinations to form nodes. After adding random edge connections, this structure is finalised as definition code. This code is then used by a renderer to create both an editable image and a corresponding rule-based caption. 
+
+3.2. Rule-based hard contrastive data generation 
+
+A set of the image editing operations is applied to the pseudo diagram data obtained by the steps in Sec. 3.1, as proposed in [17] but we modify the rules which outlined below: 
+
+Rule for Hard Positive Images 
+
+Apply a combination of the following editions: • Randomly reverse the flow direction from top-down to bottom-up (since all original diagrams are defined with a top-down flow). • Randomly move the positions of selected nodes. 
+
+Rule for Hard Negative Images 
+
+Apply a combination of the following perturbations: • Reverse the direction of randomly selected arrows. • Remove a subset of arrows at random. 
+
+Algorithm 1 Editable pseudo diagram synthesis 
+
+Input ri: Raster-format diagram image 
+
+N n: Node size, N s: Sampling size 
+
+Output di,j : Editable-format pseudo diagram data, 
+
+1: //Extract text 
+
+2: // OCR (·): OCR operation 
+
+3: // {uik }N oi
+
+k=1 = {tik , (x, y )ik }N oi
+
+k=1 : Extracted text and positions 
+
+4: for i ← 1 to N R do 
+
+5: {uik }N oi
+
+k=1 ← OCR (ri);
+
+6: end for 
+
+7: //Select N s nearest neighbour text combinations as nodes 
+
+8: // Dist (c): Sum of the distances of text combinations c
+
+9: for i ← 1 to N R do 
+
+10: Ci ← {{ uik1 , u ik2 , · · · , u ikN n }| uikm ∈ { uik }N oi
+
+k=1 };
+
+11: ˆCi ← argmin (N s)
+
+ci∈Ci Dist (ci);
+
+12: end for 
+
+13: //Random connection 
+
+14: // RC (c): All combinations of 
+
+15: // randomly connected directed links among nodes c
+
+16: for i ← 1 to N R do 
+
+17: Init : Gi ← Φ;
+
+18: for c in ˆCi do 
+
+19: for e in RC (c) do 
+
+20: Gi ← Gi ∪ (c, e );
+
+21: end for 
+
+22: end for 
+
+23: end for 
+
+24: //Generate diagrams 
+
+25: // Code (g): Code generate function 
+
+26: // Desc (g): Description generate function (Alg. 2) 
+
+27: // VG (c): Vector-formatted diagram image renderer 
+
+28: for i ← 1 to N R do 
+
+29: Init : j ← 1;
+
+30: for g in Gi do 
+
+31: di,j ← (VG (Code (g)) , Desc (g), Code (g)) ;
+
+32: j ← j + 1 ;
+
+33: end for 
+
+34: end for 
+
+• Apply “Rule for Hard Positive Image” after the above operations. 
+
+Rule for Hard Positive Captions (same as [17]) 
+
+The code of the diagram. 
+
+Rule for Hard Negative Captions (same as [17]) 
+
+Apply a combination of the following semantic distor-tions: • Randomly swap the labels of selected nodes in the natural language description. • Randomly swap the labels of nodes within the codes. As shown in Fig. 3, hard positive and negative samples are generated by applying these editing rules. 4Algorithm 2 Diagram description generate function 
+
+Input g = ( c, e ): Diagram nodes ( c = {ci}) and connections ( e = {(ifrom 
+
+j , i to 
+
+j )})
+
+Output t = {tj }: Diagram description, 
+
+1: for i ← 1 to N c do 
+
+2: Init : cdi ← “Yes”; 
+
+3: end for 
+
+4: for j ← 1 to N e do 
+
+5: tj ← “From cifrom  
+
+> j
+
+: ”; 
+
+6: if cifrom  
+
+> j
+
+is question. then 
+
+7: tj ← tj + “If **” +cdi + “**, proceed to ”; 
+
+8: if cdi is “Yes” then 
+
+9: cdi ← “No”; 
+
+10: else 
+
+11: cdi ← “”; 
+
+12: end if 
+
+13: else 
+
+14: tj ← tj + “Proceed to ”; 
+
+15: end if 
+
+16: tj ← tj + cito  
+
+> j
+
+;
+
+17: end for 
+
+3.3. Structure-aware contrastive learning 
+
+The diagram data and their hard positive / negative sam-ples prepared in Sec. 3.1 and Sec. 3.2 are used for con-trastive learning specialised to diagrammatic imagery. We use structure-aware contrastive learning [17], which has been reported its performance strength in a diagram image domain. The objective is defined as: 
+
+L = LCL + λSC LSC + λDO LDO , (1) where LCL , LSC and LDO are the InfoNCE loss [21], structure-aware contrastive (SC) loss and distinct factor or-thgonal (DO) loss, respectively. λSC and λDO are hyper-parameters controlling the relative contributions of the SC and DO losses. We omit the DO loss ( λDO = 0 ) for model training in this paper since no significant differences in the performance are reported in [17]. The InfoNCE loss is defined as: 
+
+LCL = 12 Evi,t i
+
+
+
+− log exp( sim (Fv (vi), F t(ti))) 
+
+Evi,t j̸ =i [⟨Fv (vi), F t(tj )⟩]
+
+− log exp ⟨Fv (vi), F t(ti)⟩
+
+Evj̸ =i,t i [⟨Fv (vj ), F t(ti)⟩]
+
+
+
+, (2) where sim (·, ·) denotes the similarity function, originally defined as cosine similarity, vi, ti, Fv and Ft represent the training image data, their captions, the vision and text en-coder, respectively. For clarity, feature normalization and the temperature parameter are omitted in the equations in this paper. We adopt an absolute value of the cosine simi-larity for the similarity function, since we find this modifi-cation contributes the stability of the model training of our Part Hair Normally Tie Hair into Ponytail Check Ponytail Position Part Hair Normally Tie Hair into Ponytail Check Ponytail Position Part Hair Normally Tie Hair into Ponytail Check Ponytail Position Part Hair Normally Tie Hair into Ponytail Check Ponytail Position Part Hair Normally Tie Hair into Ponytail Check Ponytail Position Part Hair Normally Tie Hair into Ponytail Check Ponytail Position Part Hair Normally Tie Hair into Ponytail Check Ponytail Position 
+
+The step 'Part Hair Normally' occurs the next step 'Tie Hair into Ponytail'. The step 'Tie Hair into Ponytail' occurs the next step 'Check Ponytail Position'. The step 'Check Ponytail Position' occurs the next step 'Tie Hair into Ponytail'. flowchart TD A[/"Part Hair Normally"/] --> B["Tie Hair into Ponytail"] B --> C["Check Ponytail Position"] C --> B 
+
+Pseudo Diagram Image 
+
+Hard Positive Images 
+
+To bottom-to-top Move nodes 
+
+Hard Negative Images 
+
+Pseudo Diagram Caption 
+
+Hard Positive Caption 
+
+flowchart TD A[/"Part Hair Normally"/] --> B["Tie Hair into Ponytail"] B --> C["Check Ponytail Position"] C --> B The step 'Tie Hair into Ponytail' occurs the next step 'Part Hair Normally'. The step 'Part Hair Normally' occurs the next step 'Check Ponytail Position'. The step 'Check Ponytail Position' occurs the next step 'Part Hair Normally'. The step 'Part Hair Normally' occurs the next step 'Check Ponytail Position'. The step 'Check Ponytail Position' occurs the next step 'Tie Hair into Ponytail'. The step 'Tie Hair into Ponytail' occurs the next step 'Check Ponytail Position'. 
+
+Hard Negative Captions 
+
+To bottom-to-top Move nodes Reverse arrows Remove arrows Exchange nodes Code 
+
+Figure 3. The synthesis of hard positive and negative samples. Hard positive images are generated via minor visual edits, such as altering node positions or flow orientation. Hard negatives are created by permuting nodes and edges. The original diagram code serves as the hard positive caption, while hard negative captions are generated by swapping labels within the code to create a struc-tural mismatch. 
+
+method, as: 
+
+sim (Fv (vi), F t(ti)) = |⟨ Fv (vi), F t(ti)⟩| . (3) The SC loss is calculated using the positive similarity 
+
+Sp(vi, t i) and negative similarity Sn(vi, t i) between sam-5ples, which are defined as follows: 
+
+Sp(vi, t i) = 
+
+Evp∼V p(vi),t p∼T p(ti)[exp( sim (Fv (vi), F v (vp)))+ exp( sim (Ft(ti), F t(tp))) + exp( sim (Fv (vi), F t(tp)))+ exp( sim (Ft(ti), F v (vp)))] , (4) 
+
+Sn(vi, t i) = 
+
+Evn∼V n(vi),t n∼T n(ti)[exp( sim (Fv (vi), F v (vn)))+ exp( sim (Ft(ti), F t(tn))) + exp( sim (Fv (vi), F t(tn)))+ exp( sim (Ft(ti), F v (vn)))] , (5) where V p(·), T p(·), V n(·), V n(·) are the generate functions for hard positive images, hard positive captions, hard neg-ative images, and hard negative captions, respectively. The SC loss is then formulated as: 
+
+LSC = Evi,t i
+
+
+
+− log Sp(vi, t i)
+
+Sp(vi, t i) + Sn(vi, t i)
+
+
+
+. (6) This loss encourages the model to minimise the distance between the original and hard positive samples, while max-imising the distance between the original and hard negative samples. 
+
+4. Evaluation 
+
+We evaluate the proposed method in Sec. 3 on flowcharts, a representative example of diagrams. 
+
+4.1. Baselines 
+
+The evaluation compares our method against the following cases: 
+
+w/o FT (zero-shot baseline) The publicly available CLIP ViT-L/14@336px model [14] without any task-specific finetuning. 
+
+CROP Finetuned the CLIP ViT-L/14@336px model with the image cropping operation applied to the input of the model. 
+
+GRAN Finetuned the CLIP ViT-L/14@336px model with the granulated and hard samples generated in the di-agrammatic editing method [17], assuming the easy case that editable data of flowchart images are avail-able. The objective functions for the model optimisa-tion are varied by using either the CLIP loss Eq. (2) (CLIP) or the SC loss Eq. (6) (SaCLIP). 
+
+PSEUDO (ours) Finetuned the CLIP ViT-L/14@336px model with the reconstructed data with hard samples via our method (see Sec. 3), which generates editable format of diagrammatic data with hard samples, as-suming the case that only raster format of flowchart images are available. The objective functions for the model optimisation are varied by using either the CLIP loss Eq. (2) (CLIP) or the SC loss Eq. (6) (SaCLIP). 
+
+4.2. Dataset Preparation 
+
+For the experiments, we utilise the publicly available FlowVQA dataset [18], which includes a set of flowchart images, corresponding textual descriptions, Mermaid code representations, and QA pairs. We use mermaid-cli [13] as a diagram image renderer throughout this work. 
+
+Training data For the case of CROP , each disgram im-age is randomly cropped to the input size of the CLIP model 59 times, which is to make the total number of instances comparable to that of the GRAN case, resulting the number is 38,765. The cropped images are stored as PNG [22] files. The caption for each cropped image is defined by concate-nating the words extracted by Tesseract OCR [19, 20]. For the case of GRAN , the Mermaid codes are parsed and transformed according to the granulation procedure in [17]. This process involves extracting all combinations of adjacent triplets of nodes from each diagram code to regen-erate simplified versions of the original codes. The image captions are generated from the definition of the nodes and connections in the Mermaid codes via Algorithm 2. The total number of the granulated instances is 37,662. The re-sulting flowchart images are rendered as SVG [23] files to be edit for hard positive and negative sample synthesis. For the case of PSEUDO , only images in the flowchart dataset are used to constract the training data. The re-constructed (editable) data is generated by the process in Sec. 3.1. The node size N n is set to 3, as the same as the granulation process. We also use Tesseract OCR for the text extraction in the process. The total number of the re-constructed pseudo diagrams is controlled by random sam-pling to match the size of the GRAN case. The flowchart images are rendered in the same manner as the GRAN case. 
+
+Test data The test data is prepared by applying the gran-ulation process to the test set of the FlowVQA dataset as in [17]. 
+
+Hard sample synthesis We employ the hard sample syn-thesis method from [17]. In accordance with Sec. 3.2, ren-dered SVG images and Mermaid codes are used to create hard positive and negative pairs, consisting of both images and captions. During training, this process is applied on-the-fly to each batch, fostering robustness by ensuring con-stant exposure to challenging examples. In contrast, for evaluation, we pre-generate a static set of hard negatives for every test set sample. This fixed set, which includes six captions and eight images, guarantees that all models are compared under identical conditions, ensuring fair and re-producible results. 6Table 1. Evaluation results for the image-text matching task, reporting Recall@1 (R@1), Recall@5 (R@5), Recall@10 (R@10), and Mean Reciprocal Rank (MRR) across different data preparation and finetuning strategies. 
+
+Query: images, Retrieve: captions Query: captions, Retrieve: images R@1 R@5 R@10 MRR R@1 R@5 R@10 MRR w/o FT [14] 0.65726 0.88790 0.92231 0.75842 0.66586 0.89812 0.93575 0.76584 CROP - CLIP [16] 0.48118 0.70161 0.77419 0.57887 0.48118 0.65081 0.70726 0.55689 GRAN [17] - CLIP [16] 0.76694 0.92850 0.94758 0.84036 0.77930 0.93925 0.94893 0.85005 GRAN [17] - SaCLIP [17] 0.76882 0.92796 0.94785 0.84148 0.77903 0.93253 0.94570 0.84869 PSEUDO (ours) - CLIP [16] 0.76667 0.93952 0.95645 0.84315 0.78253 0.93790 0.95591 0.85319 PSEUDO (ours) - SaCLIP [17] 0.77097 0.93952 0.95914 0.84542 0.78763 0.93871 0.95484 0.85532 
+
+> Table 2. Evaluation results for the image-text matching task in the presence of hard negative samples, reported using Recall@1 (R@1), Recall@3 (R@3), and Mean Reciprocal Rank (MRR) across different data preparation and finetuning strategies.
+
+Query: images, Retrieve: captions Query: captions, Retrieve: images R@1 R@5 MRR R@1 R@5 MRR w/o FT [14] 0.16613 0.16613 0.16613 0.60538 0.82419 0.71632 CROP - CLIP [16] 0.20887 0.20887 0.20887 0.49140 0.75403 0.62629 GRAN [17] - CLIP [16] 0.46667 0.46667 0.46667 0.61640 0.82634 0.72529 GRAN [17] - SaCLIP [17] 0.47527 0.47527 0.47527 0.89973 0.98602 0.94133 
+
+PSEUDO (ours) - CLIP [16] 0.35269 0.35269 0.35269 0.50511 0.76022 0.63644 PSEUDO (ours) - SaCLIP [17] 0.38817 0.38817 0.38817 0.70484 0.87204 0.79069 
+
+4.3. CLIP Training 
+
+The finetuning process in Sec. 4.1 is conducted using the dataset introduced in Sec. 4.2. We employ the LoRA method [4], applying it to all linear layers with the param-eters set to α = 16 and r = 8 . All images are converted to a raster format prior to being input into the model. The training is carried out for 3 epochs with a learning rate of 0.0004, following a warmup period of 8 steps. A batch size of 32 is used with 4 gradient accumulation steps, creating an effective batch size of 128. For our proposed method, the hyperparameter λSC was fixed at 0.1, in line with the value used in [17]. 
+
+4.4. Image-text Matching Task Evaluation 
+
+The setup for the image-text matching task follows [17]. All images and captions from the test set described in Sec. 4.2 are encoded into feature representations using the respective encoders of the models finetuned as in Sec. 4.1. For each image, the top 10 most similar captions are retrieved, and vice versa, based on cosine similarity. To evaluate image-text matching accuracy, we compute Recall@1 (R@1), Re-call@5 (R@5), Recall@10 (R@10), and Mean Reciprocal Rank (MRR) over the retrieved sets. The results are pre-sented in Tab. 1. Our proposed method achieves notable improvements except for R@5 for image retrieval. Note that our method does not need editable data unlike other diagram-specific finetuning methods. To further assess robustness, we conduct the same ex-periment under more challenging conditions involving hard negatives. Specifically, for each image, the top 3 most simi-lar captions are retrieved from a candidate set comprising the correct caption and hard negatives; the same process is applied for each caption. We report R@1, R@3, and MRR in Tab. 2. The results show the degradation in perfor-mance for our method compared to a conventional diagram-specific contrastive learning framework that requires ed-itable data; however, they also show that our method out-performs all of other cases in which editable data is not available in this harder setting. 
+
+4.5. VQA Task Evaluation 
+
+To assess the downstream impact of our work, we evalu-ate our finetuned CLIP model within a VQA setting, in line with the approach taken by [17]. The experiment involves integrating our model as a vision encoder into a CLIP-based large language model (LLM). We selected LLaVA-v1.6-Mistral-7B [8] for this task, as this widely used LLaVA [10] variant features a CLIP ViT-L/14@336px encoder, which shares the same architecture as our model and thus provides a suitable test environment. This evaluation uses the original FlowVQA dataset, de-parting from the granulated versions used previously. The LLM’s ability to process higher-resolution inputs through a split-and-merge technique [9] makes this feasible. The core 7Table 3. A comparison of the BERTScore [26] performance across different LLaVA [10] models with their vision encoders swapped. 
+
+Vision Encoder Precision Recall F1 w/o FT 0.483461 0.425924 0.494744 CROP - CLIP [16] 0.713844 0.543008 0.618101 GRAN [17] - CLIP [16] 0.532666 0.467946 0.507943 GRAN [17] - SaCLIP [17] 0.620144 0.601086 0.634233 PSEUDO - CLIP (ours) 0.558813 0.488994 0.536966 PSEUDO - SaCLIP (ours) 0.660028 0.612537 0.647963 
+
+of the experiment is a comparison of performance, wherein we replace the LLM’s default vision encoder with each of the model variants described in Sec. 4.1. 
+
+LLaVA Training Following the procedure in [17], we finetuned all modules except for the vision encoders. For this, we employed the LoRA method [4] on all linear lay-ers, configured with α = 32 and r = 16 . The models were trained for 3 epochs using a learning rate of 0.0004 after an 8-step warmup. We used a batch size of 2 and 16 gradient accumulation steps, resulting in an effective batch size of 32. 
+
+VQA Performance The setup for this task follows [17]. We assess model performance on the FlowVQA test set us-ing the average BERTScore [26] to measure the similarity between model-generated answers and the ground truth. As presented in Tab. 3, the findings demonstrate that finetuning the vision encoder substantially enhances performance. Our method, in particular, outperforms the baseline CLIP fine-tuning approaches, achieving higher recall and F1 scores. A key advantage of our technique is that it obviates the need for curated image-caption pairs, instead generating them solely from the raster images. 
+
+4.6. Limitation 
+
+Whilst the experiments presented in this paper demonstrate the effectiveness of our method in improving performance on flowchart image-text matching and VQA tasks, a notable limitation regarding the dataset assumption remains. Our method heavily relies on the assumption of the similar ap-pearance between diagrams in a target domain and the out-put of a diagram renderer. It is not fully applicable when the appearance of diagrams in a target domain is different from a style that the diagram renderer does not support. Further-more, the quality of the pseudo-diagrams is degraded when the type of the target diagram is not supported by the dia-gram renderer. This limites the range of application of our approach. Another limitation is possibly arises from our reliance on OCR; the impact of the quality of the OCR output, which is currently unclear. Further work is required to explore effectiveness of our approach in diverse diagrammatic contexts and impact of OCR quality. 
+
+5. Conclusion 
+
+In this paper, we address a critical limitation of conventional Vision-Language Models (VLMs) about inability to com-prehend the fine-grained structural details within diagram imagery. We identify that existing finetuning approaches are often hampered by an inability to distinguish subtle yet meaningful structural variations, or by a reliance on editable source data, such as vector graphics, which are frequently unavailable. To overcome these challenges, we introduce a novel con-trastive learning framework that enables VLMs to acquire a nuanced understanding of diagrammatic structures using only raster images. Our key innovation is a method for syn-thesising a diverse set of pseudo diagrams and their corre-sponding editable data from a single source image. This allows for the application of rule-based hard negative and hard positive sampling to generate a training dataset that ef-fectively emphasises fine structural differences, without re-quiring any pre-existing editable files or semantically plau-sible training examples. Our experimental evaluation on flowchart-based image-text matching and Visual Question Answering tasks demon-strate that a CLIP model finetuned with our methodology achieves significant performance improvements. These re-sults confirm that our approach successfully enhances the model’s sensitivity to crucial structural information, prov-ing that VLM’s diagrammatic reasoning can be effectively improved even in the absence of manually curated or ed-itable diagram datasets. The proposed framework broadens the applicability of finetuning VLMs for specialised domains where data is limited to non-editable formats. Future work could ex-plore extending this method to a wider variety of dia-gram types and investigating its resilience to OCR in-accuracies. Nevertheless, this work represents a signif-icant step towards developing more practical and robust VLMs capable of deep and accurate diagram comprehen-sion. 8References 
+
+[1] Jean-Baptiste Alayrac, Jeff Donahue, Pauline Luc, Antoine Miech, Iain Barr, Yana Hasson, Karel Lenc, Arthur Mensch, Katherine Millican, Malcolm Reynolds, et al. Flamingo: a visual language model for few-shot learning. In Advances in Neural Information Processing Systems 35 , 2022. 3 [2] Ting Chen, Simon Kornblith, Mohammad Norouzi, and Ge-offrey Hinton. A simple framework for contrastive learning of visual representations. In Intl. Conf. on Machine Learn-ing , 2020. 3 [3] Kaiming He, Haoqi Fan, Yuxin Wu, Saining Xie, and Ross Girshick. Momentum contrast for unsupervised visual repre-sentation learning. In Proc. of the IEEE/CVF Conf. on Com-puter Vision and Pattern Recognition , 2020. 3 [4] Edward J Hu, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang, Weizhu Chen, et al. Lora: Low-rank adaptation of large language models. In Proc. 10th Intl. Conf. on Learning Representations , 2022. 7, 8 [5] Chao Jia, Yinfei Yang, Ye Xia, Yi-Ting Chen, Zarana Parekh, Hieu Pham, Quoc Le, Yun-Hsuan Sung, Zhen Li, and Tom Duerig. Scaling up visual and vision-language representa-tion learning with noisy text supervision. In Intl. Conf. on Machine Learning , 2021. 3 [6] Geewook Kim, Teakgyu Hong, Moonbin Yim, JeongYeon Nam, Jinyoung Park, Jinyeong Yim, Wonseok Hwang, Sang-doo Yun, Dongyoon Han, and Seunghyun Park. Ocr-free document understanding transformer. In European Confer-ence on Computer Vision , 2022. 3 [7] Junnan Li, Dongxu Li, Caiming Xiong, and Steven Hoi. Blip: Bootstrapping language-image pre-training for unified vision-language understanding and generation. In Intl. Conf. on Machine Learning , 2022. 3 [8] Haotian Liu. llava-v1.6-mistral-7b. https : / / huggingface . co / liuhaotian / llava - v1 . 6 -mistral-7b , 2023. 7 [9] Haotian Liu, Chunyuan Li, Yuheng Li, and Yong Jae Lee. Improved baselines with visual instruction tuning. In Proc. of the IEEE/CVF Conf. on Computer Vision and Pattern Recog-nition , 2024. 7 [10] Haotian Liu, Chunyuan Li, Qingyang Wu, and Yong Jae Lee. Visual instruction tuning. In Advances in Neural Information Processing Systems 36 , 2024. 7, 8 [11] Ahmed Masry, Parsa Kavehzadeh, Do Xuan Long, Ena-mul Hoque, and Shafiq Joty. Unichart: A universal vision-language pretrained model for chart comprehension and rea-soning. In Conf. on Empirical Methods in Natural Language Processing , 2023. 3 [12] Mermaid Chart. Mermaid Diagramming and charting tool. 
+
+https://mermaid.js.org . 3 [13] mermaid-js. mermaid-cli. https://github.com/ mermaid-js/mermaid-cli/releases/tag/9.4. 0, 2023. Version 9.4.0. 6 [14] OpenAI. clip-vit-large-patch14-336. https : / / huggingface . co / openai / clip - vit - large -patch14-336 , 2021. 6, 7 [15] Maitreya Patel, Naga Sai Abhiram kusumba, Sheng Cheng, Changhoon Kim, Tejas Gokhale, Chitta Baral, and Yezhou Yang. TripletCLIP: Improving compositional reasoning of CLIP via synthetic vision-language negatives. In Advances in Neural Information Processing Systems 37 , 2024. 2, 3 [16] Alec Radford, Jong Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh, Sandhini Agarwal, Girish Sastry, Amanda Askell, Pamela Mishkin, Jack Clark, et al. Learn-ing transferable visual models from natural language super-vision. In Intl. Conf. on Machine Learning , 2021. 1, 3, 7, 8[17] Hiroshi Sasaki. Structure-aware contrastive learning for di-agram understanding of multimodal models. In Proc. of the IEEE/CVF Intl. Conf. on Computer Vision Workshops , pages 7463–7472, 2025. 2, 3, 4, 5, 6, 7, 8 [18] Shubhankar Singh, Purvi Chaurasia, Yerram Varun, Pran-shu Pandya, Vatsal Gupta, Vivek Gupta, and Dan Roth. FlowVQA: Mapping multimodal logic in visual question an-swering with flowcharts. In Findings of the Association for Computational Linguistics , 2024. 6 [19] Ray Smith. An overview of the tesseract ocr engine. In 9th Intl. Conf. on Document Analysis and Recognition , 2007. 6 [20] tesseract ocr. tesseract. https : / / github . com / tesseract- ocr/tesseract/releases/tag/5. 5.1 , 2025. Version 5.5.1. 6 [21] A¨ aron van den Oord, Yazhe Li, and Oriol Vinyals. Repre-sentation learning with contrastive predictive coding. CoRR abs/1807.03748 , 2018. 5 [22] W3C. PNG (Portable Network Graphics). https://www. w3.org/Graphics/PNG/ , . 6 [23] W3C. Scalable Vector Graphics. https://www.w3. org/Graphics/SVG/ , . 6 [24] Junyi Ye, Ankan Dash, Wenpeng Yin, and Guiling Wang. Beyond end-to-end VLMs: Leveraging intermediate text representations for superior flowchart understanding. In 
+
+Proc. of the 2025 Conf. of the Nations of the Americas Chap-ter of the Association for Computational Linguistics: Human Language Technologies (Vol. 1: Long Papers) , 2025. 2 [25] Renrui Zhang, Xinyu Wei, Dongzhi Jiang, Ziyu Guo, Yichi Zhang, Chengzhuo Tong, Jiaming Liu, Aojun Zhou, Shang-hang Zhang, Peng Gao, and Hongsheng Li. MAVIS: Mathe-matical visual instruction tuning with an automatic data en-gine. In Proc. 13th Intl. Conf. on Learning Representations ,2025. 3 [26] Tianyi Zhang, Varsha Kishore, Felix Wu, Kilian Q Wein-berger, and Yoav Artzi. Bertscore: Evaluating text genera-tion with bert. In 8th Intl. Conf. on Learning Representa-tions , 2020. 8 
+
+9

@@ -1,0 +1,361 @@
+Title: CG-DMER: Hybrid Contrastive-Generative Framework for Disentangled Multimodal ECG Representation Learning
+
+URL Source: https://arxiv.org/pdf/2602.21154v1
+
+Published Time: Wed, 25 Feb 2026 02:13:34 GMT
+
+Number of Pages: 5
+
+Markdown Content:
+# CG-DMER: HYBRID CONTRASTIVE-GENERATIVE FRAMEWORK FOR DISENTANGLED MULTIMODAL ECG REPRESENTATION LEARNING 
+
+# Ziwei Niu 1,3 Hao Sun 4 Shujun Bian 1 Xihong Yang 2 Lanfen Lin 3 Yuxin Liu 1 Yueming Jin 1,2 Q 
+
+> 1
+
+# Department of Biomedical Engineering, National University of Singapore, Singapore, Singapore  
+
+> 2
+
+# Department of Electrical and Computer Engineering, National University of Singapore, Singapore, Singapore  
+
+> 3
+
+# College of Computer Science and Technology, Zhejiang University, Hangzhou, China  
+
+> 4
+
+# College of information science and engineering, Ritsumeikan university, ibaraki Osaka, Japan 
+
+ABSTRACT 
+
+Accurate interpretation of electrocardiogram (ECG) signals is cru-cial for diagnosing cardiovascular diseases. Recent multimodal ap-proaches that integrate ECGs with accompanying clinical reports show strong potential, but they still face two main concerns from a modality perspective: (1) intra-modality: existing models process ECGs in a lead-agnostic manner, overlooking spatial–temporal depen-dencies across leads, which restricts their effectiveness in modeling fine-grained diagnostic patterns; (2) inter-modality: the existing meth-ods directly align ECG signals with clinical reports, introducing modality-specific biases due to the free-text nature of the reports. In light of these two issues, we propose CG-DMER, a contrastive-generative framework for disentangled multimodal ECG representa-tion learning, powered by two appealing designs: (1) Spatial-temporal masked modeling is designed to better capture fine-grained tempo-ral dynamics and inter-lead spatial dependencies by applying mask-ing across both spatial and temporal dimensions and reconstruct-ing the missing information. (2) Representation disentanglement and alignment strategy is designed to further mitigate unnecessary noise and modality-specific biases by designing modality-specific and modality-shared encoders, which ensures a clearer separation between modality-invariant and modality-specific representations. Experi-ments on three public datasets demonstrate that CG-DMER achieves state-of-the-art performance across diverse downstream tasks. 
+
+Index Terms — Electrocardiogram, Multimodal Learning, Rep-resentation Learning, Feature Decoupling 
+
+1. INTRODUCTION 
+
+Recent advances in deep learning have achieved remarkable success in leveraging electrocardiograms (ECGs) for the automated classifi-cation of cardiovascular diseases (CVD). However, most methods are supervised and depend on large, expertly annotated datasets, which are costly to obtain. To mitigate these limitations, self-supervised learning (SSL) has emerged as a compelling alternative, enabling models to learn generalizable representations directly from unlabeled data. These representations can then be fine-tuned for specific down-stream tasks, reducing dependence on large labeled datasets. Building on these advancements, ECG self-supervised learning (eSSL) has become a promising paradigm for extracting robust features from large-scale unlabeled ECGs. Contrastive eSSL (C-eSSL) [ 1, 2, 3, 4, 5 ]leverages contrastive learning techniques to capture clinically rele-vant patterns without requiring labeled data, thereby facilitating the differentiation of various physiological states. Generative eSSL (G-eSSL) [ 6, 7, 8 , 9] focuses on modeling the underlying distribution of ECG signals by learning to reconstruct, predict, or generate physi-ologically realistic waveforms from unlabeled data. By leveraging these techniques, eSSL enhances model generalization and improves performance across various downstream clinical applications. Despite these advancements, existing eSSL approaches have predominantly focused on learning representations from raw ECG waveforms, often overlooking the rich diagnostic and contextual in-formation embedded within clinical text reports. As a result, this oversight along with the requirement for annotated samples in down-stream tasks limits the versatility of eSSL. Until recently, multimodal approaches, including ETP [ 10 ], MERL [ 11 ] and C-MELT [ 12 ] have attempted to address these limitations. Despite their great success, they still face two main challenges from a modality-wise perspective: 
+
+i) Intra-modality issue : Existing methods encode ECG signals in a lead-agnostic manner, overlooking the unique spatial and temporal characteristics of individual ECG leads, which limits their effec-tiveness in capturing fine-grained diagnostic information. ii) Inter-modality issue : Recent methods directly align ECG signals with clinical reports, introducing unnecessary noise and modality-specific biases due to the free-text nature of the reports. Driven by the above analysis, we propose CG-DMER, a sim-ple yet effective Contrastive-Generative framework for Disentangled Multimodal ECG Representation Learning. The core of CG-DMER lies in capturing fine-grained input details and enhancing ECG-text feature discrimination. Specifically, we propose a spatial-temporal masked modeling scheme for ECG signals, which applies masking across both lead-wise and temporal dimensions to encourage the model to learn fine-grained temporal dynamics and inter-lead spa-tial dependencies. In parallel, we apply masked reconstruction to clinical text reports, facilitating the learning of rich semantic rep-resentations. To further mitigate unnecessary noise and modality-specific biases, we design modality-specific and modality-shared encoders to disentangle features, promoting a clearer separation between modality-invariant and modality-specific representations. Cross-modal contrastive learning is then applied to the shared ECG-text representations, enhancing feature discrimination and strength-ening cross-modal alignment. Through this unified framework, our method facilitates the learning of generalizable and semantically rich multimodal representations. 
+
+2. METHOD 
+
+In multimodal ECG representation learning, given a training data set 
+
+X consisting of pairs of N ECG and text reports, we represent each pair as ( Ei ∈ RL×T , Ri ∈ V ∗), where L and T denote the lead and length of the raw ECG records Ei, and Ri denotes the associated text report, respectively, with i = 1 , 2, 3, ..., N . Our CG-DMER framework learns general representations directly from ECG signals and the corresponding text reports as Figure 1 describes.                          
+
+> arXiv:2602.21154v1 [cs.AI] 24 Feb 2026 ECG Signals
+> …
+> …
+> …
+> …
+> …
+> …
+> 12 Leads ECG Signal Tokenization
+> …
+> Spatial Emb Temporal Emb
+> Lead Emb 1
+> Lead Emb 1
+> Lead Emb 2
+> Lead Emb 12
+> Lead Emb 12
+> …
+> Pos Emb 2
+> Pos Emb N
+> Pos Emb 2
+> Pos Emb 1
+> Pos Emb N
+
++
+
++
+
++
+
++
+
++
+
++
+
++
+
++
+
++
+
++     
+
+> Lead Emb 1Pos Emb 1
+
+++           
+
+> …
+> …
+> …
+> …
+> ECG Token Emb
+> Lead 1
+> Lead 2
+> Lead 12
+> ……
+> ……
+> ……
+> ……
+> 𝑓 !"
+> #$%
+> 𝑓 !&
+> #$%
+> 𝑓 !&
+> '#('
+> 𝑓 !"
+> '#('
+> Text Reports
+> Transformer
+> ECG
+> Encoder
+> Text
+> Encoder
+> ECG
+> Decoder
+> Text
+> Decoder
+> 𝓛 𝒐𝒓𝒕𝒉
+> 𝓛 𝒐𝒓𝒕𝒉
+> 𝓛 𝒆 _𝒄𝒐𝒏
+> 𝓛 𝒕 _𝒄𝒐𝒏
+> 𝓛 𝑪𝒐𝒏𝒔 𝓛 𝑺𝒊𝒈𝑳𝑰𝑷
+> Multimodal Inputs Disentanglement Alignment
+> (a) CG -DMER, the contrastive -generative framework for disentangled
+> multimodal ECG representation learning. (b) The spatial and temporal processing to capture spatial -temporal patterns.
+
+Fig. 1 : A schematic view of the proposed method. 
+
+2.1. Multimodal Masked Modeling 
+
+Masked modeling is a representation learning technique that re-constructs all or part of the input data, as demonstrated in frame-works such as masked image modeling and Masked Autoencoder (MAE) [ 13 ]. This approach offers a powerful means of jointly learn-ing robust ECG-text representations by leveraging the underlying cross-modal data distribution and reconstructing missing segments to capture fine-grained dependencies. Accordingly, we consider a pretext task that involves reconstructing randomly masked portions of both ECG signals and associated clinical text reports. 
+
+Spatial–Temporal Masked ECG Modeling. An L-lead ECG records cardiac activity from multiple spatial viewpoints, making both spatial and temporal information critical. We propose a spa-tial–temporal masked ECG modeling approach that applies masking across temporal and inter-lead dimensions, enabling the model to capture correlations and fine-grained patterns. Specifically, ECG signal Ei ∈ RL×T is divided into N tem-poral patches along the temporal axis, yielding L × N patches 
+
+P atch l = { Patch l
+
+> 1
+
+, . . . , Patch lN ∈ RT . Each patch is passed through a series of convolutional layers, followed by GELU [ 14 ]activation and group normalization, to perform tokenization. To cap-ture spatial context, we introduce lead embeddings [spa 1, . . . , spa L],with spa l ∈ Rd. To preserve lead-specific characteristics, we to-kenize each lead independently. Let Eli [pn] denote the token cor-responding to the n-th temporal segment of the l-th lead. Unlike MERL [ 11 ] and C-MERL [ 12 ], which generate a single token for each temporal segment of a L-lead ECG, our method produces sep-arate tokens per lead. To retain temporal ordering, we add shared temporal (positional) embeddings [temp 1, . . . , temp N ], allowing con-sistency across leads while preserving spatial specificity. The final input embeddings are constructed by summing the token embeddings, the corresponding lead-specific spatial embeddings, and the shared temporal embeddings as follows: 
+
+temp 1 + spa 1 +WEli [p1] . . . , temp N + spa 1 +WEli [pN ] . . . , 
+
+temp 1 + spa L +WEli [p1] . . . , temp N + spa L +WEli [pN ] .
+
+(1) We randomly select a set of indices Mj to mask for each sample 
+
+j with ratio r. For N patches per lead, the total number of masked patches is |M j | = N × L × r. Masking is applied uniformly across leads. The encoder receives unmasked embeddings {Zi}i / ∈M j ,which are processed by eight Transformer layers with multi-head self-attention to capture temporal and inter-lead dependencies. During decoding, the full sequence (unmasked embeddings + shared mask embeddings) is fed to reconstruct the masked patches. The reconstruction objective is: 
+
+Le rec = 1
+
+B
+
+> B
+
+X
+
+> j=1
+
+1
+
+|M j |
+
+X
+
+> i∈M j
+
+\P atch j,i − P atch j,i 
+
+> 22
+
+. (2) 
+
+Masked Text Report Reconstruction. Following MERL [ 11 ], we adopt Med-CPT [ 15 ] as the text encoder. Text reports are tokenized, and 15% of tokens are randomly masked, and the set of masked indices is denoted as Mj . The corrupted sequence tj\M j , where masked tokens are replaced with sentinel tokens, is fed into the encoder. The decoder autoregressively predicts the masked tokens, and the training objective is the cross-entropy loss: 
+
+Lt rec = − 1
+
+B
+
+> B
+
+X
+
+> j=1
+
+1
+
+|M j |
+
+X
+
+> m∈M j
+
+log P  tj,m | tj\M j ; θ, (3) where tj,m is the ground-truth token at position m, tj\M j is the masked input sequence, and θ denotes model parameters. 
+
+2.2. Representation Disentanglement and Alignment Representation Disentanglement: Previous alignment strategies for multimodal ECG pretraining often attempt to directly align repre-sentations via contrastive learning. However, this can be suboptimal because of intrinsic differences between modalities, such as data type, training paradigm, and semantic context. Simply forcing modality-specific features into a shared space may create incompatibilities and negatively affect downstream performance. To overcome this, we in-troduce a disentanglement strategy that separates representations into modality-specific and modality-shared components for both ECG sig-nals and text reports. This design explicitly preserves unique modality information while isolating common semantic features, leading to more stable integration. Based on the representations Eecg and Etext obtained from the ECG and text encoders, respectively, we disentangle them into: 
+
+hecg sp = f ecg sp (Eecg ) , hecg sh = f ecg sh (Eecg ) ,
+
+htext sp = f text sp 
+
+ Etext  , htext sh = f text sh 
+
+ Etext  , (4) where fsh (·) and fsp (·) denote encoder networks for shared and specific parts, implemented as MLPs. Since modality-shared and modality-specific components are not naturally separated, we apply an orthogonality constraint to reduce redundancy by minimizing cosine similarity between hsh and hsp :
+
+Lorth = 1
+
+B
+
+> B
+
+X
+
+> i=1
+
+
+
+S(htext sp i , htext sh i )2 + S(hecg sp i , hecg sh i )2
+
+, (5) where S is cosine similarity and B is the batch size. 
+
+Representation Alignment: Medical reports provide detailed de-scriptions that correspond to ECG signals, so paired samples should naturally align in the multimodal feature space. Yet in masked au-toencoder architectures, generative reconstruction objectives and dis-criminative contrastive objectives often conflict, which can hinder embedding quality. To alleviate this, following C-MERL [ 12 ], we adopt the SigLIP loss [ 16 ], originally proposed for image–text pairs, and extend it to ECG–text alignment: 
+
+LSigLIP = − 1
+
+B
+
+> B
+
+X
+
+> i=1
+> B
+
+X
+
+> j=1
+
+log 11 + e−yij hecg sh i
+
+> ⊤htext sh j
+
+!
+
+, (6) where yij = 1 for positive ECG–text pairs, and yij = −1 otherwise. We then follow [ 10 , 11 ] and employ additional contrastive loss functions to maximize the posterior probability of the shared ECG representation hecg sh given its paired text representation htext sh . Co-sine similarities are defined as se2ti,i = hecg sh 
+
+> ⊤
+
+htext sh and st2ei,i =
+
+htext sh 
+
+> ⊤
+
+hecg sh . The corresponding losses are: 
+
+Le2ti,j = − log exp  se2ti,j /τ PBk=1 1[k̸ =i] exp 
+
+
+
+se2ti,k /τ 
+
+ , (7) 
+
+Lt2ei,j = − log exp  st2ei,j /τ PBk=1 1[k̸ =i] exp 
+
+
+
+st2ei,k /τ 
+
+ , (8) which are then combined as: 
+
+LCons = 12B
+
+> B
+
+X
+
+> i=1
+> B
+
+X
+
+> j=1
+
+ Le2ti,j + Lt2ei,j 
+
+ . (9) Here τ = 0 .07 is the temperature hyper-parameter and B the batch size. 
+
+Overall Objective. Our model learns representative ECG features by jointly minimizing LCons , Lt rec , Lorth and LSigLIP . The overall training objective is: 
+
+LF ull = LCons + λ1Lt rec + λ2Lorth + λ3LSigLIP , (10) where λ1, λ2, and λ3 are trade-off weights. 
+
+3. EXPERIMENTS 3.1. Pre-training Configurations Pre-train Dataset: We utilize the MIMIC-IV-ECG database [ 17 ] for pre-training, which comprises 800,035 paired samples from 161,352 unique subjects. The dataset includes multiple 10-second ECG record-ings sampled at 500 Hz, along with corresponding textual reports. To ensure a fair comparison with existing methods, we follow the prepro-cessing protocol of the MERL [ 11 ] framework. After preprocessing, we obtain a total of 779,891 samples for model training. 
+
+Pre-train Implementation: The AdamW optimizer is used with a learning rate of 2×10 −4 and a weight decay of 1×10 −5. We pre-train CG-DMER for 50 epochs, applying a cosine annealing scheduler for learning rate adjustments. A batch size of 512 is maintained per GPU, and all experiments are conducted on eight NVIDIA RTX A5000. 
+
+3.2. Downstream Tasks Configurations 
+
+We evaluate our framework on two downstream tasks: linear probing and zero-shot classification, using three widely adopted ECG datasets that together cover more than 100 cardiac conditions. The macro AUC is used as the evaluation metric for all tasks. 
+
+(1) PTB-XL [24 ] contains 21,837 ECG recordings from 18,885 pa-tients. Each 12-lead ECG is sampled at 500 Hz for 10 seconds. Following the official annotation protocol, four subsets are provided for multi-label classification: 5 Superclasses, 23 Subclasses, 19 Form classes, and 12 Rhythm classes. 
+
+(2) CPSC2018 [ 25 ] includes 6,877 12-lead ECGs sampled at 500 Hz, with durations ranging from 6 to 60 seconds. Each record is annotated with one of 9 diagnostic categories. 
+
+(3) CSN [26 , 27 ] consists of 45,152 12-lead ECGs sampled at 500 Hz for 10 seconds. After dropping records with ‘unknown’ annota-tions, the curated version contains 23,026 samples labeled with 38 categories. 
+
+3.3. Evaluation on linear probing 
+
+Linear probing has become the standard evaluation protocol for ECG self-supervised learning (eSSL), as it fairly measures the quality of learned ECG representations on uni-modal downstream tasks after pretraining. Table 1 reports the linear probing results of our proposed CG-DMER against existing eSSL and multimodal methods. Across six datasets and training data ratios ranging from 1% to 100%, CG-DMER consistently outperforms eSSL baselines. Remarkably, with only 10% of labeled data, CG-DMER surpasses all eSSL methods trained on 100% of the data. This demonstrates its strong generaliza-tion ability, driven by clinical text supervision that yields more dis-criminative and semantically enriched ECG representations. Beyond eSSL, CG-DMER also achieves superior results over multimodal counterparts across all datasets. These gains highlight the effective-ness of our hybrid contrastive–generative paradigm, which combines complementary strengths of both objectives. Together with the pro-posed feature disentanglement and alignment strategy, CG-DMER captures fine-grained physiological patterns and modality-specific cues, enabling robust generalization across diverse clinical tasks. 
+
+3.4. Evaluation on zero-shot learning 
+
+Zero-shot classification with text prompts is widely used to evaluate representation quality, as it tests a model’s ability to generalize to unseen tasks without annotated samples. Conventional zero-shot methods rely solely on category names, which often provide limited context for accurate classification. To address this, we incorporate Large Language Models (LLMs) to generate richer, clinically relevant category descriptions. In particular, we use GPT-4o to customize prompts for each category. We compare CG-DMER with ETP [ 10 ], MERL [ 11 ], and C-MELT [ 12 ] under conventional zero-shot settings across six datasets (Table 2). On average, our method achieves an AUC of 76.00, surpassing the best baseline (MERL) by 0.75. These results demonstrate the strong representation learning capacity of CG-DMER and highlight the importance of semantic richness and contextual information in prompt-based zero-shot classification. 
+
+4. ABLATION STUDIES AND ANALYSIS Effects of Key Components . We conduct ablation studies on the four core components of CG-DMER to evaluate their individual contribu-tions (Table 3). Variant 1 employs only the contrastive objective as a multimodal baseline. Incorporating spatial–temporal masked ECG Table 1 : Linear probing performance comparison between CG-DMER and existing ECG representation learning methods. The best and second-best results are highlighted in red and blue, respectively. † denotes results reproduced by our implementation. 
+
+PTBXL-Super PTBXL-Sub PTBXL-Form PTBXL-Rhythm CPSC2018 CSN Method 1% 10% 100% 1% 10% 100% 1% 10% 100% 1% 10% 100% 1% 10% 100% 1% 10% 100% Random Init (CNN) 70.45 77.09 81.61 55.82 67.60 77.91 55.82 62.54 73.00 46.26 62.36 79.29 54.96 71.47 78.33 47.22 63.17 73.13 Random Init (Trans) 70.31 75.27 77.54 53.36 67.56 77.43 53.47 61.84 72.08 45.36 60.33 77.26 52.93 68.00 77.44 45.55 60.23 71.37 SimCLR [18] 63.41 69.77 73.53 60.84 68.27 73.39 54.98 56.97 62.52 51.41 69.44 77.73 59.78 68.52 76.54 59.02 67.26 73.20 BYOL [19] 71.70 73.83 76.45 57.16 67.44 71.64 48.73 61.63 70.82 41.99 74.40 77.17 60.88 74.42 78.75 54.20 71.92 74.69 BarlowTwins [20] 72.87 75.96 78.41 62.57 70.84 74.34 52.12 60.39 66.14 50.12 73.54 77.62 55.12 72.75 78.39 60.72 71.64 77.43 MoCo-v3 [2] 73.19 76.65 78.26 55.88 69.21 76.69 50.32 63.71 71.31 51.38 71.66 74.33 62.13 76.74 75.29 54.61 74.26 77.68 SimSiam [21] 73.15 72.70 75.63 62.52 69.31 76.38 55.16 62.91 71.31 49.30 69.47 75.92 58.35 72.89 75.31 58.25 68.61 77.41 TS-TCC [22] 70.73 75.88 78.91 53.54 66.98 77.87 48.04 61.79 71.18 43.34 69.48 78.23 57.07 73.62 78.72 55.26 68.48 76.79 CLOCS [23] 68.94 73.36 76.31 57.94 72.55 76.24 51.97 57.96 72.65 47.19 71.88 76.31 59.59 77.78 77.49 54.38 71.93 76.13 ASTCL [3] 72.51 77.31 81.02 61.86 68.77 76.51 44.14 60.93 66.99 52.38 71.98 76.05 57.90 77.01 79.51 56.40 70.87 75.79 CRT [8] 69.68 78.24 77.24 61.98 70.82 78.67 46.41 59.49 68.73 47.44 73.52 74.41 58.01 76.43 82.03 56.21 73.70 78.80 ST-MEM [9] 61.12 66.87 71.36 54.12 57.86 63.59 55.71 59.99 66.07 51.12 65.44 74.85 56.69 63.32 70.39 59.77 66.87 71.36 ETP † [10] 77.25 83.06 83.90 60.34 76.66 82.07 56.60 68.75 76.13 51.88 77.32 81.00 67.67 82.40 87.97 62.05 77.30 84.44 MERL (ResNet) [11] 82.39 86.27 88.67 64.90 80.56 84.72 58.26 72.43 79.65 53.33 82.88 88.34 70.33 85.32 90.57 66.60 82.74 87.95 MERL (ViT) [11] 78.64 83.90 85.27 61.41 77.55 82.98 56.32 69.11 77.66 52.16 78.07 81.83 69.25 82.82 89.44 63.66 78.67 84.87 C-MELT † [12] 83.54 87.69 88.22 67.60 80.37 83.96 59.55 71.86 80.54 62.88 83.00 88.76 70.50 86.00 90.72 66.01 82.11 91.94 
+
+CG-DMER (Ours) 84.22 88.18 90.31 69.60 81.58 87.67 60.25 73.95 81.01 64.47 84.69 90.76 71.70 86.43 91.32 70.70 83.21 93.55 
+
+Table 2 : Zero-shot performance comparison across multiple datasets. The best and second-best results are highlighted in red and blue, respectively. † denotes results reproduced by our implementation. 
+
+Methods PTBXL-Super PTBXL-Sub PTBXL-Form PTBXL-Rhythm CPSC2018 CSN Average ETP † [10] 49.63 62.25 57.44 66.56 67.13 60.22 60.54 MERL (ResNet) [11] 74.20 75.70 65.90 78.50 82.80 74.40 75.25 MERL (Vit) [11] 73.43 72.62 62.75 75.90 79.21 72.37 72.71 C-MELT [12] 75.12 74.38 65.55 79.87 81.61 74.43 75.16 
+
+CG-DMER (Ours) 75.65 74.62 66.44 80.77 82.93 75.59 76.00 
+
+Table 3 : Effects of model components. Methods Le rec Lt rec Lorth LSigLIP Linear (1%) Zero-shot Variant 1 - - - - 64.43 73.36 Variant 2 ✓ - - - 67.39 74.87 Variant 3 ✓ ✓ - - 67.82 75.00 Variant 4 ✓ ✓ ✓ - 69.31 75.77 CG-DMER ✓ ✓ ✓ ✓ 70.15 76.00 
+
+modeling (Variant 2) improves AUC by +1.96 and +1.51, highlighting its effectiveness in capturing lead correlations and temporal dynam-ics. Variant 3 further adds masked text reconstruction, enabling the model to recover clinical semantics. Variant 4 introduces feature disentanglement, which mitigates modality bias and noise, yielding additional improvements. The full CG-DMER achieves the highest performance, demonstrating that all components are complementary and jointly enhance representation learning. 
+
+Patch Number and Masking Ratio . Figure 2(a) shows the effect of varying the patch number N , with the optimal value identified as N =100 . Larger values (e.g., 200) degrade performance more severely than smaller ones (e.g., 25), likely because aggregating multiple segments into a single token introduces ambiguity. The masking ratio determines the proportion of unmasked patches provided to the decoder and thus controls the difficulty of the reconstruction task. As shown in Figure 2(b), CG-DMER achieves its best performance at a moderately high masking ratio of 75%. 
+
+Visualization of Learned ECG Representations . To better under-stand the learned features, we visualize the final-layer outputs of the ECG encoder on the CSN test set using SimCLR, ST-MEM, MERL, and our CG-DMER. For clarity, samples from five diagnostic cate-gories are shown. As illustrated in Figure 3, multimodal methods separate categories even without supervision, whereas SimCLR and ST-MEM produce mixed and overlapping clusters. Compared to MERL, CG-DMER yields more compact and distinct clusters aligned (a) Effect of Patch Number (b) Effect of Masking Ratio 
+
+Fig. 2 : Results of CG-DMER with different patch numbers and masking ratio on linear probing and zero-shot. SimCLR (Contrastive eSSL ) ST -MEM (Generative eSSL ) MERL (Multimodal) Our CG -DMER (Multimodal)     
+
+> SR ST AF SA SVT
+
+Fig. 3 : T-SNE visualization on the CSN test set. with different ECG diagnoses, better reflecting clinical expectations. 
+
+5. CONCLUSION 
+
+In this paper, we present CG-DMER, a contrastive-generative frame-work for multimodal ECG representation learning. Using spatial-temporal masked modeling and representation disentanglement, CG-DMER captures fine-grained ECG dynamics and reduces modality-related issues. It enhances the discriminability and robustness of ECG representations, improving performance on various downstream tasks. Experiments on multiple datasets show that CG-DMER outperforms existing methods and has strong potential for clinical diagnostics. 6. ACKNOWLEDGMENTS 
+
+This work was supported by the Wellcome Leap’s Dynamic Re-silience Program jointly funded by Temasek Trust. 
+
+7. REFERENCES 
+
+[1] Ting Chen, Simon Kornblith, Mohammad Norouzi, and Geof-frey Hinton, “A simple framework for contrastive learning of visual representations,” in ICML . PMLR, 2020, pp. 1597–1607. [2] X Chen, S Xie, and K He, “An empirical study of training self-supervised vision transformers. in 2021 ieee,” in ICCV ,2021, pp. 9620–9629. [3] Ning Wang, Panpan Feng, Zhaoyang Ge, Yanjie Zhou, Bing Zhou, and Zongmin Wang, “Adversarial spatiotemporal con-trastive learning for electrocardiogram signals,” IEEE Transac-tions on Neural Networks and Learning Systems , 2023. [4] Dani Kiyasseh, Tingting Zhu, and David A Clifton, “Clocs: Contrastive learning of cardiac signals across space, time, and patients,” in ICML . PMLR, 2021, pp. 5606–5615. [5] Kaden McKeen, Laura Oliva, Sameer Masood, Augustin Toma, Barry Rubin, and Bo Wang, “Ecg-fm: An open electrocardio-gram foundation model,” arXiv preprint arXiv:2408.05178 ,2024. [6] Rui Hu, Jie Chen, and Li Zhou, “Spatiotemporal self-supervised representation learning from multi-lead ecg signals,” Biomedi-cal Signal Processing and Control , vol. 84, pp. 104772, 2023. [7] Huaicheng Zhang, Wenhan Liu, Jiguang Shi, Sheng Chang, Hao Wang, Jin He, and Qijun Huang, “Maefe: Masked autoencoders family of electrocardiogram for self-supervised pretraining and transfer learning,” IEEE Transactions on Instrumentation and Measurement , vol. 72, pp. 1–15, 2022. [8] Wenrui Zhang, Ling Yang, Shijia Geng, and Shenda Hong, “Self-supervised time series representation learning via cross reconstruction transformer,” IEEE Transactions on Neural Networks and Learning Systems , 2023. [9] Yeongyeon Na, Minje Park, Yunwon Tae, and Sunghoon Joo, “Guiding masked representation learning to capture spatio-temporal relationship of electrocardiogram,” arXiv preprint arXiv:2402.09450 , 2024. [10] Che Liu, Zhongwei Wan, Sibo Cheng, Mi Zhang, and Rossella Arcucci, “Etp: Learning transferable ecg representations via ecg-text pre-training,” in ICASSP . IEEE, 2024, pp. 8230–8234. [11] Che Liu, Zhongwei Wan, Cheng Ouyang, Anand Shah, Wenjia Bai, and Rossella Arcucci, “Zero-shot ecg classification with multimodal learning and test-time clinical knowledge enhance-ment,” arXiv preprint arXiv:2403.06659 , 2024. [12] Manh Pham, Aaqib Saeed, and Dong Ma, “C-melt: Contrastive enhanced masked auto-encoders for ecg-language pre-training,” 
+
+arXiv preprint arXiv:2410.02131 , 2024. [13] Kaiming He, Xinlei Chen, Saining Xie, Yanghao Li, Piotr Doll ´ar, and Ross Girshick, “Masked autoencoders are scal-able vision learners,” in CVPR , 2022, pp. 16000–16009. [14] Dan Hendrycks and Kevin Gimpel, “Gaussian error linear units (gelus),” arXiv preprint arXiv:1606.08415 , 2016. [15] Qiao Jin, Won Kim, Qingyu Chen, Donald C Comeau, Lana Yeganova, W John Wilbur, and Zhiyong Lu, “Medcpt: Con-trastive pre-trained transformers with large-scale pubmed search logs for zero-shot biomedical information retrieval,” Bioinfor-matics , vol. 39, no. 11, pp. btad651, 2023. [16] Xiaohua Zhai, Basil Mustafa, Alexander Kolesnikov, and Lucas Beyer, “Sigmoid loss for language image pre-training,” in 
+
+ICCV , 2023, pp. 11975–11986. [17] Brian Gow, Tom Pollard, Larry A Nathanson, Alistair Johnson, Benjamin Moody, Chrystinne Fernandes, Nathaniel Greenbaum, Jonathan W Waks, Parastou Eslami, Tanner Carbonati, et al., “Mimic-iv-ecg: Diagnostic electrocardiogram matched subset,” 
+
+Type: dataset , vol. 6, pp. 13–14, 2023. [18] Ting Chen, Simon Kornblith, Mohammad Norouzi, and Geof-frey Hinton, “A simple framework for contrastive learning of visual representations,” in ICML . PMLR, 2020, pp. 1597–1607. [19] Jean-Bastien Grill, Florian Strub, Florent Altch ´e, Corentin Tallec, Pierre Richemond, Elena Buchatskaya, Carl Doer-sch, Bernardo Avila Pires, Zhaohan Guo, Mohammad Ghesh-laghi Azar, et al., “Bootstrap your own latent-a new approach to self-supervised learning,” NeurIPS , vol. 33, pp. 21271–21284, 2020. [20] Jure Zbontar, Li Jing, Ishan Misra, Yann LeCun, and St ´ephane Deny, “Barlow twins: Self-supervised learning via redundancy reduction,” in ICML . PMLR, 2021, pp. 12310–12320. [21] Xinlei Chen and Kaiming He, “Exploring simple siamese rep-resentation learning,” in CVPR , 2021, pp. 15750–15758. [22] Emadeldeen Eldele, Mohamed Ragab, Zhenghua Chen, Min Wu, Chee Keong Kwoh, Xiaoli Li, and Cuntai Guan, “Time-series representation learning via temporal and contextual con-trasting,” arXiv preprint arXiv:2106.14112 , 2021. [23] Dani Kiyasseh, Tingting Zhu, and David A Clifton, “Clocs: Contrastive learning of cardiac signals across space, time, and patients,” in ICML . PMLR, 2021, pp. 5606–5615. [24] Patrick Wagner, Nils Strodthoff, Ralf-Dieter Bousseljot, Dieter Kreiseler, Fatima I Lunze, Wojciech Samek, and Tobias Scha-effter, “Ptb-xl, a large publicly available electrocardiography dataset,” Scientific data , vol. 7, no. 1, pp. 1–15, 2020. [25] Feifei Liu, Chengyu Liu, Lina Zhao, Xiangyu Zhang, Xiaol-ing Wu, Xiaoyan Xu, Yulin Liu, Caiyun Ma, Shoushui Wei, Zhiqiang He, et al., “An open access database for evaluating the algorithms of electrocardiogram rhythm and morphology abnormality detection,” Journal of Medical Imaging and Health Informatics , vol. 8, no. 7, pp. 1368–1373, 2018. [26] Jianwei Zheng, Huimin Chu, Daniele Struppa, Jianming Zhang, Sir Magdi Yacoub, Hesham El-Askary, Anthony Chang, Louis Ehwerhemuepha, Islam Abudayyeh, Alexander Barrett, et al., “Optimal multi-stage arrhythmia classification approach,” Sci-entific reports , vol. 10, no. 1, pp. 2898, 2020. [27] Jianwei Zheng, Hangyuan Guo, and Huimin Chu, “A large scale 12-lead electrocardiogram database for arrhythmia study (version 1.0. 0),” PhysioNet , 2022.

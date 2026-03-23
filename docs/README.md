@@ -6,8 +6,8 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-03-22
-- 运行时间：2026-03-22 20:07:54 UTC
+- 最新运行日期：2026-03-23
+- 运行时间：2026-03-23 20:26:48 UTC
 - 运行状态：成功
 - 本次总论文数：17
 - 精读区：6
@@ -15,65 +15,65 @@
 
 ### 今日简报（AI）
 - 今日共生成 17 篇推荐（精读 6 篇，速读 11 篇）
-- 精读：《Prior-guided Hierarchical Instance-pixel Contrastive Learning for Ultrasound Speckle Noise Suppression》（8.0/10）, 《Variational views for self-supervised learning in radio astronomy》（8.0/10）
-- 速读：《RoboAug: One Annotation to Hundreds of Scenes via Region-Contrastive Data Augmentation for Robotic Manipulation》（8.0/10）, 《Orthogonalized Multimodal Contrastive Learning with Asymmetric Masking for Structured Representations》（8.0/10）, 《Benchmarking Self-Supervised Models for Cardiac Ultrasound View Classification》（8.0/10）
+- 精读：《Improving Generalization on Cybersecurity Tasks with Multi-Modal Contrastive Learning》（9.0/10）, 《Contrastive meta-domain adaptation for robust skin lesion classification across clinical and acquisition conditions》（8.0/10）
+- 速读：《Scaling Audio-Text Retrieval with Multimodal Large Language Models》（8.0/10）, 《CG-DMER: Hybrid Contrastive-Generative Framework for Disentangled Multimodal ECG Representation Learning》（8.0/10）, 《CWM: Contrastive World Models for Action Feasibility Learning in Embodied Agent Pipelines》（8.0/10）
 - 这些结果覆盖了当下较热的方向，建议先看精读区论文的关键问题与方法。
-- 详情：[/202603/22/README](/202603/22/README)
+- 详情：[/202603/23/README](/202603/23/README)
 
 ### 精读区论文标签
-1. [Prior-guided Hierarchical Instance-pixel Contrastive Learning for Ultrasound Speckle Noise Suppression](/202603/22/2602.13831v1-prior-guided-hierarchical-instance-pixel-contrastive-learning-for-ultrasound-speckle-noise-suppression)  
+1. [Improving Generalization on Cybersecurity Tasks with Multi-Modal Contrastive Learning](/202603/23/2603.20181v1-improving-generalization-on-cybersecurity-tasks-with-multi-modal-contrastive-learning)  
+   标签：评分：9.0/10、query:q4
+   evidence：文本与载荷数据的多模态对比学习
+2. [Contrastive meta-domain adaptation for robust skin lesion classification across clinical and acquisition conditions](/202603/23/2602.19857v1-contrastive-meta-domain-adaptation-for-robust-skin-lesion-classification-across-clinical-and-acquisition-conditions)  
    标签：评分：8.0/10、query:q10
-   evidence：医学超声的分层实例-像素对比学习
-2. [Variational views for self-supervised learning in radio astronomy](/202603/22/2602.18923v1-variational-views-for-self-supervised-learning-in-radio-astronomy)  
-   标签：评分：8.0/10、query:q2
-   evidence：耦合自监督表示学习，使用VAE生成视图用于射电天文学
-3. [Breaking the Prototype Bias Loop: Confidence-Aware Federated Contrastive Learning for Highly Imbalanced Clients](/202603/22/2603.03007v1-breaking-the-prototype-bias-loop-confidence-aware-federated-contrastive-learning-for-highly-imbalanced-clients)  
+   evidence：对比学习用于皮肤病变分类与域适应
+3. [M3GCLR: Multi-View Mini-Max Infinite Skeleton-Data Game Contrastive Learning For Skeleton-Based Action Recognition](/202603/23/2603.09367v1-m3gclr-multi-view-mini-max-infinite-skeleton-data-game-contrastive-learning-for-skeleton-based-action-recognition)  
    标签：评分：8.0/10、query:q1
-   evidence：联邦对比学习，引入置信度感知原型聚合机制
-4. [ViSA: Visited-State Augmentation for Generalized Goal-Space Contrastive Reinforcement Learning](/202603/22/2603.14887v1-visa-visited-state-augmentation-for-generalized-goal-space-contrastive-reinforcement-learning)  
-   标签：评分：8.0/10、query:q8
-   evidence：对比学习应用于强化学习，超越计算机视觉
-5. [VLM2Rec: Resolving Modality Collapse in Vision-Language Model Embedders for Multimodal Sequential Recommendation](/202603/22/2603.17450v1-vlm2rec-resolving-modality-collapse-in-vision-language-model-embedders-for-multimodal-sequential-recommendation)  
-   标签：评分：8.0/10、query:q4
-   evidence：多模态对比学习，解决视觉语言模型的模态坍塌问题
-6. [Unsupervised Contrastive Learning for Efficient and Robust Spectral Shape Matching](/202603/22/2603.18924v1-unsupervised-contrastive-learning-for-efficient-and-robust-spectral-shape-matching)  
+   evidence：博弈论对比学习框架与极小极大优化
+4. [Pathology-Aware Multi-View Contrastive Learning for Patient-Independent ECG Reconstruction](/202603/23/2603.17248v1-pathology-aware-multi-view-contrastive-learning-for-patient-independent-ecg-reconstruction)  
    标签：评分：8.0/10、query:q1
-   evidence：无监督对比学习用于谱形状匹配，改进嵌入空间特征质量
+   evidence：病理感知嵌入的新型对比学习框架
+5. [From Topic to Transition Structure: Unsupervised Concept Discovery at Corpus Scale via Predictive Associative Memory](/202603/23/2603.18420v1-from-topic-to-transition-structure-unsupervised-concept-discovery-at-corpus-scale-via-predictive-associative-memory)  
+   标签：评分：8.0/10、query:q1
+   evidence：对比学习模型用于无监督概念发现
+6. [dinov3.seg: Open-Vocabulary Semantic Segmentation with DINOv3](/202603/23/2603.19531v1-dinov3seg-open-vocabulary-semantic-segmentation-with-dinov3)  
+   标签：评分：8.0/10、query:q7
+   evidence：DINOv3自监督视觉预训练用于密集预测
 
 ### 速读区论文标签
-1. [RoboAug: One Annotation to Hundreds of Scenes via Region-Contrastive Data Augmentation for Robotic Manipulation](/202603/22/2602.14032v1-roboaug-one-annotation-to-hundreds-of-scenes-via-region-contrastive-data-augmentation-for-robotic-manipulation)  
-   标签：评分：8.0/10、query:q6
-   evidence：区域对比数据增强用于样本高效的机器人学习
-2. [Orthogonalized Multimodal Contrastive Learning with Asymmetric Masking for Structured Representations](/202603/22/2602.14983v1-orthogonalized-multimodal-contrastive-learning-with-asymmetric-masking-for-structured-representations)  
+1. [Scaling Audio-Text Retrieval with Multimodal Large Language Models](/202603/23/2602.18010v1-scaling-audio-text-retrieval-with-multimodal-large-language-models)  
    标签：评分：8.0/10、query:q4
-   evidence：多模态对比学习与结构化表示
-3. [Benchmarking Self-Supervised Models for Cardiac Ultrasound View Classification](/202603/22/2602.15339v1-benchmarking-self-supervised-models-for-cardiac-ultrasound-view-classification)  
-   标签：评分：8.0/10、query:q10
-   evidence：有限标签医学图像分类的自监督预训练
-4. [Leveraging Contrastive Learning for a Similarity-Guided Tampered Document Data Generation Pipeline](/202603/22/2602.17322v1-leveraging-contrastive-learning-for-a-similarity-guided-tampered-document-data-generation-pipeline)  
-   标签：评分：8.0/10、query:q7
-   evidence：将对比学习与生成式数据生成流程相结合
-5. [Human-like Object Grouping in Self-supervised Vision Transformers](/202603/22/2603.13994v1-human-like-object-grouping-in-self-supervised-vision-transformers)  
-   标签：评分：7.0/10、query:q7
-   evidence：在人工对齐基准上评估包括DINO在内的自监督视觉Transformer
-6. [MotionCFG: Boosting Motion Dynamics via Stochastic Concept Perturbation](/202603/22/2603.14073v1-motioncfg-boosting-motion-dynamics-via-stochastic-concept-perturbation)  
-   标签：评分：7.0/10、query:q3
-   evidence：通过扰动概念嵌入创建负样本锚点的对比方法，用于改进生成质量
-7. [Is the reconstruction loss culprit? An attempt to outperform JEPA](/202603/22/2603.14131v1-is-the-reconstruction-loss-culprit-an-attempt-to-outperform-jepa)  
+   evidence：基于多模态大语言模型的对比式语言-音频预训练
+2. [CG-DMER: Hybrid Contrastive-Generative Framework for Disentangled Multimodal ECG Representation Learning](/202603/23/2602.21154v1-cg-dmer-hybrid-contrastive-generative-framework-for-disentangled-multimodal-ecg-representation-learning)  
+   标签：评分：8.0/10、query:q4
+   evidence：混合对比-生成框架用于多模态心电图-文本表示学习
+3. [CWM: Contrastive World Models for Action Feasibility Learning in Embodied Agent Pipelines](/202603/23/2602.22452v1-cwm-contrastive-world-models-for-action-feasibility-learning-in-embodied-agent-pipelines)  
+   标签：评分：8.0/10、query:q3
+   evidence：用于动作评分的InfoNCE对比目标与难负例挖掘
+4. [Pseudo Contrastive Learning for Diagram Comprehension in Multimodal Models](/202603/23/2602.23589v2-pseudo-contrastive-learning-for-diagram-comprehension-in-multimodal-models)  
+   标签：评分：8.0/10、query:q4
+   evidence：提出伪对比学习用于多模态图表理解，扩展CLIP式对比对齐到细粒度结构变化
+5. [DamageArbiter: A CLIP-Enhanced Multimodal Arbitration Framework for Hurricane Damage Assessment from Street-View Imagery](/202603/23/2603.14837v1-damagearbiter-a-clip-enhanced-multimodal-arbitration-framework-for-hurricane-damage-assessment-from-street-view-imagery)  
+   标签：评分：7.0/10、query:q4
+   evidence：使用CLIP多模态对比预训练进行图像-文本仲裁
+6. [Masked BRep Autoencoder via Hierarchical Graph Transformer](/202603/23/2603.14927v1-masked-brep-autoencoder-via-hierarchical-graph-transformer)  
    标签：评分：7.0/10、query:q2
-   evidence：JEPA预测式表征学习与重建目标对比
-8. [ViSA: Visited-State Augmentation for Generalized Goal-Space Contrastive Reinforcement Learning](/202603/22/2603.14887v2-visa-visited-state-augmentation-for-generalized-goal-space-contrastive-reinforcement-learning)  
+   evidence：自监督掩码自编码器用于表示学习
+7. [RaDAR: Relation-aware Diffusion-Asymmetric Graph Contrastive Learning for Recommendation](/202603/23/2603.16800v1-radar-relation-aware-diffusion-asymmetric-graph-contrastive-learning-for-recommendation)  
    标签：评分：7.0/10、query:q1
-   evidence：对比强化学习的新型数据增强方法
-9. [SHAMISA: SHAped Modeling of Implicit Structural Associations for Self-supervised No-Reference Image Quality Assessment](/202603/22/2603.13669v2-shamisa-shaped-modeling-of-implicit-structural-associations-for-self-supervised-no-reference-image-quality-assessment)  
-   标签：评分：6.0/10、query:q2
-   evidence：非对比自监督学习与结构化关系
-10. [Evaluating Compositional Structure in Audio Representations](/202603/22/2603.13685v1-evaluating-compositional-structure-in-audio-representations)  
-   标签：评分：6.0/10、query:q5
-   evidence：音频表征组合结构评估基准
-11. [Pixel-level Scene Understanding in One Token: Visual States Need What-is-Where Composition](/202603/22/2603.13904v1-pixel-level-scene-understanding-in-one-token-visual-states-need-what-is-where-composition)  
+   evidence：图对比学习与新颖的扩散非对称框架
+8. [Contrastive Reasoning Alignment: Reinforcement Learning from Hidden Representations](/202603/23/2603.17305v1-contrastive-reasoning-alignment-reinforcement-learning-from-hidden-representations)  
+   标签：评分：7.0/10、query:q1
+   evidence：新颖的对比表示学习方法结合强化学习
+9. [Membership Inference for Contrastive Pre-training Models with Text-only PII Queries](/202603/23/2603.14222v1-membership-inference-for-contrastive-pre-training-models-with-text-only-pii-queries)  
+   标签：评分：6.0/10、query:q4
+   evidence：针对CLIP和CLAP等对比预训练模型的成员推理
+10. [Learning Image-Text Matching with Optimal Partial Transport](/202603/23/2603.14349v1-learning-image-text-matching-with-optimal-partial-transport)  
+   标签：评分：6.0/10、query:q4
+   evidence：基于最优传输的跨模态图像-文本匹配
+11. [Masked BRep Autoencoder via Hierarchical Graph Transformer](/202603/23/2603.14927v2-masked-brep-autoencoder-via-hierarchical-graph-transformer)  
    标签：评分：6.0/10、query:q7
-   evidence：自监督视觉状态表示学习，采用全局到局部重建目标
+   evidence：通过掩码图自编码器进行3D CAD表示的自监督学习
 
 
 <div class="dpr-home-promo-card">

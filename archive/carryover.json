@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-03-22T20:04:34.070113+00:00",
-  "updated_date": "20260322",
+  "generated_at": "2026-03-23T20:23:37.120344+00:00",
+  "updated_date": "20260323",
   "carryover_days": 9,
   "items": [
     {
@@ -39,89 +39,7 @@
       "matched_requirement_id": "req-10",
       "selection_source": "carryover_cache",
       "paper_id": "2603.12514v1",
-      "carry_days": 2
-    },
-    {
-      "id": "2602.19857v1",
-      "title": "Contrastive meta-domain adaptation for robust skin lesion classification across clinical and acquisition conditions",
-      "abstract": "Deep learning models for dermatological image analysis remain sensitive to acquisition variability and domain-specific visual characteristics, leading to performance degradation when deployed in clinical settings. We investigate how visual artifacts and domain shifts affect deep learning-based skin lesion classification. We propose an adaptation strategy, grounded in the idea of visual meta-domains, that transfers visual representations from larger dermoscopic datasets into clinical image domains, thereby improving generalization robustness. Experiments across multiple dermatology datasets show consistent gains in classification performance and reduced gaps between dermoscopic and clinical images. These results emphasize the importance of domain-aware training for deployable systems.",
-      "authors": [
-        "Rodrigo Mota",
-        "Kelvin Cunha",
-        "Emanoel dos Santos",
-        "Fábio Papais",
-        "Francisco Filho",
-        "Thales Bezerra",
-        "Erico Medeiros",
-        "Paulo Borba",
-        "Tsang Ing Ren"
-      ],
-      "primary_category": "cs.CV",
-      "categories": [
-        "cs.CV"
-      ],
-      "published": "2026-02-23T13:56:49+00:00",
-      "link": "https://arxiv.org/pdf/2602.19857v1",
-      "tags": [
-        "keyword:生成对比学习",
-        "query:生成对比学习"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "contrastive learning for skin lesion classification with domain adaptation",
-      "llm_evidence_cn": "对比学习用于皮肤病变分类与域适应",
-      "llm_evidence": "对比学习用于皮肤病变分类与域适应",
-      "canonical_evidence": "对比学习用于皮肤病变分类与域适应",
-      "llm_tldr_en": "Contrastive meta-domain adaptation improves skin lesion classification robustness across clinical and dermoscopic domains with limited target data.",
-      "llm_tldr_cn": "对比元域适应提升皮肤病变分类在临床和皮肤镜域间的鲁棒性，应对目标数据有限问题。",
-      "llm_tldr": "对比元域适应提升皮肤病变分类在临床和皮肤镜域间的鲁棒性，应对目标数据有限问题。",
-      "llm_tags": [
-        "query:q10"
-      ],
-      "matched_query_tag": "query:q10",
-      "matched_query_text": "how does contrastive learning improve medical image classification with limited annotations",
-      "matched_requirement_id": "req-10",
-      "selection_source": "carryover_cache",
-      "paper_id": "2602.19857v1",
-      "carry_days": 2
-    },
-    {
-      "id": "2603.09367v1",
-      "title": "M3GCLR: Multi-View Mini-Max Infinite Skeleton-Data Game Contrastive Learning For Skeleton-Based Action Recognition",
-      "abstract": "In recent years, contrastive learning has drawn significant attention as an effective approach to reducing reliance on labeled data. However, existing methods for self-supervised skeleton-based action recognition still face three major limitations: insufficient modeling of view discrepancies, lack of effective adversarial mechanisms, and uncontrollable augmentation perturbations. To tackle these issues, we propose the Multi-view Mini-Max infinite skeleton-data Game Contrastive Learning for skeleton-based action Recognition (M3GCLR), a game-theoretic contrastive framework. First, we establish the Infinite Skeleton-data Game (ISG) model and the ISG equilibrium theorem, and further provide a rigorous proof, enabling mini-max optimization based on multi-view mutual information. Then, we generate normal-extreme data pairs through multi-view rotation augmentation and adopt temporally averaged input as a neutral anchor to achieve structural alignment, thereby explicitly characterizing perturbation strength. Next, leveraging the proposed equilibrium theorem, we construct a strongly adversarial mini-max skeleton-data game to encourage the model to mine richer action-discriminative information. Finally, we introduce the dual-loss equilibrium optimizer to optimize the game equilibrium, allowing the learning process to maximize action-relevant information while minimizing encoding redundancy, and we prove the equivalence between the proposed optimizer and the ISG model. Extensive Experiments show that M3GCLR achieves three-stream 82.1%, 85.8% accuracy on NTU RGB+D 60 (X-Sub, X-View) and 72.3%, 75.0% accuracy on NTU RGB+D 120 (X-Sub, X-Set). On PKU-MMD Part I and II, it attains 89.1%, 45.2% in three-stream respectively, all results matching or outperforming state-of-the-art performance. Ablation studies confirm the effectiveness of each component.",
-      "authors": [
-        "Yanshan Li",
-        "Ke Ma",
-        "Miaomiao Wei",
-        "Linhui Dai"
-      ],
-      "primary_category": "cs.CV",
-      "categories": [
-        "cs.CV",
-        "cs.AI"
-      ],
-      "published": "2026-03-10T08:45:14+00:00",
-      "link": "https://arxiv.org/pdf/2603.09367v1",
-      "tags": [
-        "keyword:对比学习进展",
-        "query:对比学习进展"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "game-theoretic contrastive learning framework with mini-max optimization",
-      "llm_evidence_cn": "博弈论对比学习框架与极小极大优化",
-      "llm_evidence": "博弈论对比学习框架与极小极大优化",
-      "canonical_evidence": "博弈论对比学习框架与极小极大优化",
-      "llm_tldr_en": "Proposes M3GCLR, a game-theoretic contrastive framework with Infinite Skeleton-data Game for self-supervised skeleton action recognition.",
-      "llm_tldr_cn": "提出M3GCLR，基于无限骨架数据博弈的博弈论对比学习框架用于自监督骨架动作识别。",
-      "llm_tldr": "提出M3GCLR，基于无限骨架数据博弈的博弈论对比学习框架用于自监督骨架动作识别。",
-      "llm_tags": [
-        "query:q1"
-      ],
-      "matched_query_tag": "query:q1",
-      "matched_query_text": "contrastive learning recent advances and new methods",
-      "matched_requirement_id": "req-1",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.09367v1",
-      "carry_days": 2
+      "carry_days": 3
     },
     {
       "id": "2603.04878v1",
@@ -162,7 +80,7 @@
       "matched_requirement_id": "req-5",
       "selection_source": "carryover_cache",
       "paper_id": "2603.04878v1",
-      "carry_days": 2
+      "carry_days": 3
     },
     {
       "id": "2603.14086v1",
@@ -198,7 +116,7 @@
       "matched_requirement_id": "req-3",
       "selection_source": "carryover_cache",
       "paper_id": "2603.14086v1",
-      "carry_days": 2
+      "carry_days": 3
     },
     {
       "id": "2603.02929v1",
@@ -238,7 +156,7 @@
       "matched_requirement_id": "req-7",
       "selection_source": "carryover_cache",
       "paper_id": "2603.02929v1",
-      "carry_days": 2
+      "carry_days": 3
     },
     {
       "id": "2603.03530v1",
@@ -276,7 +194,7 @@
       "matched_requirement_id": "req-9",
       "selection_source": "carryover_cache",
       "paper_id": "2603.03530v1",
-      "carry_days": 2
+      "carry_days": 3
     },
     {
       "id": "2603.04516v1",
@@ -317,7 +235,7 @@
       "matched_requirement_id": "req-8",
       "selection_source": "carryover_cache",
       "paper_id": "2603.04516v1",
-      "carry_days": 2
+      "carry_days": 3
     },
     {
       "id": "2603.00951v1",
@@ -353,7 +271,7 @@
       "matched_requirement_id": "req-9",
       "selection_source": "carryover_cache",
       "paper_id": "2603.00951v1",
-      "carry_days": 2
+      "carry_days": 3
     },
     {
       "id": "2603.04037v1",
@@ -392,82 +310,7 @@
       "matched_requirement_id": "req-3",
       "selection_source": "carryover_cache",
       "paper_id": "2603.04037v1",
-      "carry_days": 2
-    },
-    {
-      "id": "2602.18010v1",
-      "title": "Scaling Audio-Text Retrieval with Multimodal Large Language Models",
-      "abstract": "Audio-text retrieval is crucial for bridging acoustic signals and natural language. While contrastive dual-encoder architectures like CLAP have shown promise, they are fundamentally limited by the capacity of small-scale encoders. Specifically, the text encoders struggle to understand complex queries that require reasoning or world knowledge. In this paper, we propose AuroLA, a novel contrastive language-audio pre-training framework that re-purposes Multimodal Large Language Models (MLLMs) as a unified backbone for retrieval. Specifically, we make three contributions: (i) we construct a scalable data pipeline that curates diverse audio from multiple sources and generates multi-granular captions, ranging from long descriptions to structured tags, via automated annotation; (ii) we adapt an MLLM for retrieval by prompting it to summarize the audio/text input and using the hidden state of a special token as audio/text embeddings. For model training, we devise a novel Hybrid-NCE loss, which employs multi-granular supervision and hard-negative reweighting to robustly align audio with diverse textual supervision; and (iii) we design an MLLM-based bidirectional re-ranking module that refines retrieval candidates through deep cross-modal interaction. Extensive experiments demonstrate that AuroLA consistently outperforms state-of-the-art models, including the recent PE-AV, while utilizing only approximately 1% of PE-AV's training data. Lastly, we observe clear scaling trends regarding dataset size and model capacity, validating the effectiveness of MLLM as a unified backbone for audio-text retrieval. Code is available at https://github.com/Jazzcharles/AuroLA.",
-      "authors": [
-        "Jilan Xu",
-        "Carl Thomé",
-        "Danijela Horak",
-        "Weidi Xie",
-        "Andrew Zisserman"
-      ],
-      "primary_category": "cs.SD",
-      "categories": [
-        "cs.SD"
-      ],
-      "published": "2026-02-20T05:48:51+00:00",
-      "link": "https://arxiv.org/pdf/2602.18010v1",
-      "tags": [
-        "keyword:对比学习进展",
-        "query:对比学习进展"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "contrastive language-audio pre-training with multimodal large language models",
-      "llm_evidence_cn": "基于多模态大语言模型的对比式语言-音频预训练",
-      "llm_evidence": "基于多模态大语言模型的对比式语言-音频预训练",
-      "canonical_evidence": "基于多模态大语言模型的对比式语言-音频预训练",
-      "llm_tldr_en": "Proposes AuroLA, a contrastive framework repurposing MLLMs for scalable audio-text retrieval with multi-granular captions.",
-      "llm_tldr_cn": "提出AuroLA，一种重新利用多模态大语言模型进行可扩展音频-文本检索的对比框架。",
-      "llm_tldr": "提出AuroLA，一种重新利用多模态大语言模型进行可扩展音频-文本检索的对比框架。",
-      "llm_tags": [
-        "query:q4"
-      ],
-      "matched_query_tag": "query:q4",
-      "matched_query_text": "multimodal contrastive learning image text audio",
-      "matched_requirement_id": "req-4",
-      "selection_source": "carryover_cache",
-      "paper_id": "2602.18010v1",
-      "carry_days": 2
-    },
-    {
-      "id": "2602.22452v1",
-      "title": "CWM: Contrastive World Models for Action Feasibility Learning in Embodied Agent Pipelines",
-      "abstract": "A reliable action feasibility scorer is a critical bottleneck in embodied agent pipelines: before any planning or reasoning occurs, the agent must identify which candidate actions are physically executable in the current state. Existing approaches use supervised fine-tuning (SFT) to train action scorers, but SFT treats each candidate independently and does not explicitly teach the model to discriminate between actions that are physically correct and those that are subtly wrong. We propose the Contrastive World Model (CWM), which fine-tunes a large language model (LLM) as an action scorer using an InfoNCE contrastive objective with hard-mined negative examples. The key idea is to push valid actions away from invalid ones in scoring space, with special emphasis on hard negatives: semantically similar but physically incompatible candidates. We evaluate CWM on the ScienceWorld benchmark through two studies. First, an intrinsic affordance evaluation on 605 hard-negative test pairs shows that CWM outperforms SFT by +6.76 percentage points on Precision@1 for minimal-edit negatives -- cases where a single word changes the physical outcome -- and achieves a higher AUC-ROC (0.929 vs. 0.906). Second, a live filter characterisation study measures how well CWM ranks gold-path actions against all valid environment actions during task execution. Under out-of-distribution stress conditions, CWM maintains a significantly better safety margin (-2.39) than SFT (-3.96), indicating that the gold action is ranked closer to the top. These results support the hypothesis that contrastive training induces representations that capture physical feasibility more faithfully than SFT alone.",
-      "authors": [
-        "Chayan Banerjee"
-      ],
-      "primary_category": "cs.AI",
-      "categories": [
-        "cs.AI",
-        "cs.RO"
-      ],
-      "published": "2026-02-25T22:27:30+00:00",
-      "link": "https://arxiv.org/pdf/2602.22452v1",
-      "tags": [
-        "keyword:对比学习进展",
-        "query:对比学习进展"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "InfoNCE contrastive objective with hard-mined negative examples for action scoring",
-      "llm_evidence_cn": "用于动作评分的InfoNCE对比目标与难负例挖掘",
-      "llm_evidence": "用于动作评分的InfoNCE对比目标与难负例挖掘",
-      "canonical_evidence": "用于动作评分的InfoNCE对比目标与难负例挖掘",
-      "llm_tldr_en": "Proposes CWM, fine-tuning LLMs as action scorers using contrastive learning with hard negative mining in embodied agents.",
-      "llm_tldr_cn": "提出CWM，利用对比学习与难负例挖掘将大语言模型微调为具身智能体中的动作评分器。",
-      "llm_tldr": "提出CWM，利用对比学习与难负例挖掘将大语言模型微调为具身智能体中的动作评分器。",
-      "llm_tags": [
-        "query:q3"
-      ],
-      "matched_query_tag": "query:q3",
-      "matched_query_text": "hard negative sampling techniques in contrastive learning",
-      "matched_requirement_id": "req-3",
-      "selection_source": "carryover_cache",
-      "paper_id": "2602.22452v1",
-      "carry_days": 2
+      "carry_days": 3
     },
     {
       "id": "2603.08012v1",
@@ -504,47 +347,7 @@
       "matched_requirement_id": "req-8",
       "selection_source": "carryover_cache",
       "paper_id": "2603.08012v1",
-      "carry_days": 2
-    },
-    {
-      "id": "2602.21154v1",
-      "title": "CG-DMER: Hybrid Contrastive-Generative Framework for Disentangled Multimodal ECG Representation Learning",
-      "abstract": "Accurate interpretation of electrocardiogram (ECG) signals is crucial for diagnosing cardiovascular diseases. Recent multimodal approaches that integrate ECGs with accompanying clinical reports show strong potential, but they still face two main concerns from a modality perspective: (1) intra-modality: existing models process ECGs in a lead-agnostic manner, overlooking spatial-temporal dependencies across leads, which restricts their effectiveness in modeling fine-grained diagnostic patterns; (2) inter-modality: existing methods directly align ECG signals with clinical reports, introducing modality-specific biases due to the free-text nature of the reports. In light of these two issues, we propose CG-DMER, a contrastive-generative framework for disentangled multimodal ECG representation learning, powered by two key designs: (1) Spatial-temporal masked modeling is designed to better capture fine-grained temporal dynamics and inter-lead spatial dependencies by applying masking across both spatial and temporal dimensions and reconstructing the missing information. (2) A representation disentanglement and alignment strategy is designed to mitigate unnecessary noise and modality-specific biases by introducing modality-specific and modality-shared encoders, ensuring a clearer separation between modality-invariant and modality-specific representations. Experiments on three public datasets demonstrate that CG-DMER achieves state-of-the-art performance across diverse downstream tasks.",
-      "authors": [
-        "Ziwei Niu",
-        "Hao Sun",
-        "Shujun Bian",
-        "Xihong Yang",
-        "Lanfen Lin",
-        "Yuxin Liu",
-        "Yueming Jin"
-      ],
-      "primary_category": "cs.AI",
-      "categories": [
-        "cs.AI"
-      ],
-      "published": "2026-02-24T17:59:21+00:00",
-      "link": "https://arxiv.org/pdf/2602.21154v1",
-      "tags": [
-        "keyword:对比学习进展"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "hybrid contrastive-generative framework for multimodal ECG-text representation learning",
-      "llm_evidence_cn": "混合对比-生成框架用于多模态心电图-文本表示学习",
-      "llm_evidence": "混合对比-生成框架用于多模态心电图-文本表示学习",
-      "canonical_evidence": "混合对比-生成框架用于多模态心电图-文本表示学习",
-      "llm_tldr_en": "CG-DMER combines contrastive and generative learning for disentangled multimodal ECG and clinical report representations.",
-      "llm_tldr_cn": "CG-DMER结合对比与生成学习，实现解耦的多模态心电图与临床报告表示。",
-      "llm_tldr": "CG-DMER结合对比与生成学习，实现解耦的多模态心电图与临床报告表示。",
-      "llm_tags": [
-        "query:q4"
-      ],
-      "matched_query_tag": "query:q4",
-      "matched_query_text": "multimodal contrastive learning image text audio",
-      "matched_requirement_id": "req-4",
-      "selection_source": "carryover_cache",
-      "paper_id": "2602.21154v1",
-      "carry_days": 2
+      "carry_days": 3
     },
     {
       "id": "2603.09370v1",
@@ -582,7 +385,7 @@
       "matched_requirement_id": "req-1",
       "selection_source": "carryover_cache",
       "paper_id": "2603.09370v1",
-      "carry_days": 2
+      "carry_days": 3
     },
     {
       "id": "2603.07874v1",
@@ -620,43 +423,7 @@
       "matched_requirement_id": "req-4",
       "selection_source": "carryover_cache",
       "paper_id": "2603.07874v1",
-      "carry_days": 2
-    },
-    {
-      "id": "2602.23589v2",
-      "title": "Pseudo Contrastive Learning for Diagram Comprehension in Multimodal Models",
-      "abstract": "Recent multimodal models such as Contrastive Language-Image Pre-training (CLIP) have shown remarkable ability to align visual and linguistic representations. However, domains where small visual differences carry large semantic significance, such as diagram understanding, remain challenging due to the models' limited sensitivity to fine-grained structural variations.   We propose a new training paradigm designed to enhance diagram comprehension in vision-language models. Our approach introduces pseudo contrastive samples generated by a diagram renderer that creates synthetic diagrams using randomly picked text elements. These samples highlight structural differences in diagrammatic imagery without requiring any modification or editing of the original data. By incorporating these pseudo contrastive samples into the training objective, the model learns to capture more precise and semantically consistent diagram structures.   Empirical evaluations on a benchmark dataset of flowcharts demonstrate substantial improvements over standard CLIP and hard-negative CLIP training in both image-text matching and visual question answering tasks. The results underscore the value of domain-specific training strategies and contribute to advancing diagrammatic understanding within the broader context of vision-language learning.",
-      "authors": [
-        "Hiroshi Sasaki"
-      ],
-      "primary_category": "cs.CV",
-      "categories": [
-        "cs.CV",
-        "cs.AI"
-      ],
-      "published": "2026-02-27T01:39:53+00:00",
-      "link": "https://arxiv.org/pdf/2602.23589v2",
-      "tags": [
-        "keyword:对比学习进展",
-        "query:对比学习进展"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "proposes pseudo contrastive learning for multimodal diagram comprehension, extending CLIP-style contrastive alignment to fine-grained structural variations",
-      "llm_evidence_cn": "提出伪对比学习用于多模态图表理解，扩展CLIP式对比对齐到细粒度结构变化",
-      "llm_evidence": "提出伪对比学习用于多模态图表理解，扩展CLIP式对比对齐到细粒度结构变化",
-      "canonical_evidence": "提出伪对比学习用于多模态图表理解，扩展CLIP式对比对齐到细粒度结构变化",
-      "llm_tldr_en": "Introduces pseudo contrastive samples via synthetic diagram generation to improve multimodal vision-language models' sensitivity to structural details.",
-      "llm_tldr_cn": "通过合成图表生成伪对比样本，提升多模态视觉语言模型对结构细节的敏感度。",
-      "llm_tldr": "通过合成图表生成伪对比样本，提升多模态视觉语言模型对结构细节的敏感度。",
-      "llm_tags": [
-        "query:q4"
-      ],
-      "matched_query_tag": "query:q4",
-      "matched_query_text": "multimodal contrastive learning image text audio",
-      "matched_requirement_id": "req-4",
-      "selection_source": "carryover_cache",
-      "paper_id": "2602.23589v2",
-      "carry_days": 2
+      "carry_days": 3
     },
     {
       "id": "2603.04772v1",
@@ -698,7 +465,7 @@
       "matched_requirement_id": "req-3",
       "selection_source": "carryover_cache",
       "paper_id": "2603.04772v1",
-      "carry_days": 2
+      "carry_days": 3
     },
     {
       "id": "2603.10648v2",
@@ -735,7 +502,7 @@
       "matched_requirement_id": "req-1",
       "selection_source": "carryover_cache",
       "paper_id": "2603.10648v2",
-      "carry_days": 2
+      "carry_days": 3
     },
     {
       "id": "2603.09825v1",
@@ -777,7 +544,7 @@
       "matched_requirement_id": "req-8",
       "selection_source": "carryover_cache",
       "paper_id": "2603.09825v1",
-      "carry_days": 2
+      "carry_days": 3
     },
     {
       "id": "2603.08224v1",
@@ -817,7 +584,7 @@
       "matched_requirement_id": "req-4",
       "selection_source": "carryover_cache",
       "paper_id": "2603.08224v1",
-      "carry_days": 2
+      "carry_days": 3
     }
   ]
 }
