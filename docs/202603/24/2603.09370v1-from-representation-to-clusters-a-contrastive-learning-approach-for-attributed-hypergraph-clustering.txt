@@ -1,0 +1,899 @@
+Title: From Representation to Clusters: A Contrastive Learning Approach for Attributed Hypergraph Clustering
+
+URL Source: https://arxiv.org/pdf/2603.09370v1
+
+Published Time: Wed, 11 Mar 2026 00:46:50 GMT
+
+Number of Pages: 12
+
+Markdown Content:
+# From Representation to Clusters: A Contrastive Learning Approach for Attributed Hypergraph Clustering 
+
+# Li Ni 
+
+School of Computer Science and Technology Anhui University Hefei, China nili@ahu.edu.cn 
+
+# Shuaikang Zeng 
+
+School of Computer Science and Technology Anhui University Hefei, China e24301218@stu.ahu.edu.cn 
+
+# Lin Mu ∗
+
+School of Computer Science and Technology Anhui University Hefei, China mulin@ahu.edu.cn 
+
+# Longlong Lin 
+
+School of Computer Science and Technology Southwest University Chongqing, China longlonglin@swu.edu.cn 
+
+## Abstract 
+
+Contrastive learning has demonstrated strong performance in at-tributed hypergraph clustering. Typically, existing methods based on contrastive learning first learn node embeddings and then apply clustering algorithms, such as k-means, to these embeddings to obtain the clustering results. However, these methods lack direct clustering supervision, risking the inclusion of clustering-irrelevant information in the learned graph. To this end, we propose a Con-trastive learning approach for Attributed Hypergraph Clustering (CAHC), an end-to-end method that simultaneously learns node embeddings and obtains clustering results. CAHC consists of two main steps: representation learning and cluster assignment learn-ing. The former employs a novel contrastive learning approach that incorporates both node-level and hyperedge-level objectives to generate node embeddings. The latter joint embedding and cluster-ing optimization to refine these embeddings by clustering-oriented guidance and obtains clustering results simultaneously. Extensive experimental results demonstrate that CAHC outperforms baselines on eight datasets. 
+
+## CCS Concepts 
+
+• Theory of computation → Unsupervised learning and clus-tering ; • Mathematics of computing → Hypergraphs .
+
+## Keywords 
+
+Attributed hypergraph clustering, contrastive learning, hypergraph representation learning, hypergraph attention network 
+
+ACM Reference Format: 
+
+Li Ni, Shuaikang Zeng, Lin Mu, and Longlong Lin. 2026. From Representation to Clusters: A Contrastive Learning Approach for Attributed Hypergraph Clustering. In Proceedings of the ACM Web Conference 2026 (WWW ’26),  
+
+> ∗Corresponding author.
+> This work is licensed under a Creative Commons Attribution 4.0 International License.
+> WWW ’26, Dubai, United Arab Emirates
+> ©2026 Copyright held by the owner/author(s). ACM ISBN 979-8-4007-2307-0/2026/04 https://doi.org/10.1145/3774904.3792432
+
+(a) Existing contrastive hypergraph clustering methods. 
+
+(b) Proposed CAHC. 
+
+Figure 1: Comparison of contrastive learning-based hyper-graph clustering methods and the proposed CAHC. 
+
+April 13–17, 2026, Dubai, United Arab Emirates. ACM, New York, NY, USA, 12 pages. https://doi.org/10.1145/3774904.3792432 
+
+## 1 Introduction 
+
+Hypergraphs are an effective tool for modeling high-order rela-tionships among entities, as each hyperedge can connect several nodes [ 5 , 49 ]. This ability makes hypergraphs particularly useful in modeling complex relationships in various real-world applica-tions, such as recommender systems [ 39 ], computer vision [ 47 ], and neuroscience [ 41 ]. These high-order relationships cannot be effectively represented by ordinary pairwise graphs, where each edge connects only two nodes [ 4, 5 , 49 , 51 ]. Hypergraphs often contain cluster structure [ 18 ], and identifying such structures has widespread applications in fields [ 1 ], such as parallel computing [15 ] and circuit design [ 17 ]. As a result, researchers have developed various hypergraph clustering methods [22, 34, 40].  
+
+> arXiv:2603.09370v1 [cs.LG] 10 Mar 2026 WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates Li Ni, Shuaikang Zeng, Lin Mu, and Longlong Lin
+
+Existing hypergraph clustering methods can be broadly catego-rized into traditional and deep learning-based approaches [ 34 ]. Tra-ditional methods include spectral clustering-based methods [ 29 , 45 ], fuzzy memberships-based methods [ 40 ], and stochastic block mod-els [ 7 , 28 , 48 ]. These methods often struggle to capture complex and high-order structural information effectively [ 22 ]. In contrast, deep learning-based approaches have gained much attention for their ability to capture such high-order information [ 34 ]. Several recent self-supervised frameworks, including SE-HSSL [ 22 ], Hyper-GCL [ 36 ], and TriCL [ 20 ] have improved representation capabilities. These methods generally use contrastive learning to learn repre-sentations, which are then partitioned using clustering algorithms, such as k-means, to form clusters, as shown in Figure 1(a). Although contrastive learning-based hypergraph clustering meth-ods have achieved promising results, these methods typically learn representations by comparing two augmented views, lacking ex-plicit clustering guidance. As a result, they may incorporate ir-relevant or non-cluster-related features into the learned graph, ultimately resulting in low-quality clusters. To address this, we propose a contrastive learning approach for attributed hypergraph clustering, called CAHC. As shown in Figure 1(b), CAHC comprises two steps: the representation learning and the cluster assignment learning. The former aims to learn high-quality node embeddings based on the hypergraph structure and attributes. The latter jointly optimizes both the embeddings and clustering, achieving a syner-gistic optimization of both the node embeddings and clustering results. Notably, in CAHC, traditional clustering algorithms such as k-means are no longer required. The main contributions of this work are summarized as follows: 
+
+• We propose an attributed hypergraph clustering method based on contrastive learning, termed CAHC. To the best of our knowledge, it is the first end-to-end model for attributed hypergraph clustering. CAHC employs contrastive learning for node embeddings, followed by a joint optimization of embedding and clustering objectives to yield the clustering results. 
+
+• We propose a clustering loss function that measures the closeness between soft assignments and hard assignments. It shares node embeddings with representation learning to ef-fectively implement cluster-guidance embedding and cluster assignment simultaneously. In addition, we design a novel hyperedge-level objective to capture the structural informa-tion of hypergraphs. 
+
+• Extensive experiments on eight real-world datasets demon-strate that CAHC outperforms baselines. Furthermore, abla-tion studies confirm that each component of CAHC plays a crucial role. 
+
+Reproduction. The source code of this paper can be found at https://github.com/nilics/CAHC. 
+
+## 2 Proposed method 2.1 Problem statement 
+
+Data model. We denote a hypergraph H = (𝑉 , 𝐸, 𝑋 ), where 
+
+𝑉 = {𝑣 1, 𝑣 2, . . . , 𝑣 𝑁 } represents the set of nodes, with 𝑁 being the total number of nodes. The set 𝐸 = {𝑒 1, 𝑒 2, . . . , 𝑒 𝑀 } represents the collection of hyperedges, where each hyperedge 𝑒 𝑗 ⊆ 𝑉 is a non-empty subset of nodes and 𝑀 is the number of hyperedges. Each node 𝑣 𝑖 ∈ 𝑉 is associated with a feature vector x𝑖 ∈ R𝑑 , which is stacked into the node feature matrix 𝑋 ∈ R𝑁 ×𝑑 , where each row 
+
+𝑋 [𝑖, :] corresponds to the feature vector of node 𝑣 𝑖 . The hyperedges are also represented by the incident matrix 𝐻 ∈ { 0, 1}𝑁 ×𝑀 , where 
+
+𝐻 𝑖 𝑗 = 1 if node 𝑣 𝑖 is part of hyperedge 𝑒 𝑗 , and 0 otherwise. Based on the incident matrix 𝐻 , the hypergraph H = (𝑉 , 𝐸, 𝑋 ) can also be expressed as H = (𝑋, 𝐻 ).
+
+Problem statement. Given a hypergraph H = (𝑋, 𝐻 ), the task aims to simultaneously encode the nodes in an unsupervised manner using a hypergraph neural network, while also partitioning the hypergraph into 𝑘 clusters 𝐶 = {𝐶 1, 𝐶 2, . . . , 𝐶 𝑘 } without any supervision. 
+
+## 2.2 Overview 
+
+In this section, we propose a contrastive learning approach for at-tributed hypergraph clustering, called CAHC. The process of CAHC is shown in Figure 2. CAHC comprises two core steps: represen-tation learning, which aims to learn node embeddings from the inherent structural and attribute information; and cluster assign-ment learning, which optimizes these embeddings to align with the final cluster structure, thereby achieving synergistic optimization of representation learning and clustering tasks. 
+
+## 2.3 Representation learning 
+
+CAHC adopts a contrastive learning paradigm that learns represen-tations by maximizing the agreement between different views. As depicted in Figure 2, it comprises three main components: data aug-mentation, hypergraph encoding, and objective optimization. First, data augmentation is applied to the hypergraph H = (𝑋, 𝐻 ) to ob-tain two correlated views H1 = (𝑋 (1) , 𝐻 (1) ) and H2 = (𝑋 (2) , 𝐻 (2) ).Next, a shared hypergraph neural network encoder 𝑓 𝜃 generates node representations 𝑍 for these augmented views. Finally, the en-coder is optimized using two learning objectives: a hyperedge-level contrastive objective and a node-level contrastive objective. 
+
+Data augmentation. We consider two hypergraph augmen-tation strategies: node feature masking and membership relation masking. In node feature masking, we construct a binary masking matrix 𝑀 𝑓 ∈ { 0, 1}𝑁 ×𝑑 with the same shape as the node feature ma-trix 𝑋 [ 31 , 46 ]. Each element 𝑀 𝑓 ;𝑖 𝑗 is independently sampled from a Bernoulli distribution: 𝑀 𝑓 ;𝑖 𝑗 ∼ B( 1 − 𝑝 𝑓 ), where 𝑝 𝑓 represents the probability of masking a feature element[ 20 ]. The augmented feature matrix 𝑋 ′ is computed as follows: 
+
+𝑋 ′ = 𝑋 ⊙ 𝑀 𝑓 , (1) where ⊙ denotes element-wise multiplication. This operation pre-serves feature values where 𝑀 𝑓 ;𝑖 𝑗 = 1, and masks (sets to zero) features where 𝑀 𝑓 ;𝑖 𝑗 = 0.Membership relation masking is designed to perturb higher-order relationships by randomly removing or adding nodes in hy-peredges. Similar to the node feature masking strategy, we construct a binary masking matrix 𝑀 𝑚 ∈ { 0, 1}𝑁 ×𝑀 with the shape of the incident matrix 𝐻 . Each element 𝑀 𝑚,𝑖 𝑗 is independently sampled from a Bernoulli distribution B( 1−𝑝 𝑚 ), where 𝑝 𝑚 denotes the prob-ability of masking a node-hyperedge association[ 22 ]. The enhanced From Representation to Clusters: A Contrastive Learning Approach for Attributed Hypergraph Clustering WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates 
+
+Figure 2: Overview of CAHC. CAHC consists of two core steps: hypergraph representation learning and cluster assignment learning. Specifically, hypergraph representation learning optimizes Lhyper + L node to learn node embeddings from the inherent structural and attribute information of the data. Cluster assignment learning optimizes Lhyper + Lnode + Lclu to achieve representations and clustering results. 
+
+hypergraph topology is the modified incident matrix 𝐻 ′:
+
+𝐻 ′ = 𝐻 ⊙ 𝑀 𝑚 , (2) where ⊙ denotes element-wise multiplication. This operation pre-serves the elements where M𝑚,𝑖 𝑗 = 1, while masking those where 
+
+M𝑚,𝑖 𝑗 = 0. The hyperparameter 𝑝 𝑚 controls the intensity of this topological perturbation. 
+
+Hypergraph encoder. The hypergraph encoder is based on a hypergraph neural network (HGNN). To capture the varying importance of nodes within a hyperedge, we incorporate a multi-head attention mechanism into the HGNN. Formally, the 𝑙 th layer of the hypergraph neural network can be expressed as: 
+
+𝑃 (𝑙 ) = 𝜎 
+
+
+
+Agg 𝐸 →𝑉 (𝑃 (𝑙 −1) , 𝑄 (𝑙 −1) , 𝐻 )Θ(𝑙 ) 
+
+> 𝑉
+
++ 𝑃 (𝑙 −1) Φ(𝑙 )
+
+> 𝑉
+
+
+
+, (3) 
+
+𝑄 (𝑙 ) = 𝜎 
+
+
+
+Agg 𝑉 →𝐸 (𝑃 (𝑙 −1) , 𝑄 (𝑙 −1) , 𝐻 )Θ(𝑙 ) 
+
+> 𝐸
+
++ 𝑄 (𝑙 −1) Φ(𝑙 )
+
+> 𝐸
+
+
+
+, (4) where 𝜎 is the nonlinear activation function ReLU, Θ𝑉 , Φ𝑉 , Θ𝐸 ,and Φ𝐸 are learnable linear transformation matrices. 𝑃 (𝑙 ) and 𝑄 (𝑙 )
+
+represent node and hyperedge resentations, respectively. 𝑃 (0) is initialized with node features 𝑋 , and 𝑄 (0) is initialized by aggre-gating the node features 𝑋 of its associated nodes (e.g., via mean pooling). The functions Agg 𝑉 →𝐸 and Agg 𝐸 →𝑉 are aggregation op-erations, where Agg 𝐸 →𝑉 refers to hyperedge-to-node aggregation and Agg 𝑉 →𝐸 corresponds to node-to-hyperedge aggregation. Aggregation functions Agg 𝑉 →𝐸 and Agg 𝐸 →𝑉 are based on multi-head attention mechanisms to assign different weights to distinct node and hyperedge representations adaptively. This mechanism addresses a key limitation of HGNNs, which aggregate information via simple averaging and thus fail to model the varying impor-tance of nodes within a hyperedge. Taking the hyperedge-to-node aggregation Agg 𝐸 →𝑉 as an example, it is computed as follows: Agg 𝐸 →𝑉 (𝑃, 𝑄, 𝐻 ) = 𝑁 ℎ
+
+|| 
+
+> ℎ=1
+
+
+
+𝛼 (ℎ) 
+
+> 𝐸𝑉
+
+𝑄𝑊 (ℎ)
+
+> 𝑄
+
+
+
+𝑊 𝑂 , (5) where || denotes the concatenation operation, 𝑁 ℎ is the number of attention heads, 𝑊 (ℎ) 
+
+> 𝑄
+
+, and 𝑊 𝑂 are learnable weight matrices. The attention coefficient matrix 𝛼 (ℎ) 
+
+> 𝐸𝑉
+
+is computed as follows to learn the attention of node 𝑣 𝑖 to its associated hyperedge 𝑒 𝑗 :
+
+𝛼 (ℎ) 
+
+> 𝐸𝑉 ,𝑖 𝑗
+
+= softmax 𝑗 (𝑠 (ℎ) 
+
+> 𝑖 𝑗
+
+) = exp (𝑠 (ℎ) 
+
+> 𝑖 𝑗
+
+)
+
+Í𝑗 ′ ∈ N 𝑉 (𝑖 ) exp (𝑠 (ℎ)  
+
+> 𝑖 𝑗 ′
+
+) , (6) 
+
+𝑠 (ℎ) 
+
+> 𝑖 𝑗
+
+= LeakyReLU 
+
+
+
+(𝑎 (ℎ) )⊤ [𝑝 𝑖 𝑊 (ℎ) 
+
+> 𝑃
+
+|| 𝑞 𝑗 𝑊 (ℎ) 
+
+> 𝑄
+
+]
+
+
+
+, (7) where N𝑉 (𝑖 ) denotes the set of hyperedges associated with node 𝑣 𝑖 .The term 𝑠 (ℎ) 
+
+> 𝑖 𝑗
+
+represents the unnormalized attention score of node 
+
+𝑣 𝑖 towards hyperedge 𝑒 𝑗 under the ℎ-th attention head, which is parameterized by a learnable attention vector a(ℎ) . The aggregation from nodes to hyperedges, denoted as Agg 𝑉 →𝐸 , is implemented symmetrically. 
+
+Contrastive loss. Based on the aforementioned data augmen-tation strategy and shared hypergraph encoder, we optimize the encoder by minimizing the following two loss functions: hyperedge-level loss 𝐿 hyper and node-level loss 𝐿 node .The hyperedge-level loss aims to enable the model to distinguish which hyperedges are real or generated negative hyperedges, as follows: 
+
+Lhyper = − 1
+
+|𝐸 |∑︁ 𝑒 ∈𝐸 
+
+log (𝜎 (𝑆 (𝑦 𝑒 ))) − 1
+
+|𝐸 neg |∑︁ 𝑒 ∈𝐸 neg 
+
+log (1 − 𝜎 (𝑆 (𝑦 𝑒 ))) ,
+
+(8) where 𝜎 (·) denotes the Sigmoid function, 𝑆 (·) represents a shared scoring function (implemented as a multilayer perceptron) that computes a scalar score for all hyperedge representations, 𝑦 𝑒 is the representation of hyperedge 𝑒 , obtained by applying mean pooling to the node embeddings (generated by the encoder) that belong to 
+
+𝑒 , 𝐸 represent hyperedges in the original hypergraph, and 𝐸 neg rep-resents the set of generated negative hyperedges. These negative hyperedges are constructed by randomly replacing nodes in each original hyperedge 𝑒 ∈ 𝐸 to form invalid ones. The hyperedge-level loss adheres to the principle of contrastive learning by compris-ing two opposing objectives: a positive term that maximizes the similarity for nodes connected by real hyperedges in 𝐸 , and a neg-ative term that minimizes the similarity for nodes connected by artificially constructed negative hyperedges in 𝐸 neg .Node-level loss aims to make the representation of the same node in two augmented views similar, while ensuring that these WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates Li Ni, Shuaikang Zeng, Lin Mu, and Longlong Lin 
+
+representations are distinguishable from those of other nodes. For augmented views H1 = (𝑋 (1) , 𝐻 (1) ) and H2 = (𝑋 (2) , 𝐻 (2) ), the symmetric node loss function Lnode is computed as follows: 
+
+Lnode = 12𝑁 
+
+> 𝑁
+
+∑︁ 
+
+> 𝑖 =1
+
+h
+
+ℓ (𝑧 (1) 
+
+> 𝑖
+
+, 𝑧 (2) 
+
+> 𝑖
+
+) + ℓ (𝑧 (2) 
+
+> 𝑖
+
+, 𝑧 (1) 
+
+> 𝑖
+
+)
+
+i
+
+, (9) where ℓ (𝑧 (1) 
+
+> 𝑖
+
+, 𝑧 (2) 
+
+> 𝑖
+
+) is computed as: 
+
+ℓ (𝑧 (1) 
+
+> 𝑖
+
+, 𝑧 (2) 
+
+> 𝑖
+
+) = − log exp (sim (𝑧 (1) 
+
+> 𝑖
+
+, 𝑧 (2) 
+
+> 𝑖
+
+)/ 𝜏 𝑛 )
+
+Í𝑁 𝑘 =1 exp (sim (𝑧 (1) 
+
+> 𝑖
+
+, 𝑧 (2) 
+
+> 𝑘
+
+)/ 𝜏 𝑛 ) , (10) where sim (· , ·) denotes cosine similarity, and 𝜏 𝑛 is a temperature hyperparameter, 𝑧 (1) 
+
+> 𝑖
+
+and 𝑧 (2) 
+
+> 𝑖
+
+represent the final node representa-tion vectors obtained for the same node 𝑣 𝑖 in two augmented views, respectively, which through a shared encoder 𝑓 𝜃 and a nonlinear projection head 𝑔 𝜑 . Here, for any node representation 𝑧 (1) 
+
+> 𝑖
+
+from the first view, its corresponding representation 𝑧 (2) 
+
+> 𝑖
+
+in the second view forms a positive sample pair. Meanwhile, 𝑧 (1) 
+
+> 𝑖
+
+forms negative sample pairs with all other node representations 𝑧 (2) 
+
+> 𝑗
+
+(𝑗 ≠ 𝑖 ) from the second view[20]. The hyperedge-level loss calculated by Eq. (8) and node-level loss calculated by Eq. (9) are complementary. The hyperedge loss forces the model to understand the complex, higher-order interac-tion patterns between nodes, focusing on the structural within the hypergraph. On the other hand, the node loss ensures that the rep-resentations of different nodes are sufficiently distinct, emphasizing the individual discriminability of nodes. Together, these losses are integrated into the final contrastive loss, calculated as: 
+
+Lrep = Lhyper + L node . (11) CAHC jointly optimizes Eq. (11) during the representation learning phase, enabling the learned node embeddings to simultaneously preserve information at both the hyperedge and node levels. 
+
+## 2.4 Cluster assignment learning 
+
+Embedding methods without clustering supervision may learn non-cluster-related features, resulting in poor clustering results. To provide clustering-oriented guidance, CAHC performs joint opti-mization of the embedding and clustering, thereby obtaining the representation and the final cluster assignments simultaneously. CAHC assumes that there are 𝐾 clusters, denoted by 𝑐 = {𝑐 1, 𝑐 2,. . . , 𝑐 𝐾 }. It computes the membership degree 𝜇 𝑖𝑘 for each node 𝑖 
+
+with respect to each cluster center 𝑐 𝑘 , forming a soft assignment matrix. It also assigns each node to its nearest cluster center, gener-ating high-confidence pseudo-labels 𝑙 𝑖 (i.e., hard assignments). The loss function is designed to minimize the discrepancy between the soft assignment and hard assignments, as follows: 
+
+Lclus = − 1
+
+𝑁 
+
+> 𝑁
+
+∑︁ 
+
+> 𝑖 =1
+> 𝐾
+
+∑︁ 
+
+> 𝑘 =1
+
+I(𝑙 𝑖 = 𝑘 ) log 𝜇 𝑖𝑘 , (12) where I(·) denotes the indicator function and soft assignment of node 𝑖 to cluster 𝑐 𝑘 is computed as follows: 
+
+𝜇 𝑖𝑘 = exp (sim (𝑧 𝑖 , 𝑐 𝑘 )/ 𝜏 𝑐 )
+
+Í𝐾 𝑘 ′=1 exp (sim (𝑧 𝑖 , 𝑐 𝑘 ′ )/ 𝜏 𝑐 ) , (13) 
+
+Algorithm 1 CAHC 
+
+Require: Node features X, hypergraph incidence matrix H, num-ber of clusters 𝐾 , representation learning epochs 𝑇 1, cluster assignment learning epochs 𝑇 2, loss weights 𝛼, 𝛽, 𝛾 .
+
+Ensure: Final node cluster assignments Y. 
+
+> 1:
+
+Stage 1: Representation Learning  
+
+> 2:
+
+for 𝑒𝑝𝑜𝑐ℎ = 1 to 𝑇 1 do  
+
+> 3:
+
+Generate two augmented views H1 and H2. 
+
+> 4:
+
+Construct negative hyperedges 𝐸 neg  
+
+> 5:
+
+Compute loss Lrep with Eq. (11).  
+
+> 6:
+
+Update the encoder 𝑓 𝜃 and projection head 𝑔 𝜑  
+
+> 7:
+
+end for  
+
+> 8:
+
+Obtain node representation Zinit  
+
+> 9:
+
+Stage 2: Cluster assignment learning  
+
+> 10:
+
+Cluster centroids c ← k-means ( Zinit ) 
+
+> 11:
+
+for 𝑒𝑝𝑜𝑐ℎ = 1 to 𝑇 2 do  
+
+> 12:
+
+Compute loss Lrep with Eq. (11).  
+
+> 13:
+
+Compute the soft assignments Q with Eq. (13)  
+
+> 14:
+
+Compute pseudo-labels ˆY with Eq. (14)  
+
+> 15:
+
+Compute clustering loss Lclus with Eq. (12)  
+
+> 16:
+
+Update all model parameters by L with Eq. (15)  
+
+> 17:
+
+end for  
+
+> 18:
+
+Obtain clustering results with Y from Eq. (14)  
+
+> 19:
+
+return Y
+
+where 𝜏 𝑐 is a temperature hyperparameter, 𝑧 𝑖 represents node em-bedding of node 𝑖 , and cluster centers 𝑐 = {𝑐 1, 𝑐 2, . . . , 𝑐 𝐾 } are obtained by k-means [13]. The pseudo-label 𝑙 𝑖 is computed as: 
+
+𝑙 𝑖 = arg max  
+
+> 𝑘
+
+𝜇 𝑖𝑘 . (14) The overall loss function L combines the clustering loss Lclus 
+
+in Eq. (12) with the representation learning loss Lrep in Eq. (11): 
+
+L = Lclus + L rep . (15) Algorithm 1 summarizes the execution steps of CAHC. CAHC generates two augmented views to compute the node loss Lnode ac-cording to Eq. (9) . It constructs negative hyperedges 𝐸 neg to compute the hypergraph loss Lhyper in Eq. (8) and then computes the con-trastive loss. During the learning phase, CAHC optimizes Eq. (11) to update the encoder 𝑓 𝜃 and the projection head 𝑔 𝜑 , learning repre-sentations. Based on the representations 𝑍 init , the algorithm applies k-means to obtain the cluster centroids. Using 𝑍 init and the cluster centroids, CAHC proceeds to optimize Eq. (15) , performing joint embedding and clustering optimization to obtain both the learned representations and the clustering results. The clustering results are derived using the pseudo-labels 𝑙 𝑖 , which are computed according to Eq. (14). 
+
+## 3 Experiment 
+
+In this section, we first introduce the experimental settings, includ-ing the datasets, baselines, and evaluation metrics. Subsequently, we compare CAHC with the baselines, analyze the impact of clus-tering guidance, conduct ablation studies, and examine parameter sensitivity. From Representation to Clusters: A Contrastive Learning Approach for Attributed Hypergraph Clustering WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates 
+
+Table 1: Statistics of the datasets.                                     
+
+> Dataset # Nodes # Hyperedges # Features # Classes
+> Cora-C 1,434 1,579 1,433 7Citeseer 1,458 1,079 3,703 6Pubmed 3,840 7,963 500 3Cora-A 2,388 1,072 1,433 7DBLP 41,302 22,363 1425 620NewsW100 16,242 100 100 4Mushroom 8,124 298 22 2NTU2012 2,012 2,012 100 67
+
+## 3.1 Experiment settings 
+
+Datasets . We evaluate the performance of the algorithms on eight public datasets: Cora-C [ 30 ], Citeseer [ 30 ], Pubmed [ 30 ], Cora-A [ 26 ], DBLP [ 26 ], NTU2012 [ 6], 20NewsW100 [ 8], and Mushroom [ 8]. Statistics information about these datasets is shown in Table 1. For details regarding the descriptions of each dataset, refer to Appendix A. 
+
+Baselines . We compare CAHC with six baselines: three classi-cal embedding methods (Node2vec [ 12 ], DGI [ 33 ] and Hyper2vec [ 14 ]), a graph learning method ( RAGC [ 50 ]), and two hypergraph self-supervised learning methods (TriCL [ 20 ] and SE-HSSL [ 22 ]). Re-ferring to [ 20 , 21 ], for self-supervised methods designed for graphs (DGI and RAGC), we first convert hypergraphs to graphs via clique expansion and apply these methods to the converted graphs. For embedding-based baseline methods, the learned embeddings are fed into the k-means algorithm [ 13 ] for clustering. Refer to Appendix B for the detailed settings of CAHC and baselines. 
+
+Metrics . We employ four metrics to assess clustering perfor-mance: Accuracy (ACC) [ 24 ], Normalized Mutual Information (NMI) [ 52 ], Adjusted Rand Index (ARI) [ 35 ], and Macro-F1 Score [ 35 ]. For ACC and F1 scores, we utilize the Hungarian algorithm for label alignment [ 19 , 42 ]. For all metrics, higher values indicate better clustering performance. 
+
+## 3.2 Experiment result 
+
+Table 2 demonstrates the clustering performance of all algorithms on eight public datasets. Overall, CAHC outperforms baselines on most datasets. It is observed that methods designed for hypergraphs (e.g., TriCL, SE-HSSL, and CAHC) outperform those designed for graphs (Node2Vec, DGI). Since the latter requires first converting hypergraphs to ordinary graphs via clique expansion, this conver-sion leads to information loss. Notably, CAHC outperforms TriCL and SE-HSSL on the Citeseer, Pubmed, and Mushroom datasets. Specifically, on the Pubmed dataset, CAHC achieves relative im-provements of 10.3% and 17.1% in NMI and ARI, respectively, com-pared to TriCL and SE-HSSL. This is primarily because TriCL and SE-HSSL rely on a two-step process: first, learning embeddings, followed by clustering, which lacks effective clustering guidance. In contrast, our algorithm optimizes both representation learning and clustering in a unified, end-to-end manner. RAGC gets the best performance on the Mushroom dataset, which contains only two clusters. Due to the small number of clus-ters, RAGC’s contrastive sample adaptive-differential awareness module generates highly accurate pseudo-labels. This reliability allows the module to effectively discriminate and weight difficult samples, leading to well-optimized cluster boundaries. In contrast, on datasets with more clusters, such as Cora-C and Citeseer, the initial pseudo-labels are less accurate. On the 20NewsW100 dataset, the performance of CAHC is inferior to that of SE-HSSL. The neg-ative hyperedge generation strategy employed by CAHC is not well-suited for hyperedges of large size, where each hyperedge connects, on average, more than 160 nodes in 20NewsW100. Specif-ically, the strategy of replacing only a single node to generate negative hyperedges fails to produce effective negative samples. This is because the generated ’negative samples’ are nearly identical to the original samples, thus diminishing the discriminative power of the hyperedge-level loss. 
+
+## 3.3 Impact of clustering guidance 
+
+To investigate the effect of the clustering guidance, we design two variants of CAHC: (1) “CAHC + k-means". This variant generates embeddings from CAHC and applies k-means to them to obtain the final results; and (2) “w/o Clus". This variant first obtains em-beddings from the representation learning step and then applies k-means to these embeddings to obtain the results. We evaluate CAHC + k-means, w/o Clus, and the original CAHC on the Pubmed, Cora-A, and DBLP datasets. Figure 3 presents ACC, F1, NMI, and ARI of CAHC + k-means, w/o Clus, and CAHC. Figure 3 shows that CAHC + k-means out-performs w/o Clus, demonstrating that the clustering loss helps improve the embedding quality for the clustering task. Further-more, Figure 3 indicates that ‘CAHC + k-means‘ and CAHC are comparable. This is because the membership score 𝜇 𝑖𝑘 , calculated by Eq. (13), follows a similar principle as k-means, where each node is assigned to the nearest cluster center. 
+
+## 3.4 Ablation study 
+
+To validate components of CAHC, we conducted an ablation study on eight datasets. Specifically, five variants of CAHC are con-structed: 1) "w/o re". This variant represents CAHC without the representation learning step; 2) "w/o hy". This variant represents CAHC without the hyperedge-level loss in Eq. ( 8); 3) "w/o no". This variant represents CAHC without the node-level loss in Eq. ( 9); 4) "w/o cl". This variant represents CAHC without the clustering mod-ule, where clustering is performed using k-means; and 5) "w/o mu". This variant represents CAHC without the multi-head attention mechanism, using a standard HGNN [ 9] instead. Table 3 demon-strates the results. Overall, CAHC outperforms w/o re, "w/o hy", "w/o no", "w/o cl", and "w/o mu", indicating that the representation learning step, hyperedge-level loss, node-level loss, clustering mod-ule, and the encoder all play a crucial role. Afterward, we gradually analyze the impact of each component. 
+
+Effectiveness of contrastive objectives. The "w/o hy", which removes hyperedge-level loss, performs significantly worse than CAHC on most datasets. For instance, on the Pubmed dataset, CAHC achieves an NMI score of 34.4, while the score of "w/o hy" is only 29.8. This empirically validates that explicitly learning from high-order structural information is a crucial component of the model’s success. Similarly, without the node-level contrastive loss ("w/o no") also performs poorly. This is particularly evident on WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates Li Ni, Shuaikang Zeng, Lin Mu, and Longlong Lin 
+
+Table 2: Comparison of clustering results (%) on datasets. All results are reported as mean ± std over 5 independent runs. The best results are in bold. ‘OOM’ denotes the out-of-memory failure, while ‘OOT’ signifies no results are obtained within 24 hours. Dataset Metric Node2vec DGI RAGC Hyper2vec TriCL SE-HSSL CAHC Cora-C 
+
+ACC 47.4 ±5.4 68.4 ±3.4 68.6 ±1.6 59.7 ±5.1 70.0 ±1.1 72.0 ±3.5 71.4 ±1.7 
+
+F1 44.7 ±7.1 62.0 ±3.0 64.8 ±1.6 58.5 ±0.4 65.1 ±1.8 67.0 ±4.3 69.1 ±2.8 
+
+NMI 32.5 ±3.9 54.0 ±1.0 50.9 ±1.7 40.6 ±1.1 55.2 ±0.8 56.5 ±2.4 56.4 ±0.9 
+
+ARI 20.2 ±4.2 47.1 ±2.0 43.5 ±2.2 33.6 ±0.9 49.2 ±0.2 49.3 ±3.5 50.8 ±1.6 
+
+Citeseer 
+
+ACC 36.2 ±1.6 63.8 ±4.3 69.4 ±1.4 42.7 ±1.3 67.6 ±1.5 68.2 ±1.7 69.8 ±0.8 
+
+F1 29.2 ±3.1 55.7 ±3.4 61.9 ±1.9 41.1 ±1.2 62.1 ±2.0 62.5 ±1.5 65.1 ±0.6 
+
+NMI 20.0 ±1.5 40.0 ±2.1 43.5 ±0.6 21.0 ±1.0 44.1 ±0.4 43.8 ±2.1 45.9 ±1.2 
+
+ARI 5.7 ±0.6 38.6 ±2.8 44.3 ±1.7 16.9 ±1.1 45.1 ±0.3 43.3 ±2.0 46.2 ±1.2 
+
+Pubmed 
+
+ACC 53.8 ±0.5 63.9 ±8.0 67.0 ±2.5 69.4 ±5.4 62.4 ±0.6 65.8 ±2.3 69.4 ±0.2 
+
+F1 54.6 ±0.5 61.8 ±10.6 65.4 ±2.2 67.7 ±5.0 61.3 ±0.6 65.1 ±2.4 69.0 ±0.2 
+
+NMI 21.6 ±0.4 27.0 ±6.4 27.1 ±2.4 29.6 ±3.3 29.7 ±0.6 31.2 ±1.1 34.4 ±0.4 
+
+ARI 12.1 ±0.5 24.9 ±8.0 26.6 ±3.1 33.5 ±6.1 24.7 ±0.8 27.5 ±2.2 32.2 ±0.3 
+
+Cora-A 
+
+ACC 34.0 ±2.0 60.9 ±5.0 59.7 ±1.1 22.7 ±0.2 70.2 ±1.5 61.0 ±3.9 72.6 ±0.4 
+
+F1 24.4 ±2.2 53.5 ±6.4 54.9 ±1.8 17.8 ±0.1 69.1 ±1.2 52.3 ±2.5 70.6 ±0.4 
+
+NMI 12.5 ±1.2 44.1 ±1.6 42.2 ±0.3 3.0 ±0.5 50.2 ±1.2 47.6 ±1.9 53.1 ±0.7 
+
+ARI 3.1 ±1.2 37.0 ±3.6 34.5 ±0.9 0.6 ±0.2 45.8 ±2.5 38.8 ±3.6 50.1 ±0.7 
+
+DBLP 
+
+ACC 39.91 ±3.3 
+
+OOM OOM OOM 
+
+65.9 ±4.1 
+
+OOT 
+
+72.3 ±8.0 
+
+F1 38.05 ±3.8 63.7 ±5.3 70.4 ±8.6 
+
+NMI 24.20 ±1.9 62.4 ±3.7 63.9 ±2.8 
+
+ARI 9.63 ±1.3 50.4 ±5.2 58.2 ±5.9 
+
+20NewsW100 
+
+ACC 44.6 ±1.2 
+
+OOM OOM OOM 
+
+61.5 ±3.7 70.2 ±0.7 64.6 ±3.1 
+
+F1 41.8 ±0.4 54.9 ±2.7 65.0 ±1.0 63.2 ±2.8 
+
+NMI 11.1 ±0.7 36.0 ±3.8 39.1 ±1.4 39.5 ±1.1 
+
+ARI 12.1 ±1.0 29.4 ±9.4 40.4 ±0.2 35.6 ±2.5 
+
+Mushroom 
+
+ACC 69.9 ±6.5 70.7 ±2.5 87.5 ±0.8 
+
+OOM 
+
+51.3 ±1.4 78.3 ±6.7 80.5 ±2.4 
+
+F1 69.3 ±6.8 67.8 ±3.1 87.4 ±0.8 38.8 ±2.4 77.4 ±7.6 80.5 ±2.5 
+
+NMI 15.0 ±6.8 20.9 ±4.8 46.6 ±2.8 3.4 ±0.6 28.7 ±10.5 30.3 ±4.2 
+
+ARI 17.6 ±8.2 17.3 ±3.8 56.3 ±2.5 0.5 ±1.0 34.2 ±14.4 37.5 ±5.9 
+
+NTU2012 
+
+ACC 56.7 ±2.2 65.0 ±2.1 66.1 ±0.3 58.8 ±0.6 70.5 ±0.5 70.5 ±0.6 70.8 ±1.1 
+
+F1 51.4 ±1.7 59.8 ±2.0 57.4 ±1.1 54.0 ±0.6 63.8 ±0.8 64.0 ±0.7 63.7 ±1.1 
+
+NMI 77.3 ±0.4 80.0 ±0.6 79.9 ±0.6 78.1 ±0.1 83.1 ±0.2 83.2 ±0.3 83.8 ±0.2 
+
+ARI 50.1 ±2.5 59.4 ±3.2 63.1 ±1.2 51.8 ±0.6 66.8 ±0.5 66.9 ±1.5 67.0 ±2.0 
+
+Cora-A, where the NMI score of CAHC is 53.1, while that of "w/o no" is only 45.4. This indicates that the individual discriminability of nodes is also indispensable for node representation. 
+
+Effectiveness of the end-to-end learning paradigm. "w/o cl" without clustering guidance performs worse than CAHC, indicating that such guidance is crucial for improving representations. "w/o cl" trains the encoder on the hypergraph without clustering guidance, leading to the incorporation of non-cluster-related features in the learned representations. Most NMI/ARI of "w/o re" are 0 because "w/o re" assigns all nodes in the dataset to a single cluster, even when the number of clusters is set to be greater than one. It indicates that the representation learning step plays a crucial role. 
+
+Effectiveness of the proposed encoder architecture. "w/o mu" with a standard HGNN performs significantly worse than CAHC. Specifically, on the Cora-A dataset, the ARI score of "w/o mu" is 41.0, while the CAHC model achieves a score of 50.1, showing a considerable performance gap. Similarly, on the Citeseer dataset, the ARI of "w/o mu" is 42.0, and the ARI of CAHC is 45.9, indicating a From Representation to Clusters: A Contrastive Learning Approach for Attributed Hypergraph Clustering WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates ACC F1 NMI ARI 
+
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> Model Variants
+> CAHC
+> w/o Clus
+> CAHC + K-means
+
+(a) Pubmed ACC F1 NMI ARI   
+
+> 0.50
+> 0.55
+> 0.60
+> 0.65
+> 0.70
+> 0.75 Model Variants
+> CAHC
+> w/o Clus
+> CAHC + K-means
+
+(b) Cora-A ACC F1 NMI ARI   
+
+> 0.55
+> 0.60
+> 0.65
+> 0.70
+> 0.75 Model Variants
+> CAHC
+> w/o Clus
+> CAHC + K-means
+
+(c) DBLP 
+
+Figure 3: Impact of clustering guidance. Table 3: Ablation study results (%). 
+
+Dataset Metric w/o re w/o hy w/o no w/o cl w/ mu CAHC Cora-C 
+
+ACC 28.0 68.8 72.9 70.4 71.6 71.4 F1 6.2 63.4 70.5 68.4 67.1 69.1 NMI 0.0 51.4 54.4 55.2 54.5 56.4 
+
+ARI 0.0 46.5 51.9 49.2 49.9 50.8 
+
+Citeseer 
+
+ACC 21.7 69.1 65.5 68.8 67.0 69.8 
+
+F1 5.9 64.9 60.6 64.3 62.4 65.1 
+
+NMI 0.0 45.0 42.9 44.5 42.0 45.9 
+
+ARI 0.0 44.7 42.1 44.7 42.5 46.2 Pubmed 
+
+ACC 40.7 61.6 69.2 68.4 70.4 69.4 F1 19.3 60.4 68.4 67.9 69.7 69.0 NMI 0.0 29.8 33.0 32.4 34.0 34.4 
+
+ARI 0.0 25.2 30.5 30.3 33.1 32.2 
+
+Cora-A 
+
+ACC 30.2 69.8 65.1 71.1 65.9 72.6 
+
+F1 6.7 68.4 59.3 69.5 63.7 70.6 
+
+NMI 0.0 51.1 45.4 51.6 46.2 53.1 
+
+ARI 0.0 46.6 42.3 47.6 41.0 50.1 DBLP 
+
+ACC 27.2 52.4 68.8 69.3 72.6 72.3 F1 7.1 43.2 64.9 67.8 70.8 70.4 NMI 0.0 52.3 60.9 60.4 63.0 63.9 
+
+ARI 0.0 28.6 52.6 53.9 54.9 58.2 20newsW100 
+
+ACC 33.6 62.9 58.6 64.1 62.5 64.6 
+
+F1 12.6 61.8 56.7 63.0 62.0 63.2 
+
+NMI 0.0 39.6 33.8 39.2 36.9 39.5 ARI 0.0 35.0 29.2 34.5 29.7 35.6 Mushroom 
+
+ACC 51.8 72.7 80.4 80.4 74.3 80.5 
+
+F1 34.1 70.9 80.4 80.3 72.2 80.5 
+
+NMI 0.0 21.2 30.2 29.8 26.5 30.3 
+
+ARI 0.0 23.2 37.2 37.2 25.1 37.5 NTU2012 
+
+ACC 5.1 71.0 69.9 70.6 69.6 70.8 F1 0.3 64.8 63.1 63.7 62.6 63.7 NMI 0.3 83.8 83.4 83.7 82.4 83.8 
+
+ARI 0.0 66.8 65.5 66.7 66.2 67.0 
+
+clear difference in performance. The results confirm that compared with HGNN, the multi-head attention mechanism-based HGNN could help CAHC to learn better representations. 
+
+## 3.5 Parameter sensitivity analysis 
+
+Here, we investigate the sensitivity of hyperparameters: feature masking rate 𝑝 f, the membership relation masking rate 𝑝 m, and embedding dimension 𝐷 .
+
+Effect of augmentation rates. The rates 𝑝 f and 𝑝 m ranged from 0.0 to 0.9 with a step size of 0.1. Figure 4 shows NMI of CAHC. A consistent conclusion can be drawn from both Cora-A and Citeseer datasets: CAHC achieves optimal performance at moderate values of 𝑝 f and 𝑝 m. Specifically, the model achieves its highest perfor-mance when the masking rates are within an intermediate range, roughly between 0.2 and 0.7 for both parameters. If the masking rates are too small (approaching 0.0), two overly similar views are generated. This provides an insufficient learning signal for the con-trastive objective to develop a robust and discriminative encoder. Conversely, if the rates are too large (approaching 0.9), the under-lying feature and structural information of the original hypergraph is broken, leading to a significant drop in performance. Therefore, intermediate augmentation rates are selected in experiments. 
+
+Effect of embedding dimension. The embedding dimension 
+
+𝐷 is chosen from the set {128, 256, 512, 768, 1024, 2048}. Figure 5 illustrates NMI of CAHC. As 𝐷 increases from 128 to an inter-mediate value (typically 512 or 768), the performance of CAHC improves overall. This suggests that CAHC benefits from a larger representation capacity to effectively capture the complex struc-tural and feature information. However, we notice a subsequent decline in performance as the dimension further increases on most datasets. Taking 20NewsW100 as an example, which has only 100 original features, the model reaches its peak performance at an embedding dimension D of 512. The performance of CAHC de-teriorates significantly when the dimension is increased to 2048. This indicates that datasets with limited features do not necessi-tate high-dimensional embeddings and may, in fact, suffer from excessively large dimensions. This phenomenon can be attributed to the embedding space becoming overly sparse, with many di-mensions potentially becoming irrelevant or redundant. Thus, a medium-sized embedding dimension is suitable for most datasets. For datasets with high-dimensional features, a large dimension should be used. 
+
+## 4 Related work 
+
+Hypergraph representation learning. Hypergraph representa-tion learning aims to embed the nodes (or hyperedges) of a hyper-graph into a low-dimensional vector space. [ 2, 3, 23 ]. Due to the availability of labels, many studies have focused on semi-supervised learning for hypergraph representation [ 37 , 43 ]. For example, Feng et al. [ 9 ] generalize graph convolutions to the hypergraph domain, WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates Li Ni, Shuaikang Zeng, Lin Mu, and Longlong Lin 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9                                                                                           
+
+> Feature masking rate
+> 0.9
+> 0.8
+> 0.7
+> 0.6
+> 0.5
+> 0.4
+> 0.3
+> 0.2
+> 0.1
+> 0.0
+> Membership relation masking rate
+> 45 46 52 53 53 53 53 53 53 53
+> 45 46 52 53 53 53 53 53 53 53
+> 44 46 52 53 53 53 53 53 54 53
+> 44 45 46 53 53 53 53 53 54 53
+> 44 45 52 52 53 53 53 53 53 52
+> 44 45 52 53 53 53 53 53 53 52
+> 44 45 52 52 53 53 53 53 52 52
+> 44 45 52 53 53 52 53 52 52 52
+> 45 45 52 52 53 52 53 53 52 51
+> 46 45 52 52 52 52 52 52 51 45
+> 46
+> 48
+> 50
+> 52
+> NMI
+
+(a) Cora-A 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9                                                                                           
+
+> Feature masking rate
+> 0.9
+> 0.8
+> 0.7
+> 0.6
+> 0.5
+> 0.4
+> 0.3
+> 0.2
+> 0.1
+> 0.0
+> Membership relation masking rate
+> 42 43 44 44 44 44 43 44 43 44
+> 45 45 45 45 45 44 44 44 42 42
+> 46 46 45 45 45 45 45 46 44 42
+> 45 46 45 45 45 45 45 46 45 43
+> 45 46 46 45 45 46 46 47 45 44
+> 46 45 46 46 47 47 47 45 45 44
+> 46 45 46 45 45 46 45 44 44 44
+> 46 45 44 45 46 46 44 44 45 45
+> 46 46 46 46 45 46 44 46 45 44
+> 45 46 45 44 44 46 45 46 45 46
+> 42
+> 43
+> 44
+> 45
+> 46
+> 47
+> NMI
+
+(b) Citeseer 
+
+Figure 4: Sensitivity analysis of 𝑝 f and 𝑝 m.128 256 512 768 1024 2048     
+
+> Embedding dimension
+> 25
+> 30
+> 35
+> 40
+> 45
+> 50
+> 55
+> 60
+> NMI (%)
+> Cora-C Citeseer Cora-A Pubmed 20NewsW100
+
+Figure 5: Sensitivity analysis of 𝐷 .
+
+with the core idea of using the hypergraph Laplacian operator for information propagation. Wu et al. [ 37 ] leverages spectral graph theory to capture the global latent structure within hypergraph learning. Yan et al. [ 44 ] propose an expansion method to transform a hypergraph into a standard graph and design a learning model to embed both hypervertices and hyperedges into a joint representa-tion space. Qu et al. [ 25 ] propose a transformer-based framework that adopts a one-stage message passing paradigm. These methods rely on labeled data as supervised signals, which may lead to high labeling costs and poor generalization. Recently, contrastive learning (CL) has gained attention for unsupervised hypergraph representation learning, as it does not require labels. For example, HyperGCL [ 36 ] addresses the critical issue of view construction in hypergraph contrastive learning by designing both knowledge-based manual augmentations and generative augmen-tation methods. Li et al. [ 38 ] proposed the Hypergraph Contrastive Collaborative Filtering (HCCF) framework, which integrates hy-pergraph structure learning with cross-view contrastive learning. To further capture multi-granularity structural information, TriCL [20 ] employs a three-level contrastive framework involving nodes, hyperedges, and their membership relations. These studies primar-ily focus on learning node representations, requiring clustering algorithms like k-means for clustering tasks. Different from them, our work proposes an end-to-end approach that simultaneously learns node representations and generates clustering results. 
+
+Attributed hypergraph clustering. Attributed hypergraph clustering aims to use structure and attributes to discover commu-nities or clusters in hypergraphs [ 11 , 16 , 34 ]. Existing methods can be broadly categorized into traditional and deep learning-based methods [ 34 ]. Traditional methods include modularity-based [ 10 ], fuzzy memberships-based method [ 40 ], and stochastic block model [7 , 28 , 48 ]. With the ability to capture high-order information, deep graph clustering, especially contrastive learning, has received in-creasing attention [ 11 , 34 ]. For example, SE-HSSL [ 22 ], HyperGCL [ 36 ], and TriCL [ 20 ] use contrastive learning to learn representa-tions, which are then partitioned using clustering algorithms, such as k-means, to form clusters. Additionally, Feng et al. [ 11 ] regard a multi-hop modularity as the objective function to obtain represen-tation and use Louvain for clustering. Wang et al. [ 34 ] propose a hypergraph clustering network that utilizes hypergraph smoothing preprocessing instead of hypergraph convolution to avoid high computational complexity. Subsequently, k-means is employed to partition low-dimensional representations into several clusters. The above studies require clustering algorithms like k-means or Lou-vain to detect clusters. Unlike these studies, our work proposes an end-to-end clustering method that simultaneously obtains node representations and clustering results. 
+
+## 5 Conclusion 
+
+In this paper, we propose an unsupervised hypergraph clustering algorithm, CAHC. It consists of two main steps: hypergraph rep-resentation learning and cluster assignment learning. Hypergraph representation learning leveraging both node-level and hyperedge-level contrastive learning to obtain node embeddings. In addition, to capture the structural information of hypergraphs, we design a novel hyperedge-level objective that maximizes the similarity for nodes connected by real hyperedges and minimizes the similarity for nodes connected by constructed negative hyperedges. Cluster assignment learning refines these embeddings by aligning them with the final cluster structure, obtaining the final clustering assign-ments. Extensive experimental results demonstrate the consistent superiority of the proposed algorithm across various hypergraph datasets. 
+
+## Acknowledgments 
+
+This work was supported by the National Natural Science Founda-tion of China [No.62572002, and No.62272001] and Natural Science Foundation of Anhui Province of China [No.2508085MF159]. From Representation to Clusters: A Contrastive Learning Approach for Attributed Hypergraph Clustering WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates 
+
+## References 
+
+[1] Sameer Agarwal, Jitendra Lim, Lihi Zelnik-Manor, Pietro Perona, David J. Krieg-man, and Serge J. Belongie. 2005. Beyond Pairwise Clustering. In Proceedings of the 2005 IEEE Computer Society Conference on Computer Vision and Pattern Recognition . 838–845. [2] Alessia Antelmi, Gennaro Cordasco, Mirko Polato, Vittorio Scarano, Carmine Spagnuolo, and Dingqi Yang. 2023. A Survey on Hypergraph Representation Learning. Comput. Surveys 56, 1 (2023), 24:1–24:38. [3] Devanshu Arya, Deepak K. Gupta, Stevan Rudinac, and Marcel Worring. 2020. HyperSAGE: Generalizing Inductive Representation Learning on Hypergraphs. arXiv:2010.04558. [4] Claude Berge. 1984. Hypergraphs: combinatorics of finite sets . Vol. 45. Elsevier. [5] Alain Bretto. 2013. Hypergraph Theory: An Introduction . Springer. [6] Ting Chen, Simon Kornblith, Mohammad Norouzi, and Geoffrey Hinton. 2020. A Simple Framework for Contrastive Learning of Visual Representations. In 
+
+Proceedings of the 37th International Conference on Machine Learning . 1597–1607. [7] Martina Contisciani, Federico Battiston, and Caterina De Bacco. 2022. Infer-ence of Hyperedges and Overlapping Communities in Hypergraphs. Nature Communications 13 (2022), 7229. [8] Dheeru Dua and Casey Graff. 2017. UCI Machine Learning Repository. http: //archive.ics.uci.edu/ml. [9] Yifan Feng, Haoran You, Zizhao Zhang, Rongrong Ji, and Yue Gao. 2019. Hy-pergraph Neural Networks. In Proceedings of the AAAI Conference on Artificial Intelligence . 3558–3565. [10] Zijin Feng, Miao Qiao, and Hong Cheng. 2023. Modularity-based Hypergraph Clustering: Random Hypergraph Model, Hyperedge-cluster Relation, and Compu-tation. Proceedings of the ACM on Management of Data 1, 3 (2023), 215:1–215:25. [11] Zijin Feng, Miao Qiao, Chengzhi Piao, and Hong Cheng. 2025. On Graph Rep-resentation for Attributed Hypergraph Clustering. Proceedings of the ACM on Management of Data 3, 1 (2025), 59:1–59:26. [12] Aditya Grover and Jure Leskovec. 2016. node2vec: Scalable Feature Learning for Networks. In Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining . 855–864. [13] John A. Hartigan and Manchek A. Wong. 1979. A K-Means Clustering Algorithm. 
+
+Journal of the Royal Statistical Society Series C: Applied Statistics 28, 1 (1979), 100–108. [14] Jie Huang, Chuan Chen, Fanghua Ye, Jiajing Wu, Zibin Zheng, and Guohui Ling. 2019. Hyper2vec: Biased Random Walk for Hyper-network Embedding. In 
+
+Proceedings of the 24th International Conference on Database Systems for Advanced Applications . 273–277. [15] Igor Kabiljo, Brian Karrer, Mayank Pundir, Sergey Pupyrev, and Alon Shalita. 2017. Social Hash Partitioner: A Scalable Distributed Hypergraph Partitioner. 
+
+Proceedings of the VLDB Endowment 10, 11 (2017), 1418–1429. [16] Barakeel Fanseu Kamhoua, Lin Zhang, Kaili Ma, James Cheng, Bo Li, and Bo Han. 2021. HyperGraph Convolution Based Attributed HyperGraph Clustering. In The 30th ACM International Conference on Information and Knowledge Management .453–463. [17] George Karypis, Rajat Aggarwal, Vipin Kumar, and Shashi Shekhar. 1999. Multi-level Hypergraph Partitioning: Applications in VLSI Domain. IEEE Transactions on Very Large Scale Integration (VLSI) Systems 7, 1 (1999), 69–79. [18] Zheng Tracy Ke, Feng Shi, and Dong Xia. 2020. Community Detection for Hypergraph Networks via Regularized Tensor Power Iteration. arXiv:1909.06503. [19] Harold W. Kuhn. 1955. The Hungarian Method for the Assignment Problem. 
+
+Naval Research Logistics Quarterly 2, 1–2 (1955), 83–97. [20] Dongjin Lee and Kijung Shin. 2023. I’m Me, We’re Us, and I’m Us: Tri-Directional Contrastive Learning on Hypergraphs. In Proceedings of the AAAI Conference on Artificial Intelligence . 8541–8549. [21] Geon Lee, Soo Yong Lee, and Kijung Shin. 2024. VilLain: Self-Supervised Learning on Homogeneous Hypergraphs without Features via Virtual Label Propagation. In Proceedings of the ACM Web Conference 2024 . 594–605. [22] Fan Li, Xiaoyang Wang, Dawei Cheng, Wenjie Zhang, Ying Zhang, and Xuemin Lin. 2024. Hypergraph Self-supervised Learning with Sampling-efficient Signals. In Proceedings of the International Joint Conference on Artificial Intelligence . 4398– 4406. [23] Zhao Li, Xin Wang, Jun Zhao, Feng Feng, Zirui Chen, and Jianxin Li. 2025. HySAE: An Efficient Semantic-Enhanced Representation Learning Model for Knowledge Hypergraph Link Prediction. In Proceedings of the ACM on Web Conference 2025 .86–97. [24] Yong Mi, Hongmei Chen, Zhong Yuan, Chuan Luo, Shi-Jinn Horng, and Tianrui Li. 2024. Fast Multi-view Subspace Clustering with Balance Anchors Guidance. 
+
+Pattern Recognition 145 (2024), 109895. [25] Shilin Qu, Weiqing Wang, Yuan-Fang Li, Xin Zhou, and Fajie Yuan. 2026. Hyper-graph Node Representation Learning with One-stage Message Passing. Neural Networks 193 (2026), 107973. [26] Ryan A. Rossi and Nesreen K. Ahmed. 2015. The Network Data Repository with Interactive Graph Analytics and Visualization. In Proceedings of the AAAI Conference on Artificial Intelligence . 4292–4293. [27] Peter J. Rousseeuw. 1987. Silhouettes: A Graphical Aid to the Interpretation and Validation of Cluster Analysis. J. Comput. Appl. Math. 20 (1987), 53–65. [28] Nicolò Ruggeri, Federico Battiston, and Caterina De Bacco. 2024. Framework to generate hypergraphs with community structure. Physical Review E 109, 3 (2024), 034309. [29] Bernhard Schölkopf, John Platt, and Thomas Hofmann. 2007. Learning with Hypergraphs: Clustering, Classification, and Embedding. In Advances in Neural Information Processing Systems . 1601–1608. [30] Prithviraj Sen, Galileo Namata, Mustafa Bilgic, Lise Getoor, Brian Galligher, and Tina Eliassi-Rad. 2008. Collective Classification in Network Data. AI Magazine 
+
+29, 3 (2008), 93–106. [31] Shantanu Thakoor, Corentin Tallec, Mohammad Gheshlaghi Azar, Mehdi Azabou, Eva L Dyer, Remi Munos, Petar Veličković, and Michal Valko. 2022. Large-Scale Representation Learning on Graphs via Bootstrapping. In International Conference on Learning Representations (ICLR) . New York, NY, USA. [32] Laurens van der Maaten and Geoffrey Hinton. 2008. Visualizing Data Using t-SNE. Journal of Machine Learning Research 9, 86 (2008), 2579–2605. [33] Petar Veličković, William Fedus, William L. Hamilton, Pietro Liò, Yoshua Bengio, and R Devon Hjelm. 2019. Deep Graph Infomax. In International Conference on Learning Representations (ICLR) . 1–10. [34] Qianqian Wang, Bowen Zhao, Zhengming Ding, Xiangdong Zhang, and Quanxue Gao. 2025. A Simple yet Effective Hypergraph Clustering Network. In Proceedings of the International Joint Conference on Artificial Intelligence . 6352–6360. [35] Siwei Wang, Xinwang Liu, Li Liu, Sihang Zhou, and En Zhu. 2023. Late Fusion Multiple Kernel Clustering With Proxy Graph Refinement. IEEE Transactions on Neural Networks and Learning Systems 34, 8 (2023), 4359–4370. [36] Tianxin Wei, Yuning You, Tianlong Chen, Yang Shen, Jingrui He, and Zhangyang Wang. 2022. Augmentations in Hypergraph Contrastive Learning: Fabricated and Generative. In Advances in Neural Information Processing Systems 35 . 1677–1691. [37] Yuze Wu, Shiyang Lan, Zhiling Cai, Mingjian Fu, Jinbo Li, and Shiping Wang. 2025. SCHG: Spectral Clustering-guided Hypergraph Neural Networks for Multi-view Semi-supervised Learning. Expert Systems with Applications 277 (2025), 127242. [38] Lianghao Xia, Chao Huang, Yong Xu, Jiashu Zhao, Dawei Yin, and Jimmy Xiangji Huang. 2022. Hypergraph Contrastive Collaborative Filtering. In Proceedings of the 45th International ACM SIGIR Conference on Research and Development in Information Retrieval (Madrid, Spain). New York, NY, USA, 1755–1765. [39] Xin Xia, Hongzhi Yin, Junliang Yu, Qinyong Wang, Lizhen Cui, and Xiangliang Zhang. 2021. Self-Supervised Hypergraph Convolutional Networks for Session-based Recommendation. In Proceedings of the Thirty-Fifth AAAI Conference on Artificial Intelligence . 4503–4511. [40] Jing Xiao, Zhi-Wei Ma, Jian Cao, and Xiao-Ke Xu. 2025. Hypergraph Community Detection With Fuzzy Memberships. IEEE Transactions on Fuzzy Systems 33, 9 (2025), 3253–3266. [41] Lihong Xiao, Xia Wu, Lie-Wei Zheng, Li Wang, Lei Wang, Dajiang Zhu, Ding-gang Shen, and Tianming Liu. 2020. Multi-Hypergraph Learning-Based Brain Functional Connectivity Analysis in fMRI Data. IEEE Transactions on Medical Imaging 39, 5 (2020), 1746–1758. [42] Junyuan Xie, Ross Girshick, and Ali Farhadi. 2016. Unsupervised Deep Embedding for Clustering Analysis. In Proceedings of the 33rd International Conference on Machine Learning . 478–487. [43] Naganand Yadati, Madhav Nimishakavi, Prateek Yadav, Vikram Nitin, Anand Louis, and Partha Talukdar. 2019. HyperGCN: A New Method for Training Graph Convolutional Networks on Hypergraphs. In Advances in Neural Information Processing Systems 32 . 1511–1522. [44] Yuguang Yan, Yuanlin Chen, Shibo Wang, Hanrui Wu, and Ruichu Cai. 2024. Hypergraph Joint Representation Learning for Hypervertices and Hyperedges via Cross Expansion. In Proceedings of the AAAI Conference on Artificial Intelligence .9232–9240. [45] Yiyang Yang, Sucheng Deng, Juan Lu, Yuhong Li, Zhiguo Gong, Leong Hou U, and Zhifeng Hao. 2021. GraphLSHC: Towards Large Scale Spectral Hypergraph Clustering. Information Sciences 544 (2021), 117–134. [46] Yuning You, Tianlong Chen, Yongduo Sui, Ting Chen, Zhangyang Wang, and Yang Shen. 2020. Graph Contrastive Learning with Augmentations. In Advances in Neural Information Processing Systems 33 . New York, NY, USA, 5812–5823. [47] Jun Yu, Dacheng Tao, and Meng Wang. 2012. Adaptive Hypergraph Learning and its Application in Image Classification. IEEE Transactions on Image Processing 21, 7 (2012), 3262–3272. [48] Erchuan Zhang, David Suter, Giang Truong, and Syed Zulqarnain Gilani. 2022. Sparse Hypergraph Community Detection Thresholds in Stochastic Block Model. In Advances in Neural Information Processing Systems 35 . 25039–25052. [49] Wenqian Zhang, Zhengyi Yang, Dong Wen, Wentao Li, Wenjie Zhang, and Xuemin Lin. 2025. Accelerating Core Decomposition in Billion-Scale Hyper-graphs. Proceedings of the ACM on Management of Data 3, 1 (2025), 6:1–6:27. [50] Tianxiang Zhao, Youqing Wang, Jinlu Wang, Jiapu Wang, Mingliang Cui, Junbin Gao, and Jipeng Guo. 2025. Hybrid-Collaborative Augmentation and Contrastive Sample Adaptive-Differential Awareness for Robust Attributed Graph Clustering. arXiv:2510.02731 WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates Li Ni, Shuaikang Zeng, Lin Mu, and Longlong Lin         
+
+> [51] Tianxiang Zhao, Youqing Wang, Shilong Xu, Tianchuan Yang, Junbin Gao, and Jipeng Guo. 2026. Dual-level noise augmentation for graph clustering with triplet-wise contrastive learning. Pattern Recognition 172 (2026), 112463. [52] Sihang Zhou, Xinwang Liu, Miaomiao Li, and et al. . 2020. Multiple Kernel Clustering With Neighbor-Kernel Subspace Segmentation. IEEE Transactions on Neural Networks and Learning Systems 31, 4 (2020), 1351–1362.
+
+## A Details of datasets 
+
+To evaluate the performance of the algorithms, we conduct ex-periments on eight datasets. These datasets include co-citation networks (Cora, Citeseer, and Pubmed) [ 30 ]; co-authorship net-works (Cora-Coauthor and DBLP-Coauthor) [ 26 ]; a computer vi-sion dataset (NTU2012) [ 6 ]; and two datasets from the UCI Machine Learning Repository (20NewsW100 and Mushroom) [ 8 ]. Statistics information about these datasets is shown in Table 1. For the co-citation network, nodes represent academic papers. A hyperedge represents a set of papers that are all cited together by a common publication. For the co-authorship network, nodes also represent papers. A hyperedge represents all papers that are written by the same author [ 20 ]. For co-citation and co-authorship datasets, node features are bag-of-words representations derived from the paper abstracts, and node labels correspond to their research fields. The preprocessed hypergraphs for Cora, Citeseer, Pubmed, Cora-Coauthor, and DBLP-Coauthor datasets are publicly available with the official implementation of HyperGCN [ 20 , 43 ]. For the visual dataset NTU2012, the hypergraph construction follows the setting described in [ 9], with node features extracted by a pre-trained con-volutional neural network. For 20NewsW100 and Mushroom, node features are TF-IDF representations and categorical descriptions, respectively. In experiments, we delete isolated nodes in datasets. Since our work focuses on unsupervised node clustering, the entire graph structure and all node features are utilized during training, and the ground-truth labels are used exclusively for post-hoc eval-uation. 
+
+## B Implementation details 
+
+All experiments are performed on a system equipped with an NVIDIA GeForce RTX 4090 GPU (48GB memory), 64GB of RAM, and an Intel Core i9-13900K CPU. CAHC is implemented using PyTorch 2.4.1 and PyTorch Geometric 2.6.1. 
+
+## B.1 Hyperparameters 
+
+CAHC is trained using the Adam optimizer and has several param-eters. Several hyperparameters were fixed across all experiments, introduced as follows. The number of encoder layers was set to 1. Within the enhanced encoder, the number of attention heads was fixed at 4, and the dimension of each attention head was set to 128. In the appendix D.1, we have added an independent sensitivity analysis regarding the number and dimension of attention heads. The contrastive temperature 𝜏 was set to 0.5. Some parameters take different values on different datasets, such as the embedding dimension ( 𝐷 ), learning rate (LR), cluster assign-ment learning learning rate (Ass.LR), weight decay, augmentation rates ( 𝑝 f, 𝑝 m), and the number of epochs for representation learn-ing(Pre.E) and cluster assignment learning(Ass.E), respectively. The values of these parameters for each dataset are provided in Table 4. 
+
+## B.2 Baseline details 
+
+To evaluate the performance of CAHC, we compare it with seven baselines, introduced as follows: 1) Node2vec [ 12 ]. Node2vec is a graph representation learning framework that generates node sequences through a biased random walk and learns node embeddings in conjunction with the skip-gram model. 2) DGI [ 33 ]. DGI is an unsupervised GCN framework that learns node embeddings by maximizing the mutual information between local node representations and the global graph summary. 3) RAGC [ 50 ]. RAGC is a robust attributed graph clustering algo-rithm. It primarily comprises a hybrid collaborative augmentation module and a contrastive sample adaptive-differential awareness module. 4) Hyper2vec [ 14 ]. Hyper2vec is a representation learning al-gorithm that extends the random walk paradigm to hypergraphs. It designs a biased second-order random walk strategy to sample node sequences to capture the high-order structural information, and combines it with the skip-gram framework to learn the final node embeddings. 5) TriCL [ 20 ]. TriCL is a three-level contrastive framework that captures multi-granular structural information from nodes, hyper-edges, and their membership interactions. k-means is employed on the node embeddings to generate clusters. 6) SE-HSSL [ 22 ]. SE-HSSL incorporates sampling-free CCA-based objectives at both node and group levels, alongside a novel hierar-chical membership contrastive objective. k-mean is employed on the node embeddings to generate clusters. Referring to [ 20 , 21 ], for self-supervised methods designed for graphs (DGI and RAGC), we first convert hypergraphs to graphs via clique expansion and apply these methods to the converted graphs. For embedding-based baseline methods, the learned embeddings are fed into the k-means algorithm [ 13 ] for clustering. For all base-lines, we used the publicly available code from the original paper. Since both CAHC and the baselines are unsupervised, no labeled validation data was available for model selection. Thus, for each baseline, we either adopted their default hyperparameter settings or conducted a grid search to find configurations that work well on datasets, following the guidelines from papers. The parameter settings for the baselines designed for graphs and hypergraphs are described as follows, respectively. For the baselines designed for graphs, Node2vec, DGI, and RAGC— we first transformed the hypergraphs into standard graphs using clique expansion, where each hyperedge is converted into a clique. Their specific settings are as follows. For Node2vec, we used the default hyperparameters; specifically, we set the number of walks per node to 10, the length of each walk to 80, the window size to 5, and the learning rate to 0.05, with parameters 𝑝 and 𝑞 both set to 1. For DGI, we used the PReLU activation function and set the learning rate to 0.001, as given by default. For RAGC, the hidden dimension was set to 1500, and the numbers of local and global diffusion steps ( 𝑡 𝑙 , 𝑡 𝑚 ) were both set to 3. The confidence threshold 
+
+𝜏 was 0.9, the positive sample weight 𝛽 was 0.9, and the negative sample weight 𝛾 was 1.0. For the baselines designed for hypergraphs, we used the follow-ing settings. For Hyper2vec, the number of walks was set to 10 From Representation to Clusters: A Contrastive Learning Approach for Attributed Hypergraph Clustering WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates 
+
+Table 4: Key hyperparameter settings for our model (CAHC). Fixed parameters are detailed in the text. Dataset 𝑝 𝑓 𝑝 𝑚 D LR Ass. LR WD Pre. E Ass. E 
+
+Cora-C 0.4 0.4 512 5e-4 5e-4 5e-4 180 120 Citeseer 0.4 0.4 2048 1e-4 1e-5 5e-5 200 80 Pubmed 0.1 0.4 1024 5e-5 5e-5 5e-5 150 60 Cora-A 0.3 0.2 768 1e-4 1e-5 1e-5 100 140 DBLP 0.4 0.2 256 8e-4 8e-4 5e-5 260 100 20NewsW100 0.1 0.2 512 1e-3 1e-4 5e-4 80 30 Mushroom 0.4 0.2 128 1e-4 1e-4 5e-4 120 80 NTU2012 0.4 0.2 512 1e-5 1e-5 5e-5 60 40 with a length of 20, the window size was 5, and the parameters 𝑝 
+
+and 𝑞 were both set to 1. For both TriCL and SE-HSSL, we strictly adhered to the default hyperparameter settings provided in their respective official implementations and original papers, without any modifications. 
+
+## C Scalability 50% 60% 70% 80% 90% 100% 
+
+Subgraph sampling ratio 
+
+> 0
+> 200
+> 400
+> 600
+> 800
+> 1000
+> 1200
+> Running time (s)
+> DBLP
+> Pubmed
+> Cora-C
+> Cora-A
+
+Figure 6: Scalability of CAHC on the DBLP, cora-C, Pubmed, and Cora-A datasets. 
+
+To evaluate the scalability of CAHC, we randomly sample hy-pergraphs of different sizes from the DBLP, Cora-C, Pubmed, and Cora-A datasets and test CAHC on these extracted hypergraphs. For each dataset and each sampling ratio in 50%, 60%, 70%, 80%, 90%, 100%, we extract hypergraphs containing the corresponding ratio of nodes from the dataset, with hyperedges that include the extracted nodes. The runtime of CAHC on these datasets is shown in Figure 6. Figure 6 shows that, as the percentage of nodes increases, the runtime of CAHC improves on datasets. This is because the com-putational complexity is directly related to the number of nodes, hyperedges, and degrees in the hypergraph. As the hypergraph grows in size, the computational cost of each message passing in-creases. For instance, as the number of nodes and hyperedges in the network increases, the average node degree rises, causing the 1 2 4 8
+
+Number of Attention Heads             
+
+> 512
+> 256
+> 128
+> 64
+> Attention Dimension per Head
+> 0.462 0.462 0.461 0.463
+> 0.459 0.460 0.458 0.460
+> 0.467 0.467 0.468 0.466
+> 0.443 0.436 0.436 0.438
+> 0.440
+> 0.445
+> 0.450
+> 0.455
+> 0.460
+> 0.465
+> NMI Score
+
+(a) Citeseer 1 2 4 8
+
+Number of Attention Heads             
+
+> 512
+> 256
+> 128
+> 64
+> Attention Dimension per Head
+> 0.523 0.525 0.526 0.527
+> 0.497 0.500 0.496 0.498
+> 0.523 0.524 0.526 0.527
+> 0.506 0.508 0.508 0.511
+> 0.500
+> 0.505
+> 0.510
+> 0.515
+> 0.520
+> 0.525
+> NMI Score
+
+(b) Cora-A 
+
+Figure 7: Parameter analysis of the number of heads and attention dimension on the Citeseer and Cora-A datasets. The color intensity corresponds to the NMI score. 
+
+hypergraph neural network to aggregate information from more neighbors, thus increasing computational cost. WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates Li Ni, Shuaikang Zeng, Lin Mu, and Longlong Lin Silhouette score: 0.220 
+
+(a) CAHC (Cora-A) Silhouette score: 0.155 (b) TriCL (Cora-A) Silhouette score: 0.135 (c) SE-HSSL (Cora-A) Silhouette score: 0.202 
+
+(d) CAHC (20NewsW100) Silhouette score: 0.165 (e) TriCL (20NewsW100) Silhouette score: 0.196 (f) SE-HSSL (20NewsW100) 
+
+Figure 8: t-SNE visualization of learned node embeddings on the Cora-A (top row) and 20newW100 (bottom row) datasets. The visualization compares the clustering quality of our proposed model against baselines. Points represent nodes, colored by their ground-truth labels. 
+
+## D Additional experiments D.1 Backbone encoder 
+
+To evaluate the number of attention heads and the dimension of each head on the performance of CAHC, we conduct a parameter analysis on the Citeseer and Cora-Ar datasets. The number of heads was varied within the set {1, 2, 4, 8}, while the attention dimension was selected from {64 , 128 , 256 , 512 }. The performance, measured by Normalized Mutual Information (NMI), is visualized via heatmaps for the Citeseer and Cora-A datasets in Figure 7. Figure 7 shows that CAHC on both datasets achieves the best performance when the dimensionality is moderate (128), and the model performance seems to be more sensitive to the choice of attention dimension than the choice of the number of heads. Fur-thermore, we observe that a multi-head configuration generally outperforms a single-head setting. This validates the effectiveness of the multi-head mechanism, suggesting that allowing the model to attend to information from different representation subspaces simultaneously may be beneficial for capturing diverse features and ultimately enhancing clustering performance. 
+
+## D.2 Qualitative analysis 
+
+To intuitively compare the quality of the learned embeddings of algorithms, we employed t-SNE [ 32 ] for visualizing the node repre-sentations learned by CAHC, TriCL, and SE-HSSL. Figure 8 presents the t-SNE visualizations of node embeddings on the Cora-A and 20NewsW100 datasets. Figure 8 shows that while TriCL and SE-HSSL yield disorga-nized results with no discernible clusters, CAHC demonstrates compact and well-separated clusters. This visual assessment is con-firmed quantitatively by the Silhouette score [ 27 ]. One potential reason TriCL and SE-HSSL fail to produce separable embeddings is that they lack clustering guidance. On the Cora-A dataset, CAHC achieves the highest Silhouette score, indicating the best cluster quality. These conclusions are consistent with results in Table 2.

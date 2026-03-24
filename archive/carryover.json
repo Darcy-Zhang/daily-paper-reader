@@ -1,46 +1,8 @@
 {
-  "generated_at": "2026-03-23T20:23:37.120344+00:00",
-  "updated_date": "20260323",
+  "generated_at": "2026-03-24T20:07:10.609815+00:00",
+  "updated_date": "20260324",
   "carryover_days": 9,
   "items": [
-    {
-      "id": "2603.12514v1",
-      "title": "Addressing Data Scarcity in 3D Trauma Detection through Self-Supervised and Semi-Supervised Learning with Vertex Relative Position Encoding",
-      "abstract": "Accurate detection and localization of traumatic injuries in abdominal CT scans remains a critical challenge in emergency radiology, primarily due to severe scarcity of annotated medical data. This paper presents a label-efficient approach combining self-supervised pre-training with semi-supervised detection for 3D medical image analysis. We employ patch-based Masked Image Modeling (MIM) to pre-train a 3D U-Net encoder on 1,206 CT volumes without annotations, learning robust anatomical representations. The pretrained encoder enables two downstream clinical tasks: 3D injury detection using VDETR with Vertex Relative Position Encoding, and multi-label injury classification. For detection, semi-supervised learning with 2,000 unlabeled volumes and consistency regularization achieves 56.57% validation mAP@0.50 and 45.30% test mAP@0.50 with only 144 labeled training samples, representing a 115% improvement over supervised-only training. For classification, expanding to 2,244 labeled samples yields 94.07% test accuracy across seven injury categories using only a frozen encoder, demonstrating immediately transferable self-supervised features. Our results validate that self-supervised pre-training combined with semi-supervised learning effectively addresses label scarcity in medical imaging, enabling robust 3D object detection with limited annotations.",
-      "authors": [
-        "Shivam Chaudhary",
-        "Sheethal Bhat",
-        "Andreas Maier"
-      ],
-      "primary_category": "cs.CV",
-      "categories": [
-        "cs.CV",
-        "cs.LG"
-      ],
-      "published": "2026-03-12T23:17:17+00:00",
-      "link": "https://arxiv.org/pdf/2603.12514v1",
-      "tags": [
-        "keyword:生成对比学习",
-        "query:生成对比学习"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "self-supervised pretraining for medical image analysis with limited annotations, sample efficiency",
-      "llm_evidence_cn": "有限标注医学图像的自监督预训练，样本效率",
-      "llm_evidence": "有限标注医学图像的自监督预训练，样本效率",
-      "canonical_evidence": "有限标注医学图像的自监督预训练，样本效率",
-      "llm_tldr_en": "Self-supervised MIM pretraining combined with semi-supervised learning for 3D trauma detection in CT with scarce labels.",
-      "llm_tldr_cn": "自监督MIM预训练结合半监督学习，用于稀缺标注的3D CT创伤检测。",
-      "llm_tldr": "自监督MIM预训练结合半监督学习，用于稀缺标注的3D CT创伤检测。",
-      "llm_tags": [
-        "query:q10"
-      ],
-      "matched_query_tag": "query:q10",
-      "matched_query_text": "how does contrastive learning improve medical image classification with limited annotations",
-      "matched_requirement_id": "req-10",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.12514v1",
-      "carry_days": 3
-    },
     {
       "id": "2603.04878v1",
       "title": "Structure Observation Driven Image-Text Contrastive Learning for Computed Tomography Report Generation",
@@ -80,7 +42,7 @@
       "matched_requirement_id": "req-5",
       "selection_source": "carryover_cache",
       "paper_id": "2603.04878v1",
-      "carry_days": 3
+      "carry_days": 4
     },
     {
       "id": "2603.14086v1",
@@ -116,85 +78,7 @@
       "matched_requirement_id": "req-3",
       "selection_source": "carryover_cache",
       "paper_id": "2603.14086v1",
-      "carry_days": 3
-    },
-    {
-      "id": "2603.02929v1",
-      "title": "TRACE: Task-Adaptive Reasoning and Representation Learning for Universal Multimodal Retrieval",
-      "abstract": "Universal Multimodal Retrieval requires unified embedding models capable of interpreting diverse user intents, ranging from simple keywords to complex compositional instructions. While Multimodal Large Language Models (MLLMs) possess strong reasoning capabilities, prevailing adaptations confine them to static encoders, underutilizing their generative potential. This encoder-only paradigm struggles with complex intents that demand logical deduction rather than superficial pattern matching. To address this, we introduce TRACE (Task-adaptive Reasoning And Compressing Embeddings). TRACE unifies generative reasoning with discriminative representation learning. It first generates a structured Chain-of-Thought (CoT) to explicitly reason about the query, and subsequently compresses this reasoning trace into a compact embedding via a dedicated token. To train this framework, we construct M-BEIR-CoT, a large-scale dataset featuring a difficulty-aware routing strategy. Experiments on the M-BEIR benchmark establish TRACE as the new state-of-the-art. Crucially, TRACE demonstrates a learned implicit routing behavior. It autonomously activates reasoning for complex queries while bypassing it for simpler ones, achieving an optimal balance between retrieval accuracy and inference throughput. Furthermore, by internalizing the deductive process, TRACE exhibits remarkable zero-shot transferability to unseen domains and novel constraints.",
-      "authors": [
-        "Xiangzhao Hao",
-        "Shijie Wang",
-        "Tianyu Yang",
-        "Tianyue Wang",
-        "Haiyun Guo",
-        "JinQiao Wang"
-      ],
-      "primary_category": "cs.CV",
-      "categories": [
-        "cs.CV"
-      ],
-      "published": "2026-03-03T12:36:39+00:00",
-      "link": "https://arxiv.org/pdf/2603.02929v1",
-      "tags": [
-        "keyword:生成对比学习",
-        "query:生成对比学习"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "unifies generative reasoning with discriminative representation learning",
-      "llm_evidence_cn": "统一生成推理与判别表示学习",
-      "llm_evidence": "统一生成推理与判别表示学习",
-      "canonical_evidence": "统一生成推理与判别表示学习",
-      "llm_tldr_en": "TRACE bridges generative Chain-of-Thought reasoning with discriminative embedding for multimodal retrieval.",
-      "llm_tldr_cn": "TRACE将生成式思维链推理与判别嵌入结合用于多模态检索。",
-      "llm_tldr": "TRACE将生成式思维链推理与判别嵌入结合用于多模态检索。",
-      "llm_tags": [
-        "query:q7"
-      ],
-      "matched_query_tag": "query:q7",
-      "matched_query_text": "Bridging generative and contrastive learning methods",
-      "matched_requirement_id": "req-7",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.02929v1",
-      "carry_days": 3
-    },
-    {
-      "id": "2603.03530v1",
-      "title": "Directional Neural Collapse Explains Few-Shot Transfer in Self-Supervised Learning",
-      "abstract": "Frozen self-supervised representations often transfer well with only a few labels across many semantic tasks. We argue that a single geometric quantity, \\emph{directional} CDNV (decision-axis variance), sits at the core of two favorable behaviors: strong few-shot transfer within a task, and low interference across many tasks. We show that both emerge when variability \\emph{along} class-separating directions is small. First, we prove sharp non-asymptotic multiclass generalization bounds for downstream classification whose leading term is the directional CDNV. The bounds include finite-shot corrections that cleanly separate intrinsic decision-axis variability from centroid-estimation error. Second, we link decision-axis collapse to multitask geometry: for independent balanced labelings, small directional CDNV across tasks forces the corresponding decision axes to be nearly orthogonal, helping a single representation support many tasks with minimal interference. Empirically, across SSL objectives, directional CDNV collapses during pretraining even when classical CDNV remains large, and our bounds closely track few-shot error at practical shot sizes. Additionally, on synthetic multitask data, we verify that SSL learns representations whose induced decision axes are nearly orthogonal. The code and project page of the paper are available at [\\href{https://dlfundamentals.github.io/directional-neural-collapse/}{project page}].",
-      "authors": [
-        "Achleshwar Luthra",
-        "Yash Salunkhe",
-        "Tomer Galanti"
-      ],
-      "primary_category": "cs.LG",
-      "categories": [
-        "cs.LG",
-        "cs.AI"
-      ],
-      "published": "2026-03-03T21:28:13+00:00",
-      "link": "https://arxiv.org/pdf/2603.03530v1",
-      "tags": [
-        "keyword:对比学习进展",
-        "query:对比学习进展"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "theoretical analysis of self-supervised learning generalization",
-      "llm_evidence_cn": "自监督学习泛化的理论分析",
-      "llm_evidence": "自监督学习泛化的理论分析",
-      "canonical_evidence": "自监督学习泛化的理论分析",
-      "llm_tldr_en": "Proves generalization bounds for self-supervised learning via directional neural collapse geometry.",
-      "llm_tldr_cn": "通过方向神经坍缩几何证明自监督学习的泛化界。",
-      "llm_tldr": "通过方向神经坍缩几何证明自监督学习的泛化界。",
-      "llm_tags": [
-        "query:q9"
-      ],
-      "matched_query_tag": "query:q9",
-      "matched_query_text": "theoretical understanding of contrastive learning generalization",
-      "matched_requirement_id": "req-9",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.03530v1",
-      "carry_days": 3
+      "carry_days": 4
     },
     {
       "id": "2603.04516v1",
@@ -235,82 +119,7 @@
       "matched_requirement_id": "req-8",
       "selection_source": "carryover_cache",
       "paper_id": "2603.04516v1",
-      "carry_days": 3
-    },
-    {
-      "id": "2603.00951v1",
-      "title": "When Does Margin Clamping Affect Training Variance? Dataset-Dependent Effects in Contrastive Forward-Forward Learning",
-      "abstract": "Contrastive Forward-Forward (CFF) learning trains Vision Transformers layer by layer against supervised contrastive objectives. CFF training can be sensitive to random seed, but the sources of this instability are poorly understood. We focus on one implementation detail: the positive-pair margin in the contrastive loss is applied through saturating similarity clamping, $\\min(s + m,\\, 1)$. We prove that an alternative formulation, subtracting the margin after the log-probability, is gradient-neutral under the mean-over-positives reduction. On CIFAR-10 ($2 \\times 2$ factorial, $n{=}7$ seeds per cell), clamping produces $5.90\\times$ higher pooled test-accuracy variance ($p{=}0.003$) with no difference in mean accuracy. Analyses of clamp activation rates, layerwise gradient norms, and a reduced-margin probe point to saturation-driven gradient truncation at early layers. The effect does not transfer cleanly to other datasets: on CIFAR-100, SVHN, and Fashion-MNIST, clamping produces equal or lower variance. Two factors account for the discrepancy. First, positive-pair density per batch controls how often saturation occurs. Second, task difficulty compresses seed-to-seed spread when accuracy is high. An SVHN difficulty sweep confirms the interaction on a single dataset, with the variance ratio moving from $0.25\\times$ at high accuracy to $16.73\\times$ under aggressive augmentation. In moderate-accuracy regimes with many same-class pairs per batch, switching to the gradient-neutral subtraction reference removes this variance inflation at no cost to mean accuracy. Measuring the layer-0 clamp activation rate serves as a simple check for whether the problem applies.",
-      "authors": [
-        "Joshua Steier"
-      ],
-      "primary_category": "cs.LG",
-      "categories": [
-        "cs.LG",
-        "cs.CV"
-      ],
-      "published": "2026-03-01T07:00:38+00:00",
-      "link": "https://arxiv.org/pdf/2603.00951v1",
-      "tags": [
-        "keyword:对比学习进展",
-        "query:对比学习进展"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "Theoretical analysis of margin clamping effects on contrastive training variance",
-      "llm_evidence_cn": "边际截断对对比训练方差影响的理论分析",
-      "llm_evidence": "边际截断对对比训练方差影响的理论分析",
-      "canonical_evidence": "边际截断对对比训练方差影响的理论分析",
-      "llm_tldr_en": "Provides theoretical understanding of how margin clamping affects variance in contrastive forward-forward learning.",
-      "llm_tldr_cn": "从理论上理解边际截断如何影响对比前向-前向学习的方差。",
-      "llm_tldr": "从理论上理解边际截断如何影响对比前向-前向学习的方差。",
-      "llm_tags": [
-        "query:q9"
-      ],
-      "matched_query_tag": "query:q9",
-      "matched_query_text": "theoretical understanding of contrastive learning generalization",
-      "matched_requirement_id": "req-9",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.00951v1",
-      "carry_days": 3
-    },
-    {
-      "id": "2603.04037v1",
-      "title": "DQE-CIR: Distinctive Query Embeddings through Learnable Attribute Weights and Target Relative Negative Sampling in Composed Image Retrieval",
-      "abstract": "Composed image retrieval (CIR) addresses the task of retrieving a target image by jointly interpreting a reference image and a modification text that specifies the intended change. Most existing methods are still built upon contrastive learning frameworks that treat the ground truth image as the only positive instance and all remaining images as negatives. This strategy inevitably introduces relevance suppression, where semantically related yet valid images are incorrectly pushed away, and semantic confusion, where different modification intents collapse into overlapping regions of the embedding space. As a result, the learned query representations often lack discriminativeness, particularly at fine-grained attribute modifications. To overcome these limitations, we propose distinctive query embeddings through learnable attribute weights and target relative negative sampling (DQE-CIR), a method designed to learn distinctive query embeddings by explicitly modeling target relative relevance during training. DQE-CIR incorporates learnable attribute weighting to emphasize distinctive visual features conditioned on the modification text, enabling more precise feature alignment between language and vision. Furthermore, we introduce target relative negative sampling, which constructs a target relative similarity distribution and selects informative negatives from a mid-zone region that excludes both easy negatives and ambiguous false negatives. This strategy enables more reliable retrieval for fine-grained attribute changes by improving query discriminativeness and reducing confusion caused by semantically similar but irrelevant candidates.",
-      "authors": [
-        "Geon Park",
-        "Ji-Hoon Park",
-        "Seong-Whan Lee"
-      ],
-      "primary_category": "cs.CV",
-      "categories": [
-        "cs.CV",
-        "cs.AI",
-        "cs.LG"
-      ],
-      "published": "2026-03-04T13:17:44+00:00",
-      "link": "https://arxiv.org/pdf/2603.04037v1",
-      "tags": [
-        "keyword:对比学习进展",
-        "query:对比学习进展"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "hard negative sampling via target relative negative sampling in contrastive learning for image retrieval",
-      "llm_evidence_cn": "图像检索对比学习中的目标相对负采样硬负采样技术",
-      "llm_evidence": "图像检索对比学习中的目标相对负采样硬负采样技术",
-      "canonical_evidence": "图像检索对比学习中的目标相对负采样硬负采样技术",
-      "llm_tldr_en": "Proposes target relative negative sampling to address relevance suppression and semantic confusion in contrastive learning for composed image retrieval.",
-      "llm_tldr_cn": "提出目标相对负采样，解决组合图像检索对比学习中的相关性抑制和语义混淆问题。",
-      "llm_tldr": "提出目标相对负采样，解决组合图像检索对比学习中的相关性抑制和语义混淆问题。",
-      "llm_tags": [
-        "query:q3"
-      ],
-      "matched_query_tag": "query:q3",
-      "matched_query_text": "hard negative sampling techniques in contrastive learning",
-      "matched_requirement_id": "req-3",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.04037v1",
-      "carry_days": 3
+      "carry_days": 4
     },
     {
       "id": "2603.08012v1",
@@ -347,45 +156,7 @@
       "matched_requirement_id": "req-8",
       "selection_source": "carryover_cache",
       "paper_id": "2603.08012v1",
-      "carry_days": 3
-    },
-    {
-      "id": "2603.09370v1",
-      "title": "From Representation to Clusters: A Contrastive Learning Approach for Attributed Hypergraph Clustering",
-      "abstract": "Contrastive learning has demonstrated strong performance in attributed hypergraph clustering. Typically, existing methods based on contrastive learning first learn node embeddings and then apply clustering algorithms, such as k-means, to these embeddings to obtain the clustering results.However, these methods lack direct clustering supervision, risking the inclusion of clustering-irrelevant information in the learned graph.To this end, we propose a Contrastive learning approach for Attributed Hypergraph Clustering (CAHC), an end-to-end method that simultaneously learns node embeddings and obtains clustering results. CAHC consists of two main steps: representation learning and cluster assignment learning. The former employs a novel contrastive learning approach that incorporates both node-level and hyperedge-level objectives to generate node embeddings.The latter joint embedding and clustering optimization to refine these embeddings by clustering-oriented guidance and obtains clustering results simultaneously.Extensive experimental results demonstrate that CAHC outperforms baselines on eight datasets.",
-      "authors": [
-        "Li Ni",
-        "Shuaikang Zeng",
-        "Lin Mu",
-        "Longlong Lin"
-      ],
-      "primary_category": "cs.LG",
-      "categories": [
-        "cs.LG"
-      ],
-      "published": "2026-03-10T08:46:27+00:00",
-      "link": "https://arxiv.org/pdf/2603.09370v1",
-      "tags": [
-        "keyword:对比学习进展",
-        "query:对比学习进展"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "novel contrastive learning approach for hypergraph clustering with end-to-end architecture",
-      "llm_evidence_cn": "超图聚类的端到端对比学习方法",
-      "llm_evidence": "超图聚类的端到端对比学习方法",
-      "canonical_evidence": "超图聚类的端到端对比学习方法",
-      "llm_tldr_en": "Proposes CAHC, an end-to-end contrastive learning method that jointly learns node embeddings and clustering assignments for attributed hypergraphs.",
-      "llm_tldr_cn": "提出CAHC，端到端对比学习联合学习节点嵌入与聚类分配。",
-      "llm_tldr": "提出CAHC，端到端对比学习联合学习节点嵌入与聚类分配。",
-      "llm_tags": [
-        "query:q1"
-      ],
-      "matched_query_tag": "query:q1",
-      "matched_query_text": "contrastive learning recent advances and new methods",
-      "matched_requirement_id": "req-1",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.09370v1",
-      "carry_days": 3
+      "carry_days": 4
     },
     {
       "id": "2603.07874v1",
@@ -423,7 +194,7 @@
       "matched_requirement_id": "req-4",
       "selection_source": "carryover_cache",
       "paper_id": "2603.07874v1",
-      "carry_days": 3
+      "carry_days": 4
     },
     {
       "id": "2603.04772v1",
@@ -465,7 +236,7 @@
       "matched_requirement_id": "req-3",
       "selection_source": "carryover_cache",
       "paper_id": "2603.04772v1",
-      "carry_days": 3
+      "carry_days": 4
     },
     {
       "id": "2603.10648v2",
@@ -502,7 +273,7 @@
       "matched_requirement_id": "req-1",
       "selection_source": "carryover_cache",
       "paper_id": "2603.10648v2",
-      "carry_days": 3
+      "carry_days": 4
     },
     {
       "id": "2603.09825v1",
@@ -544,7 +315,7 @@
       "matched_requirement_id": "req-8",
       "selection_source": "carryover_cache",
       "paper_id": "2603.09825v1",
-      "carry_days": 3
+      "carry_days": 4
     },
     {
       "id": "2603.08224v1",
@@ -584,7 +355,126 @@
       "matched_requirement_id": "req-4",
       "selection_source": "carryover_cache",
       "paper_id": "2603.08224v1",
-      "carry_days": 3
+      "carry_days": 4
+    },
+    {
+      "id": "2603.20970v1",
+      "title": "GraPHFormer: A Multimodal Graph Persistent Homology Transformer for the Analysis of Neuroscience Morphologies",
+      "abstract": "Neuronal morphology encodes critical information about circuit function, development, and disease, yet current methods analyze topology or graph structure in isolation. We introduce GraPHFormer, a multimodal architecture that unifies these complementary views through CLIP-style contrastive learning.   Our vision branch processes a novel three-channel persistence image encoding unweighted, persistence-weighted, and radius-weighted topological densities via DINOv2-ViT-S. In parallel, a TreeLSTM encoder captures geometric and radial attributes from skeleton graphs. Both project to a shared embedding space trained with symmetric InfoNCE loss, augmented by persistence-space transformations that preserve topological semantics.   Evaluated on six benchmarks (BIL-6, ACT-4, JML-4, N7, M1-Cell, M1-REG) spanning self-supervised and supervised settings, GraPHFormer achieves state-of-the-art performance on five benchmarks, significantly outperforming topology-only, graph-only, and morphometrics baselines. We demonstrate practical utility by discriminating glial morphologies across cortical regions and species, and detecting signatures of developmental and degenerative processes.   Code: https://github.com/Uzshah/GraPHFormer",
+      "authors": [
+        "Uzair Shah",
+        "Marco Agus",
+        "Mahmoud Gamal",
+        "Mahmood Alzubaidi",
+        "Corrado Cali",
+        "Pierre J. Magistretti",
+        "Abdesselam Bouzerdoum",
+        "Mowafa Househ"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-03-21T22:47:24+00:00",
+      "link": "https://arxiv.org/pdf/2603.20970v1",
+      "tags": [
+        "keyword:对比学习进展"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "CLIP-style multimodal contrastive learning unifying topology and graph for neuroscience",
+      "llm_evidence_cn": "CLIP风格多模态对比学习统一拓扑与图结构用于神经科学",
+      "llm_evidence": "CLIP风格多模态对比学习统一拓扑与图结构用于神经科学",
+      "canonical_evidence": "CLIP风格多模态对比学习统一拓扑与图结构用于神经科学",
+      "llm_tldr_en": "GraPHFormer uses contrastive learning to fuse topological and geometric neuron representations",
+      "llm_tldr_cn": "GraPHFormer用对比学习融合拓扑与几何神经元表示",
+      "llm_tldr": "GraPHFormer用对比学习融合拓扑与几何神经元表示",
+      "llm_tags": [
+        "query:q4"
+      ],
+      "matched_query_tag": "query:q4",
+      "matched_query_text": "multimodal contrastive learning image text audio",
+      "matched_requirement_id": "req-4",
+      "selection_source": "carryover_cache",
+      "paper_id": "2603.20970v1",
+      "carry_days": 1
+    },
+    {
+      "id": "2603.21084v1",
+      "title": "ViCLSR: A Supervised Contrastive Learning Framework with Natural Language Inference for Natural Language Understanding Tasks",
+      "abstract": "High-quality text representations are crucial for natural language understanding (NLU), but low-resource languages like Vietnamese face challenges due to limited annotated data. While pre-trained models like PhoBERT and CafeBERT perform well, their effectiveness is constrained by data scarcity. Contrastive learning (CL) has recently emerged as a promising approach for improving sentence representations, enabling models to effectively distinguish between semantically similar and dissimilar sentences. We propose ViCLSR (Vietnamese Contrastive Learning for Sentence Representations), a novel supervised contrastive learning framework specifically designed to optimize sentence embeddings for Vietnamese, leveraging existing natural language inference (NLI) datasets. Additionally, we propose a process to adapt existing Vietnamese datasets for supervised learning, ensuring compatibility with CL methods. Our experiments demonstrate that ViCLSR significantly outperforms the powerful monolingual pre-trained model PhoBERT on five benchmark NLU datasets such as ViNLI (+6.97% F1), ViWikiFC (+4.97% F1), ViFactCheck (+9.02% F1), UIT-ViCTSD (+5.36% F1), and ViMMRC2.0 (+4.33% Accuracy). ViCLSR shows that supervised contrastive learning can effectively address resource limitations in Vietnamese NLU tasks and improve sentence representation learning for low-resource languages. Furthermore, we conduct an in-depth analysis of the experimental results to uncover the factors contributing to the superior performance of contrastive learning models. ViCLSR is released for research purposes in advancing natural language processing tasks.",
+      "authors": [
+        "Tin Van Huynh",
+        "Kiet Van Nguyen",
+        "Ngan Luu-Thuy Nguyen"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-03-22T06:46:26+00:00",
+      "link": "https://arxiv.org/pdf/2603.21084v1",
+      "tags": [
+        "keyword:对比学习进展",
+        "query:对比学习进展"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "supervised contrastive learning framework for sentence representations",
+      "llm_evidence_cn": "监督对比学习框架用于句子表示",
+      "llm_evidence": "监督对比学习框架用于句子表示",
+      "canonical_evidence": "监督对比学习框架用于句子表示",
+      "llm_tldr_en": "Novel supervised contrastive learning framework optimizing Vietnamese sentence embeddings for NLU.",
+      "llm_tldr_cn": "新颖的监督对比学习框架，优化越南语句子嵌入用于自然语言理解。",
+      "llm_tldr": "新颖的监督对比学习框架，优化越南语句子嵌入用于自然语言理解。",
+      "llm_tags": [
+        "query:q1"
+      ],
+      "matched_query_tag": "query:q1",
+      "matched_query_text": "contrastive learning recent advances and new methods",
+      "matched_requirement_id": "req-1",
+      "selection_source": "carryover_cache",
+      "paper_id": "2603.21084v1",
+      "carry_days": 1
+    },
+    {
+      "id": "2603.20293v1",
+      "title": "LLM-Enhanced Energy Contrastive Learning for Out-of-Distribution Detection in Text-Attributed Graphs",
+      "abstract": "Text-attributed graphs, where nodes are enriched with textual attributes, have become a powerful tool for modeling real-world networks such as citation, social, and transaction networks. However, existing methods for learning from these graphs often assume that the distributions of training and testing data are consistent. This assumption leads to significant performance degradation when faced with out-of-distribution (OOD) data. In this paper, we address the challenge of node-level OOD detection in text-attributed graphs, with the goal of maintaining accurate node classification while simultaneously identifying OOD nodes. We propose a novel approach, LLM-Enhanced Energy Contrastive Learning for Out-of-Distribution Detection in Text-Attributed Graphs (LECT), which integrates large language models (LLMs) and energy-based contrastive learning. The proposed method involves generating high-quality OOD samples by leveraging the semantic understanding and contextual knowledge of LLMs to create dependency-aware pseudo-OOD nodes, and applying contrastive learning based on energy functions to distinguish between in-distribution (IND) and OOD nodes. The effectiveness of our method is demonstrated through extensive experiments on six benchmark datasets, where our method consistently outperforms state-of-the-art baselines, achieving both high classification accuracy and robust OOD detection capabilities.",
+      "authors": [
+        "Xiaoxu Ma",
+        "Dong Li",
+        "Minglai Shao",
+        "Xintao Wu",
+        "Chen Zhao"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-03-19T02:48:46+00:00",
+      "link": "https://arxiv.org/pdf/2603.20293v1",
+      "tags": [
+        "keyword:对比学习进展",
+        "query:对比学习进展"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "contrastive learning for graph-structured data beyond vision",
+      "llm_evidence_cn": "图结构数据上的对比学习应用",
+      "llm_evidence": "图结构数据上的对比学习应用",
+      "canonical_evidence": "图结构数据上的对比学习应用",
+      "llm_tldr_en": "Proposes energy-based contrastive learning with LLM enhancement for OOD detection in text-attributed graphs",
+      "llm_tldr_cn": "提出基于能量的对比学习方法用于文本属性图的分布外检测",
+      "llm_tldr": "提出基于能量的对比学习方法用于文本属性图的分布外检测",
+      "llm_tags": [
+        "query:q8"
+      ],
+      "matched_query_tag": "query:q8",
+      "matched_query_text": "contrastive learning applications beyond computer vision",
+      "matched_requirement_id": "req-8",
+      "selection_source": "carryover_cache",
+      "paper_id": "2603.20293v1",
+      "carry_days": 1
     }
   ]
 }
