@@ -1,49 +1,8 @@
 {
-  "generated_at": "2026-03-24T20:07:10.609815+00:00",
-  "updated_date": "20260324",
+  "generated_at": "2026-03-25T19:40:58.175991+00:00",
+  "updated_date": "20260325",
   "carryover_days": 9,
   "items": [
-    {
-      "id": "2603.04878v1",
-      "title": "Structure Observation Driven Image-Text Contrastive Learning for Computed Tomography Report Generation",
-      "abstract": "Computed Tomography Report Generation (CTRG) aims to automate the clinical radiology reporting process, thereby reducing the workload of report writing and facilitating patient care. While deep learning approaches have achieved remarkable advances in X-ray report generation, their effectiveness may be limited in CTRG due to larger data volumes of CT images and more intricate details required to describe them. This work introduces a novel two-stage (structure- and report-learning) framework tailored for CTRG featuring effective structure-wise image-text contrasting. In the first stage, a set of learnable structure-specific visual queries observe corresponding structures in a CT image. The resulting observation tokens are contrasted with structure-specific textual features extracted from the accompanying radiology report with a structure-wise image-text contrastive loss. In addition, text-text similarity-based soft pseudo targets are proposed to mitigate the impact of false negatives, i.e., semantically identical image structures and texts from non-paired images and reports. Thus, the model learns structure-level semantic correspondences between CT images and reports. Further, a dynamic, diversity-enhanced negative queue is proposed to guide the network in learning to discriminate various abnormalities. In the second stage, the visual structure queries are frozen and used to select the critical image patch embeddings depicting each anatomical structure, minimizing distractions from irrelevant areas while reducing memory consumption. Also, a text decoder is added and trained for report generation.Our extensive experiments on two public datasets demonstrate that our framework establishes new state-of-the-art performance for CTRG in clinical efficiency, and its components are effective.",
-      "authors": [
-        "Hong Liu",
-        "Dong Wei",
-        "Qiong Peng",
-        "Yawen Huang",
-        "Xian Wu",
-        "Yefeng Zheng",
-        "Liansheng Wang"
-      ],
-      "primary_category": "cs.CV",
-      "categories": [
-        "cs.CV"
-      ],
-      "published": "2026-03-05T07:07:07+00:00",
-      "link": "https://arxiv.org/pdf/2603.04878v1",
-      "tags": [
-        "keyword:生成对比学习",
-        "query:生成对比学习"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "image-text contrastive learning for CT radiology report generation",
-      "llm_evidence_cn": "CT放射学报告生成的图文对比学习",
-      "llm_evidence": "CT放射学报告生成的图文对比学习",
-      "canonical_evidence": "CT放射学报告生成的图文对比学习",
-      "llm_tldr_en": "Structure-driven image-text contrastive learning framework for automated CT radiology report generation.",
-      "llm_tldr_cn": "自动化CT放射学报告生成的结构驱动图文对比学习框架。",
-      "llm_tldr": "自动化CT放射学报告生成的结构驱动图文对比学习框架。",
-      "llm_tags": [
-        "query:q5"
-      ],
-      "matched_query_tag": "query:q5",
-      "matched_query_text": "medical image analysis radiology pathology",
-      "matched_requirement_id": "req-5",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.04878v1",
-      "carry_days": 4
-    },
     {
       "id": "2603.14086v1",
       "title": "Effective Feature Learning for 3D Medical Registration via Domain-Specialized DINO Pretraining",
@@ -78,202 +37,7 @@
       "matched_requirement_id": "req-3",
       "selection_source": "carryover_cache",
       "paper_id": "2603.14086v1",
-      "carry_days": 4
-    },
-    {
-      "id": "2603.04516v1",
-      "title": "Augmenting representations with scientific papers",
-      "abstract": "Astronomers have acquired vast repositories of multimodal data, including images, spectra, and time series, complemented by decades of literature that analyzes astrophysical sources. Still, these data sources are rarely systematically integrated. This work introduces a contrastive learning framework designed to align X-ray spectra with domain knowledge extracted from scientific literature, facilitating the development of shared multimodal representations. Establishing this connection is inherently complex, as scientific texts encompass a broader and more diverse physical context than spectra. We propose a contrastive pipeline that achieves a 20% Recall@1% when retrieving texts from spectra, proving that a meaningful alignment between these modalities is not only possible but capable of accelerating the interpretation of rare or poorly understood sources. Furthermore, the resulting shared latent space effectively encodes physically significant information. By fusing spectral and textual data, we improve the estimation of 20 physical variables by 16-18% over unimodal spectral baselines. Our results indicate that a Mixture of Experts (MoE) strategy, which leverages both unimodal and shared representations, yields superior performance. Finally, outlier analysis within the multimodal latent space identifies high-priority targets for follow-up investigation, including a candidate pulsating ULX (PULX) and a gravitational lens system. Importantly, this framework can be extended to other scientific domains where aligning observational data with existing literature is possible.",
-      "authors": [
-        "Nicolò Oreste Pinciroli Vago",
-        "Rocco Di Tella",
-        "Carolina Cuesta-Lázaro",
-        "Michael J. Smith",
-        "Cecilia Garraffo",
-        "Rafael Martínez-Galarza"
-      ],
-      "primary_category": "cs.LG",
-      "categories": [
-        "cs.LG",
-        "astro-ph.IM",
-        "cs.AI"
-      ],
-      "published": "2026-03-04T19:04:45+00:00",
-      "link": "https://arxiv.org/pdf/2603.04516v1",
-      "tags": [
-        "keyword:对比学习进展"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "contrastive learning beyond vision for scientific literature",
-      "llm_evidence_cn": "对比学习在科学文献中的跨领域应用",
-      "llm_evidence": "对比学习在科学文献中的跨领域应用",
-      "canonical_evidence": "对比学习在科学文献中的跨领域应用",
-      "llm_tldr_en": "Contrastive learning aligns X-ray spectra with scientific papers for multimodal representation learning.",
-      "llm_tldr_cn": "对比学习对齐X射线光谱与科学论文，实现多模态表示学习。",
-      "llm_tldr": "对比学习对齐X射线光谱与科学论文，实现多模态表示学习。",
-      "llm_tags": [
-        "query:q8"
-      ],
-      "matched_query_tag": "query:q8",
-      "matched_query_text": "contrastive learning applications beyond computer vision",
-      "matched_requirement_id": "req-8",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.04516v1",
-      "carry_days": 4
-    },
-    {
-      "id": "2603.08012v1",
-      "title": "Structure-Preserving Graph Contrastive Learning for Mathematical Information Retrieval",
-      "abstract": "This paper introduces Variable Substitution as a domain-specific graph augmentation technique for graph contrastive learning (GCL) in the context of searching for mathematical formulas. Standard GCL augmentation techniques often distort the semantic meaning of mathematical formulas, particularly for small and highly structured graphs. Variable Substitution, on the other hand, preserves the core algebraic relationships and formula structure. To demonstrate the effectiveness of our technique, we apply it to a classic GCL-based retrieval model. Experiments show that this straightforward approach significantly improves retrieval performance compared to generic augmentation strategies. We release the code on GitHub.\\footnote{https://github.com/lazywulf/formula_ret_aug}.",
-      "authors": [
-        "Chun-Hsi Ku",
-        "Hung-Hsuan Chen"
-      ],
-      "primary_category": "cs.IR",
-      "categories": [
-        "cs.IR",
-        "cs.DL"
-      ],
-      "published": "2026-03-09T06:36:34+00:00",
-      "link": "https://arxiv.org/pdf/2603.08012v1",
-      "tags": [
-        "keyword:对比学习进展",
-        "query:对比学习进展"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "graph contrastive learning for mathematical information retrieval",
-      "llm_evidence_cn": "图对比学习用于数学信息检索",
-      "llm_evidence": "图对比学习用于数学信息检索",
-      "canonical_evidence": "图对比学习用于数学信息检索",
-      "llm_tldr_en": "Proposes Variable Substitution augmentation for graph contrastive learning in mathematical formula search, extending CL beyond computer vision.",
-      "llm_tldr_cn": "提出变量替换增强技术用于数学公式检索的图对比学习，将对比学习扩展至CV之外。",
-      "llm_tldr": "提出变量替换增强技术用于数学公式检索的图对比学习，将对比学习扩展至CV之外。",
-      "llm_tags": [
-        "query:q8"
-      ],
-      "matched_query_tag": "query:q8",
-      "matched_query_text": "contrastive learning applications beyond computer vision",
-      "matched_requirement_id": "req-8",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.08012v1",
-      "carry_days": 4
-    },
-    {
-      "id": "2603.07874v1",
-      "title": "Toward Unified Multimodal Representation Learning for Autonomous Driving",
-      "abstract": "Contrastive Language-Image Pre-training (CLIP) has shown impressive performance in aligning visual and textual representations. Recent studies have extended this paradigm to 3D vision to improve scene understanding for autonomous driving. A common strategy is to employ pairwise cosine similarity between modalities to guide the training of a 3D encoder. However, considering the similarity between individual modality pairs rather than all modalities jointly fails to ensure consistent and unified alignment across the entire multimodal space. In this paper, we propose a Contrastive Tensor Pre-training (CTP) framework that simultaneously aligns multiple modalities in a unified embedding space to enhance end-to-end autonomous driving. Compared with pairwise cosine similarity alignment, our method extends the 2D similarity matrix into a multimodal similarity tensor. Furthermore, we introduce a tensor loss to enable joint contrastive learning across all modalities. For experimental validation of our framework, we construct a text-image-point cloud triplet dataset derived from existing autonomous driving datasets. The results show that our proposed unified multimodal alignment framework achieves favorable performance for both scenarios: (i) aligning a 3D encoder with pretrained CLIP encoders, and (ii) pretraining all encoders from scratch.",
-      "authors": [
-        "Ximeng Tao",
-        "Dimitar Filev",
-        "Gaurav Pandey"
-      ],
-      "primary_category": "cs.CV",
-      "categories": [
-        "cs.CV",
-        "cs.LG"
-      ],
-      "published": "2026-03-09T01:18:50+00:00",
-      "link": "https://arxiv.org/pdf/2603.07874v1",
-      "tags": [
-        "keyword:对比学习进展",
-        "query:对比学习进展"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "multimodal contrastive learning extending CLIP to 3D vision with unified tensor alignment",
-      "llm_evidence_cn": "多模态对比学习，将CLIP扩展到3D视觉，统一张量对齐",
-      "llm_evidence": "多模态对比学习，将CLIP扩展到3D视觉，统一张量对齐",
-      "canonical_evidence": "多模态对比学习，将CLIP扩展到3D视觉，统一张量对齐",
-      "llm_tldr_en": "Proposes Contrastive Tensor Pre-training to jointly align multiple modalities in unified embedding space for autonomous driving.",
-      "llm_tldr_cn": "提出对比张量预训练，在统一嵌入空间联合对齐多模态用于自动驾驶。",
-      "llm_tldr": "提出对比张量预训练，在统一嵌入空间联合对齐多模态用于自动驾驶。",
-      "llm_tags": [
-        "query:q4"
-      ],
-      "matched_query_tag": "query:q4",
-      "matched_query_text": "multimodal contrastive learning image text audio",
-      "matched_requirement_id": "req-4",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.07874v1",
-      "carry_days": 4
-    },
-    {
-      "id": "2603.04772v1",
-      "title": "TSEmbed: Unlocking Task Scaling in Universal Multimodal Embeddings",
-      "abstract": "Despite the exceptional reasoning capabilities of Multimodal Large Language Models (MLLMs), their adaptation into universal embedding models is significantly impeded by task conflict. To address this, we propose TSEmbed, a universal multimodal embedding framework that synergizes Mixture-of-Experts (MoE) with Low-Rank Adaptation (LoRA) to explicitly disentangle conflicting task objectives. Moreover, we introduce Expert-Aware Negative Sampling (EANS), a novel strategy that leverages expert routing distributions as an intrinsic proxy for semantic similarity. By dynamically prioritizing informative hard negatives that share expert activation patterns with the query, EANS effectively sharpens the model's discriminative power and refines embedding boundaries. To ensure training stability, we further devise a two-stage learning paradigm that solidifies expert specialization before optimizing representations via EANS. TSEmbed achieves state-of-the-art performance on both the Massive Multimodal Embedding Benchmark (MMEB) and real-world industrial production datasets, laying a foundation for task-level scaling in universal multimodal embeddings.",
-      "authors": [
-        "Yebo Wu",
-        "Feng Liu",
-        "Ziwei Xie",
-        "Zhiyuan Liu",
-        "Changwang Zhang",
-        "Jun Wang",
-        "Li Li"
-      ],
-      "primary_category": "cs.CL",
-      "categories": [
-        "cs.CL",
-        "cs.AI"
-      ],
-      "published": "2026-03-05T03:43:52+00:00",
-      "link": "https://arxiv.org/pdf/2603.04772v1",
-      "tags": [
-        "keyword:对比学习进展",
-        "query:对比学习进展"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "Expert-Aware Negative Sampling using expert routing for hard negatives",
-      "llm_evidence_cn": "利用专家路由分布进行专家感知负采样",
-      "llm_evidence": "利用专家路由分布进行专家感知负采样",
-      "canonical_evidence": "利用专家路由分布进行专家感知负采样",
-      "llm_tldr_en": "TSEmbed introduces EANS that leverages MoE routing patterns to select informative hard negatives.",
-      "llm_tldr_cn": "TSEmbed提出EANS，利用MoE路由模式选择信息丰富的难负样本。",
-      "llm_tldr": "TSEmbed提出EANS，利用MoE路由模式选择信息丰富的难负样本。",
-      "llm_tags": [
-        "query:q3"
-      ],
-      "matched_query_tag": "query:q3",
-      "matched_query_text": "hard negative sampling techniques in contrastive learning",
-      "matched_requirement_id": "req-3",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.04772v1",
-      "carry_days": 4
-    },
-    {
-      "id": "2603.10648v2",
-      "title": "Less is More: Decoder-Free Masked Modeling for Efficient Skeleton Representation Learning",
-      "abstract": "The landscape of skeleton-based action representation learning has evolved from Contrastive Learning (CL) to Masked Auto-Encoder (MAE) architectures. However, each paradigm faces inherent limitations: CL often overlooks fine-grained local details, while MAE is burdened by computationally heavy decoders. Moreover, MAE suffers from severe computational asymmetry -- benefiting from efficient masking during pre-training but requiring exhaustive full-sequence processing for downstream tasks. To resolve these bottlenecks, we propose SLiM (Skeleton Less is More), a novel unified framework that harmonizes masked modeling with contrastive learning via a shared encoder. By eschewing the reconstruction decoder, SLiM not only eliminates computational redundancy but also compels the encoder to capture discriminative features directly. SLiM is the first framework with decoder-free masked modeling of representative learning. Crucially, to prevent trivial reconstruction arising from high skeletal-temporal correlation, we introduce semantic tube masking, alongside skeletal-aware augmentations designed to ensure anatomical consistency across diverse temporal granularities. Extensive experiments demonstrate that SLiM consistently achieves state-of-the-art performance across all downstream protocols. Notably, our method delivers this superior accuracy with exceptional efficiency, reducing inference computational cost by 7.89x compared to existing MAE methods.",
-      "authors": [
-        "Jeonghyeok Do",
-        "Yun Chen",
-        "Geunhyuk Youk",
-        "Munchurl Kim"
-      ],
-      "primary_category": "cs.CV",
-      "categories": [
-        "cs.CV"
-      ],
-      "published": "2026-03-11T11:09:16+00:00",
-      "link": "https://arxiv.org/pdf/2603.10648v2",
-      "tags": [
-        "keyword:对比学习进展"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "unified framework harmonizing masked modeling with contrastive learning",
-      "llm_evidence_cn": "统一框架融合掩码建模与对比学习",
-      "llm_evidence": "统一框架融合掩码建模与对比学习",
-      "canonical_evidence": "统一框架融合掩码建模与对比学习",
-      "llm_tldr_en": "Proposes SLiM framework that unifies masked modeling and contrastive learning for efficient skeleton representation learning.",
-      "llm_tldr_cn": "提出SLiM框架统一掩码建模与对比学习，实现高效骨骼表示学习。",
-      "llm_tldr": "提出SLiM框架统一掩码建模与对比学习，实现高效骨骼表示学习。",
-      "llm_tags": [
-        "query:q1"
-      ],
-      "matched_query_tag": "query:q1",
-      "matched_query_text": "contrastive learning recent advances and new methods",
-      "matched_requirement_id": "req-1",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.10648v2",
-      "carry_days": 4
+      "carry_days": 5
     },
     {
       "id": "2603.09825v1",
@@ -315,38 +79,34 @@
       "matched_requirement_id": "req-8",
       "selection_source": "carryover_cache",
       "paper_id": "2603.09825v1",
-      "carry_days": 4
+      "carry_days": 5
     },
     {
-      "id": "2603.08224v1",
-      "title": "SAVE: Speech-Aware Video Representation Learning for Video-Text Retrieval",
-      "abstract": "For video-text retrieval, the use of CLIP has been a de facto choice. Since CLIP provides only image and text encoders, this consensus has led to a biased paradigm that entirely ignores the sound track of videos. While several attempts have been made to reintroduce audio -- typically by incorporating an audio encoder and fusing its output with visual features -- these methods face two challenges: ineffective representation of speech content and suboptimal vision-audio fusion. To address these issues jointly, we propose SAVE, a Speech Aware Video rEpresentation learning method. SAVE improves upon AVIGATE, a SOTA audiovisual method, with a dedicated speech branch for more effective speech embedding. Furthermore, we introduce soft-ALBEF for early vision-audio alignment that facilitates fusion. Extensive experiments on five benchmarks show that SAVE compares favorably against the SOTA, outperforming AVIGATE by +4.1% on MSRVTT-9k, +1.9% on MSRVTT-7k, +2.5% on VATEX, +9.8% on Charades, and +2.1% on LSMDC, in light of the SumR metric.",
+      "id": "2603.22732v1",
+      "title": "SOUPLE: Enhancing Audio-Visual Localization and Segmentation with Learnable Prompt Contexts",
+      "abstract": "Large-scale pre-trained image-text models exhibit robust multimodal representations, yet applying the Contrastive Language-Image Pre-training (CLIP) model to audio-visual localization remains challenging. Replacing the classification token ([CLS]) with an audio-embedded token ([V_A]) struggles to capture semantic cues, and the prompt \"a photo of a [V_A]\" fails to establish meaningful connections between audio embeddings and context tokens. To address these issues, we propose Sound-aware Prompt Learning (SOUPLE), which replaces fixed prompts with learnable context tokens. These tokens incorporate visual features to generate conditional context for a mask decoder, effectively bridging semantic correspondence between audio and visual inputs. Experiments on VGGSound, SoundNet, and AVSBench demonstrate that SOUPLE improves localization and segmentation performance.",
       "authors": [
-        "Ruixiang Zhao",
-        "Zhihao Xu",
-        "Bangxiang Lan",
-        "Zijie Xin",
-        "Jingyu Liu",
-        "Xirong Li"
+        "Khanh Binh Nguyen",
+        "Chae Jung Park"
       ],
       "primary_category": "cs.CV",
       "categories": [
         "cs.CV"
       ],
-      "published": "2026-03-09T10:54:10+00:00",
-      "link": "https://arxiv.org/pdf/2603.08224v1",
+      "published": "2026-03-24T02:56:30+00:00",
+      "link": "https://arxiv.org/pdf/2603.22732v1",
       "tags": [
         "keyword:对比学习进展",
         "query:对比学习进展"
       ],
       "llm_score": 8.0,
-      "llm_evidence_en": "multimodal learning with image, text and speech for video-text retrieval",
-      "llm_evidence_cn": "图像、文本和语音的多模态学习用于视频-文本检索",
-      "llm_evidence": "图像、文本和语音的多模态学习用于视频-文本检索",
-      "canonical_evidence": "图像、文本和语音的多模态学习用于视频-文本检索",
-      "llm_tldr_en": "SAVE integrates speech, vision and text modalities for improved video-text retrieval beyond CLIP.",
-      "llm_tldr_cn": "SAVE整合语音、视觉和文本模态，改进CLIP之外的视频-文本检索。",
-      "llm_tldr": "SAVE整合语音、视觉和文本模态，改进CLIP之外的视频-文本检索。",
+      "llm_evidence_en": "audio-visual multimodal learning extending CLIP to audio",
+      "llm_evidence_cn": "将CLIP扩展至音频的视觉-音频多模态学习",
+      "llm_evidence": "将CLIP扩展至音频的视觉-音频多模态学习",
+      "canonical_evidence": "将CLIP扩展至音频的视觉-音频多模态学习",
+      "llm_tldr_en": "Extends CLIP-style contrastive pretraining to audio-visual tasks via learnable prompt contexts.",
+      "llm_tldr_cn": "通过可学习提示上下文将CLIP式对比预训练扩展至音视频任务。",
+      "llm_tldr": "通过可学习提示上下文将CLIP式对比预训练扩展至音视频任务。",
       "llm_tags": [
         "query:q4"
       ],
@@ -354,126 +114,7 @@
       "matched_query_text": "multimodal contrastive learning image text audio",
       "matched_requirement_id": "req-4",
       "selection_source": "carryover_cache",
-      "paper_id": "2603.08224v1",
-      "carry_days": 4
-    },
-    {
-      "id": "2603.20970v1",
-      "title": "GraPHFormer: A Multimodal Graph Persistent Homology Transformer for the Analysis of Neuroscience Morphologies",
-      "abstract": "Neuronal morphology encodes critical information about circuit function, development, and disease, yet current methods analyze topology or graph structure in isolation. We introduce GraPHFormer, a multimodal architecture that unifies these complementary views through CLIP-style contrastive learning.   Our vision branch processes a novel three-channel persistence image encoding unweighted, persistence-weighted, and radius-weighted topological densities via DINOv2-ViT-S. In parallel, a TreeLSTM encoder captures geometric and radial attributes from skeleton graphs. Both project to a shared embedding space trained with symmetric InfoNCE loss, augmented by persistence-space transformations that preserve topological semantics.   Evaluated on six benchmarks (BIL-6, ACT-4, JML-4, N7, M1-Cell, M1-REG) spanning self-supervised and supervised settings, GraPHFormer achieves state-of-the-art performance on five benchmarks, significantly outperforming topology-only, graph-only, and morphometrics baselines. We demonstrate practical utility by discriminating glial morphologies across cortical regions and species, and detecting signatures of developmental and degenerative processes.   Code: https://github.com/Uzshah/GraPHFormer",
-      "authors": [
-        "Uzair Shah",
-        "Marco Agus",
-        "Mahmoud Gamal",
-        "Mahmood Alzubaidi",
-        "Corrado Cali",
-        "Pierre J. Magistretti",
-        "Abdesselam Bouzerdoum",
-        "Mowafa Househ"
-      ],
-      "primary_category": "cs.CV",
-      "categories": [
-        "cs.CV"
-      ],
-      "published": "2026-03-21T22:47:24+00:00",
-      "link": "https://arxiv.org/pdf/2603.20970v1",
-      "tags": [
-        "keyword:对比学习进展"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "CLIP-style multimodal contrastive learning unifying topology and graph for neuroscience",
-      "llm_evidence_cn": "CLIP风格多模态对比学习统一拓扑与图结构用于神经科学",
-      "llm_evidence": "CLIP风格多模态对比学习统一拓扑与图结构用于神经科学",
-      "canonical_evidence": "CLIP风格多模态对比学习统一拓扑与图结构用于神经科学",
-      "llm_tldr_en": "GraPHFormer uses contrastive learning to fuse topological and geometric neuron representations",
-      "llm_tldr_cn": "GraPHFormer用对比学习融合拓扑与几何神经元表示",
-      "llm_tldr": "GraPHFormer用对比学习融合拓扑与几何神经元表示",
-      "llm_tags": [
-        "query:q4"
-      ],
-      "matched_query_tag": "query:q4",
-      "matched_query_text": "multimodal contrastive learning image text audio",
-      "matched_requirement_id": "req-4",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.20970v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.21084v1",
-      "title": "ViCLSR: A Supervised Contrastive Learning Framework with Natural Language Inference for Natural Language Understanding Tasks",
-      "abstract": "High-quality text representations are crucial for natural language understanding (NLU), but low-resource languages like Vietnamese face challenges due to limited annotated data. While pre-trained models like PhoBERT and CafeBERT perform well, their effectiveness is constrained by data scarcity. Contrastive learning (CL) has recently emerged as a promising approach for improving sentence representations, enabling models to effectively distinguish between semantically similar and dissimilar sentences. We propose ViCLSR (Vietnamese Contrastive Learning for Sentence Representations), a novel supervised contrastive learning framework specifically designed to optimize sentence embeddings for Vietnamese, leveraging existing natural language inference (NLI) datasets. Additionally, we propose a process to adapt existing Vietnamese datasets for supervised learning, ensuring compatibility with CL methods. Our experiments demonstrate that ViCLSR significantly outperforms the powerful monolingual pre-trained model PhoBERT on five benchmark NLU datasets such as ViNLI (+6.97% F1), ViWikiFC (+4.97% F1), ViFactCheck (+9.02% F1), UIT-ViCTSD (+5.36% F1), and ViMMRC2.0 (+4.33% Accuracy). ViCLSR shows that supervised contrastive learning can effectively address resource limitations in Vietnamese NLU tasks and improve sentence representation learning for low-resource languages. Furthermore, we conduct an in-depth analysis of the experimental results to uncover the factors contributing to the superior performance of contrastive learning models. ViCLSR is released for research purposes in advancing natural language processing tasks.",
-      "authors": [
-        "Tin Van Huynh",
-        "Kiet Van Nguyen",
-        "Ngan Luu-Thuy Nguyen"
-      ],
-      "primary_category": "cs.CL",
-      "categories": [
-        "cs.CL",
-        "cs.AI",
-        "cs.LG"
-      ],
-      "published": "2026-03-22T06:46:26+00:00",
-      "link": "https://arxiv.org/pdf/2603.21084v1",
-      "tags": [
-        "keyword:对比学习进展",
-        "query:对比学习进展"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "supervised contrastive learning framework for sentence representations",
-      "llm_evidence_cn": "监督对比学习框架用于句子表示",
-      "llm_evidence": "监督对比学习框架用于句子表示",
-      "canonical_evidence": "监督对比学习框架用于句子表示",
-      "llm_tldr_en": "Novel supervised contrastive learning framework optimizing Vietnamese sentence embeddings for NLU.",
-      "llm_tldr_cn": "新颖的监督对比学习框架，优化越南语句子嵌入用于自然语言理解。",
-      "llm_tldr": "新颖的监督对比学习框架，优化越南语句子嵌入用于自然语言理解。",
-      "llm_tags": [
-        "query:q1"
-      ],
-      "matched_query_tag": "query:q1",
-      "matched_query_text": "contrastive learning recent advances and new methods",
-      "matched_requirement_id": "req-1",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.21084v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.20293v1",
-      "title": "LLM-Enhanced Energy Contrastive Learning for Out-of-Distribution Detection in Text-Attributed Graphs",
-      "abstract": "Text-attributed graphs, where nodes are enriched with textual attributes, have become a powerful tool for modeling real-world networks such as citation, social, and transaction networks. However, existing methods for learning from these graphs often assume that the distributions of training and testing data are consistent. This assumption leads to significant performance degradation when faced with out-of-distribution (OOD) data. In this paper, we address the challenge of node-level OOD detection in text-attributed graphs, with the goal of maintaining accurate node classification while simultaneously identifying OOD nodes. We propose a novel approach, LLM-Enhanced Energy Contrastive Learning for Out-of-Distribution Detection in Text-Attributed Graphs (LECT), which integrates large language models (LLMs) and energy-based contrastive learning. The proposed method involves generating high-quality OOD samples by leveraging the semantic understanding and contextual knowledge of LLMs to create dependency-aware pseudo-OOD nodes, and applying contrastive learning based on energy functions to distinguish between in-distribution (IND) and OOD nodes. The effectiveness of our method is demonstrated through extensive experiments on six benchmark datasets, where our method consistently outperforms state-of-the-art baselines, achieving both high classification accuracy and robust OOD detection capabilities.",
-      "authors": [
-        "Xiaoxu Ma",
-        "Dong Li",
-        "Minglai Shao",
-        "Xintao Wu",
-        "Chen Zhao"
-      ],
-      "primary_category": "cs.AI",
-      "categories": [
-        "cs.AI"
-      ],
-      "published": "2026-03-19T02:48:46+00:00",
-      "link": "https://arxiv.org/pdf/2603.20293v1",
-      "tags": [
-        "keyword:对比学习进展",
-        "query:对比学习进展"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "contrastive learning for graph-structured data beyond vision",
-      "llm_evidence_cn": "图结构数据上的对比学习应用",
-      "llm_evidence": "图结构数据上的对比学习应用",
-      "canonical_evidence": "图结构数据上的对比学习应用",
-      "llm_tldr_en": "Proposes energy-based contrastive learning with LLM enhancement for OOD detection in text-attributed graphs",
-      "llm_tldr_cn": "提出基于能量的对比学习方法用于文本属性图的分布外检测",
-      "llm_tldr": "提出基于能量的对比学习方法用于文本属性图的分布外检测",
-      "llm_tags": [
-        "query:q8"
-      ],
-      "matched_query_tag": "query:q8",
-      "matched_query_text": "contrastive learning applications beyond computer vision",
-      "matched_requirement_id": "req-8",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.20293v1",
+      "paper_id": "2603.22732v1",
       "carry_days": 1
     }
   ]

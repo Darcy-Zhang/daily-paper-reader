@@ -1,0 +1,613 @@
+Title: Dual Contrastive Network for Few-Shot Remote Sensing Image Scene Classification
+
+URL Source: https://arxiv.org/pdf/2603.23161v1
+
+Published Time: Wed, 25 Mar 2026 01:11:03 GMT
+
+Number of Pages: 12
+
+Markdown Content:
+> JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 1
+
+# Dual Contrastive Network for Few-Shot Remote Sensing Image Scene Classification 
+
+Zhong Ji, Senior Member, IEEE, Liyuan Hou, Xuan Wang, Gang Wang, and Yanwei Pang, Senior Member, IEEE 
+
+Abstract —Few-shot remote sensing image scene classification (FS-RSISC) aims at classifying remote sensing images with only a few labeled samples. The main challenges lie in small inter-class variances and large intra-class variances, which are the inherent property of remote sensing images. To address these challenges, we propose a transfer-based Dual Contrastive Network (DCN), which incorporates two auxiliary supervised contrastive learning branches during the training process. Specif-ically, one is a Context-guided Contrastive Learning (CCL) branch and the other is a Detail-guided Contrastive Learning (DCL) branch, which focus on inter-class discriminability and intra-class invariance, respectively. In the CCL branch, we first devise a Condenser Network to capture context features, and then leverage a supervised contrastive learning on top of the obtained context features to facilitate the model to learn more discriminative features. In the DCL branch, a Smelter Network is designed to highlight the significant local detail information. And then we construct a supervised contrastive learning based on the detail feature maps to fully exploit the spatial information in each map, enabling the model to concentrate on invariant detail features. Extensive experiments on four public benchmark remote sensing datasets demonstrate the competitive performance of our proposed DCN. 
+
+Index Terms —Few-shot learning, remote sensing image scene classification, supervised contrastive learning. 
+
+I. I NTRODUCTION 
+
+# REMOTE sensing image scene classification (RSISC) aims at predicting the scene labels of remote sensing images, which is widely applied in the various fields, such as disaster detection [1]–[3], environmental monitoring [4], [5], urban planning [6], [7], and land-use management [8], [9]. In these fields, deep learning [10]–[14] has recently been leveraged to perform the RSISC task with advanced results. However, these deep learning approaches are data-driven, which suffer from the lack of labeled remote sensing images in real world. To alleviate this limitation, the Few-Shot RSISC (FS-RSISC) [15], [16] is proposed to address the RSISC with only a few labeled samples. 
+
+This work was supported by the National Natural Science Foundation of China under Grant 62176178. (Corresponding author: Xuan Wang.) 
+
+Zhong Ji is with the School of Electrical and Information Engineering, Tianjin University, Tianjin 300072, China, and also with the CETC Key Laboratory of Aerospace Information Applications, Shijiazhuang, 050081, China. Liyuan Hou, Xuan Wang, and Yanwei Pang are with the School of Electrical and Information Engineering, Tianjin University, Tianjin 300072, China (e-mail: wang xuan@tju.edu.cn). Gang Wang is with the CETC Key Laboratory of Aerospace Information Applications, Shijiazhuang, 050081, China. Industrial Industrial Residential Residential Industrial Industrial Residential Residential       
+
+> Palace Palace Palace Palace Palace Palace Palace Palace
+
+Fig. 1. Illustrations of remote sensing image characteristics: small inter-class variances and large intra-class variances. See texts for details. 
+
+Most existing FS-RSISC approaches fall in the group of meta-learning [15]–[18]. These meta-based approaches train a meta-learner with a diverse set of few-shot tasks, which transfers the knowledge to novel tasks, and have achieved remarkable success in FS-RSISC. However, they underesti-mate the fact that a good feature extractor is still fundamental for few-shot learning [19], [20], which is confirmed in recent researches [21], [22]. Inspired by this evidence, a transfer-based approach [23] was proposed for FS-RSISC by designing a mirror-based feature extractor to construct sub-supervised data and corresponding labels to assist the pre-training stage. Nevertheless, [23] fails to train a generalized feature extrac-tor due to neglecting the inherent property of scene images: small inter-class variances and large intra-class variances. For example, as shown in Fig.1, residential and industrial classes in the first row are highly similar in terms of the objects and their arrangements, which result in a small inter-class variance. While the second row exhibits four remote sensing images belonging to the same palace scene, in which the contents vary from backgrounds to appearances. This dissimilarity of the same class images leads to a large intra-class variance. Although some existing approaches have addressed the chal-lenges of RSISC with feature fusion and attention mechanism [24]–[26], they left the complementary relationship between context and detail information out of consideration. To this end, we present a Dual Contrastive Network (DCN) containing two supervised contrastive learning branches to pull features from the same class closer than those from different classes, which facilitates the model to explore the context and detail features and thus improves the model generalization, 
+
+0000–0000/00$00.00 © 2021 IEEE  
+
+> arXiv:2603.23161v1 [cs.CV] 24 Mar 2026 JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 2
+
+as illustrated in Fig. 2. Specifically, to alleviate the problem of small inter-class variances, we propose a Context-guided Contrastive Learning (CCL) branch, which aims at improving the discrimination of each category to enable the model to distinguish inter-class differences. Particularly, we first devise a Condenser Network to condense the global context infor-mation by integrating and redistributing the information at each spatial location via the Squeeze and Expand operations among channels. It imitates the condensation process and enhances the information relevant to the scene while ignoring the irrelevant information, which results in more representative context features. Then, the context features are employed for a contrastive learning, which is an auxiliary task for scene classification in the training process. The CCL branch enables the model to aggregate vital information from all channels, thus promoting the discriminative feature extraction capability of the model. To address the problem of large intra-class variances, we further develop a Detail-guided Contrastive Learning (DCL) branch based on feature maps, with the goal of capturing the detail features that are invariant in intra-class samples by leveraging the spatial information contained in the feature maps. Similar to the process of smelting, we first devise a Smelter Network to adaptively locate the significant local regions of the input images and smelt the corresponding detail features. To be specific, the locally detailed feature information in both channel and spatial dimensions is emphasized. Then the channel and spatial information are aggregated together and mapped into attention weights, which are applied to enhance the information on significant local regions of the original feature maps. The enhanced detail feature maps are employed to construct an auxiliary contrastive learning task, which facilitates the model to concentrate on the spatial detail information of the feature maps. Notably, we introduce a self-attention based feature alignment mechanism to accurately measure the similarity between two samples. In summary, the main highlights are four-fold: 1) We propose a Dual Contrastive Network (DCN) for FS-RSISC, which consists of a Context-guided Contrastive Learning (CCL) and a Detail-guided Contrastive Learn-ing (DCL). It enables the model to extract discriminative and detail features by the complementarity between the two contrastive learning branches. 2) We design a Condenser Network for CCL, which en-hances the information relevant to the scene by exploit-ing the global contexts to generate discriminative context features. 3) A Smelter Network is devised for DCL, which extracts detail features by adaptively localizing the significant local image regions. 4) Our DCN achieves competitive performance on four benchmark remote sensing datasets, which even out-performs state-of-the-art approaches by at least 3.56 %
+
+and 5.38 % on the NWPU-RESISC45 [27] and AID [28] datasets on 5-way 5-shot, respectively. The rest of the paper is organized as follows: Section II introduces the related work. The overall architecture of the proposed DCN is described in Section III. Section IV shows experimental results on four benchmark remote sensing datasets. Finally, the conclusion is summarized in Section V. II. R ELATED WORK 
+
+A. Remote Sensing Image Scene Classification 
+
+With the renascence of neural network, RSISC has received great attention [29]–[35]. For example, Han et al . [30] de-vised an improved pre-trained AlexNet architecture for scene classification, which incorporated the spatial pyramid pooling and side supervision to fuse multi-scale information of remote sensing images. He et al . [31] proposed an end-to-end learning model called skip-connected covariance network to achieve more representative feature learning. Zhang et al . [33] made full use of the merits of convolutional neural network (CNN) and CapsNet to improve the classification performance. Liu et al . [34] designed a Siamese CNN to mitigate the impact of the small scale of scene classes and lack of image diversity. Zeng 
+
+et al . [35] proposed a prototype calibration with a feature-generating model to solve the deviation of prototype feature expression. In addition, transfer learning with large-scale pre-training CNN is also widely exploited in RSISC [36]–[40]. For in-stance, Lima et al . [36] proved that it is possible to transfer from natural images (ImageNet) to remote-sensing imagery by using pre-trained VGG19 and Inception V3 on remote sensing datasets. Xie et al . [37] introduced a scale-free CNN by converting the fully connected layers in the pre-trained CNN model to convolutional layers and using a global av-erage pooling layer after the final convolutional layer, which addressed the information losing issue during the fine-tuning process. Li et al . [38] trained three typical deep CNN models and then transferred the weights of their convolutional layers to prevent overfitting. Wang et al . [39] proposed an adaptive learning strategy to manage the input, model, and label si-multaneously for transferring a CNN-based model. Alem et al . [40] developed a novel deep transfer learning-based fusion model which combined multiple feature vectors to resolve the semantic gap among various datasets. Recently, with the diversity of remote sensing images and fine division of scene categories, some studies have begun to address the problems of small inter-class variances and large intra-class variances of remote sensing images [41]–[45]. Yu 
+
+et al . [41] investigated texture coded and saliency coded two-stream deep architectures to achieve the feature-level fusion. Goel et al . [42] adopted a hierarchical metric learning strategy, which organized the classes in a hierarchical fashion to explore the class interaction information. Shen et al . [43] constructed a dual-model architecture with a grouping-attention-fusion strat-egy to enhance the feature representation of the scene. Chen 
+
+et al . [44] presented a Multi-Branch Local Attention Network, which emphasized the main target in the complex background by both channel and spatial attentions. However, these studies only concentrate on extracting critical local features and fuse them with the original features. Unlike them, our work not only extracts local details, but also explores the global context information, which achieves the complementarity between the obtained detail feature maps and context features. JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 3Context -guided Contrastive Learning (CCL) Branch 
+
+Feature 
+
+Encoder 
+
+Input 
+
+Image 
+
+Z
+
+Detail -guided Contrastive Learning (DCL) Branch 
+
+> CE Loss
+> Linear
+> ReLU
+> Linear
+> CCL Loss
+> Normalization Projection f pc
+
+Condenser 
+
+Network 
+
+> ...
+
+Zc
+
+> ...  ...
+> ... ...  ... ...
+> Context features
+> Linear
+> ReLU
+> Linear
+> CCL Loss
+> Normalization Projection f pc
+
+Condenser 
+
+Network 
+
+> ...
+
+Zc
+
+> ...  ...
+> ...  ...
+> Context features
+> Vi|j
+> Vj|i
+> Vj
+> Vi
+> DCL Loss
+> Detail feature maps
+> ReLU
+> Linear
+> ReLU
+> Linear
+> Projection f pd
+
+Zd
+
+Smelter 
+
+Network  
+
+> Ki
+> Qi
+> Kj
+> Qj
+> Vj
+> Vi
+> Fig. 2. Overview of the proposed DCN framework. It consists of a Context-guided Contrastive Learning (CCL) branch and a Detail-guided Contrastive Learning (DCL) branch to facilitate the model to learn more discriminative and detail information to generate context and detail features, both of which are used for training their corresponding classifiers.
+
+B. Few-shot Remote Sensing Image Scene Classification 
+
+Few-shot learning aims at classifying samples from unseen novel classes with a few labeled samples, which has achieved extensive progress [46]–[50] and has recently been applied to RSISC [15]–[17], [51]–[53]. For example, Zhai et al . [15] presented a lifelong few-shot learning model based on meta-learning with gradient descent, which enabled the learned knowledge to be easily and rapidly adapted to a new dataset and in turn served in the lifelong few-shot learning. Li et al . [16] proposed a discriminative learning of adaptive match network (DLA-MatchNet) including a feature learning module and matcher to learn more discriminative feature representa-tions and a robust metric. Kim et al . [52] devised a multi-scale feature fusion network by integrating a novel self-attention feature selection module to extract more valuable texture se-mantic features from a limited number of labeled input images. Cheng et al . [53] introduced a Siamese-prototype network (SPNet) with prototype self-calibration and inter-calibration to learn more valid and representative prototypes. Li et al . [17] adopted a self-supervised contrastive learning-based metric learning network (SCL-MLNet) by weaving self-supervised contrastive learning into few-shot classification algorithms to promote the scene classification performance. Although great advance has been made, most of the existing studies are based on meta-learning framework and underestimate the importance of training a good feature extractor. Our work falls in the group of transfer learning which aims at learning a robust and generalized feature representation. Moreover, different from the above methods with a single classification model, our approach contains two branches that focus on discriminative features and detail features respectively, to adapt to scene classification tasks of different complexity. III. M ETHOD 
+
+In this section, we first describe the FS-RSISC problem, and then introduce the framework of the proposed Dual Contrastive Network (DCN), as shown in Fig. 2. It employs a Context-guided Contrastive Learning (CCL) and a Detail-guided Contrastive Learning (DCL) to explore the global contexts and local details, and the two branches achieve the mutual complementarity, thus enabling the model to learn more discriminative and detail information for different scene classification tasks. 
+
+A. Problem Definition 
+
+The FS-RSISC task follows the standard few-shot learning paradigm [54], [55]. In this paradigm, given a dataset Dbase 
+
+with sufficient samples of base classes, the goal is to enable the model to quickly adapt to novel tasks with few samples from the dataset Dnovel . Note that Dbase and Dnovel have no overlapped classes. Our model follows the transfer learning pipeline, which consists of a pre-training stage and a meta-test stage. In the pre-training stage, supervised learning is applied to train a feature encoder fθ with Dbase . In the meta-test stage, the feature encoder fθ is then transferred to the novel tasks for a better representation of Dnovel . In each novel task, there are a support set DS and a query set DQ. The support set is formed by C classes selected from the Dnovel with K samples per class, which is denoted as DS = {(xi, y i)}CK i=1 , where (xi, y i)
+
+is a pair of image and its ground-truth label. Likewise, the query set DQ = {(xj , y j )}CQ j=1 is formed by C classes with Q samples per class. Based on this setting, the probability of a query sample x ∈ D Q being predicted as class c is: 
+
+P (y = c|x) = sof tmax (⟨fθ (x), w c⟩) , (1) JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 4Squeeze      
+
+> Expand Expand
+> Squeeze
+> Expand
+> Z
+> Zs
+> ZgZe
+> 5× 5× 640
+> 5× 5× 1
+> 5× 5× 640 5× 5× 640
+> Avg
+> Zc
+> Z
+> Zs
+> ZgZe
+> 5× 5× 640
+> 5× 5× 1
+> 5× 5× 640 5× 5× 640
+> Avg
+> Zc
+> Fig. 3. Illustration of Condenser Network. With the Squeeze and Expand operations among channels, the scene-relevant information is enhanced while the irrelevant information is ignored. After the global average pooling, the context features are generated.
+
+where ⟨· , ·⟩ is the distance function, wc = 1
+
+> K
+
+P
+
+> x∈D cS
+
+fθ (x) is the prototype of the class c and DcS denotes the set of samples labeled with class c. 
+
+B. Context-guided Contrastive Learning 
+
+One main challenge of FS-RSISC is the small inter-class variances. To address this challenge, we propose a Context-guided Contrastive Learning (CCL) to exploit the global con-texts, which consists of a Condenser Network and a contrastive learning module. The goal is to enable the model to explore the discriminative features that can better reflect inter-class differences and thus guide the classification of similar images. 
+
+1) Condenser Network: Due to the interference of the back-ground and irrelevant objects, some information relevant to the scene label in remote sensing images is always inapparent. To reduce this adverse effect, we design a Condenser Network for CCL to capture the global context information, as shown in Fig. 3. The specific process is as follows: First, the feature maps Z ∈ Rh×w×c output by the Feature Encoder are squeezed along the channel dimension using a 1 × 1 convolution layer to aggregate the spatial information from each channel. Zs ∈ Rh×w×1 is the obtained spatial map: 
+
+Zs = fsq (Z) , (2) where fsq (·) is the Squeeze operation. Then, each pixel point in Zs is mapped to 0-1 with the Softmax function and multiplied by the feature maps Z in order to assign different weights to different spatial locations. The generated feature maps Zg ∈ Rh×w×c are formulated as: 
+
+Zg = sof tmax (Zs)×Z. (3) Next, the generated feature maps Zg are squeezed again to aggregate the features at each spatial position. The Layer Normalization and ReLU function are then employed on the squeezed feature maps to find out the vital regions while filtering out the insignificant ones. Subsequently, the squeezed feature maps are expanded by a 1 × 1 convolution layer with c kernels to convey vital spatial information to each channel, resulting in the expanded feature maps Ze ∈ Rh×w×c. Finally, 
+
+Ze are added to the original feature maps Z to enhance the features in vital spatial locations. The enhanced feature maps 
+
+˜Z ∈ Rh×w×c are expressed as: 
+
+˜Z = fex (ReLU (LN (fsq (Zg )))) + Z , (4) where fex (·) is the Expand operation, LN denotes the Layer Normalization. After the global average pooling operation avg , the context features Zc ∈ R1×1×c = avg ( ˜Z) are obtained. 
+
+2) Contrastive Learning: In a training batch, we first implement two different data augmentations [56] to achieve double-batch expansion. These two batch expansions are both propagated through the Feature Encoder and the Condenser Network to get the context features. Then, a non-linear pro-jection network fpc (·) and an L2 normalization layer are employed to map the context features to another embedding space, in which the contrastive learning is performed: 
+
+F = fpc (Zc) , (5) where Zc ∈ R1×1×c are the context features. Suppose there are N samples in a batch, thus there are 2 N
+
+samples in the expanded batches. We set the sample (xi, y i)
+
+as the anchor, and the positive and the negative samples are those with the same or different labels as the anchor, respectively. The Context-guided Contrastive Learning (CCL) loss is formulated as: 
+
+LCCL = −
+
+> 2N
+
+X
+
+> i=1
+
+1
+
+Pi
+
+> 2N
+
+X 
+
+> j=1 ,j ̸=i,y i=yj
+
+log exp (d(Fi, F j )/τ )
+
+P2Nn=1 ,n ̸=i exp (d(Fi, F n)/τ ) ,
+
+(6) where Pi is the number of positive samples, τ is a scalar temperature parameter, d(·, ·) denotes the distance function, which is specifically implemented as a normalized dot product. 
+
+C. Detail-guided Contrastive Learning 
+
+Scene images in the same category sometimes are quite different, which results in a large intra-class variance. To alleviate this problem, we further propose a Detail-guided Contrastive Learning (DCL) approach with more attention on invariant local details in intra-class samples, which contains a Smelter Network and a contrastive learning module. 
+
+1) Smelter Network: For DCL, we first propose a Smelter Network to locate and enhance the significant local detail information by self-adaptive adjustment, as illustrated in Fig.4. Specifically, the Channel Squeeze and Spatial Squeeze op-erations are first respectively performed on the feature maps 
+
+Z ∈ Rh×w×c by average pooling in the channel and spatial di-mensions to obtain the channel squeezed map Zcs ∈ Rh×w×1
+
+and the spatial squeezed map Zss ∈ R1×1×c:
+
+Zcs = fc(Z), (7) 
+
+Zss = fs(Z), (8) where fc (·) and fs (·) are the Channel Squeeze operation and Spatial Squeeze operation. The channel squeezed map Zcs is then successively input to a 3 × 3 convolution layer, an upsampling layer and a 1 ×
+
+1 convolution layer to derive the spatial attention map Zsp ∈
+
+Rh×w×1:
+
+Zsp = conv 1×1 (up (conv 3×3(Zcs ))) , (9) where conv n×n denotes an n × n convolution layer and up 
+
+denotes an upsampling layer. JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 5Channel 
+
+> Squeeze
+> Spatial
+> Squeeze
+> 1× 1 conv
+> Sigmoid
+> 1× 1 conv
+> 1× 1 conv
+> 3× 3 conv
+> Upsampling
+> 1× 1 conv Z
+> Zd
+> Zcs
+> Zss
+> Zsp
+> Zch
+> Fig. 4. Illustration of Smelter Network. The helpful information in the channel and spatial dimensions is extracted respectively to enhance the significant local detail regions of the feature maps.
+
+Similarly, the spatial squeezed map Zss is also propagated through two 1 × 1 convolution layers to get the channel attention map Zch ∈ R1×1×c:
+
+Zch = conv 1×1 (conv 1×1 (Zss )) . (10) Next, the two attention maps are multiplied together and then mapped by a 1 × 1 convolution layer to obtain the synthetic attention maps. Finally, the synthetic attention maps are activated by the Sigmoid function and multiplied with the input feature maps Z, and then added to the feature maps 
+
+Z, which achieves an enhancement of significant local detail regions. The obtained detail feature maps Zd ∈ Rh×w×c are formulated as: 
+
+Zd = ε (conv 1×1 (Zsp × Zch )) ×Z + Z , (11) where conv is a 1 × 1 convolution layer, ε (·) is the Sigmoid function. 
+
+2) Contrastive Learning: In a training batch, we implement the same data augmentations as CCL. The obtained two batch expansions are then propagated through the Feature Encoder and the Smelter Network to get the detail feature maps Zd ∈ Rh×w×c. To better reflect the correlation among detail features and measure the distance, we further introduce a self-attention based feature alignment mechanism. The detail feature maps Zd are first mapped into three vectors by the projection network fpf (·) to get the query Q, key K and value V :
+
+Q = K = V = fpf (Zd) , (12) where Q, K, V ∈ Rhw ×¯c. Suppose given a pair of samples 
+
+(xi, y i) and (xj , y j ), the value Vi is aligned with Vj using the query Qj and the key Ki:
+
+Vi|j = sof tmax 
+
+ Qj K⊤
+
+> i
+
+√¯c
+
+
+
+×Vi. (13) Likewise, the value Vj is aligned with Vi:
+
+Vj|i = sof tmax QiK⊤
+
+> j
+
+√¯c
+
+!
+
+×Vj . (14) Therefore the distance between xi and xj is expressed as: 
+
+d(Vi, V j ) = 12
+
+ cos  Vi, V j|i
+
+ + cos  Vj , V i|j
+
+ , (15) Similar to LCCL , the Detail-guided Contrastive Learning (DCL) loss is formulated as: 
+
+LDCL = −
+
+> 2N
+
+X
+
+> i=1
+
+1
+
+Pi
+
+> 2N
+
+X 
+
+> j=1 ,j ̸=i,y i=yj
+
+log exp (d(Vi, V j )/¯τ )
+
+P2Nn=1 ,n ̸=i exp (d(Vi, V n)/¯τ ) ,
+
+(16) Therefore, the total contrastive learning loss is composed of 
+
+LCCL (Eq. (6)) and LDCL (Eq. (16)) :
+
+LCL = LCCL + αL DCL , (17) where α is a hype-parameter to balance both items. 
+
+D. Total Loss 
+
+The cross-entropy loss is applied to optimize the distribution of both context and detail features spaces: 
+
+LCE = −
+
+> N
+
+X
+
+> i=1
+
+1
+
+N
+
+> C
+
+X
+
+> c=1
+
+yic log exp (oic )
+
+PCj=1 exp (ojc )
+
+−β
+
+> N
+
+X
+
+> i=1
+
+1
+
+N
+
+> C
+
+X
+
+> c=1
+
+yic log exp (˜ oic )
+
+PCj=1 exp (˜ ojc ) ,
+
+(18) where N is the number of samples in a training batch, yic 
+
+equals to 1 when the sample i belongs to class c, C is the number of categories, β is a hype-parameter to balance the two items, and o and ˜o represent the logits output by the last layer of the Condenser Network and the Smelter Network, respectively. Overall, our full pre-training objective is to minimize the total loss, which consists of the cross-entropy loss LCE 
+
+(Eq. (18)) and the contrastive learning loss LCL (Eq. (17)) :
+
+Ltotal = LCE + γL CL , (19) where γ is a hype-parameter to balance each item. 
+
+E. Test 
+
+In each task of the meta-test stage, a support set DS =
+
+{(xi, y i)}CK i=1 is sampled from Dnovel . Then, there are two choices of prototypes of class c:
+
+wc = 1
+
+K
+
+> K
+
+X
+
+> i=1
+
+Zci , and ˜wc = 1
+
+K
+
+> K
+
+X
+
+> i=1
+
+avg ( ˜Zci ), (20) where Zci and ˜Zci represent the context features Zc and the detail feture maps Zd of the i-th sample in the c-th class, respectively. 
+
+DQ denotes a query set sampled from Dnovel . Then, the probability of a query sample xq ∈ D Q being predicted as class c is: 
+
+P (y=c|xq )= 12 (sof tmax (⟨Zq , w c⟩) + sof tmax (⟨avg ( ˜Zq ), ˜wc⟩)) .
+
+(21) Besides, note that the Feature Encoder, the Condenser Network and the Smelter Network are frozen, and the two contrastive learning modules are discarded in the meta-test stage. JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 6                                                                                           
+
+> TABLE I COMPARATIVE RESULTS (%) ON THE WHU-RS19 AND UC M ERCED DATASETS WITH ±95 %CONFIDENCE INTERVALS . T HE TOP TWO RESULTS ARE SHOWN IN BOLD AND UNDERLINE .Type Method Backbone WHU-RS19 UC Merced 1-shot 5-shot 1-shot 5-shot Optimization LLSR [5] Conv 57.10 70.65 39.47 57.40 MAML [6] ResNet-12 59.19 ±0.92 72.34 ±0.75 50.23 ±0.98 62.02 ±0.72 Metric DLA-MatchNet [7] Conv 68.27 ±1.83 79.89 ±0.33 53.76 ±0.62 63.01 ±0.51 SCL-MLNet [8] Conv --51.37 ±0.79 68.09 ±0.92 MatchingNet [9] ResNet-12 75.99 ±0.63 82.96 ±0.40 50.99 ±0.69 57.14 ±0.59 ProtoNet [10] ResNet-12 65.53 ±0.99 85.53 ±0.73 53.15 ±0.80 71.54 ±0.52 RelationNet [11] ResNet-12 65.36 ±0.75 80.02 ±0.64 49.18 ±0.78 63.64 ±0.54 deepEMD [12] ResNet-12 67.37 ±0.62 85.43 ±0.43 52.11 ±0.41 69.82 ±0.36 FRN [13] ResNet-12 63.75 ±0.19 83.18 ±0.12 51.14 ±0.22 65.46 ±0.15 PSM [14] ResNet-12 67.72 ±0.95 86.21 ±0.70 54.35 ±0.82 71.86 ±0.54 IDLN [15] ResNet-12 73.89 ±0.88 83.12 ±0.56 --SPNet [16] ResNet-18 81.06 ±0.60 88.04 ±0.28 57.64 ±0.73 73.52 ±0.51 Transfer S2M2 [17] ResNet-12 69.00 ±0.41 82.14 ±0.21 52.16 ±0.46 67.38 ±0.25 DeepDBC [18] ResNet-12 68.23 ±0.39 85.90 ±0.31 54.20 ±0.35 71.94 ±0.26 Transfer DCN (Ours) ResNet-12 81.74 ±0.55 91.67 ±0.25 58.64 ±0.71 76.61 ±0.49
+
+IV. E XPERIMENTS 
+
+A. Datasets 
+
+We evaluate the proposed DCN on four popular remote sensing datasets: WHU-RS19 [57], UC Merced [58], NWPU-RESISC45 [27] and AID [28]. WHU-RS19 and UC Merced are small datasets, while NWPU-RESISC45 and AID are large datasets. According to the division criteria of few-shot learning [59], the datasets are divided into training set, validation set and test set with disjoint classes. Details of these datasets are described below. WHU-RS19 dataset [57] is collected by Whuhan University from Google Earth. It contains 1,005 images of 600 × 600 in 19 classes. And each class includes at least 50 images. Following [16], WHU-RS19 is divided into 9, 5, and 5 classes for training, validation, and testing, respectively. UC Merced dataset [58] is released by University of Cal-ifornia, Merced. It includes 100 images of 21 classes, pixel size of per image is 256 × 256. Following [16], UC Merced is split into 10, 6, and 5 classes for training, validation, and testing, respectively. NWPU-RESISC45 dataset [27] is a large dataset released by Northwestern Polytechnical University for RSISC, which contains 31,500 images with 256 × 256 pixels. There are 45 scene classes, and each class has 700 images. Following [16], NWPU-RESISC45 is divided into a training set with 25 classes, a validation set with 10 classes and a test set with 10 classes. AID dataset [28] contains 10,000 images of 30 classes, which issued by Wuhan University and Huazhong University of Science and Technology. Each class has 220 ∼ 420 samples and each image is 600 × 600 pixels. Following [16], AID is split into a training set with 16 classes, a validation set with 7 classes and a test set with 7 classes. 
+
+B. Experiment Setup 
+
+Following previous work [60], ResNet-12 is employed as the backbone for all the four benchmark datasets. For the projection network, fpg (·) is a Multilayer Perceptron (MLP) with a hidden layer of size 640 and a ReLU layer, which outputs 128-dimensional vectors, and fpl (·) is an MLP with a single layer of size 128 and a ReLU layer. In the data preprocessing stage, the images are all cropped to a fixed size 84 × 84. During the model pre-training stage, we apply Momentum-SGD for optimization, and set the learning rate as 0.05, the momentum as 0.9, and the weight decay as 0.0005. In terms of the loss weights, we set α=γ=1, β=0.1. The classification accuracies are calculated by random selecting 600 tasks from the test set with a confidence interval of 95%. Our model is implemented with the PyTorch framework and trained on a NVIDIA GeForce RTX 2080 GPU. 
+
+C. Comparison with State-of-the-Art Methods 
+
+We choose nine typical few-shot learning methods and six state-of-the-art FS-RSISC methods for comparison. The typical few-shot learning methods include one optimization-based approach [49], six metric-based approaches [46]–[48], [61]–[63], and two transfer learning-based approaches [50], [64]. For a fair comparison, all methods utilize the ResNet-12 as the backbone. The results of MAML [49], Relation Networks [48] are borrowed from the published articles [18], [23] and the others are re-implemented by us according to [50], [55]. The state-of-the-art FS-RSISC methods can be divided into optimization-based approach LLSR [15], metric-based approaches, such as DLA-MatchNet [16], SCL-MLNet [17], IDLN [18], and SPNet [53], and transfer-based approach CSDL [23]. All results are cited from the original published articles. 
+
+1) Results on samll datasets: Table I shows the comparative results on the small datasets: WHU-RS19 [57] and UC Merced [58], where CSDL has no results on both datasets. We observe that our method achieves the best results on both 5-way 1-shot and 5-way 5-shot. Concretely, on 1-shot setting, our DCN achieves accuracies of 81.74% on the WHU-RS19 dataset and 58.64% on the UC Merced dataset, which are at least 0.68% and 1% higher than the other methods, respectively. On 5-shot setting, the DCN outperforms the sub-optimal approach SPNet JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 7
+
+TABLE II COMPARATIVE RESULTS (%) ON THE NWPU-RESISC45 AND AID DATASETS WITH ±95 % CONFIDENCE INTERVALS . T HE TOP TWO RESULTS ARE SHOWN IN BOLD AND UNDERLINE .Type Method Backbone NWPU-RESISC45 AID 1-shot 5-shot 1-shot 5-shot Optimization LLSR [5] Conv 51.43 72.90 45.18 61.76 MAML [6] ResNet-12 56.01 ±0.87 72.94 ±0.63 62.54 ±0.79 73.12 ±0.85 Metric DLA-MatchNet [7] Conv 68.80 ±0.70 81.63 ±0.46 57.21 ±0.82 73.45 ±0.61 SCL-MLNet [8] Conv 62.21 ±1.12 80.86 ±0.76 59.46 ±0.96 76.31 ±0.68 MatchingNet [9] ResNet-12 61.57 ±0.49 76.02 ±0.34 64.30 ±0.46 74.49 ±0.35 ProtoNet [10] ResNet-12 64.52 ±0.48 81.95 ±0.30 67.08 ±0.47 82.44 ±0.29 RelationNet [11] ResNet-12 65.52 ±0.85 78.38 ±0.31 68.56 ±0.49 79.21 ±0.35 deepEMD [12] ResNet-12 67.50 ±0.74 80.54 ±0.51 63.78 ±0.68 80.26 ±0.41 FRN [13] ResNet-12 66.31 ±0.20 79.67 ±0.15 66.97 ±0.23 78.82 ±0.16 PSM [14] ResNet-12 66.17 ±0.51 83.03 ±0.34 68.89 ±0.46 83.75 ±0.33 IDLN [15] ResNet-12 75.25 ±0.75 84.67 ±0.23 - -SPNet [16] ResNet-18 67.84 ±0.87 83.94 ±0.50 - -Transfer S2M2 [17] ResNet-12 63.24 ±0.47 83.23 ±0.28 66.22 ±0.45 82.87 ±0.29 DeepDBC [18] ResNet-12 68.84 ±0.44 84.12 ±0.29 66.56 ±0.43 84.15 ±0.25 CSDL [19] ResNet-12 71.28 ±0.72 85.66 ±0.47 - -Transfer DCN (Ours) ResNet-12 74.40 ±0.78 89.22 ±0.41 73.38 ±0.77 88.25 ±0.44 
+
+TABLE III ABLATION STUDIES (%) ON THE WHU-RS19 AND UC M ERCED DATASETS .Method WHU-RS19 UC Merced 1-shot 5-shot 1-shot 5-shot Backbone 67.65 ±0.74 83.17 ±0.36 51.87 ±0.70 68.90 ±0.55 CCL (w/o CL) 68.17 ±0.72 84.08 ±0.38 52.52 ±0.72 70.02 ±0.52 CCL (w/o CN) 67.13 ±0.66 83.80 ±0.37 54.37 ±0.75 72.40 ±0.48 CCL 69.03 ±0.67 85.22 ±0.40 54.93 ±0.68 72.86 ±0.50 DCL (w/o CL) 67.61 ±0.69 83.11 ±0.36 52.10 ±0.65 69.57 ±0.58 DCL (w/o SN) 74.29 ±0.70 89.16 ±0.43 55.49 ±0.66 73.33 ±0.45 DCL 75.58 ±0.62 89.75 ±0.35 56.52 ±0.72 74.29 ±0.52     
+
+> DCN (Ours) 81.74 ±0.55 91.67 ±0.25 58.64 ±0.71 76.61 ±0.49
+
+TABLE IV ABLATION STUDIES (%) ON THE NWPU-RESISC45 AND AID DATASETS .Method NWPU-RESISC45 AID 1-shot 5-shot 1-shot 5-shot Backbone 71.26 ±0.86 86.19 ±0.47 69.22 ±0.79 83.48 ±0.45 CCL (w/o CL) 71.66 ±0.85 86.31 ±0.48 69.35 ±0.84 83.07 ±0.49 CCL (w/o CN) 72.01 ±0.82 87.20 ±0.44 69.18 ±0.79 84.46 ±0.45 CCL 72.55 ±0.71 87.92 ±0.41 70.91 ±0.80 85.66 ±0.44 DCL (w/o CL) 71.91 ±0.75 86.53 ±0.47 69.65 ±0.82 84.10 ±0.51 DCL (w/o SN) 72.59 ±0.71 87.47 ±0.45 71.12 ±0.79 86.27 ±0.46 DCL 73.50 ±0.76 88.37 ±0.47 72.16 ±0.77 86.97 ±0.48     
+
+> DCN (Ours) 74.40 ±0.78 89.22 ±0.41 73.38 ±0.77 88.25 ±0.44
+
+by a large margin of 3.63% and 3.09% on the two datasets, respectively. This indicates that both context and detail features of remote sensing images contribute to scene classification, and our DCN is able to learn more robust and comprehensive features with the dual contrastive learning framework, which can better adapt to the different novel scene classification tasks. In addition, it is obvious that the gains achieved on 5-shot setting are greater than those on 1-shot setting. This is due to the fact that unlike meta-learning methods that enhance the learning ability of the model and enable the model learn how to learn, our DCN focuses more on feature representations to obtain more discriminative features. 
+
+2) Results on large datasets: On the large datasets, NWPU-RESISC45 [27] and AID [28], our DCN also achieves com-petitive performance. From Table II, we can observe that our method achieves encouraging improvements over the state-of-the-art approaches on 5-way 5-shot, where the gains of 3.56% and 4.1% are achieved than the second best approach on the NWPU-RESISC45 and AID datasets, respectively. On 5-way 1-shot, our method is 0.85% lower than the best result in IDLN [18] on the NWPU-RESISC45 dataset. We suppose the reason lies in that our DCN trains the classifier based on the support set features, while IDLN calibrates features iteratively to guide the generation of the classifier. Therefore our method may has the classification bias when the number of support samples is too small. Moreover, we observe that SPNet, which performs well on the small datasets, suffers from performance degradation when faced with the large datasets. Our DCN maintains superior performance on both large and small datasets, which demonstrates the generality of our method. 
+
+D. Ablation Studies 
+
+To demonstrate the effectiveness of each component of our DCN, we conduct a series of ablation studies. Our baseline is based on [20], which only applies the cross-entropy loss to learn the backbone in the pre-training stage. Then we consider the following variants: 
+
+Backbone represents the baseline of our method. 
+
+CCL (w/o CL) adds the Condenser Network after the Feature Encoder on the baseline. 
+
+CCL (w/o CN) adds the Context-guided Contrastive Learn-ing without the Condenser Network on the baseline. 
+
+CCL adds the Context-guided Contrastive Learning on the baseline. 
+
+DCL (w/o CL) adds the Smelter Network after the Feature Encoder on the baseline. 
+
+DCL (w/o SN) adds the Detail-guided Contrastive Learning without the Smelter Network on the baseline. 
+
+DCL adds the Detail-guided Contrastive Learning on the baseline. The detailed results of ablation studies on the four bench-mark datasets are shown in Table III and Table IV. The results JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 80.517                           
+
+> 0.711
+> 0.615
+> 0.136 0.104 0.085
+> 0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> ResNet ResNet+CN ResNet+SN
+> Inter -class var iance ( ⬆)Intr a-class var iance ( ⬇)
+> ⬆best ⬇best
+> Fig. 5. The inter-class variances and intra-class variances on the NWPU-RESISC45 dataset on 5-way 1-shot with baseline (ResNet), Con-denser Network-integrated (ResNet+CN) and Smelter Network-integrated (ResNet+SN).
+
+show a significant improvement of our DCN over the baseline, achieving 3.14% ∼ 14.09% gains on 1-shot setting and 3.03% 
+
+∼ 8.5% gains on 5-shot setting. The CCL consists of the Condenser Network and the corresponding contrastive learning module. We can observe that CCL improves the results by 0.54% ∼ 1.9% and 0.46% ∼ 1.42% compared with CCL (w/o CN) on the two settings, respectively. It is demonstrated that the Condenser Network can generate features containing more discriminative information by exploiting the global contexts, thus enabling the model to pay more attention to inter-class variability during the CCL. Likewise, the Detail-guided Contrastive Learning consists of the Smelter Network and the corresponding contrastive learning module. It is observed that DCL outperforms DCL (w/o SN). Especially on the NWPU-RESISC45 and UC Merced datasets, DCL achieves about 1% improvements on both settings. This proves the effectiveness of our designed Smelter Network, which guides the network to focus more on significant detail regions in DCL. Compared with CCL and DCL, which are both asingle contrastive learning framework, our DCN achieves at least 0.9% and 0.85% performance gain on 5-way 1-shot and 5-way 5-shot, respectively. This demonstrates that our dual contrastive learning framework is able to learn robust feature representations by the complementarity of context and detail branches. 
+
+E. Inter-class and Intra-class Variances Analysis 
+
+To verify the effectiveness of our proposed CCL and DCL, we visualize the inter-class and intra-class variances of novel classes on the NWPU-RESISC45 dataset with different net-works, including baseline (ResNet) and two branches of our DCN, namely Condenser Network-integrated (ResNet+CN) and Smelter Network-integrated (ResNet+SN). As shown in Fig. 5, inter-class variance of embedding features by ResNet+CN is larger than that by ResNet, which indicates that the Condenser Network and auxiliary contrastive learning task based on the context features promote the model to extract more representative and discriminative features. This enlarge the distance between samples of different categories in the feature space to some extent. It is also observed that compared with ResNet, the features extracted by ResNet+SN has a smaller intra-class variance. This demonstrates that the Smelter Network and auxiliary contrastive learning task based on the detail features enable the model to focus more on the local details, which alleviates the problem of widely various appearances and backgrounds of the same class samples. Moreover, as shown in Fig. 6 and Fig. 7, Gradient-weighted Class Activation Mapping (Grad-CAM) [65] is applied to visualize the interested regions of different networks for inter-class and intra-class images, where the regions of interest are indicated in red. From Fig. 6, it is observed that the representative regions, which are directly related to the scene categories, are more prominently highlighted in the third row. For example, for the baseball diamond in the first column, the Grad-CAM result of ResNet+CN highlights all four baseball diamonds, while the result of ResNet highlights some unre-lated regions such as the limestone on the upper and right sides of the image. This indicates that the Condenser Network enhances the representation of relevant features while ignoring the redundant features, and promotes the model to learn more discriminative features with the contrastive learning. Compar-ing the second and third columns in Fig. 7, we observe that the regions concerned by the network are more comprehensive and accurate in the third column. This is due to the fact that DCL enables the network to pay attention to different spatial details on each channel. Therefore, the focal regions are magnified when all channels are aggregated together. To better demonstrate the attention of ResNet+SN to local detail regions, we additionally selected a few feature maps from channels that account for large weights. It is observed that each feature map extracted by ResNet+SN concentrates on important local information, thus the total class activation map contains more local details, which proves that the DCL complements the CCL for a better classification. 
+
+F. Weighting Coefficients Analysis 1) Impact of parameter α sensitivity: In this section, we investigate the impact of the weight coefficient α in Eq.(17) on the overall model performance, which balances the DCL and CCL in the dual contrastive learning task. In this process, we fix the weighting coefficients β and γ to 0.1 and 1, respectively. The results on the NWPU-RESISC45 dataset under different settings are shown in Fig. 8. It is observed that on both settings the performance reaches their peaks when α = 1 and decreases either α is greater or less than 1. This suggests that the DCL task and the CCL task are equally important in the dual contrastive learning, and their two losses complement each other to facilitate the learning of robust feature representations. 
+
+2) Impact of parameter β sensitivity: The weight coeffi-cient β in Eq.(18) is applied to balance the two cross-entropy losses ratios of the context and detail features. We adjust α
+
+by fixing both the weighting coefficients α and γ to 1. The results on the NWPU-RESISC45 dataset are shown in Fig. 9. As observed from the figure, when β = 0.1, the performance of our DCN reaches the maximum and decreases as β increasing JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 9Port Footballfield Buildings Overpass Denseresidential Baseball diamond Church 
+
+> Input
+> image
+> ResNet
+> ResNet
+> +CN
+
+Fig. 6. Grad-CAM visualization results of inter-class images with different networks: baseline (ResNet) and Condenser Network-integrated (ResNet+CN). Palace       
+
+> Palace
+> Palace
+> Palace
+> Input image ResNet ResNet+SN Map1 Map2 Map3 Map4
+
+Fig. 7. Grad-CAM visualization results of intra-class images with baseline (ResNet) and Smelter Network-integrated (ResNet+SN), where the right of the red dotted line is the visualization results of feature maps from several channels with large weights extracted by ResNet+SN. 
+
+over 0.1. And when no detail cross-entropy loss is added, i.e., 
+
+β = 0, there is also a small degradation in performance, which proves that the detail features are effective in classification, and can compensate for the bias introduced by training the classifier using only context features. 
+
+3) Impact of parameter γ sensitivity: Our pre-training model is a multi-task learning network, which contains a classification task and a dual contrastive learning task. The weight coefficient γ in Eq.(19) represents the proportion of the dual contrastive learning task in the multi-tasks. We fix α and 
+
+β to 1 and 0.1, respectively, and adjust γ. The results on the NWPU-RESISC45 dataset are shown in Fig. 10. We observe that the performance improves with the increase of γ on both the 1-shot and 5-shot settings, and peak at γ = 1, then continue to decrease. This indicates that dual contrastive learning has a positive impact on the overall model as an auxiliary task for the classification task, and both contrastive and classification tasks promote each other to learn a good feature embedding. JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 10 71.5           
+
+> 72
+> 72.5
+> 73
+> 73.5
+> 74
+> 74.5
+> 00.2 0.4 0.6 0.8 11.2 1.4 1.6 1.8 2
+> Accur acy(% )
+> α
+
+(a) Results on 5-way 1-shot. 86.5            
+
+> 87
+> 87.5
+> 88
+> 88.5
+> 89
+> 89.5
+> 00.2 0.4 0.6 0.8 11.2 1.4 1.6 1.8 2
+> Accur acy(% )
+> α
+
+(b) Results on 5-way 5-shot. Fig. 8. Impact of weighting coefficient α on the NWPU-RESISC45 dataset. 71.5           
+
+> 72
+> 72.5
+> 73
+> 73.5
+> 74
+> 74.5
+> 00.2 0.4 0.6 0.8 11.2 1.4 1.6 1.8 2
+> Accur acy(% )
+> β
+
+(a) Results on 5-way 1-shot. 86.5            
+
+> 87
+> 87.5
+> 88
+> 88.5
+> 89
+> 89.5
+> 00.2 0.4 0.6 0.8 11.2 1.4 1.6 1.8 2
+> Accur acy(% )
+> β
+
+(b) Results on 5-way 5-shot. Fig. 9. Impact of weighting coefficient β on the NWPU-RESISC45 dataset. 
+
+G. Training Time and Parameters 
+
+Table V present the results of the evaluation of the training speed of the proposed DCN method. The training is conducted on four different datasets, with the number of epochs varying across the datasets: 200 epochs for the NWPU-RESISC45 dataset and 150 epochs for the remaining three datasets. The maximum training time is less than 6 hours. Moreover, the parameter efficiency of our DCN is illustrated in Table VI. The comparison of the parameter quantity and calculation quantity between the embedding network in our DCN method and the original ResNet-12 reveals that the number of parameters and FLOPs of the DCN is slightly higher than that of ResNet-12. However, our proposed DCN achieves a substantial improvement over the baseline in terms of performance, demonstrating its high computational effi-ciency. V. C ONCLUSION 
+
+In this work, we have proposed a novel DCN approach based on the transfer learning framework for FS-RSISC, which consists of two different branches for extracting comple-mentary features and implements the integration of super-vised contrastive learning into the few-shot classification task. Specifically, the CCL branch includes a Condenser Network and a contrastive learning module, which promotes the model to extract discriminative features by exploiting the global context information. The DCL branch is designed for capturing invariant local details, which contains a Smelter Network and a contrastive learning module based on feature maps. The competitive experimental results on four popular benchmark remote sensing datasets demonstrate the effectiveness of our proposed DCN. In the future work, we will explore the semi-supervised and weakly-supervised settings to exploit the more unlabeled data and noisy data. REFERENCES [1] Q. Zhu, Y. Zhong, L. Zhang, and D. Li, “Adaptive deep sparse semantic modeling framework for high spatial resolution image scene classifica-71.5           
+
+> 72
+> 72.5
+> 73
+> 73.5
+> 74
+> 74.5
+> 00.2 0.4 0.6 0.8 11.2 1.4 1.6 1.8 2
+> Accur acy(% )
+> γ
+
+(a) Results on 5-way 1-shot. 86.5            
+
+> 87
+> 87.5
+> 88
+> 88.5
+> 89
+> 89.5
+> 00.2 0.4 0.6 0.8 11.2 1.4 1.6 1.8 2
+> Accur acy(% )
+> γ
+
+(b) Results on 5-way 5-shot. Fig. 10. Impact of weighting coefficient γ on the NWPU-RESISC45 dataset. TABLE V TRAINING RUNTIME ON THE WHU-RS19, UC M ERCED ,NWPU-RESISC45 AND AID DATASETS .WHU-RS19 UC Merced NWPU-RESISC45 AID Epoch 150 150 200 150 Time(s) 403.50 883.50 21010.00 4778.25 TABLE VI PARAMETER EFFICIENCY OF EMBEDDING NETWORKS . P STANDS FOR THE NUMBER OF PARAMETERS , AND FLOP S DENOTES THE NUMBER OF MULTIPLY -ADDS .ResNet-12 DCN(Ours) P 12.43M 12.90M FLOPs 3523.03M 3533.42M tion,” IEEE Trans. Geosci. Remote Sens. , vol. 56, no. 10, pp. 6180–6195, 2018. [2] Z. Lv, F. Wang, G. Cui, J. A. Benediktsson, T. Lei, and W. Sun, “Spatial– spectral attention network guided with change magnitude image for land cover change detection using remote sensing images,” IEEE Trans. Geosci. Remote Sens. , vol. 60, pp. 1–12, 2022. [3] J. Chen, H. Huang, J. Peng, J. Zhu, L. Chen, C. Tao, and H. Li, “Con-textual information-preserved architecture learning for remote-sensing scene classification,” IEEE Trans. Geosci. Remote Sens. , vol. 60, pp. 1–14, 2022. [4] T. Tian, X. Liu, and L. Wang, “Remote sensing scene classification based on res-capsnet,” in Proc. IGARSS - IEEE Int. Geosci. Remote Sens. Symp. , 2019, pp. 525–528. [5] X. Li, R. Feng, X. Guan, H. Shen, and L. Zhang, “Remote sensing image mosaicking: Achievements and challenges,” IEEE Geosci. Remote Sens. Mag. , vol. 7, no. 4, pp. 8–22, 2019. [6] C. Lu, X. Yang, Z. Wang, and Z. Li, “Using multi-level fusion of local features for land-use scene classification with high spatial resolution images in urban coastal zones,” IEEE J. Sel. Topics Appl. Earth Observ. Remote Sens. , vol. 70, pp. 1–12, 2018. [7] S. Wang, Y. Guan, and L. Shao, “Multi-granularity canonical appearance pooling for remote sensing scene classification,” IEEE Trans. Image Process. , vol. 29, pp. 5396–5407, 2020. [8] J. He, X. Li, P. Liu, X. Wu, J. Zhang, D. Zhang, X. Liu, and Y. Yao, “Accurate estimation of the proportion of mixed land use at the street-block level by integrating high spatial resolution images and geospatial big data,” IEEE Trans. Geosci. Remote Sens. , vol. 59, no. 8, pp. 6357– 6370, 2020. [9] Y. Xu, B. Du, and L. Zhang, “Assessing the threat of adversarial ex-amples on deep neural networks for remote sensing scene classification: Attacks and defenses,” IEEE Trans. Geosci. Remote Sens. , vol. 59, no. 2, pp. 1604–1617, 2021. [10] S. Chaib, H. Liu, Y. Gu, and H. Yao, “Deep feature fusion for VHR remote sensing scene classification,” IEEE Trans. Geosci. Remote Sens. ,vol. 55, no. 8, pp. 4775–4784, 2017. [11] X. Lu, X. Zheng, and Y. Yuan, “Remote sensing scene classification by unsupervised representation learning,” IEEE Trans. Geosci. Remote Sens. , vol. 55, no. 9, pp. 5148–5157, 2017. [12] J. Wang, Y. Zhong, Z. Zheng, A. Ma, and L. Zhang, “RSNet: The search for remote sensing deep neural networks in recognition tasks,” IEEE Trans. Geosci. Remote Sens. , vol. 59, no. 3, pp. 2520–2534, 2021. [13] A. Ma, N. Yu, Z. Zheng, Y. Zhong, and L. Zhang, “A supervised progressive growing generative adversarial network for remote sensing JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 11 
+
+image scene classification,” IEEE Trans. Geosci. Remote Sens. , vol. 60, pp. 1–18, 2022. [14] L. Zhang and L. Zhang, “Artificial intelligence for remote sensing data analysis: A review of challenges and opportunities,” IEEE Geosci. Remote Sens. Mag. , vol. 10, no. 2, pp. 270–294, 2022. [15] M. Zhai, H. Liu, and F. Sun, “Lifelong learning for scene recognition in remote sensing images,” IEEE Geosci. Remote Sens. Lett. , vol. 16, no. 9, pp. 1472–1476, 2019. [16] L. Li, J. Han, X. Yao, G. Cheng, and L. Guo, “DLA-Matchnet for few-shot remote sensing image scene classification,” IEEE Trans. Geosci. Remote Sens. , vol. 59, no. 9, pp. 7844–7853, 2020. [17] X. Li, D. Shi, X. Diao, and H. Xu, “SCL-MLNet: Boosting few-shot remote sensing scene classification via self-supervised contrastive learning,” IEEE Trans. Geosci. Remote Sens. , vol. 60, pp. 1–12, 2022. [18] Q. Zeng, J. Geng, W. Jiang, K. Huang, and Z. Wang, “IDLN: Iterative distribution learning network for few-shot remote sensing image scene classification,” IEEE Geosci. Remote Sens. Lett. , vol. 19, pp. 1–5, 2021. [19] G. S. Dhillon, P. Chaudhari, A. Ravichandran, and S. Soatto, “A baseline for few-shot image classification,” in Proc. Int. Conf. Learn. Represent. ,2020. [20] Y. Tian, Y. Wang, D. Krishnan, J. B. Tenenbaum, and P. Isola, “Rethink-ing few-shot image classification: a good embedding is all you need?” in Proc. Eur. Conf. Comput. Vis. , 2020, pp. 266–282. [21] H. Liang, Q. Zhang, P. Dai, and J. Lu, “Boosting the generalization capability in cross-domain few-shot learning via noise-enhanced super-vised autoencoder,” in Proc. IEEE/CVF Int. Conf. Comput. Vis. (ICCV) ,2021, pp. 9424–9434. [22] A. Chowdhury, M. Jiang, S. Chaudhuri, and C. Jermaine, “Few-shot image classification: Just use a library of pre-trained feature extractors and a simple classifier,” in Proc. IEEE/CVF Int. Conf. Comput. Vis. (ICCV) , 2021, pp. 9425–9434. [23] L. Xing, L. Zhao, W. Cao, X. Ge, W. Liu, and B. Liu, “Class shared dictionary learning for few-shot remote sensing scene classification,” 
+
+IEEE Geosci. Remote Sens. Lett. , vol. 19, pp. 1–5, 2022. [24] R. Cao, L. Fang, T. Lu, and N. He, “Self-attention-based deep feature fusion for remote sensing scene classification,” IEEE Geosci. Remote Sens. Lett. , vol. 18, no. 1, pp. 43–47, 2020. [25] P. Du, E. Li, J. Xia, A. Samat, and X. Bai, “Feature and model level fusion of pretrained cnn for remote sensing scene classification,” IEEE J. Sel. Topics Appl. Earth Observ. Remote Sens. , vol. 12, no. 8, pp. 2600–2611, 2018. [26] E. Li, A. Samat, C. Zhang, P. Du, and W. Liu, “First and second-order information fusion networks for remote sensing scene classification,” 
+
+IEEE Geosci. Remote Sens. Lett. , vol. 19, pp. 1–5, 2021. [27] C. Gong, J. Han, and X. Lu, “Remote sensing image scene classification: Benchmark and state of the art,” Proc. IEEE , vol. 105, no. 10, pp. 1865– 1883, 2017. [28] G.-S. Xia, J. Hu, F. Hu, B. Shi, X. Bai, Y. Zhong, L. Zhang, and X. Lu, “AID: A benchmark data set for performance evaluation of aerial scene classification,” IEEE Trans. Geosci. Remote Sens. , vol. 55, no. 7, pp. 3965–3981, 2017. [29] G. Cheng, C. Yang, X. Yao, L. Guo, and J. Han, “When deep learn-ing meets metric learning: Remote sensing image scene classification via learning discriminative cnns,” IEEE Trans. Geosci. Remote Sens. ,vol. 56, no. 5, pp. 2811–2821, 2018. [30] X. Han, Y. Zhong, L. Cao, and L. Zhang, “Pre-trained AlexNet archi-tecture with pyramid pooling and supervision for high spatial resolution remote sensing image scene classification,” Remote Sens. , vol. 9, no. 8, p. 848, 2017. [31] N. He, L. Fang, S. Li, J. Plaza, and A. Plaza, “Skip-connected covariance network for remote sensing scene classification,” IEEE Trans. Neural Netw. Learn. Syst. , vol. 31, no. 5, pp. 1461–1474, 2020. [32] L. Zhang, L. Song, B. Du, and Y. Zhang, “Nonlocal low-rank tensor completion for visual data,” IEEE Trans. Cybern. , vol. 51, no. 2, pp. 673–685, 2021. [33] W. Zhang, P. Tang, and L. Zhao, “Remote sensing image scene clas-sification using CNN-CapsNet,” Remote Sens. , vol. 11, no. 5, p. 494, 2019. [34] X. Liu, Y. Zhou, J. Zhao, R. Yao, B. Liu, and Y. Zheng, “Siamese convolutional neural networks for remote sensing scene classification,” 
+
+IEEE Geosci. Remote Sens. Lett. , vol. 16, no. 8, pp. 1200–1204, 2019. [35] Q. Zeng, J. Geng, K. Huang, W. Jiang, and J. Guo, “Prototype calibra-tion with feature generation for few-shot remote sensing image scene classification,” Remote Sens. , vol. 13, no. 14, p. 2728, 2021. [36] R. Pires de Lima and K. Marfurt, “Convolutional neural network for remote-sensing scene classification: Transfer learning analysis,” Remote Sens. , vol. 12, no. 1, p. 86, 2019. [37] J. Xie, N. He, L. Fang, and A. Plaza, “Scale-free convolutional neural network for remote sensing scene classification,” IEEE Trans. Geosci. Remote Sens. , vol. 57, no. 9, pp. 6916–6928, 2019. [38] W. Li, Z. Wang, Y. Wang, J. Wu, J. Wang, Y. Jia, and G. Gui, “Classification of high-spatial-resolution remote sensing scenes method using transfer learning and deep convolutional neural network,” IEEE J. Sel. Topics Appl. Earth Observ. Remote Sens. , vol. 13, pp. 1986–1995, 2020. [39] W. Wang, Y. Chen, and P. Ghamisi, “Transferring cnn with adaptive learning for remote sensing scene classification,” IEEE Trans. Geosci. Remote Sens. , vol. 60, pp. 1–18, 2022. [40] A. M. Hilal, F. N. Al-Wesabi, K. J. Alzahrani, M. Al Duhayyim, M. Ahmed Hamza, M. Rizwanullah, and V. Garc´ ıa D´ ıaz, “Deep transfer learning based fusion model for environmental remote sensing image classification model,” Eur J Remote Sens. , vol. 55, no. sup1, pp. 12–23, 2022. [41] Y. Yu and F. Liu, “Dense connectivity based two-stream deep feature fusion framework for aerial scene classification,” Remote Sens. , vol. 10, no. 7, p. 1158, 2018. [42] A. Goel, B. Banerjee, and A. Piˇ zurica, “Hierarchical metric learning for optical remote sensing scene categorization,” IEEE Geosci. Remote Sens. Lett. , vol. 16, no. 6, pp. 952–956, 2019. [43] J. Shen, T. Zhang, Y. Wang, R. Wang, Q. Wang, and M. Qi, “A dual-model architecture with grouping-attention-fusion for remote sensing scene classification,” Remote Sens. , vol. 13, no. 3, p. 433, 2021. [44] S.-B. Chen, Q.-S. Wei, W.-Z. Wang, J. Tang, B. Luo, and Z.-Y. Wang, “Remote sensing scene classification via multi-branch local attention network,” IEEE Trans. Image Process. , vol. 31, pp. 99–109, 2022. [45] M. Ma, W. Ma, L. Jiao, X. Liu, F. Liu, L. Li, S. Yang, and B. Hou, “Transfer representation learning meets multi-modal fusion classification for remote sensing images,” IEEE Trans. Geosci. Remote Sens. , 2022. [46] O. Vinyals, C. Blundell, T. Lillicrap, D. Wierstra et al. , “Matching networks for one shot learning,” in Proc. Adv. Neural Inf. Process. Syst. ,2016, pp. 3630–3638. [47] J. Snell, K. Swersky, and R. Zemel, “Prototypical networks for few-shot learning,” in Proc. Adv. Neural Inf. Process. Syst. , 2017, pp. 4077–4087. [48] F. Sung, Y. Yang, L. Zhang, T. Xiang, P. H. Torr, and T. M. Hospedales, “Learning to compare: Relation network for few-shot learning,” in Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit. (CVPR) , 2018, pp. 1199–1208. [49] C. Finn, P. Abbeel, and S. Levine, “Model-agnostic meta-learning for fast adaptation of deep networks,” in Proc. Int. Conf. Mach. Learn. ,2017, pp. 1126–1135. [50] P. Mangla, N. Kumari, A. Sinha, M. Singh, B. Krishnamurthy, and V. N. Balasubramanian, “Charting the right manifold: Manifold mixup for few-shot learning,” in Proc. IEEE Winter Conf. Appl. Comput. Vis. (WACV) , 2020, pp. 2218–2227. [51] M. Yang, X. Bai, L. Wang, and F. Zhou, “Mixed loss graph attention network for few-shot sar target classification,” IEEE Trans. Geosci. Remote Sens. , vol. 60, pp. 1–13, 2021. [52] J. Kim and M. Chi, “SAFFNet: Self-attention-based feature fusion network for remote sensing few-shot scene classification,” Remote Sens. ,vol. 13, no. 13, p. 2532, 2021. [53] G. Cheng, L. Cai, C. Lang, X. Yao, J. Chen, L. Guo, and J. Han, “SPNet: Siamese-prototype network for few-shot remote sensing image scene classification,” IEEE Trans. Geosci. Remote Sens. , vol. 60, pp. 1–11, 2022. [54] Q. Sun, Y. Liu, T.-S. Chua, and B. Schiele, “Meta-transfer learning for few-shot learning,” in Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit. (CVPR) , 2019, pp. 403–412. [55] W.-Y. Chen, Y.-C. Liu, Z. Kira, Y.-C. F. Wang, and J.-B. Huang, “A closer look at few-shot classification,” arXiv:1904.04232 , 2019. [56] T. Chen, S. Kornblith, M. Norouzi, and G. Hinton, “A simple framework for contrastive learning of visual representations,” in Proc. Int. Conf. Mach. Learn. , 2020, pp. 1597–1607. [57] G. Sheng, W. Yang, T. Xu, and H. Sun, “High-resolution satellite scene classification using a sparse coding based multiple feature combination,” 
+
+Int J Remote Sens , vol. 33, no. 8, pp. 2395–2412, 2012. [58] Y. Yang and S. Newsam, “Bag-of-visual-words and spatial extensions for land-use classification,” in Proc. 18th Sigspatial Int. Conf. Adv. Geographic Inf. Syst. (GIS) , 2010, p. 270. [59] A. Srinivasan, A. Bharadwaj, M. Sathyan, and S. Natarajan, “Optimiza-tion of image embeddings for few-shot learning,” arXiv:2004.02034 ,2020. [60] K. He, X. Zhang, S. Ren, and J. Sun, “Deep residual learning for image recognition,” in Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit. (CVPR) , 2016, pp. 770–778. JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 12 
+
+[61] C. Zhang, Y. Cai, G. Lin, and C. Shen, “DeepEMD: Few-shot image classification with differentiable earth mover’s distance and structured classifiers,” in Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit. (CVPR) , 2020, pp. 12 203–12 213. [62] D. Wertheimer, L. Tang, and B. Hariharan, “Few-shot classification with feature map reconstruction networks,” in CVPR , 2021, pp. 8012–8021. [63] Y. Guo, R. Du, X. Li, J. Xie, Z. Ma, and Y. Dong, “Learning calibrated class centers for few-shot classification by pair-wise similarity,” IEEE Trans. Image Process. , vol. 31, pp. 4543–4555, 2022. [64] J. Xie, F. Long, J. Lv, Q. Wang, and P. Li, “Joint distribution matters: Deep brownian distance covariance for few-shot classification,” in Proc. IEEE/CVF Conf. Comput. Vis. Pattern Recognit. (CVPR) , 2022, pp. 7972–7981. [65] R. R. Selvaraju, M. Cogswell, A. Das, R. Vedantam, D. Parikh, and D. Batra, “Grad-CAM: Visual explanations from deep networks via gradient-based localization,” in Proc. IEEE/CVF Int. Conf. Comput. Vis. (ICCV) , 2017, pp. 618–626.
